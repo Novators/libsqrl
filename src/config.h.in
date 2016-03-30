@@ -1,0 +1,38 @@
+/** @file config.h
+
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+#ifndef CONFIG_H_INCLUDED
+#define CONFIG_H_INCLUDED
+
+#cmakedefine UNIX
+#cmakedefine WIN32
+#cmakedefine CYGWIN
+#cmakedefine CMAKE_COMPILER_IS_GNUCC
+#cmakedefine MSVC
+#cmakedefine APPLE
+
+#define SCRYPT_SALSA
+#define SCRYPT_SHA256
+
+#define SQRL_LIB_VERSION "@sqrl_version@"
+#define SQRL_LIB_VERSION_MAJOR @sqrl_version_major@
+#define SQRL_LIB_VERSION_MINOR @sqrl_version_minor@
+#define SQRL_LIB_VERSION_BUILD @sqrl_build@
+
+#if defined WIN32 || defined CYGWIN
+  #ifdef CMAKE_COMPILER_IS_GNUCC
+    #define DLL_PUBLIC __attribute__ ((dllexport))
+  #else
+    #define DLL_PUBLIC __declspec(dllexport) // Note: actually gcc seems to also supports this syntax.
+  #endif
+  #define DLL_LOCAL
+#else
+  #define DLL_PUBLIC __attribute__ ((visibility ("default")))
+  #define DLL_LOCAL  __attribute__ ((visibility ("hidden")))
+#endif
+
+#endif

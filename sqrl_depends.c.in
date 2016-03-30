@@ -1,0 +1,33 @@
+#include "src/sqrl_internal.h"
+
+DLL_PUBLIC
+size_t Sqrl_Version( char *buffer, size_t buffer_len ) 
+{
+	if( !buffer ) return 0;
+	char *ver = "@sqrl_version@";
+	size_t ver_len = strlen( ver );
+	if( buffer_len <= ver_len ) {
+		return 0;
+	}
+	memcpy( buffer, ver, ver_len );
+	buffer[ver_len] = 0;
+	return ver_len;
+}
+
+DLL_PUBLIC
+int Sqrl_Version_Major()
+{
+	return @sqrl_version_major@;
+}
+
+DLL_PUBLIC
+int Sqrl_Version_Minor()
+{
+	return @sqrl_version_minor@;
+}
+
+DLL_PUBLIC
+int Sqrl_Version_Build()
+{
+	return @sqrl_build@;
+}
