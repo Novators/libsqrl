@@ -10,6 +10,7 @@ Visit <a href="https://sqrlid.com">SQRLid</a> for more information, development 
 @section platforms Supported Platforms
 This implementation is intended to work on multiple platforms.  Tested platforms include:
 - Mac OS X (Tested on 10.11.4 64 bit)
+- Linux (Tested on Ubuntu 14.04.4 LTS, 64 bit)
 
 With minimal work, this implementation should run on iOS, Windows, and Android as well.  We have not had an opportunity to test these platforms yet.
 
