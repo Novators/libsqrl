@@ -295,7 +295,8 @@ bool sqrl_user_regen_keys( Sqrl_User u )
 	RELOCK_START(user,relock);
 	uint8_t *key;
 	int keys[] = { KEY_MK, KEY_ILK, KEY_LOCAL };
-	for( int i = 0; i < 3; i++ ) {
+	int i;
+	for( i = 0; i < 3; i++ ) {
 		key = sqrl_user_key( u, keys[i] );
 		_su_keygen( u, keys[i], key );
 	}
@@ -375,7 +376,8 @@ uint8_t *sqrl_user_key( Sqrl_User u, int key_type )
 	RELOCK_START(user,relock);
 	int offset = -1;
 	int empty = -1;
-	for( int i = 0; i < USER_MAX_KEYS; i++ ) {
+	int i;
+	for( i = 0; i < USER_MAX_KEYS; i++ ) {
 		if( user->lookup[i] == key_type ) {
 			offset = i;
 			break;
@@ -413,7 +415,8 @@ bool sqrl_user_has_key( Sqrl_User u, int key_type )
 {
 	SQRL_CAST_USER(user,u);
 	if( user == NULL ) return false;
-	for( int i = 0; i < USER_MAX_KEYS; i++ ) {
+	int i;
+	for( i = 0; i < USER_MAX_KEYS; i++ ) {
 		if( user->lookup[i] == key_type ) {
 			return true;
 		}
@@ -426,7 +429,8 @@ void sqrl_user_remove_key( Sqrl_User u, int key_type )
 	SQRL_CAST_USER(user,u);
 	if( user == NULL ) return;
 	int offset = -1;
-	for( int i = 0; i < USER_MAX_KEYS; i++ ) {
+	int i;
+	for( i = 0; i < USER_MAX_KEYS; i++ ) {
 		if( user->lookup[i] == key_type ) {
 			offset = i;
 		}
@@ -474,7 +478,8 @@ bool sqrl_user_set_rescue_code( Sqrl_User u, char *rc )
 	SQRL_CAST_USER(user,u);
 	if( user == NULL ) return false;
 	if( strlen( rc ) != 24 ) return false;
-	for( int i = 0; i < SQRL_RESCUE_CODE_LENGTH; i++ ) {
+	int i;
+	for( i = 0; i < SQRL_RESCUE_CODE_LENGTH; i++ ) {
 		if( rc[i] < '0' || rc[i] > '9' ) {
 			return false;
 		}
