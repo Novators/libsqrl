@@ -21,6 +21,7 @@ int main()
 	bool bError = false;
 	sqrl_init();
 	UT_string *buf;
+	int i;
 	utstring_new( buf );
 	Sqrl_User *user = sqrl_user_create();
 	Sqrl_Storage storage = sqrl_storage_create();
@@ -42,7 +43,7 @@ int main()
 	uint8_t *key;
 
 	char str[128];
-	for( int i = 4; i > 0; i-- ) {
+	for( i = 4; i > 0; i-- ) {
 		sqrl_user_rekey( user );
 		key = sqrl_user_key( user, KEY_IUK );
 		memcpy( sPointer, key, SQRL_KEY_SIZE );
@@ -100,7 +101,7 @@ int main()
 	sPointer = loaded;
 	int keys[] = { KEY_PIUK3, KEY_PIUK2, KEY_PIUK1, KEY_PIUK0, KEY_IUK, KEY_ILK, KEY_MK };
 	char names[][6] = { "PIUK4", "PIUK3", "PIUK2", "PIUK1", "  IUK", "  ILK", "   MK" };
-	for( int i = 0; i < 7; i++ ) {
+	for( i = 0; i < 7; i++ ) {
 		key = sqrl_user_key( user, keys[i] );
 		memcpy( sPointer, key, SQRL_KEY_SIZE );
 		sPointer += SQRL_KEY_SIZE;
