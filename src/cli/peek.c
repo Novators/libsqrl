@@ -249,10 +249,11 @@ void printBlock2( Sqrl_Storage storage )
 	Sqrl_User user;
 	Sqrl_Block block;
 	sqrl_block_clear( &block );
+	uint8_t salt[16];
 	uint16_t d16;
 	uint8_t buf[512];
-	uint8_t d8;
-	uint32_t d32;
+	uint8_t d8, nFactor;
+	uint32_t d32, iterations;
 	char str[512];
 	uint8_t *ptr;
 	Sqrl_Status status;
@@ -260,17 +261,23 @@ void printBlock2( Sqrl_Storage storage )
 	if( sqrl_storage_block_get( storage, &block, SQRL_BLOCK_RESCUE )) {
 		printf( "Block 2:\n" );
 		d16 = sqrl_block_read_int16( &block );
+		sqrl_block_seek( &block, 0 );
+		sqrl_block_read( &block, buf, d16 );
+		sodium_bin2hex( str, 512, buf, d16 );
+		printTwoByFour( str );
+		sqrl_block_seek( &block, 2 );
+
 		printf( "  Block Length:      %u\n", d16 );
 		d16 = sqrl_block_read_int16( &block );
 		printf( "  Block Type:        %u\n", d16 );
-		sqrl_block_read( &block, buf, 16 );
-		sodium_bin2hex( str, 512, buf, 16 );
+		sqrl_block_read( &block, salt, 16 );
+		sodium_bin2hex( str, 512, salt, 16 );
 		printf( "  Scrypt Salt:       " );
 		printInFours( str );
-		d8 = sqrl_block_read_int8( &block );
-		printf( "  N-Factor:          %u\n", d8 );
-		d32 = sqrl_block_read_int32( &block );
-		printf( "  Iteration Count:   %u\n", d32 );
+		nFactor = sqrl_block_read_int8( &block );
+		printf( "  N-Factor:          %u\n", nFactor );
+		iterations = sqrl_block_read_int32( &block );
+		printf( "  Iteration Count:   %u\n", iterations );
 		sqrl_block_read( &block, buf, 32 + 16 );
 		printf( "  Encrypted IUK:     " );
 		sodium_bin2hex( str, 512, buf, 32 );
@@ -278,14 +285,35 @@ void printBlock2( Sqrl_Storage storage )
 		printf( "  Verification Tag:  " );
 		sodium_bin2hex( str, 512, buf + 32, 16 );
 		printInFours( str );
+
+		sqrl_block_seek( &block, 0 );
+		sqrl_block_read( &block, buf, 25 );
+		printf( "  AAD (%u):\n", 25 );
+		sodium_bin2hex( str, 512, buf, 25 );
+		printTwoByFour( str );
+		sqrl_block_read( &block, buf, 32 );
+		printf( "  Cipher Text (32):\n" );
+		sodium_bin2hex( str, 512, buf, 32 );
+		printTwoByFour( str );
+		sqrl_block_read( &block, buf, 16 );
+		sodium_bin2hex( str, 512, buf, 16 );
+		printf( "  Tag (16):\n" );
+		printTwoByFour( str );
+
 		sqrl_block_free( &block );
 		if( rc && strlen( rc ) == 24 ) {
 			printf( "  Rescue Code:       %s\n", rc );
 			user = sqrl_user_create();
-			ptr = (uint8_t*)sqrl_user_key( user, KEY_RESCUE_CODE );
-			strcpy( (char*)ptr, rc );
+			sqrl_user_set_rescue_code( user, rc );
 			status = sqrl_user_load_with_rescue_code( user, storage, NULL, NULL );
 			if( status == SQRL_STATUS_OK ) {
+				if( 0 < sqrl_enscrypt( buf, rc, 24,
+					salt, 16, nFactor, iterations, NULL, NULL )) {
+					sodium_bin2hex( str, 512, buf, 32 );
+					printf( "  AES-GCM Key:\n" );
+					printTwoByFour( str );
+				}
+
 				printf( "  Decryption:\n" );
 				ptr = sqrl_user_key( user, KEY_IUK );
 				sodium_bin2hex( str, 512, ptr, 32 );
@@ -319,6 +347,12 @@ void printBlock3( Sqrl_Storage storage )
 	if( sqrl_storage_block_get( storage, &block, SQRL_BLOCK_PREVIOUS )) {
 		printf( "Block 3:\n" );
 		d16 = sqrl_block_read_int16( &block );
+		sqrl_block_seek( &block, 0 );
+		sqrl_block_read( &block, buf, d16 );
+		sodium_bin2hex( str, 512, buf, d16 );
+		printTwoByFour( str );
+		sqrl_block_seek( &block, 2 );
+
 		printf( "  Block Length:      %u\n", d16 );
 		d16 = sqrl_block_read_int16( &block );
 		printf( "  Block Type:        %u\n", d16 );
@@ -343,6 +377,21 @@ void printBlock3( Sqrl_Storage storage )
 		sodium_bin2hex( str, 512, ptr, 16 );
 		printf( "  Verification Tag:  " );
 		printInFours( str );
+
+		sqrl_block_seek( &block, 0 );
+		sqrl_block_read( &block, buf, 4 );
+		printf( "  AAD (%u):\n", 4 );
+		sodium_bin2hex( str, 512, buf, 4 );
+		printTwoByFour( str );
+		sqrl_block_read( &block, buf, 128 );
+		printf( "  Cipher Text (128):\n" );
+		sodium_bin2hex( str, 512, buf, 128 );
+		printTwoByFour( str );
+		sqrl_block_read( &block, buf, 16 );
+		sodium_bin2hex( str, 512, buf, 16 );
+		printf( "  Tag (16):\n" );
+		printTwoByFour( str );
+
 		sqrl_block_free( &block );
 		if( password ) {
 			user = sqrl_user_create();
@@ -353,8 +402,8 @@ void printBlock3( Sqrl_Storage storage )
 			if( SQRL_STATUS_OK == sqrl_user_load_with_password( user, storage, NULL, NULL )) {
 				ptr = sqrl_user_key( user, KEY_MK );
 				sodium_bin2hex( str, 512, ptr, 32 );
-				printf( "  Decrypting w/ IMK: " );
-				printInFours( str );
+				printf( "  AES-GCM Key:\n" );
+				printTwoByFour( str );
 				ptr = sqrl_user_key( user, KEY_PIUK0 );
 				printf( "  Decrypted:\n" );
 				sodium_bin2hex( str, 512, ptr, 32 );
