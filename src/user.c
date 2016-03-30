@@ -343,7 +343,8 @@ uint8_t *sqrl_user_new_key( Sqrl_User u, int key_type )
 	RELOCK_START(user,relock);
 	int offset = -1;
 	int empty = -1;
-	for( int i = 0; i < USER_MAX_KEYS; i++ ) {
+	int i = 0;
+	for( i = 0; i < USER_MAX_KEYS; i++ ) {
 		if( user->lookup[i] == key_type ) {
 			offset = i;
 		}
