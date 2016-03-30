@@ -3,8 +3,10 @@ set(PROJECT_NAME libsqrl)
 cmake_minimum_required(VERSION 2.8)
 
 # A hack...
-cmake_policy(SET CMP0026 OLD)
-cmake_policy(SET CMP0045 OLD)
+if(CMAKE_MAJOR_VERSION EQUAL 3)
+	cmake_policy(SET CMP0026 OLD)
+	cmake_policy(SET CMP0045 OLD)
+endif(CMAKE_MAJOR_VERSION EQUAL 3)
 # End Hack.
 
 include(ExternalProject)
