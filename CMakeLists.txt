@@ -34,7 +34,7 @@ CHECK_FOR_SSE()
 
 configure_file(${SRCDIR}/config.h.in ${SRCDIR}/config.h)
 configure_file(sqrl_depends.c.in sqrl_depends.c)
-configure_file(info.in README.md)
+configure_file(README.in README.md)
 
 ######################### MAC BUILD #########################
 set(REQUIRED_LIBS_PRESENT TRUE)
