@@ -2,7 +2,7 @@
 @mainpage @PROJECT_NAME@
 @version @sqrl_version@
 @author Adam Comley
-@details sqrl is a client side library for implementing the <a href="https://www.grc.com/sqrl/sqrl.htm">SQRL Specification</a>.
+@details libsqrl is a library implementing the <a href="https://www.grc.com/sqrl/sqrl.htm">SQRL Specification</a>.
 
 @section about About
 Visit <a href="https://sqrlid.com">SQRLid</a> for more information, development status, and new releases.
