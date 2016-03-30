@@ -149,6 +149,7 @@ bool sul_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 {
 	SQRL_CAST_USER(user,u);
 	bool retVal = true;
+	int i;
 	Sqrl_Crypt_Context sctx;
 	uint8_t *keyPointer;
 	block->cur = 0;
@@ -177,7 +178,7 @@ bool sul_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 
 	int pt_offset = 0;
 	int piuks[] = { KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3 };
-	for( int i = 0; i < 4; i++ ) {
+	for( i = 0; i < 4; i++ ) {
 		keyPointer = sqrl_user_new_key( u, piuks[i] );
 		memcpy( keyPointer, sctx.plain_text + pt_offset, SQRL_KEY_SIZE );
 		pt_offset += SQRL_KEY_SIZE;
@@ -200,6 +201,7 @@ bool sus_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 {
 	SQRL_CAST_USER(user,u);
 	bool retVal = true;
+	int i;
 	Sqrl_Crypt_Context sctx;
 	uint8_t *keyPointer;
 	sqrl_block_init( block, 3, 148 );
@@ -219,7 +221,7 @@ bool sus_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 
 	int pt_offset = 0;
 	int piuks[] = { KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3 };
-	for( int i = 0; i < 4; i++ ) {
+	for( i = 0; i < 4; i++ ) {
 		if( sqrl_user_has_key( u, piuks[i] )) {
 			keyPointer = sqrl_user_key( u, piuks[i] );
 			memcpy( sctx.plain_text + pt_offset, keyPointer, SQRL_KEY_SIZE );
