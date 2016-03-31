@@ -27,14 +27,13 @@ int main()
 	Sqrl_Storage storage = sqrl_storage_create();
 	sqrl_user_set_password( user, "the password", 12 );
 
-	/*
 	ASSERT( "hintlock_1", !sqrl_user_is_hintlocked( user ) )
 	sqrl_user_hintlock( user, NULL, NULL );
 	ASSERT( "hintlock_2", sqrl_user_is_hintlocked( user ) )
 	sqrl_user_hintunlock( user, "the ", 4, NULL, NULL );
 	ASSERT( "hintlock_3", !sqrl_user_is_hintlocked( user ) )
 	printf( "HNTLCK: PASS\n" );
-	*/
+
 	printf( "    PW: the password\n" );
 	uint8_t saved[SQRL_KEY_SIZE*7];
 	uint8_t loaded[SQRL_KEY_SIZE*7];
