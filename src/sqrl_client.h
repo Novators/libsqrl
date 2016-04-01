@@ -82,28 +82,6 @@ is throttled to approximately 5 samples per second.  This allows us to quickly b
 entropy, and then reduce CPU and power usage when we have enough.  If you want more entropy,
 or want to add your own sources, you can do so with the \p sqrl_entropy_add function.
 
-Usage
------
-Create a new entropy pool with \p sqrl_entropy_create:
-
-~~~{.c}
-Sqrl_Entropy_Pool pool = sqrl_entropy_create();
-~~~
-
-The entropy pool will spawn a new thread and automatically start collecting entropy.  You
-can add your own entropy source (such as a webcam feed) with \p sqrl_entropy_add.
-Take a peek at how much entropy is currently in the pool with \p sqrl_entropy_estimate.
-When you need to retrieve entropy, call \p sqrl_entropy_get or \p sqrl_entropy_get_blocking.
-The first may fail if there is not enough entropy available, and the blocking function will
-not return until there is.
-
-It's usually ok to leave the pool running for the duration of your program's execution.
-It uses very little resources when not in use.  If you do want to stop the entropy pool,
-use \p sqrl_entropy_destroy:
-
-~~~{.c}
-pool = sqrl_entropy_destroy( pool );
-~~~
 @{ */
 
 /** The Entropy Pool Object */
