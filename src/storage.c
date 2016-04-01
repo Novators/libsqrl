@@ -400,10 +400,14 @@ bool sqrl_storage_save_to_buffer(
 	if( etype == SQRL_EXPORT_RESCUE ) {
 		Sqrl_Block block;
 		memset( &block, 0, sizeof( Sqrl_Block ));
-		if( sqrl_storage_block_get( storage, &block, 2 )) {
+		if( sqrl_storage_block_get( storage, &block, SQRL_BLOCK_RESCUE )) {
 			utstring_bincpy( tmp, block.data, block.blockLength );
+			sqrl_block_free( &block );
 		}
-		sqrl_block_free( &block );
+		if( sqrl_storage_block_get( storage, &block, SQRL_BLOCK_PREVIOUS )) {
+			utstring_bincpy( tmp, block.data, block.blockLength );
+			sqrl_block_free( &block );
+		}
 	} else {
 		SQRL_CAST_PAGE(page,storage);
 		struct S4Page *nextPage;

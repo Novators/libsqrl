@@ -505,6 +505,7 @@ bool sqrl_user_set_password( Sqrl_User u, char *password, size_t password_len )
 {
 	SQRL_CAST_USER(user,u);
 	if( user == NULL ) return false;
+	if( sqrl_user_is_hintlocked( u )) return false;
 	RELOCK_START(user,relock);
 	char *p = sqrl_user_password( u );
 	size_t *l = sqrl_user_password_length( u );

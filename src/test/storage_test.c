@@ -11,11 +11,11 @@ For more details, see the LICENSE file included with this package.
 
 int main() 
 {
+	sqrl_init();
 	bool bError = false;
 	Sqrl_Storage storage;
 	Sqrl_User user = sqrl_user_create();;
 	
-	sqrl_init();
 	storage = sqrl_storage_create();
 	sqrl_storage_load_from_file( storage, "test1.sqrl" );
 	if( ! sqrl_storage_block_exists( storage, SQRL_BLOCK_USER )
@@ -24,12 +24,19 @@ int main()
 		printf( "Bad Blocks\n" );
 		goto ERROR;
 	}
-	char *pw = sqrl_user_password( user );
-	size_t *pwl = sqrl_user_password_length( user );
-	strcpy( pw, "the password" );
-	*pwl = 12;
+	sqrl_user_set_password( user, "the password", 12 );
 	if( SQRL_STATUS_OK != sqrl_user_load_with_password( user, storage, NULL, NULL )) {
 		printf( "Load failed\n" );
+		goto ERROR;
+	}
+	sqrl_user_set_password( user, "asdf", 4 );
+	sqrl_user_save( user, storage, NULL, NULL );
+	user = sqrl_user_destroy( user );
+	user = NULL; // Make sure...
+	user = sqrl_user_create();
+	sqrl_user_set_password( user, "asdf", 4 );
+	if( SQRL_STATUS_OK != sqrl_user_load_with_password( user, storage, NULL, NULL )) {
+		printf( "New Password failed\n" );
 		goto ERROR;
 	}
 	goto DONE;

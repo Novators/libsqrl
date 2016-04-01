@@ -175,7 +175,7 @@ typedef enum {
 typedef enum {
 	/** Exports ALL blocks in the storage object */
 	SQRL_EXPORT_ALL,
-	/** Exports ONLY the type 2 (Rescue) block */
+	/** Exports ONLY the type 2 (Rescue) and type 3 (Previous) blocks */
 	SQRL_EXPORT_RESCUE
 } Sqrl_Export;
 
