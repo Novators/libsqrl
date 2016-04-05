@@ -49,6 +49,32 @@ printf( "%s: %d Users\n", tag, _pucI )
 #endif
 
 /**
+Finds a previously allocated \p Sqrl_User.  Be sure to release your reference
+with \p sqrl_user_release when you are finished with the \p Sqrl_User.
+
+@param unique_id A string of length \p SQRL_UNIQUE_ID_LENGTH identifying the \p Sqrl_User.
+@return Sqrl_User A \p Sqrl_User object, or NULL if not available.
+*/
+DLL_PUBLIC
+Sqrl_User sqrl_user_find( const char *unique_id )
+{
+	Sqrl_User user = NULL;
+	struct Sqrl_User_List *l;
+	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
+	l = SQRL_USER_LIST;
+	while( l ) {
+		if( l->user && sqrl_user_unique_id_match( l->user, unique_id )) {
+			user = l->user;
+			sqrl_user_hold( user );
+			break;
+		}
+		l = l->next;
+	}
+	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+	return user;
+}
+
+/**
 Creates an empty \p Sqrl_User, ready to generate or load identity data.
 
 @return Pointer to new \p Sqrl_User
