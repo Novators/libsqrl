@@ -263,7 +263,6 @@ int sqrl_enscrypt_ms(
 	enscrypt_progress_fn cb_ptr, 
 	void *cb_data );
 
-void sqrl_generate_random_key( uint8_t *key );
 void sqrl_curve_private_key( uint8_t *key );
 void sqrl_curve_public_key( uint8_t *puk, const uint8_t *prk );
 
@@ -271,5 +270,7 @@ void sqrl_lcstr( char * );
 void printhex( char *label, uint8_t *bin, size_t bin_len );
 
 void bin2rc( char *buf, uint8_t *bin );
+void utstring_zero( UT_string *str );
+
 
 #endif // SQRL_INTERNAL_H_INCLUDED

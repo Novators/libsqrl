@@ -1,4 +1,4 @@
-/** @file url.c 
+/** @file uri.c 
 
 @author Adam Comley
 
@@ -7,11 +7,11 @@ For more details, see the LICENSE file included with this package.
 **/
 
 /**
-Creates a copy of a \p Sqrl_Url object.
+Creates a copy of a \p Sqrl_Uri object.
 
-\warning Allocates memory for a new \p Sqrl_Url object!  Free it with \p sqrl_url_free() when done!
+\warning Allocates memory for a new \p Sqrl_Uri object!  Free it with \p sqrl_uri_free() when done!
 
-@param original The \p Sqrl_Url object to copy.
+@param original The \p Sqrl_Uri object to copy.
 @return An identical copy of \p original.
 */
 
@@ -22,37 +22,37 @@ Creates a copy of a \p Sqrl_Url object.
 #include "sqrl_internal.h"
 
 DLL_PUBLIC
-Sqrl_Url *sqrl_url_create_copy( Sqrl_Url *original )
+Sqrl_Uri *sqrl_uri_create_copy( Sqrl_Uri *original )
 {
 	size_t sz;
 	if( !original ) return NULL;
-	Sqrl_Url *nurl = calloc( sizeof( Sqrl_Url ), 1 );
-	if( !nurl ) return NULL;
+	Sqrl_Uri *nuri = calloc( sizeof( Sqrl_Uri ), 1 );
+	if( !nuri ) return NULL;
 	if( original->challenge ) {
 		sz = strlen( original->challenge );
-		nurl->challenge = calloc( sz + 1, 1 );
-		if( nurl->challenge ) 
-			memcpy( nurl->challenge, original->challenge, sz );
+		nuri->challenge = calloc( sz + 1, 1 );
+		if( nuri->challenge ) 
+			memcpy( nuri->challenge, original->challenge, sz );
 	}
 	if( original->host ) {
 		sz = strlen( original->host );
-		nurl->host = calloc( sz + 1, 1 );
-		if( nurl->host )
-			memcpy( nurl->host, original->host, sz );
+		nuri->host = calloc( sz + 1, 1 );
+		if( nuri->host )
+			memcpy( nuri->host, original->host, sz );
 	}
 	if( original->url ) {
 		sz = strlen( original->url );
-		nurl->url = calloc( sz + 1, 1 );
-		if( nurl->url )
-			memcpy( nurl->url, original->url, sz );
+		nuri->url = calloc( sz + 1, 1 );
+		if( nuri->url )
+			memcpy( nuri->url, original->url, sz );
 	}
 	if( original->scheme ) {
 		sz = strlen( original->scheme );
-		nurl->scheme = calloc( sz + 1, 1 );
-		if( nurl->scheme )
-			memcpy( nurl->scheme, original->scheme, sz );
+		nuri->scheme = calloc( sz + 1, 1 );
+		if( nuri->scheme )
+			memcpy( nuri->scheme, original->scheme, sz );
 	}
-	return nurl;
+	return nuri;
 }
 
 /*
@@ -72,8 +72,8 @@ _is_scheme_char(int c)
 	return (!isalpha(c) && '+' != c && '-' != c && '.' != c) ? 0 : 1;
 }
 
-static void _fix_divider( char *url ) {
-	char *p = strstr( url, "//" );
+static void _fix_divider( char *uri ) {
+	char *p = strstr( uri, "//" );
 	if( p ) {
 		p += 2;
 		p = strstr( p, "//" );
@@ -90,17 +90,17 @@ static void _fix_divider( char *url ) {
 }
 
 /**
-Parses a SQRL URL and returns a \p Sqrl_Url object
+Parses a SQRL URL and returns a \p Sqrl_Uri object
 
-\warning Allocates a new \p Sqrl_Url object!
+\warning Allocates a new \p Sqrl_Uri object!
 
 @param theUrl NULL terminated SQRL URL string
-@return A new \p Sqrl_Url object
+@return A new \p Sqrl_Uri object
 */
 DLL_PUBLIC
-Sqrl_Url * sqrl_url_parse(const char *theUrl)
+Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 {
-	Sqrl_Url *purl = NULL;
+	Sqrl_Uri *puri = NULL;
 	const char *tmpstr;
 	const char *curstr;
 	int len;
@@ -116,15 +116,15 @@ Sqrl_Url * sqrl_url_parse(const char *theUrl)
 		 *password = NULL;
 	
 	UT_string *prefix = NULL;
-	char *url = malloc( strlen( theUrl ) + 1 );
-	strcpy( url, theUrl );
-//	_fix_divider( url );
+	char *uri = malloc( strlen( theUrl ) + 1 );
+	strcpy( uri, theUrl );
+//	_fix_divider( uri );
 
-	/* Allocate the parsed url storage */
-	purl = calloc(sizeof(Sqrl_Url),1);
-	if( purl == NULL ) goto ERROR;
+	/* Allocate the parsed uri storage */
+	puri = calloc(sizeof(Sqrl_Uri),1);
+	if( puri == NULL ) goto ERROR;
 
-	curstr = url;
+	curstr = uri;
 	
 	/*
 	 * <scheme>:<scheme-specific-part>
@@ -142,18 +142,18 @@ Sqrl_Url * sqrl_url_parse(const char *theUrl)
 		if ( !_is_scheme_char(curstr[i]) ) goto ERROR;
 	}
 	/* Copy the scheme to the storage */
-	purl->scheme = malloc(sizeof(char) * (len + 1));
-	if ( NULL == purl->scheme ) goto ERROR;
+	puri->scheme = malloc(sizeof(char) * (len + 1));
+	if ( NULL == puri->scheme ) goto ERROR;
 	
-	(void)strncpy(purl->scheme, curstr, len);
-	purl->scheme[len] = '\0';
-	sqrl_lcstr( purl->scheme );
+	(void)strncpy(puri->scheme, curstr, len);
+	puri->scheme[len] = '\0';
+	sqrl_lcstr( puri->scheme );
 	/* Skip ':' */
 	tmpstr++;
 	curstr = tmpstr;
 	
 	/*
-	 * //<user>:<password>@<host>:<port>/<url-path>
+	 * //<user>:<password>@<host>:<port>/<uri-path>
 	 * Any ":", "@" and "/" must be encoded.
 	 */
 	/* Eat "//" */
@@ -313,26 +313,37 @@ Sqrl_Url * sqrl_url_parse(const char *theUrl)
 	
 	/* SQRL Specific... */
 SQRL:
-	purl->challenge = (char*) malloc( strlen( url ) + 1 );
-	purl->url = (char*) malloc( strlen( url ) + 2 );
-	if( purl->challenge == NULL || purl->url == NULL ) goto ERROR;
-
-	utstring_new( prefix );
-	if( prefix == NULL ) goto ERROR;
-
-	strcpy( purl->challenge, theUrl );
-	strcpy( purl->url + 1, url );
-
-	if( purl->scheme[0] == 's' ) {
-		memcpy( purl->url, "https", 5 );
+	if( 0 == strcmp( puri->scheme, "sqrl" )) {
+		puri->url = (char*) malloc( strlen( uri ) + 2 );
+		strcpy( puri->url + 1, theUrl );
+		memcpy( puri->url, "https", 5 );
+		utstring_new( prefix );
 		utstring_bincpy( prefix, "https://", 8 );
-	} else if( purl->scheme[0] == 'q' ) {
-		memcpy( purl->url, "http", 4 );
+	} else if( 0 == strcmp( puri->scheme, "file" )) {
+		// File
+		puri->url = (char*) malloc( strlen( uri ) - 6 );
+		strcpy( puri->url, theUrl + 7 );
+		goto END;
+	} else {
+		// Invalid Scheme
+		goto ERROR;
+	}
+	puri->challenge = (char*) malloc( strlen( uri ) + 1 );
+	if( puri->challenge == NULL || puri->url == NULL ) goto ERROR;
+
+	strcpy( puri->challenge, theUrl );
+
+/*
+	if( puri->scheme[0] == 's' ) {
+		memcpy( puri->url, "https", 5 );
+		utstring_bincpy( prefix, "https://", 8 );
+	} else if( puri->scheme[0] == 'q' ) {
+		memcpy( puri->url, "http", 4 );
 		utstring_bincpy( prefix, "http://", 7 );
 	} else {
 		goto ERROR;
 	}
-
+*/
 	size_t hl = strlen( host );
 	size_t pl = 0;
 	size_t ul = hl + 1;
@@ -344,28 +355,28 @@ SQRL:
 		}
 	}
 	if( pl ) ul += pl + 1;
-	purl->host = (char*) calloc( ul, 1 );
-	if( purl->host == NULL ) goto ERROR;
-	strcpy( purl->host, host );
+	puri->host = (char*) calloc( ul, 1 );
+	if( puri->host == NULL ) goto ERROR;
+	strcpy( puri->host, host );
 	utstring_bincpy( prefix, host, strlen( host ));
 	if( port ) {
 		utstring_printf( prefix, ":%s", port );
 	}
 	if( pl ) {
-		purl->host[hl] = '/';
-		strncpy( purl->host + hl + 1, path, pl );
-		_fix_divider( purl->url );
+		puri->host[hl] = '/';
+		strncpy( puri->host + hl + 1, path, pl );
+		_fix_divider( puri->url );
 	}
-	purl->prefix = (char*) malloc( utstring_len( prefix ));
-	if( purl->prefix == NULL ) goto ERROR;
-	strcpy( purl->prefix, utstring_body( prefix ));
+	puri->prefix = (char*) malloc( utstring_len( prefix ));
+	if( puri->prefix == NULL ) goto ERROR;
+	strcpy( puri->prefix, utstring_body( prefix ));
 	goto END;
 
 ERROR:
-	if( purl ) {
-		sqrl_url_free( purl );
+	if( puri ) {
+		sqrl_uri_free( puri );
 	}
-	purl = NULL;
+	puri = NULL;
 	
 END:
 	if( host ) free( host );
@@ -375,26 +386,26 @@ END:
 	if( username ) free( username );
 	if( password ) free( password );
 	if( prefix ) utstring_free( prefix );
-	if( url ) free( url );
-	return purl;
+	if( uri ) free( uri );
+	return puri;
 }
 
 /**
-Frees the memory allocated to a \p Sqrl_Url object
+Frees the memory allocated to a \p Sqrl_Uri object
 
-@param url the \p Sqrl_Url object
+@param uri the \p Sqrl_Uri object
 @return NULL
 */
 DLL_PUBLIC
-Sqrl_Url* sqrl_url_free( Sqrl_Url *url )
+Sqrl_Uri* sqrl_uri_free( Sqrl_Uri *uri )
 {
-	if ( url ) {
-		if( url->challenge ) free( url->challenge );
-		if( url->host ) free( url->host );
-		if( url->prefix ) free( url->prefix );
-		if( url->url ) free( url->url );
-		if( url->scheme ) free( url->scheme );
-		free(url);
+	if ( uri ) {
+		if( uri->challenge ) free( uri->challenge );
+		if( uri->host ) free( uri->host );
+		if( uri->prefix ) free( uri->prefix );
+		if( uri->url ) free( uri->url );
+		if( uri->scheme ) free( uri->scheme );
+		free(uri);
 	}
 	return NULL;
 }

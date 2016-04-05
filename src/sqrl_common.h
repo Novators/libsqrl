@@ -59,11 +59,9 @@ UT_string*	sqrl_urlencode( UT_string *dest, const char *src );
 
 /** \defgroup util Utility Functions
 
-Functions for communicating with SQRL servers.
 @{ */
 
 int 		sqrl_init();
-void utstring_zero( UT_string *str );
 
 /**
 Get a string representing the version of SQRL lib in use

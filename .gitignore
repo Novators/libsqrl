@@ -31,7 +31,7 @@ sqrl_depends.c
 Doxyfile
 doc/
 rc_test
-url_test
+uri_test
 merge_archives_sqrl.cmake
 site_test
 html/mainpage.dox

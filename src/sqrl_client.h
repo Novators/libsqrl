@@ -245,7 +245,7 @@ bool       sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id );
 /**
 A structure to hold information about a parsed SQRL URL
 */
-typedef struct Sqrl_Url {
+typedef struct Sqrl_Uri {
 	/** The entire SQRL URL */
 	char *challenge;
 	/** The domain + extension */
@@ -256,13 +256,18 @@ typedef struct Sqrl_Url {
 	char *url;
 	/** Internal use */
 	char *scheme;
-} Sqrl_Url;
+} Sqrl_Uri;
 
-Sqrl_Url*	sqrl_url_create_copy( Sqrl_Url *original );
-Sqrl_Url*	sqrl_url_parse(const char *);
-Sqrl_Url*	sqrl_url_free(struct Sqrl_Url *);
+Sqrl_Uri*	sqrl_uri_create_copy( Sqrl_Uri *original );
+Sqrl_Uri*	sqrl_uri_parse(const char *);
+Sqrl_Uri*	sqrl_uri_free(struct Sqrl_Uri *);
 
 /** @} */ // endgroup URL
+
+/**
+\defgroup Client SQRL Client API
+
+@{ */
 
 
 typedef enum {
@@ -297,7 +302,7 @@ typedef enum {
 typedef struct Sqrl_Client_Transaction {
 	Sqrl_Transaction_Type type;
 	Sqrl_User *user;
-	Sqrl_Url *url;
+	Sqrl_Uri *url;
 	bool altIdentitySpecified;
 	char *altIdentity;
 	Sqrl_Export exportType;
@@ -363,6 +368,6 @@ void sqrl_client_transaction_set_alternate_identity(
 	Sqrl_Client_Transaction *transaction,
 	const char *altIdentity );
 Sqrl_User sqrl_get_user( const char *unique_id );
-
+/** @} */ // endgroup Client
 
 #endif // SQRL_CLIENT_H_INCLUDED
