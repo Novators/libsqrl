@@ -16,7 +16,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/libutils.cmake)
 
 set(sqrl_version_major 1)
 set(sqrl_version_minor 1)
-set(sqrl_build 17)
+set(sqrl_build 18)
 set(sqrl_version "${sqrl_version_major}.${sqrl_version_minor} build ${sqrl_build}")
 
 #set(CMAKE_BUILD_TYPE Release)
@@ -133,7 +133,7 @@ endif(DOXYGEN_FOUND)
 
 # Tests
 include(CTest)
-add_test(url_test uri_test)
+add_test(uri_test uri_test)
 add_test(user_test user_test)
 add_test(encdec_test encdec_test)
 add_test(gcm_test gcm_test)

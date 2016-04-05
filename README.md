@@ -1,4 +1,4 @@
-# libsqrl 1.1 build 17
+# libsqrl 1.1 build 18
 
 A SQRL Authentication Library
 
