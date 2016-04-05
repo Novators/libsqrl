@@ -65,7 +65,6 @@ For more details, see the LICENSE file included with this package.
 
 typedef void* Sqrl_Key;
 typedef int (sqrl_status_fn)(Sqrl_Status status, int percent, void* data);
-typedef int (sqrl_ask_fn)(const char *question, size_t question_len);
 
 /**
 \defgroup entropy Entropy Harvester
@@ -199,6 +198,9 @@ int 		sqrl_storage_save_to_file(
 				const char *filename, 
 				Sqrl_Export etype,
 				Sqrl_Encoding encoding );
+void 		sqrl_storage_unique_id( 
+				Sqrl_Storage storage, 
+				char *unique_id );
 /** @} */ // endgroup storage
 
 /** \defgroup user User Identities
@@ -211,19 +213,20 @@ typedef void* Sqrl_User;
 uint16_t sqrl_user_check_flags( Sqrl_User u, uint16_t flags );
 void sqrl_user_clear_flags( Sqrl_User u, uint16_t flags );
 Sqrl_User sqrl_user_create();
-Sqrl_User sqrl_user_destroy( Sqrl_User user );
+Sqrl_User sqrl_user_create_from_file( const char *filename );
+Sqrl_User sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len );
+bool sqrl_user_save( Sqrl_User u, const char *filename, Sqrl_Export exportType, Sqrl_Encoding encoding );
+char *sqrl_user_save_to_buffer( Sqrl_User u, size_t *buffer_len, Sqrl_Export exportType, Sqrl_Encoding encoding );
+Sqrl_User sqrl_user_release( Sqrl_User user );
+bool sqrl_user_hold( Sqrl_User user );
 uint8_t sqrl_user_get_enscrypt_seconds( Sqrl_User u );
 uint8_t sqrl_user_get_hint_length( Sqrl_User u );
 char *sqrl_user_get_rescue_code( Sqrl_User u );
 uint16_t sqrl_user_get_timeout_minutes( Sqrl_User u );
-void sqrl_user_hintlock( Sqrl_User user, 
-				sqrl_status_fn callback, 
-				void *callback_data );
+void sqrl_user_hintlock( Sqrl_User user );
 void sqrl_user_hintunlock( Sqrl_User user, 
 				char *hint, 
-				size_t len, 
-				sqrl_status_fn callback, 
-				void *callback_data );
+				size_t len );
 bool sqrl_user_is_hintlocked( Sqrl_User user );
 void sqrl_user_set_enscrypt_seconds( Sqrl_User u, uint8_t seconds );
 void sqrl_user_set_flags( Sqrl_User u, uint16_t flags );
@@ -231,10 +234,136 @@ void sqrl_user_set_hint_length( Sqrl_User u, uint8_t length );
 bool sqrl_user_set_password( Sqrl_User u, char *password, size_t password_len );
 bool sqrl_user_set_rescue_code( Sqrl_User u, char *rc );
 void sqrl_user_set_timeout_minutes( Sqrl_User u, uint16_t minutes );
-
+bool sqrl_user_unique_id( Sqrl_User u, char *buffer );
+bool sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id );
 
 /** @} */ // endgroup user
 
+/**
+\defgroup URL SQRL URL Functions
+
+@{ */
+
+/**
+A structure to hold information about a parsed SQRL URL
+*/
+typedef struct Sqrl_Url {
+	/** The entire SQRL URL */
+	char *challenge;
+	/** The domain + extension */
+	char *host;
+	/** Internal use */
+	char *prefix;
+	/** the https url */
+	char *url;
+	/** Internal use */
+	char *scheme;
+} Sqrl_Url;
+
+Sqrl_Url*	sqrl_url_create_copy( Sqrl_Url *original );
+Sqrl_Url*	sqrl_url_parse(const char *);
+Sqrl_Url*	sqrl_url_free(struct Sqrl_Url *);
+
+/** @} */ // endgroup URL
+
+
+typedef enum {
+	SQRL_BUTTON_CANCEL = 0,
+	SQRL_BUTTON_FIRST  = 1,
+	SQRL_BUTTON_SECOND = 2,
+	SQRL_BUTTON_OK     = 3
+} Sqrl_Button;
+
+typedef enum {
+	SQRL_CREDENTIAL_PASSWORD,
+	SQRL_CREDENTIAL_HINT,
+	SQRL_CREDENTIAL_RESCUE_CODE
+} Sqrl_Credential_Type;
+
+typedef enum {
+	SQRL_TRANSACTION_UNKNOWN = 0,
+	SQRL_TRANSACTION_IDENT,
+	SQRL_TRANSACTION_DISABLE,
+	SQRL_TRANSACTION_ENABLE,
+	SQRL_TRANSACTION_REMOVE,
+	SQRL_TRANSACTION_SAVE_IDENTITY,
+	SQRL_TRANSACTION_RECOVER_IDENTITY,
+	SQRL_TRANSACTION_REKEY_IDENTITY,
+	SQRL_TRANSACTION_UNLOCK_IDENTITY,
+	SQRL_TRANSACTION_LOCK_IDENTITY,
+	SQRL_TRANSACTION_LOAD_IDENTITY
+} Sqrl_Transaction_Type;
+
+typedef struct Sqrl_Client_Transaction {
+	Sqrl_Transaction_Type type;
+	Sqrl_Status status;
+	Sqrl_User *user;
+	Sqrl_Url *url;
+	bool altIdentitySpecified;
+	char *altIdentity;
+	Sqrl_Export exportType;
+	Sqrl_Encoding encodingType;
+} Sqrl_Client_Transaction;
+
+typedef void (sqrl_ccb_select_user)(
+	Sqrl_Client_Transaction *transaction);
+typedef void (sqrl_ccb_select_alternate_identity)(
+	Sqrl_Client_Transaction *transaction);
+typedef bool (sqrl_ccb_authentication_required)(
+	Sqrl_Client_Transaction *transaction,
+	Sqrl_Credential_Type credentialType );
+typedef void (sqrl_ccb_ask)(
+	Sqrl_Client_Transaction *transaction,
+	const char *message, size_t message_len,
+	const char *firstButton, size_t firstButton_len,
+	const char *secondButton, size_t secondButton_len );
+typedef void (sqrl_ccb_send)(
+	Sqrl_Client_Transaction *transaction,
+	const char *url, size_t url_len,
+	const char *payload, size_t payload_len );
+typedef int (sqrl_ccb_progress)(
+	Sqrl_Client_Transaction *transaction,
+	int progress );
+typedef void (sqrl_ccb_save_suggested)(
+	Sqrl_User *user);
+
+typedef struct Sqrl_Client_Callbacks {
+	sqrl_ccb_select_user *onSelectUser;
+	sqrl_ccb_select_alternate_identity *onSelectAlternateIdentity;
+	sqrl_ccb_authentication_required *onAuthenticationRequired;
+	sqrl_ccb_ask *onAsk;
+	sqrl_ccb_send *onSend;
+	sqrl_ccb_progress *onProgress;
+	sqrl_ccb_save_suggested *onSaveSuggested;
+} Sqrl_Client_Callbacks;
+void sqrl_client_get_callbacks( Sqrl_Client_Callbacks *callbacks );
+void sqrl_client_set_callbacks( Sqrl_Client_Callbacks *callbacks );
+
+Sqrl_Client_Transaction *sqrl_client_begin_transaction(
+	Sqrl_Transaction_Type type,
+	const char *link, size_t link_len );
+Sqrl_Client_Transaction *sqrl_client_end_transaction(
+	Sqrl_Client_Transaction *transaction );
+void sqrl_client_answer( 
+	Sqrl_Client_Transaction *transaction,
+	Sqrl_Button answer );
+void sqrl_client_receive( 
+	Sqrl_Client_Transaction *transaction,
+	const char *payload, size_t payload_len );
+void sqrl_client_authenticate(
+	Sqrl_Client_Transaction *transaction,
+	Sqrl_Credential_Type credentialType,
+	char *credential, size_t credentialLength );
+void sqrl_client_transaction_rescue(
+	Sqrl_Client_Transaction *transaction,
+	const char *rescue_code );
+void sqrl_client_transaction_set_user(
+	Sqrl_Client_Transaction *transaction,
+	Sqrl_User user );
+void sqrl_client_transaction_set_alternate_identity(
+	Sqrl_Client_Transaction *transaction,
+	const char *altIdentity );
+Sqrl_User sqrl_get_user( const char *unique_id );
 
 
 #endif // SQRL_CLIENT_H_INCLUDED

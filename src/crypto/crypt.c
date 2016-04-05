@@ -85,7 +85,7 @@ DONE:
     if (escrypt_free_local(&local)) {
         return -1; /* LCOV_EXCL_LINE */
     }
-    return retVal == 0 ? endTime : -1;
+    return retVal == 0 ? (int)endTime : -1;
 }
 
 int sqrl_enscrypt_ms( 

@@ -60,10 +60,6 @@ bool sul_block_2( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 		return false;
 	}
 	
-	relock = sqrl_user_is_memlocked( (Sqrl_User)user );
-	if( relock ) {
-		sqrl_user_memunlock( u );
-	}
 	if( !su_init_t2( u, &sctx, block, false )) {
 		goto ERROR;
 	}
@@ -93,9 +89,6 @@ ERROR:
 
 DONE:
 	sodium_memzero( user->keys->scratch, sctx.text_len + SQRL_KEY_SIZE );
-	if( relock ) {
-		sqrl_user_memlock( u );
-	}
 	return retVal;
 
 }
@@ -111,10 +104,6 @@ bool sus_block_2( Sqrl_User u, Sqrl_Storage storage, Sqrl_Block *block, struct s
 		return false;
 	}
 	
-	relock = sqrl_user_is_memlocked( (Sqrl_User)user );
-	if( relock ) {
-		sqrl_user_memunlock( u );
-	}
 	if( !su_init_t2( u, &sctx, block, true )) {
 		goto ERROR;
 	}
@@ -132,6 +121,13 @@ bool sus_block_2( Sqrl_User u, Sqrl_Storage storage, Sqrl_Block *block, struct s
 	if( !sqrl_crypt_gcm( &sctx, key )) {
 		goto ERROR;
 	}
+	// Save unique id
+	UT_string *str;
+	utstring_new( str );
+	sqrl_b64u_encode( str, sctx.cipher_text, SQRL_KEY_SIZE );
+	strcpy( user->unique_id, utstring_body(str));
+	utstring_free( str );
+
 	goto DONE;
 
 ERROR:
@@ -139,9 +135,6 @@ ERROR:
 
 DONE:
 	sodium_memzero( user->keys->scratch, sctx.text_len + SQRL_KEY_SIZE );
-	if( relock ) {
-		sqrl_user_memlock( u );
-	}
 	return retVal;
 }
 
@@ -162,10 +155,6 @@ bool sul_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	sctx.text_len = SQRL_KEY_SIZE * 4;
 	sctx.cipher_text = block->data + 4;
 	sctx.tag = sctx.cipher_text + (SQRL_KEY_SIZE * 4);
-	bool relock = sqrl_user_is_memlocked( (Sqrl_User)user );
-	if( relock ) {
-		sqrl_user_memunlock( (Sqrl_User)user );
-	}
 	sctx.plain_text = user->keys->scratch;
 	sctx.iv = sctx.plain_text + sctx.text_len;
 	memset( sctx.iv, 0, 12 );
@@ -190,9 +179,6 @@ ERROR:
 
 DONE:
 	sodium_memzero( user->keys->scratch, sctx.text_len );
-	if( relock ) {
-		sqrl_user_memlock( u );
-	}
 	return retVal;
 
 }
@@ -212,11 +198,6 @@ bool sus_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	sctx.text_len = SQRL_KEY_SIZE * 4;
 	sctx.cipher_text = block->data + 4;
 	sctx.tag = sctx.cipher_text + (SQRL_KEY_SIZE * 4);
-	sqrl_user_ensure_keys_allocated( (Sqrl_User)user );
-	bool relock = sqrl_user_is_memlocked( (Sqrl_User)user );
-	if( relock ) {
-		sqrl_user_memunlock( (Sqrl_User)user );
-	}
 	sctx.plain_text = user->keys->scratch;
 
 	int pt_offset = 0;
@@ -246,21 +227,19 @@ ERROR:
 
 DONE:
 	sodium_memzero( user->keys->scratch, sctx.text_len );
-	if( relock ) {
-		sqrl_user_memlock( u );
-	}
 	return retVal;
 }
 
 bool sul_block_1( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
 {
-	SQRL_CAST_USER(user,u);
+	WITH_USER(user,u);
+	if( !user ) return false;
 	bool retVal = true;
 	Sqrl_Crypt_Context sctx;
 	uint8_t *keyPointer;
 
 	if( sqrl_block_read_int16( block ) != 125 ) {
-		return false;
+		goto ERROR;
 	}
 	
 	block->cur = 0;
@@ -270,7 +249,7 @@ bool sul_block_1( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	sqrl_block_seek( block, 4 );
 	sctx.add_len = sqrl_block_read_int16( block );
 	if( sctx.add_len != 45 ) {
-		return false;
+		goto ERROR;
 	}
 	// IV and Salt
 	sctx.iv = block->data + block->cur;
@@ -292,11 +271,6 @@ bool sul_block_1( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	// Verification Tag
 	sctx.tag = sctx.cipher_text + sctx.text_len;
 	// Plain Text
-	sqrl_user_ensure_keys_allocated( (Sqrl_User)user );
-	bool relock = sqrl_user_is_memlocked( (Sqrl_User)user );
-	if( relock ) {
-		sqrl_user_memunlock( (Sqrl_User)user );
-	}
 	sctx.plain_text = user->keys->scratch;
 
 	// Iteration Count
@@ -306,7 +280,7 @@ bool sul_block_1( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 			&sctx, 
 			key, 
 			user->keys->password, 
-			user->keys->password_len, 
+			user->keys->password_len,
 			sqrl_user_enscrypt_callback, 
 			&cbdata ) > 0 ) {
 		if( sqrl_crypt_gcm( &sctx, key )) {
@@ -323,17 +297,20 @@ ERROR:
 
 DONE:
 	sodium_memzero( user->keys->scratch, sctx.text_len + SQRL_KEY_SIZE );
-	if( relock ) {
-		sqrl_user_memlock( (Sqrl_User) user );
-	}
+	END_WITH_USER(user);
 	return retVal;
 }
 
 bool sus_block_1( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
 {
-	SQRL_CAST_USER(user,u);
+	WITH_USER(user,u);
+	if( !user ) return false;
 	bool retVal = true;
 	Sqrl_Crypt_Context sctx;
+	if( !sqrl_client_require_password( cbdata.transaction )) {
+		END_WITH_USER(user);
+		return false;
+	}
 	uint8_t *keyPointer;
 	sqrl_block_init( block, 1, 125 );
 	// Block Length
@@ -364,7 +341,6 @@ bool sus_block_1( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	// Verification Tag
 	sctx.tag = block->data + block->cur + sctx.text_len;
 	// Plain Text
-	RELOCK_START(user,relock);
 	sctx.plain_text = user->keys->scratch;
 	if( sqrl_user_has_key( (Sqrl_User)user, KEY_MK )) {
 		keyPointer = sqrl_user_key( (Sqrl_User)user, KEY_MK );
@@ -382,7 +358,7 @@ bool sus_block_1( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	// Iteration Count
 	uint8_t *key = sctx.plain_text + sctx.text_len;
 	sctx.flags = SQRL_ENCRYPT | SQRL_MILLIS;
-	sctx.count = user->options.enscryptSeconds * 100;
+	sctx.count = user->options.enscryptSeconds * SQRL_MILLIS_PER_SECOND;
 	uint32_t iterations = sqrl_crypt_enscrypt( &sctx, key, user->keys->password, user->keys->password_len, sqrl_user_enscrypt_callback, &cbdata );
 	sqrl_block_seek( block, 35 );
 	sqrl_block_write_int32( block, sctx.count );
@@ -399,44 +375,44 @@ ERROR:
 
 DONE:
 	sodium_memzero( user->keys->scratch, sctx.text_len + SQRL_KEY_SIZE );
-	RELOCK_END(user,relock);
+	END_WITH_USER(user);
 	return retVal;
 }
 
 Sqrl_Status sqrl_user_load_with_rescue_code(
 	Sqrl_User u,
-	Sqrl_Storage storage,
 	sqrl_status_fn callback,
 	void *callback_data )
 {
-	SQRL_CAST_USER(user,u);
+	WITH_USER(user,u);
+	if( !user ) return SQRL_STATUS_INVALID_PARAMETERS;
+		if( user->storage == NULL ) {
+		return SQRL_STATUS_NO_ID;
+	}
+
 	struct sqrl_user_callback_data cbdata;
 	Sqrl_Block block;
 	sqrl_block_clear( &block );
 
 	Sqrl_Status retVal = SQRL_STATUS_OK;
 
-	if( !storage || !u ) {
-		retVal = SQRL_STATUS_INVALID_PARAMETERS;
-		goto ERROR;
-	}
-	RELOCK_START(user,relock);
-
-	cbdata.cbfn = callback;
-	cbdata.cbdata = callback_data;
+	Sqrl_Client_Transaction transaction;
+	transaction.type = SQRL_TRANSACTION_RECOVER_IDENTITY;
+	transaction.user = u;
+	cbdata.transaction = &transaction;
 	cbdata.adder = 0;
 	cbdata.divisor = 1;
 
-	if( sqrl_storage_block_exists( storage, SQRL_BLOCK_RESCUE ) &&
-		sqrl_storage_block_get( storage, &block, SQRL_BLOCK_RESCUE )) 
+	if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_RESCUE ) &&
+		sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_RESCUE )) 
 	{
 		if( ! sul_block_2( u, &block, cbdata )) {
 			goto ERROR;
 		}
 		sqrl_block_free( &block );
 		sqrl_user_regen_keys( u );
-		if( sqrl_storage_block_exists( storage, SQRL_BLOCK_PREVIOUS ) &&
-			sqrl_storage_block_get( storage, &block, SQRL_BLOCK_PREVIOUS ))
+		if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_PREVIOUS ) &&
+			sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_PREVIOUS ))
 		{
 			if( ! sul_block_3( u, &block, cbdata )) {
 				goto ERROR;
@@ -454,44 +430,43 @@ ERROR:
 	}
 
 DONE:
-	RELOCK_END(user,relock);
+	END_WITH_USER(user);
 	sqrl_block_free( &block );
 	return retVal;
 }
 
 Sqrl_Status sqrl_user_load_with_password(
 	Sqrl_User u,
-	Sqrl_Storage storage,
 	sqrl_status_fn callback,
 	void *callback_data )
 {
-	SQRL_CAST_USER(user,u);
+	WITH_USER(user,u);
+	if( !user ) return SQRL_STATUS_INVALID_PARAMETERS;
+	if( user->storage == NULL ) {
+		return SQRL_STATUS_NO_ID;
+	}
+
 	struct sqrl_user_callback_data cbdata;
 	Sqrl_Block block;
 	sqrl_block_clear( &block );
 
 	Sqrl_Status retVal = SQRL_STATUS_OK;
-
-	if( !storage || !u ) {
-		retVal = SQRL_STATUS_INVALID_PARAMETERS;
-		goto ERROR;
-	}
-	RELOCK_START(user,relock);
-
-	cbdata.cbfn = callback;
-	cbdata.cbdata = callback_data;
+	Sqrl_Client_Transaction transaction;
+	transaction.type = SQRL_TRANSACTION_LOAD_IDENTITY;
+	transaction.user = u;
+	cbdata.transaction = &transaction;
 	cbdata.adder = 0;
 	cbdata.divisor = 1;
 
-	if( sqrl_storage_block_exists( storage, SQRL_BLOCK_USER ) &&
-		sqrl_storage_block_get( storage, &block, SQRL_BLOCK_USER )) 
+	if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_USER ) &&
+		sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_USER )) 
 	{
 		if( ! sul_block_1( u, &block, cbdata )) {
 			goto ERROR;
 		}
 		sqrl_block_free( &block );
-		if( sqrl_storage_block_exists( storage, SQRL_BLOCK_PREVIOUS ) &&
-			sqrl_storage_block_get( storage, &block, SQRL_BLOCK_PREVIOUS ))
+		if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_PREVIOUS ) &&
+			sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_PREVIOUS ))
 		{
 			if( ! sul_block_3( u, &block, cbdata )) {
 				goto ERROR;
@@ -510,18 +485,22 @@ ERROR:
 	}
 
 DONE:
-	RELOCK_END(user,relock);
+	END_WITH_USER(user);
 	sqrl_block_free( &block );
 	return retVal;
 }
 
-Sqrl_Status sqrl_user_save(
+Sqrl_Status sqrl_user_update_storage(
 	Sqrl_User u, 
-	Sqrl_Storage storage, 
 	sqrl_status_fn callback, 
 	void *callback_data ) 
 {
-	SQRL_CAST_USER(user,u);
+	WITH_USER(user,u);
+	if( !user ) return SQRL_STATUS_INVALID_PARAMETERS;
+	if( user->storage == NULL ) {
+		user->storage = sqrl_storage_create();
+	}
+
 	struct sqrl_user_callback_data cbdata;
 	Sqrl_Block block;
 	sqrl_block_clear( &block );
@@ -529,48 +508,268 @@ Sqrl_Status sqrl_user_save(
 
 	Sqrl_Status retVal = SQRL_STATUS_OK;
 
-	if( !storage || !u ) {
-		retVal = SQRL_STATUS_INVALID_PARAMETERS;
-		goto ERROR;
-	}
-	RELOCK_START(user,relock);
-
-	cbdata.cbfn = callback;
-	cbdata.cbdata = callback_data;
+	Sqrl_Client_Transaction transaction;
+	transaction.type = SQRL_TRANSACTION_SAVE_IDENTITY;
+	transaction.user = u;
+	cbdata.transaction = &transaction;
 	cbdata.adder = 0;
 	cbdata.divisor = 1;
 
 	if( (user->flags & USER_FLAG_T1_CHANGED) == USER_FLAG_T1_CHANGED ||
-		! sqrl_storage_block_exists( storage, SQRL_BLOCK_USER )) 
+		! sqrl_storage_block_exists( user->storage, SQRL_BLOCK_USER )) 
 	{
 		if( sus_block_1( u, &block, cbdata )) {
-			sqrl_storage_block_put( storage, &block );
+			sqrl_storage_block_put( user->storage, &block );
 		}
 		sqrl_block_free( &block );
 	}
 
 	if( (user->flags & USER_FLAG_T2_CHANGED) == USER_FLAG_T2_CHANGED ||
-		! sqrl_storage_block_exists( storage, SQRL_BLOCK_RESCUE ))
+		! sqrl_storage_block_exists( user->storage, SQRL_BLOCK_RESCUE ))
 	{
-		if( sus_block_2( u, storage, &block, cbdata )) {
-			sqrl_storage_block_put( storage, &block );
+		if( sus_block_2( u, user->storage, &block, cbdata )) {
+			sqrl_storage_block_put( user->storage, &block );
 		}
 		sqrl_block_free( &block );
 	}
 
 	if( (user->flags & USER_FLAG_T2_CHANGED) == USER_FLAG_T2_CHANGED ||
-		! sqrl_storage_block_exists( storage, SQRL_BLOCK_PREVIOUS ))
+		! sqrl_storage_block_exists( user->storage, SQRL_BLOCK_PREVIOUS ))
 	{
 		if( sus_block_3( u, &block, cbdata )) {
-			sqrl_storage_block_put( storage, &block );
+			sqrl_storage_block_put( user->storage, &block );
 		}
 		sqrl_block_free( &block );
 	}
-ERROR:
-	retVal |= SQRL_STATUS_ERROR;
 
 DONE:
-	RELOCK_END(user,relock);
+	END_WITH_USER(user);
 	return retVal;
 }
+
+static void _suc_load_unique_id( struct Sqrl_User *user )
+{
+	if( !user ) return;
+	sqrl_storage_unique_id( user->storage, user->unique_id );
+}
+
+Sqrl_User sqrl_user_create_from_file( const char *filename )
+{
+	Sqrl_User u = NULL;
+	Sqrl_Storage storage = sqrl_storage_create();
+	if( !sqrl_storage_load_from_file( storage, filename )) {
+		goto ERROR;
+	}
+	u = sqrl_user_create();
+	WITH_USER(user,u);
+	if( user == NULL ) {
+		goto ERROR;
+	}
+	user->filename = malloc( strlen( filename ) + 1 );
+	if( !user->filename ) {
+		END_WITH_USER(user);
+		goto ERROR;
+	}
+	strcpy( user->filename, filename );
+	user->storage = storage;
+	_suc_load_unique_id( user );
+	END_WITH_USER(user);
+	return u;
+
+ERROR:
+	if( user ) {
+		END_WITH_USER(user);
+		sqrl_user_release(u);
+	}
+	if( storage ) {
+		sqrl_storage_destroy(storage);
+	}
+	return NULL;
+}
+
+Sqrl_User sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len )
+{
+	Sqrl_User u = NULL;
+	Sqrl_Storage storage = sqrl_storage_create();
+	UT_string *buf;
+	utstring_new( buf );
+	utstring_printf( buf, buffer, buffer_len );
+	if( sqrl_storage_load_from_buffer( storage, buf )) {
+		u = sqrl_user_create();
+		WITH_USER(user,u);
+		user->storage = storage;
+		_suc_load_unique_id( user );
+		END_WITH_USER(user);
+	} else {
+		storage = sqrl_storage_destroy( storage );
+	}
+	return u;
+}
+
+bool sqrl_user_save( Sqrl_User u, const char *filename, Sqrl_Export exportType, Sqrl_Encoding encoding )
+{
+	if( filename == NULL ) return false;
+	WITH_USER(user,u);
+	if( user == NULL ) return false;
+	if( SQRL_STATUS_OK == sqrl_user_update_storage( u, NULL, NULL )) {
+		if( sqrl_storage_save_to_file( user->storage, filename, exportType, encoding ) > 0 ) {
+			END_WITH_USER(user);
+			return true;
+		}
+	}
+	END_WITH_USER(user);
+	return false;
+}
+
+char *sqrl_user_save_to_buffer( Sqrl_User u, size_t *buffer_len, Sqrl_Export exportType, Sqrl_Encoding encoding )
+{
+	WITH_USER(user,u);
+	if( !user ) return NULL;
+	char *retVal = NULL;
+	UT_string *buf;
+	utstring_new( buf );
+	Sqrl_Client_Transaction transaction;
+	transaction.type = SQRL_TRANSACTION_SAVE_IDENTITY;
+	transaction.user = u;
+	struct sqrl_user_callback_data cbdata;
+	cbdata.transaction = &transaction;
+	cbdata.adder = 0;
+	cbdata.divisor = 1;
+
+	if( SQRL_STATUS_OK == sqrl_user_update_storage( u, NULL, NULL )) {
+		if( sqrl_storage_save_to_buffer( user->storage, buf, exportType, encoding )) {
+			retVal = malloc( utstring_len(buf) + 1 );
+			if( !retVal ) goto ERROR;
+			memcpy( retVal, utstring_body(buf), utstring_len(buf));
+			retVal[utstring_len(buf)] = 0x00;
+			if( buffer_len ) {
+				*buffer_len = utstring_len(buf);
+			}
+			goto DONE;
+		}
+	}
+
+ERROR:
+	if( retVal ) {
+		free( retVal );
+		retVal = NULL;
+	}
+
+DONE:
+	if( buf ) {
+		utstring_free(buf);
+	}
+	END_WITH_USER(user);
+	return retVal;
+}
+
+bool sqrl_user_try_load_password( Sqrl_User u, bool retry )
+{
+	printf( "sqrl_user_try_load_password\n" );
+	WITH_USER(user,u);
+	if( !user ) return false;
+	bool retVal = false;
+	Sqrl_Block block;
+	Sqrl_Client_Transaction transaction;
+	transaction.type = SQRL_TRANSACTION_LOAD_IDENTITY;
+	transaction.user = u;
+	struct sqrl_user_callback_data cbdata;
+	cbdata.transaction = &transaction;
+	cbdata.adder = 0;
+	cbdata.divisor = 1;
+LOOP:
+	if( !sqrl_storage_block_exists( user->storage, SQRL_BLOCK_USER )) {
+		printf( "No PW block.  Trying RC block.\n" );
+		retVal = sqrl_user_try_load_rescue( u, retry );
+		goto DONE;
+	}
+	if( user->keys->password_len == 0 ) {
+		printf( "PWL == 0\n" );
+		goto NEEDAUTH;
+	}
+
+	memset( &block, 0, sizeof( Sqrl_Block ));
+	sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_USER );
+	printf( "sul_block_1\n" );
+	if( ! sul_block_1( u, &block, cbdata )) {
+		sqrl_block_free( &block );
+		printf( "sul_block_1 failed\n" );
+		goto NEEDAUTH;
+	}
+	sqrl_block_free( &block );
+	sqrl_user_regen_keys( u );
+	if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_PREVIOUS ) &&
+		sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_PREVIOUS ))
+	{
+		printf( "sul_block_3\n" );
+		sul_block_3( u, &block, cbdata );
+		sqrl_block_free( &block );
+	}
+	retVal = true;
+	goto DONE;
+
+NEEDAUTH:
+	if( retry ) {
+		retry = false;
+		sqrl_client_call_authentication_required( &transaction, SQRL_CREDENTIAL_PASSWORD );
+		goto LOOP;
+	}
+
+DONE:
+	END_WITH_USER(user);
+	printf( "/sqrl_user_try_load_password\n" );
+	return retVal;
+}
+
+bool sqrl_user_try_load_rescue( Sqrl_User u, bool retry )
+{
+	printf( "sqrl_user_try_load_rescue\n" );
+	WITH_USER(user,u);
+	if( !user ) return false;
+	bool retVal = false;
+	Sqrl_Client_Transaction transaction;
+	transaction.type = SQRL_TRANSACTION_RECOVER_IDENTITY;
+	transaction.user = u;
+	struct sqrl_user_callback_data cbdata;
+	cbdata.transaction = &transaction;
+	cbdata.adder = 0;
+	cbdata.divisor = 1;
+
+LOOP:
+	if( !sqrl_storage_block_exists( user->storage, SQRL_BLOCK_RESCUE )) {
+		goto DONE;
+	}
+	if( !sqrl_user_has_key( u, KEY_RESCUE_CODE ) ) {
+		goto NEEDAUTH;
+	}
+
+	Sqrl_Block block;
+	memset( &block, 0, sizeof( Sqrl_Block ));
+	sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_RESCUE );
+	if( ! sul_block_2( u, &block, cbdata )) {
+		sqrl_block_free( &block );
+		goto NEEDAUTH;
+	}
+	sqrl_block_free( &block );
+	sqrl_user_regen_keys( u );
+	if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_PREVIOUS ) &&
+		sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_PREVIOUS ))
+	{
+		sul_block_3( u, &block, cbdata );
+		sqrl_block_free( &block );
+	}
+	goto DONE;
+
+NEEDAUTH:
+	if( retry ) {
+		retry = false;
+		sqrl_client_call_authentication_required( &transaction, SQRL_CREDENTIAL_RESCUE_CODE );
+		goto LOOP;
+	}
+
+DONE:
+	END_WITH_USER(user);
+	return retVal;
+}
+
 

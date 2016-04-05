@@ -14,7 +14,7 @@ int main()
 	sqrl_init();
 	bool bError = false;
 	Sqrl_Storage storage;
-	Sqrl_User user = sqrl_user_create();;
+	Sqrl_User user = sqrl_user_create_from_file( "test1.sqrl" );
 	
 	storage = sqrl_storage_create();
 	sqrl_storage_load_from_file( storage, "test1.sqrl" );
@@ -25,17 +25,17 @@ int main()
 		goto ERROR;
 	}
 	sqrl_user_set_password( user, "the password", 12 );
-	if( SQRL_STATUS_OK != sqrl_user_load_with_password( user, storage, NULL, NULL )) {
+	if( SQRL_STATUS_OK != sqrl_user_load_with_password( user, NULL, NULL )) {
 		printf( "Load failed\n" );
 		goto ERROR;
-	}
+	} 
 	sqrl_user_set_password( user, "asdf", 4 );
-	sqrl_user_save( user, storage, NULL, NULL );
-	user = sqrl_user_destroy( user );
+	char *buf = sqrl_user_save_to_buffer( user, NULL, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+	user = sqrl_user_release( user );
 	user = NULL; // Make sure...
-	user = sqrl_user_create();
+	user = sqrl_user_create_from_buffer( buf, strlen(buf));
 	sqrl_user_set_password( user, "asdf", 4 );
-	if( SQRL_STATUS_OK != sqrl_user_load_with_password( user, storage, NULL, NULL )) {
+	if( SQRL_STATUS_OK != sqrl_user_load_with_password( user, NULL, NULL )) {
 		printf( "New Password failed\n" );
 		goto ERROR;
 	}
@@ -48,7 +48,7 @@ DONE:
 	if( storage ) {
 		storage = sqrl_storage_destroy( storage );
 	}
-	user = sqrl_user_destroy( user );
+	user = sqrl_user_release( user );
 	if( bError ) {
 		printf( "FAIL\n" );
 		exit(1);

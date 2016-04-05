@@ -29,7 +29,7 @@ For more details, see the LICENSE file included with this package.
 
 static bool sqrl_is_initialized = false;
 
-SqrlMutex * sqrlMutexNew(int ref)
+SqrlMutex sqrl_mutex_create()
 {
 	#ifdef _WIN32
 	CRITICAL_SECTION *cs = calloc( 1, sizeof( CRITICAL_SECTION ));
@@ -42,7 +42,7 @@ SqrlMutex * sqrlMutexNew(int ref)
 	#endif
 }
 
-void sqrlMutexRelease( SqrlMutex *sm )
+void sqrl_mutex_destroy( SqrlMutex sm )
 {
 	#ifdef _WIN32
 	DeleteCriticalSection( (CRITICAL_SECTION*) sm );
@@ -51,17 +51,20 @@ void sqrlMutexRelease( SqrlMutex *sm )
 	#endif
 }
 
-void sqrlMutexEnter( SqrlMutex *sm )
+bool sqrl_mutex_enter( SqrlMutex sm )
 {
-	#ifdef _WIN32
-	EnterCriticalSection( (CRITICAL_SECTION*)sm );
-	#else
-	pthread_mutex_lock( (pthread_mutex_t*)sm );
-	#endif
-	//DEBUG_PRINT( "Mutex Entered\n" );
+	if( sm != NULL ) {
+		#ifdef _WIN32
+		EnterCriticalSection( (CRITICAL_SECTION*)sm );
+		#else
+		pthread_mutex_lock( (pthread_mutex_t*)sm );
+		#endif
+		return true;
+	}
+	return false;
 }
 
-void sqrlMutexLeave( SqrlMutex *sm )
+void sqrl_mutex_leave( SqrlMutex sm )
 {
 	#ifdef _WIN32
 	LeaveCriticalSection( (CRITICAL_SECTION*)sm );
@@ -71,6 +74,8 @@ void sqrlMutexLeave( SqrlMutex *sm )
 	//DEBUG_PRINT( "Mutex Left\n" );
 }
 
+struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
+
 /**
  * Initializes the SQRL library.  Must be called once, before any SQRL functions are used.
  */
@@ -78,18 +83,9 @@ int sqrl_init()
 {
 	if( !sqrl_is_initialized ) {
 		sqrl_is_initialized = true;
-		sqrlMutexMethods.xGlobalInit = NULL;
-		sqrlMutexMethods.xGlobalRelease = NULL;
-		sqrlMutexMethods.xNew = sqrlMutexNew;
-		sqrlMutexMethods.xRelease = sqrlMutexRelease;
-		sqrlMutexMethods.xEnter = sqrlMutexEnter;
-		sqrlMutexMethods.xTryEnter = NULL;
-		sqrlMutexMethods.xLeave = sqrlMutexLeave;
+		SQRL_GLOBAL_MUTICES.user = sqrl_mutex_create();
 		#ifdef DEBUG
 		DEBUG_PRINTF( DEBUG_INFO, "libsqrl %s\n", SQRL_LIB_VERSION );
-		#ifdef SQRL_DEBUG_KEYS
-		sqrl_init_key_count();
-		#endif
 		#endif
 		gcm_initialize();
 		return sodium_init();
@@ -118,6 +114,15 @@ void bin2rc( char *buf, uint8_t *bin )
 	buf[j] = 0;
 }
 
+void sqrl_lcstr( char *str )
+{
+	int i;
+	for( i = 0; str[i] != 0; i++ ) {
+		if( str[i] > 64 && str[i] < 91 ) {
+			str[i] += 32;
+		}
+	}
+}
 
 void printhex( char *label, uint8_t *bin, size_t bin_len )
 {

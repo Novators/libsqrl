@@ -464,3 +464,29 @@ int sqrl_storage_save_to_file( Sqrl_Storage storage, const char *filename, Sqrl_
 	utstring_free( buf );
 	return retVal;
 }
+
+DLL_PUBLIC
+void sqrl_storage_unique_id( Sqrl_Storage storage, char *unique_id )
+{
+	if( !unique_id ) return;
+	Sqrl_Block block;
+	memset( &block, 0, sizeof( Sqrl_Block ));
+	if( !storage ) goto ERROR;
+	if( sqrl_storage_block_exists( storage, SQRL_BLOCK_RESCUE &&
+		sqrl_storage_block_get( storage, &block, SQRL_BLOCK_RESCUE )))
+	{
+		if( block.blockLength == 73 ) {
+			UT_string *buf;
+			utstring_new( buf );
+			sqrl_b64u_encode( buf, block.data + 25, SQRL_KEY_SIZE );
+			strcpy( unique_id, utstring_body( buf ));
+			utstring_free( buf );
+			goto DONE;
+		}
+	}
+
+ERROR:
+	memset( unique_id, 0, SQRL_UNIQUE_ID_LENGTH + 1 );
+DONE:
+	sqrl_block_free( &block );
+}

@@ -14,31 +14,107 @@ For more details, see the LICENSE file included with this package.
 static int assertions_passed = 0;
 #define CHAR_PER_LINE 72
 
-#define ASSERT(m,a) if((a)) { assertions_passed++; } else { printf( "ASSERTION FAILED: %s\n", m ); goto ERROR; }
+char myPassword[] = "the password";
+size_t myPasswordLength = 12;
+char myRescueCode[SQRL_RESCUE_CODE_LENGTH+1];
+
+#define ASSERT(m,a) if((a)) { assertions_passed++; printf( "  PASS: %s\n", m); } else { printf( "  FAIL: %s\n", m ); goto ERROR; }
+
+bool onAuthenticationRequired(
+	Sqrl_Client_Transaction *transaction,
+	Sqrl_Credential_Type credentialType )
+{
+	char *cred = NULL;
+	uint8_t len = 0;
+	switch( credentialType ) {
+	case SQRL_CREDENTIAL_PASSWORD:
+		printf( "   REQ: Password\n" );
+		cred = malloc( myPasswordLength + 1 );
+		strcpy( cred, myPassword );
+		break;
+	case SQRL_CREDENTIAL_RESCUE_CODE:
+		printf( "   REQ: Rescue Code\n" );
+		cred = malloc( SQRL_RESCUE_CODE_LENGTH + 1 );
+		strcpy( cred, myRescueCode );
+		break;
+	case SQRL_CREDENTIAL_HINT:
+		printf( "   REQ: Hint\n" );
+		len = sqrl_user_get_hint_length( transaction->user );
+		cred = malloc( len + 1 );
+		strncpy( cred, myPassword, len );
+		break;
+	default:
+		return false;
+	}
+	sqrl_client_authenticate( transaction, credentialType, cred, strlen( cred ));
+	if( cred ) {
+		free( cred );
+	}
+	return true;
+}
+
+char transactionType[11][10] = {
+	"UNKNWN",
+	"IDENT",
+	"DISABL",
+	"ENABLE",
+	"REMOVE",
+	"SAVE",
+	"RECOVR",
+	"REKEY",
+	"UNLOCK",
+	"LOCK",
+	"LOAD"
+};
+bool showingProgress = false;
+int nextProgress = 0;
+int onProgress( Sqrl_Client_Transaction *transaction, int p )
+{
+	if( !showingProgress ) {
+		// Transaction type
+		showingProgress = true;
+		nextProgress = 2;
+		printf( "%6s: ", transactionType[transaction->type] );
+	}
+	const char sym[] = "|****";
+	while( p >= nextProgress ) {
+		if( nextProgress != 100 ) {
+			printf( "%c", sym[nextProgress%5] );
+		}
+		nextProgress += 2;
+	}
+	if( p >= 100 ) {
+		printf( "\n" );
+		showingProgress = false;
+	}
+	fflush( stdout );
+	return 1;
+
+}
+
+void printKV( char *key, char *value ) {
+	printf( "%6s: %s\n", key, value );
+}
 
 int main() 
 {
 	bool bError = false;
 	sqrl_init();
-	UT_string *buf;
+	char *buf;
 	int i;
-	utstring_new( buf );
+
+	Sqrl_Client_Callbacks cbs;
+	memset( &cbs, 0, sizeof( Sqrl_Client_Callbacks ));
+	cbs.onAuthenticationRequired = onAuthenticationRequired;
+	cbs.onProgress = onProgress;
+	sqrl_client_set_callbacks( &cbs );
+
 	Sqrl_User *user = sqrl_user_create();
-	Sqrl_Storage storage = sqrl_storage_create();
-	sqrl_user_set_password( user, "the password", 12 );
 
-	ASSERT( "hintlock_1", !sqrl_user_is_hintlocked( user ) )
-	sqrl_user_hintlock( user, NULL, NULL );
-	ASSERT( "hintlock_2", sqrl_user_is_hintlocked( user ) )
-	sqrl_user_hintunlock( user, "the ", 4, NULL, NULL );
-	ASSERT( "hintlock_3", !sqrl_user_is_hintlocked( user ) )
-	printf( "HNTLCK: PASS\n" );
-
-	printf( "    PW: the password\n" );
+	printf( "    PW: %s\n", myPassword );
 	uint8_t saved[SQRL_KEY_SIZE*7];
 	uint8_t loaded[SQRL_KEY_SIZE*7];
 	uint8_t *sPointer = saved;
-	char savedRC[25];
 	uint8_t *key;
 
 	char str[128];
@@ -48,7 +124,7 @@ int main()
 		memcpy( sPointer, key, SQRL_KEY_SIZE );
 		sPointer += SQRL_KEY_SIZE;
 		sodium_bin2hex( str, 128, key, SQRL_KEY_SIZE );
-		printf( " PIUK%d: %s\n", i, str );
+		printKV( "PIUK", str );
 	}
 
 	sqrl_user_rekey( user );
@@ -56,31 +132,34 @@ int main()
 	memcpy( sPointer, key, SQRL_KEY_SIZE );
 	sPointer += SQRL_KEY_SIZE;
 	sodium_bin2hex( str, 128, key, SQRL_KEY_SIZE );
-	printf( "   IUK: %s\n", str );
+	printKV( "IUK", str );
 	key = sqrl_user_key( user, KEY_ILK );
 	memcpy( sPointer, key, SQRL_KEY_SIZE );
 	sPointer += SQRL_KEY_SIZE;
 	sodium_bin2hex( str, 128, key, SQRL_KEY_SIZE );
-	printf( "   ILK: %s\n", str );
+	printKV( "ILK", str );
 	key = sqrl_user_key( user, KEY_MK );
 	memcpy( sPointer, key, SQRL_KEY_SIZE );
 	sodium_bin2hex( str, 128, key, SQRL_KEY_SIZE );
-	printf( "    MK: %s\n", str );
-	strcpy( savedRC, sqrl_user_get_rescue_code( user ));
-	printf( "    RC: %s\n", savedRC );
+	printKV( "MK", str );
+	strcpy( myRescueCode, sqrl_user_get_rescue_code( user ));
+	printKV( "RC", str );
 
-	sqrl_user_save( user, storage, NULL, NULL );
-	sqrl_storage_save_to_buffer( storage, buf, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
-	ASSERT( "export_len", utstring_len( buf ) == 470 )
-	printf( "EXPORT: PASS\n" );
+	buf = sqrl_user_save_to_buffer( user, NULL, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+	ASSERT( "export_len", strlen( buf ) == 470 )
 
-	user = sqrl_user_destroy( user );
-	user = sqrl_user_create();
-	sqrl_user_set_password( user, "the password", 12 );
+	user = sqrl_user_release( user );
+	user = sqrl_user_create_from_buffer( buf, strlen(buf) );
 
-	sqrl_user_load_with_password( user, storage, NULL, NULL );
 	key = sqrl_user_key( user, KEY_MK );
 	ASSERT( "load_mk", 0 == sodium_memcmp( key, saved + (SQRL_KEY_SIZE * 6), SQRL_KEY_SIZE ));
+
+	ASSERT( "hintlock_1", !sqrl_user_is_hintlocked( user ) )
+	sqrl_user_hintlock( user );
+	ASSERT( "hintlock_2", sqrl_user_is_hintlocked( user ) )
+	sqrl_user_hintunlock( user, NULL, 0 );
+	ASSERT( "hintlock_3", !sqrl_user_is_hintlocked( user ) )
+
 	key = sqrl_user_key( user, KEY_ILK );
 	ASSERT( "load_ilk", 0 == sodium_memcmp( key, saved + (SQRL_KEY_SIZE * 5), SQRL_KEY_SIZE ));
 	key = sqrl_user_key( user, KEY_PIUK0 );
@@ -91,12 +170,9 @@ int main()
 	ASSERT( "load_piuk3", 0 == sodium_memcmp( key, saved + (SQRL_KEY_SIZE * 1), SQRL_KEY_SIZE ));
 	key = sqrl_user_key( user, KEY_PIUK3 );
 	ASSERT( "load_piuk4", 0 == sodium_memcmp( key, saved, SQRL_KEY_SIZE ));
-	printf( "PW_IMP: PASS\n" );
 
-	user = sqrl_user_destroy( user );
-	user = sqrl_user_create();
-	sqrl_user_set_rescue_code( user, savedRC );
-	sqrl_user_load_with_rescue_code( user, storage, NULL, NULL );
+	user = sqrl_user_release( user );
+	user = sqrl_user_create_from_buffer( buf, strlen( buf ));
 	sPointer = loaded;
 	int keys[] = { KEY_PIUK3, KEY_PIUK2, KEY_PIUK1, KEY_PIUK0, KEY_IUK, KEY_ILK, KEY_MK };
 	char names[][6] = { "PIUK4", "PIUK3", "PIUK2", "PIUK1", "  IUK", "  ILK", "   MK" };
@@ -106,12 +182,11 @@ int main()
 		sPointer += SQRL_KEY_SIZE;
 	}
 	ASSERT( "load_rc", 0 == sodium_memcmp( loaded, saved, SQRL_KEY_SIZE * 7 ));
-	printf( "RC_IMP: PASS\n" );
 
-	char *start = utstring_body( buf );
-	char *line = utstring_body( buf );
+	char *start = buf;
+	char *line = buf;
 	char tmp[CHAR_PER_LINE + 1];
-	size_t total = utstring_len( buf );
+	size_t total = strlen( buf );
 	printf( "  DATA:\n" );
 	while( (line - start) < total ) {
 		strncpy( tmp, line, CHAR_PER_LINE );
@@ -119,8 +194,7 @@ int main()
 		line += CHAR_PER_LINE;
 	}
 
-	utstring_free( buf );
-	//sqrl_storage_save_to_file( storage, "test1.sqrl", SQRL_EXPORT_ALL, SQRL_ENCODING_BINARY );
+	free( buf );
 
 	goto DONE;
 
@@ -129,8 +203,7 @@ ERROR:
 
 DONE:
 	//pool = sqrl_entropy_destroy( pool );
-	user = sqrl_user_destroy( user );
-	storage = sqrl_storage_destroy( storage );
+	user = sqrl_user_release( user );
 	printf( "\nPASSED %d tests.\n", assertions_passed );
 	if( bError ) {
 		printf( "\nFAILED test %d\n", assertions_passed + 1 );

@@ -124,6 +124,13 @@ void printInFours( char *str )
 	printf( "\n" );
 }
 
+void printUniqueID( Sqrl_Storage storage )
+{
+	char str[SQRL_UNIQUE_ID_LENGTH+1];
+	sqrl_storage_unique_id( storage, str );
+	printf( "Unique ID: %s\n", str );
+}
+
 void printBlock1( Sqrl_Storage storage )
 {
 	Sqrl_User user;
@@ -218,25 +225,17 @@ void printBlock1( Sqrl_Storage storage )
 				uint16_t iterations,
 				enscrypt_progress_fn cb_ptr, 
 				void *cb_data );
-			user = sqrl_user_create();
-			ptr = (uint8_t*)sqrl_user_password( user );
-			size_t *pl = sqrl_user_password_length( user );
-			*pl = strlen( password );
-			strcpy( (char*)ptr, password );
-			if( SQRL_STATUS_OK == sqrl_user_load_with_password( user, storage, NULL, NULL )) {
-				printf( "  Decryption:\n" );
-				ptr = sqrl_user_key( user, KEY_MK );
-				sodium_bin2hex( str, 512, ptr, 32 );
-				printf( "    Decrypted IMK:   " );
-				printInFours( str );
-				ptr = sqrl_user_key( user, KEY_ILK );
-				sodium_bin2hex( str, 512, ptr, 32 );
-				printf( "    Decrypted ILK:   " );
-				printInFours( str );
-			} else {
-				printf( "  Decryption:        Failed\n" );
-				return;
-			}
+			user = sqrl_user_create_from_buffer( text, strlen(text));
+			sqrl_user_set_password( user, password, strlen(password) );
+			printf( "  Decryption:\n" );
+			ptr = sqrl_user_key( user, KEY_MK );
+			sodium_bin2hex( str, 512, ptr, 32 );
+			printf( "    Decrypted IMK:   " );
+			printInFours( str );
+			ptr = sqrl_user_key( user, KEY_ILK );
+			sodium_bin2hex( str, 512, ptr, 32 );
+			printf( "    Decrypted ILK:   " );
+			printInFours( str );
 		}
 	} else {
 		printf( "Block 1 Not found.\n" );
@@ -302,27 +301,21 @@ void printBlock2( Sqrl_Storage storage )
 
 		sqrl_block_free( &block );
 		if( rc && strlen( rc ) == 24 ) {
+			user = sqrl_user_create_from_buffer( text, strlen(text) );
 			printf( "  Rescue Code:       %s\n", rc );
-			user = sqrl_user_create();
 			sqrl_user_set_rescue_code( user, rc );
-			status = sqrl_user_load_with_rescue_code( user, storage, NULL, NULL );
-			if( status == SQRL_STATUS_OK ) {
-				if( 0 < sqrl_enscrypt( buf, rc, 24,
-					salt, 16, nFactor, iterations, NULL, NULL )) {
-					sodium_bin2hex( str, 512, buf, 32 );
-					printf( "  AES-GCM Key:\n" );
-					printTwoByFour( str );
-				}
-
-				printf( "  Decryption:\n" );
-				ptr = sqrl_user_key( user, KEY_IUK );
-				sodium_bin2hex( str, 512, ptr, 32 );
-				printf( "    Decrypted IUK:   " );
-				printInFours( str );
-			} else {
-				printf( "  Decryption:        Failed (%d)\n", status );
-				return;
+			if( 0 < sqrl_enscrypt( buf, rc, 24,
+				salt, 16, nFactor, iterations, NULL, NULL )) {
+				sodium_bin2hex( str, 512, buf, 32 );
+				printf( "  AES-GCM Key:\n" );
+				printTwoByFour( str );
 			}
+
+			printf( "  Decryption:\n" );
+			ptr = sqrl_user_key( user, KEY_IUK );
+			sodium_bin2hex( str, 512, ptr, 32 );
+			printf( "    Decrypted IUK:   " );
+			printInFours( str );
 		}
 	} else {
 		printf( "Block 2 Not found.\n" );
@@ -394,51 +387,44 @@ void printBlock3( Sqrl_Storage storage )
 
 		sqrl_block_free( &block );
 		if( password ) {
-			user = sqrl_user_create();
+			user = sqrl_user_create_from_buffer( text, strlen(text));
 			ptr = (uint8_t*)sqrl_user_password( user );
 			size_t *pl = sqrl_user_password_length( user );
 			*pl = strlen( password );
 			strcpy( (char*)ptr, password );
-			if( SQRL_STATUS_OK == sqrl_user_load_with_password( user, storage, NULL, NULL )) {
-				ptr = sqrl_user_key( user, KEY_MK );
-				sodium_bin2hex( str, 512, ptr, 32 );
-				printf( "  AES-GCM Key:\n" );
-				printTwoByFour( str );
-				ptr = sqrl_user_key( user, KEY_PIUK0 );
-				printf( "  Decrypted:\n" );
-				sodium_bin2hex( str, 512, ptr, 32 );
-				printf( "    Decrypted PIUK0: " );
-				printInFours( str );
-				ptr = sqrl_user_key( user, KEY_PIUK1 );
-				sodium_bin2hex( str, 512, ptr, 32 );
-				printf( "    Decrypted PIUK1: " );
-				printInFours( str );
-				ptr = sqrl_user_key( user, KEY_PIUK2 );
-				sodium_bin2hex( str, 512, ptr, 32 );
-				printf( "    Decrypted PIUK2: " );
-				printInFours( str );
-				ptr = sqrl_user_key( user, KEY_PIUK3 );
-				sodium_bin2hex( str, 512, ptr, 32 );
-				printf( "    Decrypted PIUK3: " );
-				printInFours( str );
-			} else {
-				printf( "  Decryption:        Failed\n" );
-				return;
-			}
+			ptr = sqrl_user_key( user, KEY_MK );
+			sodium_bin2hex( str, 512, ptr, 32 );
+			printf( "  AES-GCM Key:\n" );
+			printTwoByFour( str );
+			ptr = sqrl_user_key( user, KEY_PIUK0 );
+			printf( "  Decrypted:\n" );
+			sodium_bin2hex( str, 512, ptr, 32 );
+			printf( "    Decrypted PIUK0: " );
+			printInFours( str );
+			ptr = sqrl_user_key( user, KEY_PIUK1 );
+			sodium_bin2hex( str, 512, ptr, 32 );
+			printf( "    Decrypted PIUK1: " );
+			printInFours( str );
+			ptr = sqrl_user_key( user, KEY_PIUK2 );
+			sodium_bin2hex( str, 512, ptr, 32 );
+			printf( "    Decrypted PIUK2: " );
+			printInFours( str );
+			ptr = sqrl_user_key( user, KEY_PIUK3 );
+			sodium_bin2hex( str, 512, ptr, 32 );
+			printf( "    Decrypted PIUK3: " );
+			printInFours( str );
 		}
 	} else {
 		printf( "Block 2 Not found.\n" );
 		return;
 	}
-
-
 }
 
 int main( int argc, char *argv[] )
 {
 	sqrl_init();
+	Sqrl_User u = NULL;
 	int i, l;
-	Sqrl_Storage storage = NULL;
 
 	for( i = 1; i < argc; i++ ) {
 		if( 0 == strcmp( argv[i], "-h" ) ||
@@ -462,37 +448,33 @@ int main( int argc, char *argv[] )
 		filename = argv[i];
 	}
 	if( text ) {
-		storage = sqrl_storage_create();
-		UT_string *sqrldata;
-		utstring_new( sqrldata );
-		utstring_printf( sqrldata, "%s", text );
-		if( sqrl_storage_load_from_buffer( storage, sqrldata )) {
-			printf( "Loaded text Identity:\n%s\n\n", utstring_body( sqrldata ));
+		u = sqrl_user_create_from_buffer( text, strlen(text));
+		if( u ) {
+			printf( "Loaded text Identity:\n%s\n\n", text );
 		} else {
 			printf( "Failed to load text Identity\n" );
-			exit(1);
 		}
-		utstring_free( sqrldata );
 	} else if( filename ) {
-		storage = sqrl_storage_create();
-		if( sqrl_storage_load_from_file( storage, filename )) {
-			UT_string *sqrldata;
-			utstring_new( sqrldata );
-			sqrl_storage_save_to_buffer( storage, sqrldata, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+		u = sqrl_user_create_from_file( filename );
+		if( u ) {
+			text = sqrl_user_save_to_buffer( u, NULL, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
 			printf( "Loaded file Identity:\n");
-			printBreak( utstring_body( sqrldata ), 64 );
-			utstring_free( sqrldata );
+			printBreak( text, 64 );
 		} else {
 			printf( "Failed to load Identity from file\n" );
 			exit(1);
 		}
 	}
-	if( storage ) {
-		printBlock1( storage );
-		printBlock2( storage );
-		printBlock3( storage );
+	if( u ) {
+		WITH_USER(user,u);
+		printUniqueID( user->storage );
+		printBlock1( user->storage );
+		printBlock2( user->storage );
+		printBlock3( user->storage );
+		END_WITH_USER(user);
 	} else {
 		printf( "%s", help );
 	}
+	u = sqrl_user_release( u );
 	exit(0);
 }

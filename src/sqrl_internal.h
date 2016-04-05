@@ -28,15 +28,11 @@ do {if(DEBUG_PRINT_VAR && t) printf(fmt, __VA_ARGS__); } while(0)
 do {if(DEBUG_PRINT_VAR && t) printf(s); } while( 0 )
 
 #ifdef DEBUG
-//#define SQRL_DEBUG_KEYS
 #define DEBUG_PRINT_VAR 1
-
-#ifdef SQRL_DEBUG_KEYS
-void sqrl_init_key_count();
-#endif
-
+#define DEBUG_PRINT_REFERENCE_COUNT 0
 #else
 #define DEBUG_PRINT_VAR 0
+#define DEBUG_PRINT_REFERENCE_COUNT 0
 #endif
 // Some additional UTstring functions...
 #define utstring_shrink(s,l)                          \
@@ -58,22 +54,20 @@ do{                                                   \
 typedef int (*enscrypt_progress_fn)(int percent, void* data);
 double sqrl_get_real_time( );
 
-typedef struct SqrlMutex SqrlMutex;
+typedef void* SqrlMutex;
 
-typedef struct SqrlMutexMethods 
-{
-	int (*xGlobalInit)(void);		/* [Optional:] Global mutex initialization */
-	void  (*xGlobalRelease)(void);	/* [Optional:] Global Release callback () */
-	SqrlMutex * (*xNew)(int);	        /* [Required:] Request a new mutex */
-	void  (*xRelease)(SqrlMutex *);	/* [Optional:] Release a mutex  */
-	void  (*xEnter)(SqrlMutex *);	    /* [Required:] Enter mutex */
-	int (*xTryEnter)(SqrlMutex *);    /* [Optional:] Try to enter a mutex */
-	void  (*xLeave)(SqrlMutex *);	    /* [Required:] Leave a locked mutex */
-} SqrlMutexMethods;
+struct Sqrl_Global_Mutices {
+	SqrlMutex user;
+};
 
-void sqrlMutexRelease( SqrlMutex *sm );
+extern struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
 
-static SqrlMutexMethods sqrlMutexMethods;
+SqrlMutex sqrl_mutex_create();
+void sqrl_mutex_destroy( SqrlMutex sm );
+bool sqrl_mutex_enter( SqrlMutex sm );
+void sqrl_mutex_leave( SqrlMutex sm );
+
+
 
 typedef struct Sqrl_Crypt_Context
 {
@@ -89,12 +83,6 @@ typedef struct Sqrl_Crypt_Context
 	uint8_t nFactor;
 	uint8_t flags;
 } Sqrl_Crypt_Context;
-
-struct Sqrl_User_Credentials {
-	uint8_t master_key[32];
-	uint8_t lock_key[32];
-	uint8_t previous_unlock_key[4][32];
-};
 
 #define KEY_SCRATCH_SIZE 2048
 
@@ -133,19 +121,42 @@ struct Sqrl_User
 	uint32_t flags;
 	uint32_t hint_iterations;
 	Sqrl_User_Options options;
+	SqrlMutex referenceCountMutex;
+	int referenceCount;
+	Sqrl_Storage storage;
+	char *filename;
+	char unique_id[SQRL_UNIQUE_ID_LENGTH+1];
 	struct Sqrl_Keys *keys;
 };
 
 struct sqrl_user_callback_data {
-	sqrl_status_fn *cbfn;
-	void * cbdata;
+	Sqrl_Client_Transaction *transaction;
 	int adder;
 	int divisor;
 };
 
 #define SQRL_CAST_USER(a,b) struct Sqrl_User *(a) = (struct Sqrl_User*)(b)
-#define RELOCK_START(u,r) sqrl_user_ensure_keys_allocated(u); bool r = sqrl_user_is_memlocked(u); if( r ) { sqrl_user_memunlock(u); }
-#define RELOCK_END(u,r) if( r ) {sqrl_user_memlock(u); }
+#define WITH_USER(user,u) \
+struct Sqrl_User *user = NULL; \
+bool wu_relock = false; \
+if( sqrl_user_hold( u )) { \
+	user = (struct Sqrl_User*)(u); \
+	sqrl_user_ensure_keys_allocated(user); \
+	wu_relock = sqrl_user_is_memlocked(user); \
+	if( wu_relock ) { \
+		sqrl_user_memunlock( user ); \
+	} \
+}
+
+#define END_WITH_USER(user) \
+if( user != NULL ) { \
+	if( wu_relock ) { \
+		sqrl_user_memlock( user ); \
+	} \
+	sqrl_user_release( (Sqrl_User)(user) ); \
+	user = NULL; \
+}
+
 
 void 		sqrl_user_default_options( Sqrl_User_Options *options );
 int sqrl_user_enscrypt_callback( int percent, void *data );
@@ -164,24 +175,55 @@ char *sqrl_user_password( Sqrl_User user );
 size_t *sqrl_user_password_length( Sqrl_User user );
 Sqrl_Status sqrl_user_load_with_password(
 	Sqrl_User u,
-	Sqrl_Storage storage,
 	sqrl_status_fn callback,
 	void *callback_data );
 Sqrl_Status sqrl_user_load_with_rescue_code(
 	Sqrl_User u,
-	Sqrl_Storage storage,
 	sqrl_status_fn callback,
 	void *callback_data );
-Sqrl_Status sqrl_user_save(
+Sqrl_Status sqrl_user_update_storage(
 	Sqrl_User user, 
-	Sqrl_Storage storage, 
 	sqrl_status_fn callback, 
 	void *callback_data );
-
+bool sqrl_user_try_load_rescue( Sqrl_User u, bool retry );
+bool sqrl_user_try_load_password( Sqrl_User u, bool retry );
 
 #define BIT_CHECK(v,b) ((v & b) == b)
 #define BIT_SET(v,b) v |= b
 #define BIT_UNSET(v,b) v &= ~(b)
+
+struct Sqrl_User_List {
+	struct Sqrl_User *user;
+	struct Sqrl_User_List *next;
+};
+
+extern struct Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
+
+void sqrl_client_call_select_user( 
+	Sqrl_Client_Transaction *transaction );
+void sqrl_client_call_select_alternate_identity( 
+	Sqrl_Client_Transaction *transaction );
+bool sqrl_client_call_authentication_required( 
+	Sqrl_Client_Transaction *transaction, 
+	Sqrl_Credential_Type credentialType );
+void sqrl_client_call_ask(
+	Sqrl_Client_Transaction *transaction,
+	const char *message, size_t message_len,
+	const char *firstButton, size_t firstButton_len,
+	const char *secondButton, size_t secondButton_len );
+void sqrl_client_call_send(
+	Sqrl_Client_Transaction *transaction,
+	const char *url, size_t url_len,
+	const char *payload, size_t payload_len );
+int sqrl_client_call_progress(
+	Sqrl_Client_Transaction *transaction,
+	int progress );
+void sqrl_client_call_save_suggested(
+	Sqrl_User *user);
+
+bool sqrl_client_require_password( Sqrl_Client_Transaction *transaction );
+bool sqrl_client_require_hint( Sqrl_Client_Transaction *transaction );
+bool sqrl_client_require_rescue_code( Sqrl_Client_Transaction *transaction );
 
 
 /* crypt.c */
@@ -227,18 +269,12 @@ int sqrl_enscrypt_ms(
 	enscrypt_progress_fn cb_ptr, 
 	void *cb_data );
 
-
-int curve25519_donna(uint8_t *, const uint8_t *, const uint8_t *);
 void sqrl_generate_random_key( uint8_t *key );
-
 void sqrl_curve_private_key( uint8_t *key );
 void sqrl_curve_public_key( uint8_t *puk, const uint8_t *prk );
 
 void sqrl_lcstr( char * );
 void printhex( char *label, uint8_t *bin, size_t bin_len );
-
-void sqrl_user_make_hint( Sqrl_Storage storage, const char *password, size_t password_len, uint8_t *plain_text );
-void sqrl_user_make_hint_if_needed( Sqrl_Storage storage, const char *password, size_t password_len, uint8_t *plain_text );
 
 void bin2rc( char *buf, uint8_t *bin );
 

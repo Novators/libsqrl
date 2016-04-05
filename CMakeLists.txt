@@ -16,7 +16,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/libutils.cmake)
 
 set(sqrl_version_major 1)
 set(sqrl_version_minor 1)
-set(sqrl_build 16)
+set(sqrl_build 17)
 set(sqrl_version "${sqrl_version_major}.${sqrl_version_minor} build ${sqrl_build}")
 
 #set(CMAKE_BUILD_TYPE Release)
@@ -71,7 +71,7 @@ include_directories(include)
 
 set(SRC src/user.c src/user_storage.c src/entropy/entropy.c src/entropy/rdrand.c 
 	src/crypto/aes.c src/crypto/gcm.c src/encdec.c src/crypto/crypt.c src/util.c 
-	src/storage.c src/block.c src/realtime.c)
+	src/storage.c src/block.c src/realtime.c src/url.c src/client.c)
 
 add_library(tmpsqrl ${SRC})
 add_dependencies(tmpsqrl libsodium)
@@ -112,6 +112,9 @@ target_link_libraries(user_test sqrl)
 add_executable(peek src/cli/peek.c)
 target_link_libraries(peek sqrl)
 
+add_executable(url_test src/test/url_test.c)
+target_link_libraries(url_test sqrl)
+
 #documentation
 find_package(Doxygen QUIET)
 if(DOXYGEN_FOUND)
@@ -130,6 +133,7 @@ endif(DOXYGEN_FOUND)
 
 # Tests
 include(CTest)
+add_test(url_test url_test)
 add_test(user_test user_test)
 add_test(encdec_test encdec_test)
 add_test(gcm_test gcm_test)
