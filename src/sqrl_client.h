@@ -211,22 +211,13 @@ typedef void* Sqrl_User;
 
 uint16_t   sqrl_user_check_flags( Sqrl_User u, uint16_t flags );
 void       sqrl_user_clear_flags( Sqrl_User u, uint16_t flags );
-Sqrl_User  sqrl_user_create();
-Sqrl_User  sqrl_user_create_from_file( const char *filename );
-Sqrl_User  sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len );
-bool       sqrl_user_save( Sqrl_User u, const char *filename, Sqrl_Export exportType, Sqrl_Encoding encoding );
-char*      sqrl_user_save_to_buffer( Sqrl_User u, size_t *buffer_len, Sqrl_Export exportType, Sqrl_Encoding encoding );
+Sqrl_User  sqrl_user_find( const char *unique_id );
 Sqrl_User  sqrl_user_release( Sqrl_User user );
 bool       sqrl_user_hold( Sqrl_User user );
 uint8_t    sqrl_user_get_enscrypt_seconds( Sqrl_User u );
 uint8_t    sqrl_user_get_hint_length( Sqrl_User u );
 char*      sqrl_user_get_rescue_code( Sqrl_User u );
 uint16_t   sqrl_user_get_timeout_minutes( Sqrl_User u );
-void       sqrl_user_hintlock( Sqrl_User user );
-void       sqrl_user_hintunlock( Sqrl_User user, 
-				char *hint, 
-				size_t len );
-bool       sqrl_user_is_hintlocked( Sqrl_User user );
 void       sqrl_user_set_enscrypt_seconds( Sqrl_User u, uint8_t seconds );
 void       sqrl_user_set_flags( Sqrl_User u, uint16_t flags );
 void       sqrl_user_set_hint_length( Sqrl_User u, uint8_t length );

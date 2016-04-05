@@ -158,24 +158,47 @@ if( user != NULL ) { \
 }
 
 
-void 		sqrl_user_default_options( Sqrl_User_Options *options );
-int sqrl_user_enscrypt_callback( int percent, void *data );
-void sqrl_user_ensure_keys_allocated( Sqrl_User u );
-uint8_t *sqrl_user_scratch( Sqrl_User user );
-bool sqrl_user_regen_keys( Sqrl_User u );
-uint8_t *sqrl_user_new_key( Sqrl_User u, int key_type );
-uint8_t *sqrl_user_key( Sqrl_User user, int key_type );
-void sqrl_user_remove_key( Sqrl_User user, int key_type );
-bool sqrl_user_has_key( Sqrl_User user, int key_type );
-bool sqrl_user_is_memlocked( Sqrl_User user );
-void sqrl_user_memlock( Sqrl_User user );
-void sqrl_user_memunlock( Sqrl_User user );
-bool sqrl_user_rekey( Sqrl_User u );
-bool sqrl_user_update_storage( Sqrl_User user );
-bool sqrl_user_try_load_rescue( Sqrl_User u, bool retry );
-bool sqrl_user_try_load_password( Sqrl_User u, bool retry );
-bool sqrl_user_set_password( Sqrl_User u, char *password, size_t password_len );
-bool sqrl_user_force_decrypt( Sqrl_User u );
+void        sqrl_user_default_options( Sqrl_User_Options *options );
+Sqrl_User   sqrl_user_create();
+Sqrl_User   sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len );
+Sqrl_User   sqrl_user_create_from_file( const char *filename );
+int         sqrl_user_enscrypt_callback( int percent, void *data );
+void        sqrl_user_ensure_keys_allocated( Sqrl_User u );
+bool        sqrl_user_force_decrypt( Sqrl_User u );
+bool        sqrl_user_has_key( Sqrl_User user, int key_type );
+void        sqrl_user_hintlock( Sqrl_User user );
+void        sqrl_user_hintunlock( Sqrl_User user, 
+                char *hint, 
+                size_t len );
+bool        sqrl_user_is_hintlocked( Sqrl_User user );
+bool        sqrl_user_is_memlocked( Sqrl_User user );
+uint8_t*    sqrl_user_key( Sqrl_User user, int key_type );
+bool        sqrl_user_try_load_password( Sqrl_User u, bool retry );
+bool        sqrl_user_try_load_rescue( Sqrl_User u, bool retry );
+void        sqrl_user_memlock( Sqrl_User user );
+void        sqrl_user_memunlock( Sqrl_User user );
+uint8_t*    sqrl_user_new_key( Sqrl_User u, int key_type );
+bool        sqrl_user_regen_keys( Sqrl_User u );
+bool        sqrl_user_rekey( Sqrl_User u );
+void        sqrl_user_remove_key( Sqrl_User user, int key_type );
+bool        sqrl_user_save( 
+				Sqrl_User u, 
+				const char *filename, 
+				Sqrl_Export exportType, 
+				Sqrl_Encoding encoding );
+char*       sqrl_user_save_to_buffer( 
+				Sqrl_User u, 
+				size_t *buffer_len, 
+				Sqrl_Export exportType, 
+				Sqrl_Encoding encoding );
+uint8_t*    sqrl_user_scratch( Sqrl_User user );
+bool        sqrl_user_set_password( 
+				Sqrl_User u, 
+				char *password, 
+				size_t password_len );
+bool        sqrl_user_update_storage( Sqrl_User user );
+
+
 
 #define BIT_CHECK(v,b) ((v & b) == b)
 #define BIT_SET(v,b) v |= b
