@@ -491,9 +491,7 @@ DONE:
 }
 
 Sqrl_Status sqrl_user_update_storage(
-	Sqrl_User u, 
-	sqrl_status_fn callback, 
-	void *callback_data ) 
+	Sqrl_User u ) 
 {
 	WITH_USER(user,u);
 	if( !user ) return SQRL_STATUS_INVALID_PARAMETERS;
@@ -611,7 +609,7 @@ bool sqrl_user_save( Sqrl_User u, const char *filename, Sqrl_Export exportType, 
 	if( filename == NULL ) return false;
 	WITH_USER(user,u);
 	if( user == NULL ) return false;
-	if( SQRL_STATUS_OK == sqrl_user_update_storage( u, NULL, NULL )) {
+	if( SQRL_STATUS_OK == sqrl_user_update_storage( u )) {
 		if( sqrl_storage_save_to_file( user->storage, filename, exportType, encoding ) > 0 ) {
 			END_WITH_USER(user);
 			return true;
@@ -636,7 +634,7 @@ char *sqrl_user_save_to_buffer( Sqrl_User u, size_t *buffer_len, Sqrl_Export exp
 	cbdata.adder = 0;
 	cbdata.divisor = 1;
 
-	if( SQRL_STATUS_OK == sqrl_user_update_storage( u, NULL, NULL )) {
+	if( SQRL_STATUS_OK == sqrl_user_update_storage( u )) {
 		if( sqrl_storage_save_to_buffer( user->storage, buf, exportType, encoding )) {
 			retVal = malloc( utstring_len(buf) + 1 );
 			if( !retVal ) goto ERROR;

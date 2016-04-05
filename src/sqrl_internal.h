@@ -182,9 +182,7 @@ Sqrl_Status sqrl_user_load_with_rescue_code(
 	sqrl_status_fn callback,
 	void *callback_data );
 Sqrl_Status sqrl_user_update_storage(
-	Sqrl_User user, 
-	sqrl_status_fn callback, 
-	void *callback_data );
+	Sqrl_User user );
 bool sqrl_user_try_load_rescue( Sqrl_User u, bool retry );
 bool sqrl_user_try_load_password( Sqrl_User u, bool retry );
 
