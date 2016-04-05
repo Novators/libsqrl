@@ -118,6 +118,16 @@ void sqrl_client_authenticate(
 			sqrl_user_set_rescue_code( transaction->user, credential );
 		}
 		break;
+	case SQRL_CREDENTIAL_OLD_PASSWORD:
+		if( transaction->type == SQRL_TRANSACTION_CHANGE_PASSWORD ) {
+			sqrl_user_set_password( transaction->user, credential, credentialLength );
+			if( sqrl_user_force_decrypt( transaction->user )) {
+				if( sqrl_client_require_password( transaction )) {
+					sqrl_client_call_save_suggested( transaction->user );
+				}
+			}
+		}
+		break;
 	}
 	END_WITH_USER(user);
 	sodium_memzero( credential, credentialLength );

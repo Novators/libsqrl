@@ -9,9 +9,6 @@ For more details, see the LICENSE file included with this package.
 #include <stdio.h>
 #include "sqrl_internal.h"
 
-#define WITH_REFERENCE_COUNT(user) sqrl_mutex_enter( user->referenceCountMutex )
-#define END_WITH_REFERENCE_COUNT(user) sqrl_mutex_leave( user->referenceCountMutex );
-
 struct Sqrl_User_List *SQRL_USER_LIST;
 
 int sqrl_user_enscrypt_callback( int percent, void *data )

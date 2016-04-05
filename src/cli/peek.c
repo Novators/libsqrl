@@ -255,7 +255,6 @@ void printBlock2( Sqrl_Storage storage )
 	uint32_t d32, iterations;
 	char str[512];
 	uint8_t *ptr;
-	Sqrl_Status status;
 
 	if( sqrl_storage_block_get( storage, &block, SQRL_BLOCK_RESCUE )) {
 		printf( "Block 2:\n" );
@@ -335,7 +334,6 @@ void printBlock3( Sqrl_Storage storage )
 	uint32_t d32;
 	char str[512];
 	uint8_t *ptr;
-	Sqrl_Status status;
 
 	if( sqrl_storage_block_get( storage, &block, SQRL_BLOCK_PREVIOUS )) {
 		printf( "Block 3:\n" );

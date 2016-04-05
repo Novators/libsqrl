@@ -171,8 +171,7 @@ bool sqrl_user_is_memlocked( Sqrl_User user );
 void sqrl_user_memlock( Sqrl_User user );
 void sqrl_user_memunlock( Sqrl_User user );
 bool sqrl_user_rekey( Sqrl_User u );
-Sqrl_Status sqrl_user_update_storage(
-	Sqrl_User user );
+bool sqrl_user_update_storage( Sqrl_User user );
 bool sqrl_user_try_load_rescue( Sqrl_User u, bool retry );
 bool sqrl_user_try_load_password( Sqrl_User u, bool retry );
 bool sqrl_user_set_password( Sqrl_User u, char *password, size_t password_len );
@@ -185,6 +184,11 @@ bool sqrl_user_force_decrypt( Sqrl_User u );
 struct Sqrl_User_List {
 	struct Sqrl_User *user;
 	struct Sqrl_User_List *next;
+};
+
+struct Sqrl_Transaction_List {
+	struct Sqrl_Client_Transaction *transaction;
+	struct Sqrl_Transaction_List *next;
 };
 
 extern struct Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;

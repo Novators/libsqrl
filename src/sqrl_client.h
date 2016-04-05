@@ -64,7 +64,6 @@ For more details, see the LICENSE file included with this package.
 #define KEY_PASSWORD_MAX_LEN 512
 
 typedef void* Sqrl_Key;
-typedef int (sqrl_status_fn)(Sqrl_Status status, int percent, void* data);
 
 /**
 \defgroup entropy Entropy Harvester
@@ -297,7 +296,6 @@ typedef enum {
 
 typedef struct Sqrl_Client_Transaction {
 	Sqrl_Transaction_Type type;
-	Sqrl_Status status;
 	Sqrl_User *user;
 	Sqrl_Url *url;
 	bool altIdentitySpecified;

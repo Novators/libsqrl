@@ -377,11 +377,10 @@ DONE:
 	return retVal;
 }
 
-Sqrl_Status sqrl_user_update_storage(
-	Sqrl_User u ) 
+bool sqrl_user_update_storage( Sqrl_User u ) 
 {
 	WITH_USER(user,u);
-	if( !user ) return SQRL_STATUS_INVALID_PARAMETERS;
+	if( !user ) return false;
 	if( user->storage == NULL ) {
 		user->storage = sqrl_storage_create();
 	}
@@ -390,8 +389,7 @@ Sqrl_Status sqrl_user_update_storage(
 	Sqrl_Block block;
 	sqrl_block_clear( &block );
 	Sqrl_Crypt_Context sctx;
-
-	Sqrl_Status retVal = SQRL_STATUS_OK;
+	bool retVal = true;
 
 	Sqrl_Client_Transaction transaction;
 	transaction.type = SQRL_TRANSACTION_SAVE_IDENTITY;
@@ -496,7 +494,7 @@ bool sqrl_user_save( Sqrl_User u, const char *filename, Sqrl_Export exportType, 
 	if( filename == NULL ) return false;
 	WITH_USER(user,u);
 	if( user == NULL ) return false;
-	if( SQRL_STATUS_OK == sqrl_user_update_storage( u )) {
+	if( sqrl_user_update_storage( u )) {
 		if( sqrl_storage_save_to_file( user->storage, filename, exportType, encoding ) > 0 ) {
 			END_WITH_USER(user);
 			return true;
@@ -521,7 +519,7 @@ char *sqrl_user_save_to_buffer( Sqrl_User u, size_t *buffer_len, Sqrl_Export exp
 	cbdata.adder = 0;
 	cbdata.divisor = 1;
 
-	if( SQRL_STATUS_OK == sqrl_user_update_storage( u )) {
+	if( sqrl_user_update_storage( u )) {
 		if( sqrl_storage_save_to_buffer( user->storage, buf, exportType, encoding )) {
 			retVal = malloc( utstring_len(buf) + 1 );
 			if( !retVal ) goto ERROR;
