@@ -9,13 +9,95 @@ For more details, see the LICENSE file included with this package.
 #include "../sqrl_internal.h"
 #include <unistd.h>
 
+char myPassword[32];
+
+bool onAuthenticationRequired(
+	Sqrl_Client_Transaction *transaction,
+	Sqrl_Credential_Type credentialType )
+{
+	char *cred = NULL;
+	uint8_t len;
+
+	switch( credentialType ) {
+	case SQRL_CREDENTIAL_PASSWORD:
+		printf( "   REQ: Password\n" );
+		cred = malloc( strlen( myPassword ) + 1 );
+		strcpy( cred, myPassword );
+		break;
+	case SQRL_CREDENTIAL_HINT:
+		printf( "   REQ: Hint\n" );
+		len = sqrl_user_get_hint_length( transaction->user );
+		cred = malloc( len + 1 );
+		strncpy( cred, myPassword, len );
+		break;
+	case SQRL_CREDENTIAL_RESCUE_CODE:
+		printf( "Rescue Code Requested, but not needed!\n" );
+		exit(1);
+	default:
+		return false;
+	}
+	sqrl_client_authenticate( transaction, credentialType, cred, strlen( cred ));
+	if( cred ) {
+		free( cred );
+	}
+	return true;
+}
+
+char transactionType[11][10] = {
+	"UNKNWN",
+	"IDENT",
+	"DISABL",
+	"ENABLE",
+	"REMOVE",
+	"SAVE",
+	"RECOVR",
+	"REKEY",
+	"UNLOCK",
+	"LOCK",
+	"LOAD"
+};
+bool showingProgress = false;
+int nextProgress = 0;
+int onProgress( Sqrl_Client_Transaction *transaction, int p )
+{
+	if( !showingProgress ) {
+		// Transaction type
+		showingProgress = true;
+		nextProgress = 2;
+		printf( "%6s: ", transactionType[transaction->type] );
+	}
+	const char sym[] = "|****";
+	while( p >= nextProgress ) {
+		if( nextProgress != 100 ) {
+			printf( "%c", sym[nextProgress%5] );
+		}
+		nextProgress += 2;
+	}
+	if( p >= 100 ) {
+		printf( "\n" );
+		showingProgress = false;
+	}
+	fflush( stdout );
+	return 1;
+
+}
+
+
 int main() 
 {
+	strcpy( myPassword, "the password" );
 	sqrl_init();
 	bool bError = false;
-	Sqrl_Storage storage;
-	Sqrl_User user = sqrl_user_create_from_file( "test1.sqrl" );
+	Sqrl_Storage storage = NULL;
+	Sqrl_User user = NULL;
+	uint8_t *key = NULL;
 	
+	Sqrl_Client_Callbacks cbs;
+	memset( &cbs, 0, sizeof( Sqrl_Client_Callbacks ));
+	cbs.onAuthenticationRequired = onAuthenticationRequired;
+	cbs.onProgress = onProgress;
+	sqrl_client_set_callbacks( &cbs );
+
 	storage = sqrl_storage_create();
 	sqrl_storage_load_from_file( storage, "test1.sqrl" );
 	if( ! sqrl_storage_block_exists( storage, SQRL_BLOCK_USER )
@@ -24,19 +106,24 @@ int main()
 		printf( "Bad Blocks\n" );
 		goto ERROR;
 	}
-	sqrl_user_set_password( user, "the password", 12 );
-	if( SQRL_STATUS_OK != sqrl_user_load_with_password( user, NULL, NULL )) {
-		printf( "Load failed\n" );
+	storage = sqrl_storage_destroy( storage );
+
+	user = sqrl_user_create_from_file( "test1.sqrl" );
+	key = sqrl_user_key( user, KEY_MK );
+	if( !key ) {
+		printf( "Load Failed\n" );
 		goto ERROR;
-	} 
-	sqrl_user_set_password( user, "asdf", 4 );
+	}
+	strcpy( myPassword, "asdfjkl" );
+	sqrl_user_set_password( user, myPassword, 7 );
 	char *buf = sqrl_user_save_to_buffer( user, NULL, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
 	user = sqrl_user_release( user );
 	user = NULL; // Make sure...
 	user = sqrl_user_create_from_buffer( buf, strlen(buf));
-	sqrl_user_set_password( user, "asdf", 4 );
-	if( SQRL_STATUS_OK != sqrl_user_load_with_password( user, NULL, NULL )) {
-		printf( "New Password failed\n" );
+
+	key = sqrl_user_key( user, KEY_MK );
+	if( !key ) {
+		printf( "New Password Failed\n" );
 		goto ERROR;
 	}
 	goto DONE;

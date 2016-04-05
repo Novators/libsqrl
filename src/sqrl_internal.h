@@ -171,20 +171,12 @@ bool sqrl_user_is_memlocked( Sqrl_User user );
 void sqrl_user_memlock( Sqrl_User user );
 void sqrl_user_memunlock( Sqrl_User user );
 bool sqrl_user_rekey( Sqrl_User u );
-char *sqrl_user_password( Sqrl_User user );
-size_t *sqrl_user_password_length( Sqrl_User user );
-Sqrl_Status sqrl_user_load_with_password(
-	Sqrl_User u,
-	sqrl_status_fn callback,
-	void *callback_data );
-Sqrl_Status sqrl_user_load_with_rescue_code(
-	Sqrl_User u,
-	sqrl_status_fn callback,
-	void *callback_data );
 Sqrl_Status sqrl_user_update_storage(
 	Sqrl_User user );
 bool sqrl_user_try_load_rescue( Sqrl_User u, bool retry );
 bool sqrl_user_try_load_password( Sqrl_User u, bool retry );
+bool sqrl_user_set_password( Sqrl_User u, char *password, size_t password_len );
+bool sqrl_user_force_decrypt( Sqrl_User u );
 
 #define BIT_CHECK(v,b) ((v & b) == b)
 #define BIT_SET(v,b) v |= b

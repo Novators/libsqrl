@@ -520,7 +520,6 @@ uint8_t *sqrl_user_new_key( Sqrl_User u, int key_type )
 
 uint8_t *sqrl_user_key( Sqrl_User u, int key_type )
 {
-	printf( "sqrl_user_key %d\n", key_type );
 	WITH_USER(user,u);
 	if( user == NULL ) return NULL;
 	int offset, empty, i;
@@ -554,7 +553,6 @@ LOOP:
 			END_WITH_USER(user);
 			return NULL;
 		case KEY_IUK:
-			printf( "sqrl_user_key... trying rc %d\n", key_type );
 			sqrl_user_try_load_rescue( u, true );
 			goto LOOP;
 			break;
@@ -564,9 +562,7 @@ LOOP:
 		case KEY_PIUK1:
 		case KEY_PIUK2:
 		case KEY_PIUK3:
-			printf( "sqrl_user_key... trying pw %d\n", key_type );
 			sqrl_user_try_load_password( u, true );
-			printf( "Tried load passw\n" );
 			goto LOOP;
 			break;
 		}
@@ -653,6 +649,14 @@ bool sqrl_user_set_rescue_code( Sqrl_User u, char *rc )
 	return true;
 }
 
+bool sqrl_user_force_decrypt( Sqrl_User u )
+{
+	if( sqrl_user_key( u, KEY_MK )) {
+		return true;
+	}
+	return false;
+}
+
 /**
 Sets the password for a \p User. Passwords longer than 512 characters are truncated.
 
@@ -667,8 +671,8 @@ bool sqrl_user_set_password( Sqrl_User u, char *password, size_t password_len )
 	if( sqrl_user_is_hintlocked( u )) return false;
 	WITH_USER(user,u);
 	if( user == NULL ) return false;
-	char *p = sqrl_user_password( u );
-	size_t *l = sqrl_user_password_length( u );
+	char *p = user->keys->password;
+	size_t *l = &user->keys->password_len;
 	if( !p || !l ) {
 		END_WITH_USER(user);
 		return false;
@@ -683,44 +687,6 @@ bool sqrl_user_set_password( Sqrl_User u, char *password, size_t password_len )
 	*l = password_len;
 	END_WITH_USER(user);
 	return true;
-}
-
-/**
-Gets a user's password.
-
-\warning Do not exceed 512 characters!
-
-@param u A \p Sqrl_User
-@return Pointer to char
-*/
-DLL_PUBLIC
-char *sqrl_user_password( Sqrl_User u )
-{
-	char *retVal = NULL;
-	WITH_USER(user,u);
-	if( user == NULL ) return NULL;
-	retVal = user->keys->password;
-	END_WITH_USER(user);
-	return retVal;
-}
-
-/**
-Gets the length of a user's password
-
-\warning The maximum password length is 512!
-
-@param u A \p Sqrl_User
-@return Pointer to size_t
-*/
-DLL_PUBLIC
-size_t *sqrl_user_password_length( Sqrl_User u )
-{
-	size_t *retVal = NULL;
-	WITH_USER(user,u);
-	if( user == NULL ) return NULL;
-	retVal = &user->keys->password_len;
-	END_WITH_USER(user);
-	return retVal;
 }
 
 uint8_t *sqrl_user_scratch( Sqrl_User u )

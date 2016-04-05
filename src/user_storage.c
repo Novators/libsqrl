@@ -161,7 +161,6 @@ bool sul_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	keyPointer = sqrl_user_key( u, KEY_MK );
 	sctx.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
 	if( !sqrl_crypt_gcm( &sctx, keyPointer )) {
-		printf( "Encryption failed\n" );
 		goto ERROR;
 	}
 
@@ -217,7 +216,6 @@ bool sus_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	sctx.count = 100;
 	sctx.flags = SQRL_ENCRYPT | SQRL_MILLIS;
 	if( !sqrl_crypt_gcm( &sctx, keyPointer )) {
-		printf( "Encryption failed\n" );
 		goto ERROR;
 	}
 	goto DONE;
@@ -376,117 +374,6 @@ ERROR:
 DONE:
 	sodium_memzero( user->keys->scratch, sctx.text_len + SQRL_KEY_SIZE );
 	END_WITH_USER(user);
-	return retVal;
-}
-
-Sqrl_Status sqrl_user_load_with_rescue_code(
-	Sqrl_User u,
-	sqrl_status_fn callback,
-	void *callback_data )
-{
-	WITH_USER(user,u);
-	if( !user ) return SQRL_STATUS_INVALID_PARAMETERS;
-		if( user->storage == NULL ) {
-		return SQRL_STATUS_NO_ID;
-	}
-
-	struct sqrl_user_callback_data cbdata;
-	Sqrl_Block block;
-	sqrl_block_clear( &block );
-
-	Sqrl_Status retVal = SQRL_STATUS_OK;
-
-	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_RECOVER_IDENTITY;
-	transaction.user = u;
-	cbdata.transaction = &transaction;
-	cbdata.adder = 0;
-	cbdata.divisor = 1;
-
-	if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_RESCUE ) &&
-		sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_RESCUE )) 
-	{
-		if( ! sul_block_2( u, &block, cbdata )) {
-			goto ERROR;
-		}
-		sqrl_block_free( &block );
-		sqrl_user_regen_keys( u );
-		if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_PREVIOUS ) &&
-			sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_PREVIOUS ))
-		{
-			if( ! sul_block_3( u, &block, cbdata )) {
-				goto ERROR;
-			}
-		}
-		goto DONE;
-	} else {
-		retVal = SQRL_STATUS_NO_ID;
-		goto ERROR;
-	}
-
-ERROR:
-	if( retVal == SQRL_STATUS_OK ) {
-		retVal = SQRL_STATUS_ERROR;
-	}
-
-DONE:
-	END_WITH_USER(user);
-	sqrl_block_free( &block );
-	return retVal;
-}
-
-Sqrl_Status sqrl_user_load_with_password(
-	Sqrl_User u,
-	sqrl_status_fn callback,
-	void *callback_data )
-{
-	WITH_USER(user,u);
-	if( !user ) return SQRL_STATUS_INVALID_PARAMETERS;
-	if( user->storage == NULL ) {
-		return SQRL_STATUS_NO_ID;
-	}
-
-	struct sqrl_user_callback_data cbdata;
-	Sqrl_Block block;
-	sqrl_block_clear( &block );
-
-	Sqrl_Status retVal = SQRL_STATUS_OK;
-	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_LOAD_IDENTITY;
-	transaction.user = u;
-	cbdata.transaction = &transaction;
-	cbdata.adder = 0;
-	cbdata.divisor = 1;
-
-	if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_USER ) &&
-		sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_USER )) 
-	{
-		if( ! sul_block_1( u, &block, cbdata )) {
-			goto ERROR;
-		}
-		sqrl_block_free( &block );
-		if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_PREVIOUS ) &&
-			sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_PREVIOUS ))
-		{
-			if( ! sul_block_3( u, &block, cbdata )) {
-				goto ERROR;
-			}
-			sqrl_block_free( &block );
-		}
-	} else {
-		retVal = SQRL_STATUS_NO_ID;
-		goto ERROR;
-	}
-	goto DONE;
-
-ERROR:
-	if( retVal == SQRL_STATUS_OK ) {
-		retVal = SQRL_STATUS_ERROR;
-	}
-
-DONE:
-	END_WITH_USER(user);
-	sqrl_block_free( &block );
 	return retVal;
 }
 
@@ -663,7 +550,6 @@ DONE:
 
 bool sqrl_user_try_load_password( Sqrl_User u, bool retry )
 {
-	printf( "sqrl_user_try_load_password\n" );
 	WITH_USER(user,u);
 	if( !user ) return false;
 	bool retVal = false;
@@ -677,29 +563,24 @@ bool sqrl_user_try_load_password( Sqrl_User u, bool retry )
 	cbdata.divisor = 1;
 LOOP:
 	if( !sqrl_storage_block_exists( user->storage, SQRL_BLOCK_USER )) {
-		printf( "No PW block.  Trying RC block.\n" );
 		retVal = sqrl_user_try_load_rescue( u, retry );
 		goto DONE;
 	}
 	if( user->keys->password_len == 0 ) {
-		printf( "PWL == 0\n" );
 		goto NEEDAUTH;
 	}
 
 	memset( &block, 0, sizeof( Sqrl_Block ));
 	sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_USER );
-	printf( "sul_block_1\n" );
 	if( ! sul_block_1( u, &block, cbdata )) {
 		sqrl_block_free( &block );
-		printf( "sul_block_1 failed\n" );
 		goto NEEDAUTH;
 	}
 	sqrl_block_free( &block );
-	sqrl_user_regen_keys( u );
+	//sqrl_user_regen_keys( u );
 	if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_PREVIOUS ) &&
 		sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_PREVIOUS ))
 	{
-		printf( "sul_block_3\n" );
 		sul_block_3( u, &block, cbdata );
 		sqrl_block_free( &block );
 	}
@@ -715,13 +596,11 @@ NEEDAUTH:
 
 DONE:
 	END_WITH_USER(user);
-	printf( "/sqrl_user_try_load_password\n" );
 	return retVal;
 }
 
 bool sqrl_user_try_load_rescue( Sqrl_User u, bool retry )
 {
-	printf( "sqrl_user_try_load_rescue\n" );
 	WITH_USER(user,u);
 	if( !user ) return false;
 	bool retVal = false;

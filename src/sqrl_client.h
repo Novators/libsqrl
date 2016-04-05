@@ -210,32 +210,31 @@ These functions facilitate creating and maintaining user identities.
 
 typedef void* Sqrl_User;
 
-uint16_t sqrl_user_check_flags( Sqrl_User u, uint16_t flags );
-void sqrl_user_clear_flags( Sqrl_User u, uint16_t flags );
-Sqrl_User sqrl_user_create();
-Sqrl_User sqrl_user_create_from_file( const char *filename );
-Sqrl_User sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len );
-bool sqrl_user_save( Sqrl_User u, const char *filename, Sqrl_Export exportType, Sqrl_Encoding encoding );
-char *sqrl_user_save_to_buffer( Sqrl_User u, size_t *buffer_len, Sqrl_Export exportType, Sqrl_Encoding encoding );
-Sqrl_User sqrl_user_release( Sqrl_User user );
-bool sqrl_user_hold( Sqrl_User user );
-uint8_t sqrl_user_get_enscrypt_seconds( Sqrl_User u );
-uint8_t sqrl_user_get_hint_length( Sqrl_User u );
-char *sqrl_user_get_rescue_code( Sqrl_User u );
-uint16_t sqrl_user_get_timeout_minutes( Sqrl_User u );
-void sqrl_user_hintlock( Sqrl_User user );
-void sqrl_user_hintunlock( Sqrl_User user, 
+uint16_t   sqrl_user_check_flags( Sqrl_User u, uint16_t flags );
+void       sqrl_user_clear_flags( Sqrl_User u, uint16_t flags );
+Sqrl_User  sqrl_user_create();
+Sqrl_User  sqrl_user_create_from_file( const char *filename );
+Sqrl_User  sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len );
+bool       sqrl_user_save( Sqrl_User u, const char *filename, Sqrl_Export exportType, Sqrl_Encoding encoding );
+char*      sqrl_user_save_to_buffer( Sqrl_User u, size_t *buffer_len, Sqrl_Export exportType, Sqrl_Encoding encoding );
+Sqrl_User  sqrl_user_release( Sqrl_User user );
+bool       sqrl_user_hold( Sqrl_User user );
+uint8_t    sqrl_user_get_enscrypt_seconds( Sqrl_User u );
+uint8_t    sqrl_user_get_hint_length( Sqrl_User u );
+char*      sqrl_user_get_rescue_code( Sqrl_User u );
+uint16_t   sqrl_user_get_timeout_minutes( Sqrl_User u );
+void       sqrl_user_hintlock( Sqrl_User user );
+void       sqrl_user_hintunlock( Sqrl_User user, 
 				char *hint, 
 				size_t len );
-bool sqrl_user_is_hintlocked( Sqrl_User user );
-void sqrl_user_set_enscrypt_seconds( Sqrl_User u, uint8_t seconds );
-void sqrl_user_set_flags( Sqrl_User u, uint16_t flags );
-void sqrl_user_set_hint_length( Sqrl_User u, uint8_t length );
-bool sqrl_user_set_password( Sqrl_User u, char *password, size_t password_len );
-bool sqrl_user_set_rescue_code( Sqrl_User u, char *rc );
-void sqrl_user_set_timeout_minutes( Sqrl_User u, uint16_t minutes );
-bool sqrl_user_unique_id( Sqrl_User u, char *buffer );
-bool sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id );
+bool       sqrl_user_is_hintlocked( Sqrl_User user );
+void       sqrl_user_set_enscrypt_seconds( Sqrl_User u, uint8_t seconds );
+void       sqrl_user_set_flags( Sqrl_User u, uint16_t flags );
+void       sqrl_user_set_hint_length( Sqrl_User u, uint8_t length );
+bool       sqrl_user_set_rescue_code( Sqrl_User u, char *rc );
+void       sqrl_user_set_timeout_minutes( Sqrl_User u, uint16_t minutes );
+bool       sqrl_user_unique_id( Sqrl_User u, char *buffer );
+bool       sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id );
 
 /** @} */ // endgroup user
 
@@ -277,7 +276,8 @@ typedef enum {
 typedef enum {
 	SQRL_CREDENTIAL_PASSWORD,
 	SQRL_CREDENTIAL_HINT,
-	SQRL_CREDENTIAL_RESCUE_CODE
+	SQRL_CREDENTIAL_RESCUE_CODE,
+	SQRL_CREDENTIAL_OLD_PASSWORD
 } Sqrl_Credential_Type;
 
 typedef enum {
@@ -291,7 +291,8 @@ typedef enum {
 	SQRL_TRANSACTION_REKEY_IDENTITY,
 	SQRL_TRANSACTION_UNLOCK_IDENTITY,
 	SQRL_TRANSACTION_LOCK_IDENTITY,
-	SQRL_TRANSACTION_LOAD_IDENTITY
+	SQRL_TRANSACTION_LOAD_IDENTITY,
+	SQRL_TRANSACTION_CHANGE_PASSWORD
 } Sqrl_Transaction_Type;
 
 typedef struct Sqrl_Client_Transaction {

@@ -388,10 +388,7 @@ void printBlock3( Sqrl_Storage storage )
 		sqrl_block_free( &block );
 		if( password ) {
 			user = sqrl_user_create_from_buffer( text, strlen(text));
-			ptr = (uint8_t*)sqrl_user_password( user );
-			size_t *pl = sqrl_user_password_length( user );
-			*pl = strlen( password );
-			strcpy( (char*)ptr, password );
+			sqrl_user_set_password( user, password, strlen(password));
 			ptr = sqrl_user_key( user, KEY_MK );
 			sodium_bin2hex( str, 512, ptr, 32 );
 			printf( "  AES-GCM Key:\n" );
