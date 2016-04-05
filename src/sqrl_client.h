@@ -242,6 +242,11 @@ bool       sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id );
 
 @{ */
 
+typedef enum {
+	SQRL_SCHEME_SQRL,
+	SQRL_SCHEME_FILE
+} Sqrl_Scheme;
+
 /**
 A structure to hold information about a parsed SQRL URL
 */
@@ -255,7 +260,7 @@ typedef struct Sqrl_Uri {
 	/** the https url */
 	char *url;
 	/** Internal use */
-	char *scheme;
+	Sqrl_Scheme scheme;
 } Sqrl_Uri;
 
 Sqrl_Uri*	sqrl_uri_create_copy( Sqrl_Uri *original );
@@ -345,7 +350,7 @@ void sqrl_client_set_callbacks( Sqrl_Client_Callbacks *callbacks );
 
 Sqrl_Client_Transaction *sqrl_client_begin_transaction(
 	Sqrl_Transaction_Type type,
-	const char *link, size_t link_len );
+	const char *uri, size_t uri_len );
 Sqrl_Client_Transaction *sqrl_client_end_transaction(
 	Sqrl_Client_Transaction *transaction );
 void sqrl_client_answer( 

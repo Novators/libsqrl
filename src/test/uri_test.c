@@ -11,13 +11,14 @@ For more details, see the LICENSE file included with this package.
 
 #define STREQ(A,B) if( strcmp( A, B ) != 0 ) { printf( "%s != %s\n", A, B ); exit(1); }
 #define STRNULL(A) if( A != NULL ) { printf( "%s should be NULL!\n", A ); exit(1); }
+#define NUMEQ(A,B) if( A != B ) { printf( "%d != %d\n", A, B ); exit(1); }
 
 void printuri( Sqrl_Uri *uri )
 {
 	printf( "URL: %s\n", uri->url );
 	printf( "cha: %s\n", uri->challenge );
 	printf( "hst: %s\n", uri->host );
-	printf( "scm: %s\n\n", uri->scheme );
+	printf( "scm: %s\n\n", uri->scheme == SQRL_SCHEME_SQRL ? "sqrl" : "file" );
 }
 
 int main() 
@@ -25,7 +26,8 @@ int main()
 	Sqrl_Uri *uri;
 
 	uri = sqrl_uri_parse( "sqrl://sqrlid.com/login//nut=blah" );
-	STREQ( uri->scheme, "sqrl" )
+	printuri( uri );
+	NUMEQ( uri->scheme, SQRL_SCHEME_SQRL );
 	STREQ( uri->host, "sqrlid.com/login" )
 	STREQ( uri->challenge, "sqrl://sqrlid.com/login//nut=blah" )
 	STREQ( uri->url, "https://sqrlid.com/login/nut=blah" )
@@ -33,7 +35,8 @@ int main()
 	sqrl_uri_free( uri );
 
 	uri = sqrl_uri_parse( "sqrl://sqrlid.com/login?nut=blah" );
-	STREQ( uri->scheme, "sqrl" );
+	printuri( uri );
+	NUMEQ( uri->scheme, SQRL_SCHEME_SQRL );
 	STREQ( uri->host, "sqrlid.com" );
 	STREQ( uri->challenge, "sqrl://sqrlid.com/login?nut=blah" );
 	STREQ( uri->url, "https://sqrlid.com/login?nut=blah" );
@@ -41,7 +44,8 @@ int main()
 	sqrl_uri_free( uri );
 
 	uri = sqrl_uri_parse( "sqrl://sqrlid.com:8080/login?nut=blah" );
-	STREQ( uri->scheme, "sqrl" );
+	printuri( uri );
+	NUMEQ( uri->scheme, SQRL_SCHEME_SQRL );
 	STREQ( uri->host, "sqrlid.com" );
 	STREQ( uri->challenge, "sqrl://sqrlid.com:8080/login?nut=blah" );
 	STREQ( uri->url, "https://sqrlid.com:8080/login?nut=blah" );
@@ -49,16 +53,12 @@ int main()
 	sqrl_uri_free( uri );
 
 	uri = sqrl_uri_parse( "file://test1.sqrl" );
-	if( !uri ) {
-		printf( "Failed to parse file:// uri\n" );
-		exit(1);
-	}
-	STREQ( uri->scheme, "file" );
+	printuri( uri );
+	NUMEQ( uri->scheme, SQRL_SCHEME_FILE );
 	STRNULL( uri->host );
-	STRNULL( uri->challenge );
-	STREQ( uri->url, "test1.sqrl" );
+	STREQ( uri->url, "file://test1.sqrl" );
+	STREQ( uri->challenge, "test1.sqrl" );
 	STRNULL( uri->prefix );
-
 	sqrl_uri_free( uri );
 
 	uri = sqrl_uri_parse( "http://google.com" );
