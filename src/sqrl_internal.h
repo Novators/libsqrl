@@ -50,6 +50,20 @@ do{                                                   \
 #define SQRL_MILLIS 2
 #define SQRL_ITERATIONS 0
 
+#define KEY_MK           1
+#define KEY_ILK          2
+#define KEY_PIUK0        3
+#define KEY_PIUK1        4
+#define KEY_PIUK2        5
+#define KEY_PIUK3        6
+#define KEY_IUK          7
+#define KEY_LOCAL        8
+#define KEY_RESCUE_CODE  9
+#define KEY_PASSWORD    10
+
+#define KEY_PASSWORD_MAX_LEN 512
+
+
 typedef int (*enscrypt_progress_fn)(int percent, void* data);
 double sqrl_get_real_time( );
 
