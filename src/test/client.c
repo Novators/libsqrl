@@ -17,10 +17,10 @@ char gen_password[32] = "abcdef";
 char gen_rescue_code[25];
 char gen_uid[SQRL_UNIQUE_ID_LENGTH + 1];
 char *gen_data;
+Sqrl_User gen_user = NULL;
 char load_uid[SQRL_UNIQUE_ID_LENGTH + 1];
 Sqrl_User load_user = NULL;
-Sqrl_User gen_user = NULL;
-
+char new_password[] = "123456";
 char *password = t1_password;
 char *rescueCode = t1_rescue_code;
 
@@ -47,8 +47,14 @@ bool onAuthenticationRequired(
         break;
     case SQRL_CREDENTIAL_RESCUE_CODE:
         PC( "AUTH_REQ", "Rescue Code" );
-        printf( "Rescue Code Requested, but not needed!\n" );
-        exit(1);
+        cred = malloc( strlen( rescueCode ) + 1 );
+        strcpy( cred, rescueCode );
+        break;
+    case SQRL_CREDENTIAL_NEW_PASSWORD:
+        PC( "AUTH_REQ", "New Password" );
+        cred = malloc( strlen( new_password ) + 1 );
+        strcpy( cred, new_password );
+        break;
     default:
         return false;
     }
@@ -136,8 +142,8 @@ void onTransactionComplete( Sqrl_Client_Transaction *transaction )
                 gen_data = malloc( transaction->string_len + 1 );
                 strcpy( gen_data, transaction->string );
                 sqrl_user_unique_id( gen_user, gen_uid );
-                PC( "GEN_UID", gen_uid );
-                PC( "GEN_DATA", gen_data );
+                PC( "SAVE_UID", gen_uid );
+                PC( "SAVE_DATA", gen_data );
             }
         default:
             break;
@@ -200,6 +206,30 @@ int main()
         exit(1);
     }
     PC( "PASS", "Reload Generated Identity" );
+
+    free( gen_data );
+    gen_data = NULL;
+    if( SQRL_TRANSACTION_STATUS_SUCCESS != sqrl_client_begin_transaction( SQRL_TRANSACTION_IDENTITY_CHANGE_PASSWORD, load_user, NULL, 0 )) {
+        PC( "FAIL", "Change Password" );
+    }
+    if( SQRL_TRANSACTION_STATUS_SUCCESS != sqrl_client_export_user( load_user, NULL, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 )) {
+        PC( "FAIL", "Save Changed Identity" );
+    }
+
+    load_user = sqrl_user_release( load_user );
+    password = new_password;
+    if( SQRL_TRANSACTION_STATUS_SUCCESS != sqrl_client_begin_transaction( SQRL_TRANSACTION_IDENTITY_LOAD, NULL, gen_data, strlen( gen_data ))) {
+        PC( "FAIL", "Load Changed Identity" );
+        exit(1);
+    }
+    PC( "PASS", "Change Password" );
+
+    password = gen_password;
+    if( SQRL_TRANSACTION_STATUS_SUCCESS != sqrl_client_begin_transaction( SQRL_TRANSACTION_IDENTITY_RESCUE, load_user, NULL, 0 )) {
+        PC( "FAIL", "Rescue Identity" );
+        exit(1);
+    }
+    PC( "PASS", "Rescue Identity" );
 
     gen_user = sqrl_user_release( gen_user );
     t1_user = sqrl_user_release( t1_user );

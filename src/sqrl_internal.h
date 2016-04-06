@@ -180,6 +180,7 @@ Sqrl_User   sqrl_user_create_from_file( const char *filename );
 int         sqrl_user_enscrypt_callback( int percent, void *data );
 void        sqrl_user_ensure_keys_allocated( Sqrl_User u );
 bool        sqrl_user_force_decrypt( Sqrl_Client_Transaction *transaction );
+bool        sqrl_user_force_rescue( Sqrl_Client_Transaction *transaction );
 bool        sqrl_user_has_key( Sqrl_User user, int key_type );
 void        sqrl_user_hintlock( Sqrl_User user );
 void        sqrl_user_hintunlock( 

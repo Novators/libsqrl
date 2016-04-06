@@ -685,6 +685,15 @@ bool sqrl_user_force_decrypt( Sqrl_Client_Transaction *transaction )
 	return false;
 }
 
+bool sqrl_user_force_rescue( Sqrl_Client_Transaction *transaction )
+{
+	if( !transaction ) return false;
+	if( sqrl_user_key( transaction, KEY_IUK )) {
+		return true;
+	}
+	return false;
+}
+
 /**
 Sets the password for a \p User. Passwords longer than 512 characters are truncated.
 

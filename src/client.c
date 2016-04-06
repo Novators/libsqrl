@@ -147,6 +147,23 @@ bool sqrl_client_require_hint( Sqrl_Client_Transaction *transaction )
 	return retVal;
 }
 
+bool sqrl_client_require_new_password( Sqrl_Client_Transaction *transaction )
+{
+	if( !transaction ) return false;
+	WITH_USER(user,transaction->user);
+	if( !user ) return false;
+	bool retVal = true;
+	if( sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_NEW_PASSWORD ) &&
+		user->keys->password_len > 0 ) {
+		goto DONE;
+	}
+	retVal = false;
+
+DONE:
+	END_WITH_USER(user);
+	return retVal;
+}
+
 bool sqrl_client_require_password( Sqrl_Client_Transaction *transaction )
 {
 	if( !transaction ) return false;
@@ -156,8 +173,8 @@ bool sqrl_client_require_password( Sqrl_Client_Transaction *transaction )
 	if( user->keys->password_len > 0 ) {
 		goto DONE;
 	}
-	if( sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_PASSWORD &&
-		user->keys->password_len > 0 )) {
+	if( sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_PASSWORD ) &&
+		user->keys->password_len > 0 ) {
 		goto DONE;
 	}
 	retVal = false;
@@ -175,8 +192,8 @@ bool sqrl_client_require_rescue_code( Sqrl_Client_Transaction *transaction )
 	if( sqrl_user_has_key( transaction->user, KEY_RESCUE_CODE ) ) {
 		goto DONE;
 	}
-	if( sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_RESCUE_CODE &&
-		sqrl_user_has_key( transaction->user, KEY_RESCUE_CODE) )) {
+	if( sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_RESCUE_CODE ) &&
+		sqrl_user_has_key( transaction->user, KEY_RESCUE_CODE) ) {
 		goto DONE;
 	}
 	retVal = false;
@@ -267,10 +284,13 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	case SQRL_TRANSACTION_AUTH_REMOVE:
 		goto NI;
 	case SQRL_TRANSACTION_IDENTITY_RESCUE:
-		goto NI;
+		if( !transaction.user ) goto ERROR;
+		if( sqrl_user_force_rescue( &transaction )) {
+			goto SUCCESS;
+		}
+		goto ERROR;
 	case SQRL_TRANSACTION_IDENTITY_REKEY:
 		if( !transaction.user ) goto ERROR;
-		sqrl_user_hold( transaction.user );
 		sqrl_user_rekey( &transaction );
 		if( sqrl_client_require_password( &transaction )) {
 			sqrl_client_call_save_suggested( transaction.user );
@@ -302,7 +322,13 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 		}
 		goto ERROR;
 	case SQRL_TRANSACTION_IDENTITY_CHANGE_PASSWORD:
-		goto NI;
+		if( !transaction.user ) goto ERROR;
+		if( sqrl_user_force_decrypt( &transaction )) {
+			if( sqrl_client_require_new_password( &transaction )) {
+				goto SUCCESS;
+			}
+		}
+		goto ERROR;
 	default:
 		goto ERROR;
 	}
