@@ -42,3 +42,4 @@ makevectors
 user_test
 peek
 client_test
+protocol_test

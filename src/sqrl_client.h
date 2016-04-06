@@ -75,6 +75,7 @@ Sqrl_User  sqrl_user_find( const char *unique_id );
 Sqrl_User  sqrl_user_release( Sqrl_User user );
 bool       sqrl_user_hold( Sqrl_User user );
 uint8_t    sqrl_user_get_enscrypt_seconds( Sqrl_User u );
+uint16_t   sqrl_user_get_flags( Sqrl_User u );
 uint8_t    sqrl_user_get_hint_length( Sqrl_User u );
 char*      sqrl_user_get_rescue_code( Sqrl_User u );
 uint16_t   sqrl_user_get_timeout_minutes( Sqrl_User u );
@@ -94,6 +95,7 @@ bool       sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id );
 @{ */
 
 typedef enum {
+	SQRL_SCHEME_INVALID = 0,
 	SQRL_SCHEME_SQRL,
 	SQRL_SCHEME_FILE
 } Sqrl_Scheme;
@@ -112,6 +114,8 @@ typedef struct Sqrl_Uri {
 	char *url;
 	/** Internal use */
 	Sqrl_Scheme scheme;
+	/** Server Friendly Name */
+	char *sfn;
 } Sqrl_Uri;
 
 Sqrl_Uri*	sqrl_uri_create_copy( Sqrl_Uri *original );
@@ -142,6 +146,7 @@ typedef enum {
 
 typedef enum {
 	SQRL_TRANSACTION_UNKNOWN = 0,
+	SQRL_TRANSACTION_AUTH_QUERY,
 	SQRL_TRANSACTION_AUTH_IDENT,
 	SQRL_TRANSACTION_AUTH_DISABLE,
 	SQRL_TRANSACTION_AUTH_ENABLE,
@@ -170,12 +175,12 @@ typedef struct Sqrl_Client_Transaction {
 	char *string;
 	size_t string_len;
 	Sqrl_Transaction_Status status;
-	bool altIdentitySpecified;
+	char *altIdentity;
 	Sqrl_Export exportType;
 	Sqrl_Encoding encodingType;
 } Sqrl_Client_Transaction;
 
-typedef void (sqrl_ccb_select_user)(
+typedef Sqrl_User (sqrl_ccb_select_user)(
 	Sqrl_Client_Transaction *transaction);
 typedef void (sqrl_ccb_select_alternate_identity)(
 	Sqrl_Client_Transaction *transaction);
@@ -233,12 +238,6 @@ void sqrl_client_authenticate(
 	Sqrl_Client_Transaction *transaction,
 	Sqrl_Credential_Type credentialType,
 	char *credential, size_t credentialLength );
-void sqrl_client_transaction_rescue(
-	Sqrl_Client_Transaction *transaction,
-	const char *rescue_code );
-void sqrl_client_transaction_set_user(
-	Sqrl_Client_Transaction *transaction,
-	Sqrl_User user );
 void sqrl_client_transaction_set_alternate_identity(
 	Sqrl_Client_Transaction *transaction,
 	const char *altIdentity );

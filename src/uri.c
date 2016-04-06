@@ -47,6 +47,12 @@ Sqrl_Uri *sqrl_uri_create_copy( Sqrl_Uri *original )
 			memcpy( nuri->url, original->url, sz );
 	}
 	nuri->scheme = original->scheme;
+	if( original->sfn ) {
+		sz = strlen( original->sfn );
+		nuri->sfn = calloc( sz + 1, 1 );
+		if( nuri->sfn )
+			memcpy( nuri->sfn, original->sfn, sz );
+	}
 	return nuri;
 }
 
@@ -67,6 +73,7 @@ _is_scheme_char(int c)
 	return (!isalpha(c) && '+' != c && '-' != c && '.' != c) ? 0 : 1;
 }
 
+/*
 static void _fix_divider( char *uri ) {
 	char *p = strstr( uri, "//" );
 	if( p ) {
@@ -83,6 +90,7 @@ static void _fix_divider( char *uri ) {
 		}
 	}
 }
+*/
 
 /**
 Parses a SQRL URL and returns a \p Sqrl_Uri object
@@ -330,6 +338,8 @@ SQRL:
 		puri->challenge = (char*) malloc( strlen( uri ) - 6 );
 		strcpy( puri->challenge, theUrl + 7 );
 		goto END;
+	default:
+		goto ERROR;
 	}
 	puri->challenge = (char*) malloc( strlen( uri ) + 1 );
 	if( puri->challenge == NULL || puri->url == NULL ) goto ERROR;
@@ -337,13 +347,33 @@ SQRL:
 	strcpy( puri->challenge, theUrl );
 
 	size_t hl = strlen( host );
-	size_t pl = 0;
+	long pl = 0;
 	size_t ul = hl + 1;
 	char *pp = NULL;
-	if( path ) {
-		pp = strstr( path, "//" );
+	char *ppp = NULL;
+	if( query ) {
+		pp = strstr( query, "sfn=" );
+		if( !pp ) {
+			goto ERROR;
+		}
+		pp += 4;
+		ppp = strchr( pp, '&' );
+		if( ppp ) {
+			pl = ppp - pp;
+		} else {
+			pl = strlen( pp );
+		}
+		UT_string *utsfn = sqrl_b64u_decode( NULL, pp, pl );
+		if( utsfn ) {
+			puri->sfn = calloc( 1, utstring_len( utsfn ) + 1 );
+			memcpy( puri->sfn, utstring_body( utsfn ), utstring_len( utsfn ));
+			utstring_free( utsfn );
+		}
+		pl = 0;
+		pp = strstr( query, "x=" );
 		if( pp ) {
-			pl = pp - path;
+			pp += 2;
+			pl = strtol( pp, NULL, 10 );
 		}
 	}
 	if( pl ) ul += pl + 1;
@@ -357,7 +387,6 @@ SQRL:
 	if( pl ) {
 		puri->host[hl] = '/';
 		strncpy( puri->host + hl + 1, path, pl );
-		_fix_divider( puri->url );
 	}
 	puri->prefix = (char*) malloc( utstring_len( prefix ));
 	if( puri->prefix == NULL ) goto ERROR;
@@ -396,6 +425,7 @@ Sqrl_Uri* sqrl_uri_free( Sqrl_Uri *uri )
 		if( uri->host ) free( uri->host );
 		if( uri->prefix ) free( uri->prefix );
 		if( uri->url ) free( uri->url );
+		if( uri->sfn ) free( uri->sfn );
 		free(uri);
 	}
 	return NULL;

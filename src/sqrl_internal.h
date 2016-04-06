@@ -63,6 +63,10 @@ do{                                                   \
 
 #define KEY_PASSWORD_MAX_LEN 512
 
+#define SQRL_VERSION_STRING "1"
+#define SQRL_KNOWN_VERSIONS_COUNT 1
+#define SQRL_CLIENT_VERSIONS {1}
+
 
 typedef int (*enscrypt_progress_fn)(int percent, void* data);
 double sqrl_get_real_time( );
@@ -220,7 +224,7 @@ struct Sqrl_User_List {
 
 extern struct Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
 
-void sqrl_client_call_select_user( 
+Sqrl_User sqrl_client_call_select_user( 
 	Sqrl_Client_Transaction *transaction );
 void sqrl_client_call_select_alternate_identity( 
 	Sqrl_Client_Transaction *transaction );
@@ -249,6 +253,28 @@ bool sqrl_client_require_password( Sqrl_Client_Transaction *transaction );
 bool sqrl_client_require_hint( Sqrl_Client_Transaction *transaction );
 bool sqrl_client_require_rescue_code( Sqrl_Client_Transaction *transaction );
 
+typedef struct Sqrl_Client_Site {
+	Sqrl_Client_Transaction *transaction;
+	uint16_t userOptFlags;
+	uint16_t flags;
+	char *serverFriendlyName;
+	int version;
+	uint32_t tif;
+	UT_string *serverString;
+	UT_string *clientString;
+	uint8_t *key_sec;
+	uint8_t *key_pub;
+	uint8_t *key_psec;
+	uint8_t *key_ppub;
+	uint8_t *key_suk;
+	uint8_t *key_vuk;
+	uint8_t *key_ursk;
+	uint8_t *key_urpk;
+	Sqrl_Transaction_Type currentTransaction;
+	int previous_identity;
+} Sqrl_Client_Site;
+
+Sqrl_Transaction_Status sqrl_client_do_ident( Sqrl_Client_Transaction *transaction );
 
 /* crypt.c */
 void 		sqrl_sign( const UT_string *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] );

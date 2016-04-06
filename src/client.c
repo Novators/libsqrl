@@ -37,14 +37,44 @@ void sqrl_client_set_callbacks( Sqrl_Client_Callbacks *callbacks )
 	}
 }
 
-void sqrl_client_call_select_user( Sqrl_Client_Transaction *transaction )
+Sqrl_User sqrl_client_call_select_user( Sqrl_Client_Transaction *transaction )
 {
-	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onSelectUser ) return;
-	(SQRL_CLIENT_CALLBACKS->onSelectUser)( transaction );
+	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onSelectUser ) return NULL;
+	Sqrl_User user = (SQRL_CLIENT_CALLBACKS->onSelectUser)( transaction );
+	if( user ) {
+		if( transaction->user ) {
+			transaction->user = sqrl_user_release( transaction->user );
+		}
+		transaction->user = user;
+		sqrl_user_hold( user );
+	}
+	return user;
+}
+
+DLL_PUBLIC
+void sqrl_client_transaction_set_alternate_identity(
+	Sqrl_Client_Transaction *transaction,
+	const char *altIdentity )
+{
+	if( !transaction ) return;
+	if( altIdentity ) {
+		if( transaction->altIdentity ) {
+			free( transaction->altIdentity );
+		}
+		size_t len = strlen( altIdentity );
+		if( len > 0 ) {
+			transaction->altIdentity = malloc( len + 1 );
+			strcpy( transaction->altIdentity, altIdentity );
+		}
+	}
 }
 
 void sqrl_client_call_select_alternate_identity( Sqrl_Client_Transaction *transaction )
 {
+	if( transaction->altIdentity ) {
+		free( transaction->altIdentity );
+		transaction->altIdentity = NULL;
+	}
 	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onSelectAlternateIdentity ) return;
 	(SQRL_CLIENT_CALLBACKS->onSelectAlternateIdentity)( transaction );
 }
@@ -265,6 +295,7 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	memset( &transaction, 0, sizeof( Sqrl_Client_Transaction ));
 	transaction.type = type;
 	transaction.status = retVal;
+
 	if( string ) {
 		transaction.uri = sqrl_uri_parse( string );
 	}
@@ -276,7 +307,15 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	case SQRL_TRANSACTION_UNKNOWN:
 		goto ERROR;
 	case SQRL_TRANSACTION_AUTH_IDENT:
-		goto NI;
+		if( !transaction.uri || transaction.uri->scheme != SQRL_SCHEME_SQRL ) {
+			goto ERROR;
+		}
+		if( !transaction.user ) {
+			sqrl_client_call_select_user( &transaction );
+			if( !transaction.user ) goto ERROR;
+		}
+		retVal = sqrl_client_do_ident( &transaction );
+		goto DONE;
 	case SQRL_TRANSACTION_AUTH_DISABLE:
 		goto NI;
 	case SQRL_TRANSACTION_AUTH_ENABLE:

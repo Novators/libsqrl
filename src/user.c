@@ -835,6 +835,16 @@ void sqrl_user_set_timeout_minutes( Sqrl_User u, uint16_t minutes )
 	END_WITH_USER(user);
 }
 
+DLL_PUBLIC
+uint16_t sqrl_user_get_flags( Sqrl_User u )
+{
+	uint16_t retVal = 0;
+	WITH_USER(user,u);
+	retVal = user->options.flags;
+	END_WITH_USER(user);
+	return retVal;
+}
+
 /**
 Helper to check a user's options flags
 
