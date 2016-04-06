@@ -29,7 +29,7 @@ do {if(DEBUG_PRINT_VAR && t) printf(s); } while( 0 )
 
 #ifdef DEBUG
 #define DEBUG_PRINT_VAR 1
-#define DEBUG_PRINT_REFERENCE_COUNT 0
+#define DEBUG_PRINT_REFERENCE_COUNT 1
 #else
 #define DEBUG_PRINT_VAR 0
 #define DEBUG_PRINT_REFERENCE_COUNT 0

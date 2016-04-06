@@ -115,7 +115,7 @@ int main()
 {
     sqrl_init();
     bool bError = false;
-    char txtBuffer[128] = {0};
+    char txtBuffer[1024] = {0};
     
     Sqrl_Client_Callbacks cbs;
     memset( &cbs, 0, sizeof( Sqrl_Client_Callbacks ));
@@ -134,5 +134,6 @@ int main()
         PC( "EXPCTD", "Tne7wOsRjUo1A8xs7V4K2kDpdKqpHsmHZpN-6eyOcLc" );
         exit(1);
     }
+    user = sqrl_user_release( user );
     PC( "ALL", "PASS" );
 }
