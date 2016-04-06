@@ -24,44 +24,22 @@ For more details, see the LICENSE file included with this package.
 #define SQRL_OPTION_CLEAR_HINT_USER_SWITCH	0x0040
 #define SQRL_OPTION_CLEAR_HINT_IDLE			0x0080
 
-// Defaults for new Identities
-#define SQRL_DEFAULT_N_FACTOR 				     9
-#define SQRL_DEFAULT_FLAGS 					  0xF1
-#define SQRL_DEFAULT_HINT_LENGTH 			     4
-#define SQRL_DEFAULT_TIMEOUT_MINUTES 		    15
-
 #ifdef DEBUG
+// (Much) faster enscrypt during debug...
 #define SQRL_DEFAULT_ENSCRYPT_SECONDS 		     1
 #define SQRL_RESCUE_ENSCRYPT_SECONDS 			 5
 #define SQRL_ENTROPY_NEEDED 					 1
 #define SQRL_MILLIS_PER_SECOND 				   100
+#define SQRL_HINT_ENSCRYPT_MILLISECONDS 	   100
 #else
 #define SQRL_DEFAULT_ENSCRYPT_SECONDS 		     5
 #define SQRL_RESCUE_ENSCRYPT_SECONDS 		    60
 #define SQRL_ENTROPY_NEEDED 				   512
 #define SQRL_MILLIS_PER_SECOND				  1000
+#define SQRL_HINT_ENSCRYPT_MILLISECONDS 	  1000
 #endif
 
-// For hints, uncomment one or the other...
-#define SQRL_HINT_ENSCRYPT_MILLISECONDS 	  1000
-//#define SQRL_HINT_ENSCRYPT_ITERATIONS 		20
 
-#define SQRL_BLOCK_USER 					0x0001
-#define SQRL_BLOCK_RESCUE 					0x0002
-#define SQRL_BLOCK_PREVIOUS					0x0003
-
-#define KEY_MK 			 1
-#define KEY_ILK 		 2
-#define KEY_PIUK0 		 3
-#define KEY_PIUK1		 4
-#define KEY_PIUK2		 5
-#define KEY_PIUK3		 6
-#define KEY_IUK 		 7
-#define KEY_LOCAL 		 8
-#define KEY_RESCUE_CODE  9
-#define KEY_PASSWORD    10
-
-#define KEY_PASSWORD_MAX_LEN 512
 
 /**
 \p Sqrl_Encoding specifies the type of encoding to use when exporting / saving.

@@ -12,6 +12,31 @@ For more details, see the LICENSE file included with this package.
 #include "sqrl_client.h"
 #include "sqrl_server.h"
 
+#define SQRL_BLOCK_USER                     0x0001
+#define SQRL_BLOCK_RESCUE                   0x0002
+#define SQRL_BLOCK_PREVIOUS                 0x0003
+
+#define KEY_MK           1
+#define KEY_ILK          2
+#define KEY_PIUK0        3
+#define KEY_PIUK1        4
+#define KEY_PIUK2        5
+#define KEY_PIUK3        6
+#define KEY_IUK          7
+#define KEY_LOCAL        8
+#define KEY_RESCUE_CODE  9
+#define KEY_PASSWORD    10
+
+#define KEY_PASSWORD_MAX_LEN 512
+
+// Defaults for new Identities
+#define SQRL_DEFAULT_N_FACTOR                    9
+#define SQRL_DEFAULT_FLAGS                    0xF1
+#define SQRL_DEFAULT_HINT_LENGTH                 4
+#define SQRL_DEFAULT_TIMEOUT_MINUTES            15
+
+
+
 /**
 \defgroup entropy Entropy Harvester
 
