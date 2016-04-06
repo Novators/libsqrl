@@ -307,9 +307,10 @@ typedef struct Sqrl_Client_Transaction {
 	Sqrl_Transaction_Type type;
 	Sqrl_User *user;
 	Sqrl_Uri *uri;
+	char *string;
+	size_t string_len;
 	Sqrl_Transaction_Status status;
 	bool altIdentitySpecified;
-	char *altIdentity;
 	Sqrl_Export exportType;
 	Sqrl_Encoding encodingType;
 } Sqrl_Client_Transaction;
@@ -334,7 +335,7 @@ typedef int (sqrl_ccb_progress)(
 	Sqrl_Client_Transaction *transaction,
 	int progress );
 typedef void (sqrl_ccb_save_suggested)(
-	Sqrl_User *user);
+	Sqrl_User user);
 typedef void (sqrl_ccb_transaction_complete)(
 	Sqrl_Client_Transaction *transaction );
 
@@ -351,10 +352,17 @@ typedef struct Sqrl_Client_Callbacks {
 void sqrl_client_get_callbacks( Sqrl_Client_Callbacks *callbacks );
 void sqrl_client_set_callbacks( Sqrl_Client_Callbacks *callbacks );
 
+Sqrl_Transaction_Status sqrl_client_export_user(
+	Sqrl_User user,
+	const char *uri,
+	Sqrl_Export exportType,
+	Sqrl_Encoding encodingType );
+
 Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	Sqrl_Transaction_Type type,
 	Sqrl_User user,
-	const char *uri );
+	const char *string,
+	size_t string_len );
 void sqrl_client_answer( 
 	Sqrl_Client_Transaction *transaction,
 	Sqrl_Button answer );

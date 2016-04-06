@@ -116,10 +116,17 @@ int main()
 	}
 	strcpy( myPassword, "asdfjkl" );
 	sqrl_user_set_password( user, myPassword, 7 );
-	char *buf = sqrl_user_save_to_buffer( user, NULL, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+	UT_string *buf;
+	utstring_new( buf );
+	WITH_USER(u,user);
+	sqrl_user_update_storage( user );
+	sqrl_storage_save_to_buffer( u->storage, buf, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+	END_WITH_USER(u);
 	user = sqrl_user_release( user );
 	user = NULL; // Make sure...
-	user = sqrl_user_create_from_buffer( buf, strlen(buf));
+	user = sqrl_user_create_from_buffer( utstring_body( buf ), utstring_len(buf));
+	utstring_free( buf );
+	buf = NULL;
 
 	key = sqrl_user_key( user, KEY_MK );
 	if( !key ) {

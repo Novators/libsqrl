@@ -145,7 +145,16 @@ int main()
 	strcpy( myRescueCode, sqrl_user_get_rescue_code( user ));
 	printKV( "RC", str );
 
-	buf = sqrl_user_save_to_buffer( user, NULL, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+	UT_string *ubuf;
+	utstring_new( ubuf );
+	WITH_USER(u,user);
+	sqrl_user_update_storage( user );
+	sqrl_storage_save_to_buffer( u->storage, ubuf, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+	END_WITH_USER(u);
+	buf = malloc( utstring_len( ubuf ) + 1 );
+	strcpy( buf, utstring_body( ubuf ));
+	utstring_free( ubuf );
+	ubuf = NULL;
 	ASSERT( "export_len", strlen( buf ) == 470 )
 
 	user = sqrl_user_release( user );

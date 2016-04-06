@@ -489,12 +489,18 @@ Sqrl_User sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len )
 	return u;
 }
 
-bool sqrl_user_save( Sqrl_User u, const char *filename, Sqrl_Export exportType, Sqrl_Encoding encoding )
+bool sqrl_user_save( Sqrl_Client_Transaction *transaction )
 {
+	if( !transaction || !transaction->uri ) return false;
+	if( transaction->uri->scheme != SQRL_SCHEME_FILE ) return false;
+	char *filename = transaction->uri->challenge;
 	if( filename == NULL ) return false;
-	WITH_USER(user,u);
+	Sqrl_Encoding encoding = transaction->encodingType;
+	Sqrl_Export exportType = transaction->exportType;
+
+	WITH_USER(user,transaction->user);
 	if( user == NULL ) return false;
-	if( sqrl_user_update_storage( u )) {
+	if( sqrl_user_update_storage( transaction->user )) {
 		if( sqrl_storage_save_to_file( user->storage, filename, exportType, encoding ) > 0 ) {
 			END_WITH_USER(user);
 			return true;
@@ -504,39 +510,40 @@ bool sqrl_user_save( Sqrl_User u, const char *filename, Sqrl_Export exportType, 
 	return false;
 }
 
-char *sqrl_user_save_to_buffer( Sqrl_User u, size_t *buffer_len, Sqrl_Export exportType, Sqrl_Encoding encoding )
+bool sqrl_user_save_to_buffer( Sqrl_Client_Transaction *transaction )
 {
-	WITH_USER(user,u);
-	if( !user ) return NULL;
-	char *retVal = NULL;
+	if( !transaction || !transaction->user ) return false;
+	Sqrl_Encoding encoding = transaction->encodingType;
+	Sqrl_Export exportType = transaction->exportType;
+	WITH_USER(user,transaction->user);
+	if( !user ) return false;
+	bool retVal = true;
 	UT_string *buf;
 	utstring_new( buf );
-	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_IDENTITY_SAVE;
-	transaction.user = u;
 	struct sqrl_user_callback_data cbdata;
-	cbdata.transaction = &transaction;
+	cbdata.transaction = transaction;
 	cbdata.adder = 0;
 	cbdata.divisor = 1;
 
-	if( sqrl_user_update_storage( u )) {
+	if( sqrl_user_update_storage( transaction->user )) {
 		if( sqrl_storage_save_to_buffer( user->storage, buf, exportType, encoding )) {
-			retVal = malloc( utstring_len(buf) + 1 );
-			if( !retVal ) goto ERROR;
-			memcpy( retVal, utstring_body(buf), utstring_len(buf));
-			retVal[utstring_len(buf)] = 0x00;
-			if( buffer_len ) {
-				*buffer_len = utstring_len(buf);
-			}
+			if( transaction->string ) free( transaction->string );
+			transaction->string = malloc( utstring_len(buf) + 1 );
+			if( !transaction->string ) goto ERROR;
+			memcpy( transaction->string, utstring_body(buf), utstring_len(buf));
+			transaction->string[utstring_len(buf)] = 0x00;
+			transaction->string_len = utstring_len( buf );
 			goto DONE;
 		}
 	}
 
 ERROR:
-	if( retVal ) {
-		free( retVal );
-		retVal = NULL;
+	if( transaction->string ) {
+		free( transaction->string );
+		transaction->string = NULL;
+		transaction->string_len = 0;
 	}
+	retVal = false;
 
 DONE:
 	if( buf ) {

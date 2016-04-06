@@ -182,16 +182,8 @@ uint8_t*    sqrl_user_new_key( Sqrl_User u, int key_type );
 bool        sqrl_user_regen_keys( Sqrl_User u );
 bool        sqrl_user_rekey( Sqrl_User u );
 void        sqrl_user_remove_key( Sqrl_User user, int key_type );
-bool        sqrl_user_save( 
-				Sqrl_User u, 
-				const char *filename, 
-				Sqrl_Export exportType, 
-				Sqrl_Encoding encoding );
-char*       sqrl_user_save_to_buffer( 
-				Sqrl_User u, 
-				size_t *buffer_len, 
-				Sqrl_Export exportType, 
-				Sqrl_Encoding encoding );
+bool        sqrl_user_save( Sqrl_Client_Transaction *transaction );
+bool        sqrl_user_save_to_buffer( Sqrl_Client_Transaction *transaction );
 uint8_t*    sqrl_user_scratch( Sqrl_User user );
 bool        sqrl_user_set_password( 
 				Sqrl_User u, 
@@ -232,7 +224,7 @@ int sqrl_client_call_progress(
 	Sqrl_Client_Transaction *transaction,
 	int progress );
 void sqrl_client_call_save_suggested(
-	Sqrl_User *user);
+	Sqrl_User user);
 void sqrl_client_call_transaction_complete(
 	Sqrl_Client_Transaction *transaction );
 

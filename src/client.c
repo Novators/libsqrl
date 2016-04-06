@@ -87,7 +87,7 @@ int sqrl_client_call_progress(
 }
 
 void sqrl_client_call_save_suggested(
-	Sqrl_User *user)
+	Sqrl_User user)
 {
 	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onSaveSuggested ) return;
 	(SQRL_CLIENT_CALLBACKS->onSaveSuggested)(user);
@@ -186,6 +186,48 @@ DONE:
 }
 
 /**
+Begins a save transaction.
+
+*/
+DLL_PUBLIC
+Sqrl_Transaction_Status sqrl_client_export_user(
+	Sqrl_User user,
+	const char *uri,
+	Sqrl_Export exportType,
+	Sqrl_Encoding encodingType )
+{
+	Sqrl_Transaction_Status status = SQRL_TRANSACTION_STATUS_WORKING;
+	Sqrl_Client_Transaction transaction;
+	memset( &transaction, 0, sizeof( Sqrl_Client_Transaction ));
+	transaction.type = SQRL_TRANSACTION_IDENTITY_SAVE;
+	transaction.user = user;
+	sqrl_user_hold( user );
+	transaction.exportType = exportType;
+	transaction.encodingType = encodingType;
+	if( uri ) {
+		transaction.uri = sqrl_uri_parse( uri );
+		if( !transaction.uri ) goto ERROR;
+		if( transaction.uri->scheme != SQRL_SCHEME_FILE ) goto ERROR;
+		if( !sqrl_user_save( &transaction )) goto ERROR;
+	} else {
+		if( !sqrl_user_save_to_buffer( &transaction )) goto ERROR;
+	}
+	status = SQRL_TRANSACTION_STATUS_SUCCESS;
+	goto DONE;
+
+ERROR:
+	status = SQRL_TRANSACTION_STATUS_FAILED;
+
+DONE:
+	transaction.status = status;
+	sqrl_client_call_transaction_complete( &transaction );
+
+	transaction.user = sqrl_user_release( transaction.user );
+	transaction.uri = sqrl_uri_free( transaction.uri );
+	return status;
+}
+
+/**
 Begins a SQRL transaction.
 
 If you are 
@@ -197,7 +239,8 @@ DLL_PUBLIC
 Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	Sqrl_Transaction_Type type,
 	Sqrl_User user,
-	const char *uri )
+	const char *string,
+	size_t string_len )
 {
 	Sqrl_Transaction_Status retVal = SQRL_TRANSACTION_STATUS_WORKING;
 	uint8_t *key;
@@ -205,9 +248,8 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	memset( &transaction, 0, sizeof( Sqrl_Client_Transaction ));
 	transaction.type = type;
 	transaction.status = retVal;
-	if( uri ) {
-		transaction.uri = sqrl_uri_parse( uri );
-		if( !transaction.uri ) goto ERROR;
+	if( string ) {
+		transaction.uri = sqrl_uri_parse( string );
 	}
 	if( user ) {
 		transaction.user = user;
@@ -224,8 +266,6 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 		goto NI;
 	case SQRL_TRANSACTION_AUTH_REMOVE:
 		goto NI;
-	case SQRL_TRANSACTION_IDENTITY_SAVE:
-		goto NI;
 	case SQRL_TRANSACTION_IDENTITY_RESCUE:
 		goto NI;
 	case SQRL_TRANSACTION_IDENTITY_REKEY:
@@ -238,11 +278,18 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 		}
 		goto ERROR;
 	case SQRL_TRANSACTION_IDENTITY_LOAD:
-		if( !transaction.uri || transaction.uri->scheme != SQRL_SCHEME_FILE ) goto ERROR;
 		if( transaction.user ) goto ERROR;
-		transaction.user = sqrl_user_create_from_file( transaction.uri->challenge );
-		if( transaction.user ) {
-			goto SUCCESS;
+		if( transaction.uri ) {
+			if( transaction.uri->scheme != SQRL_SCHEME_FILE ) goto ERROR;
+			transaction.user = sqrl_user_create_from_file( transaction.uri->challenge );
+			if( transaction.user ) {
+				goto SUCCESS;
+			}
+		} else {
+			transaction.user = sqrl_user_create_from_buffer( string, string_len );
+			if( transaction.user ) {
+				goto SUCCESS;
+			}
 		}
 		goto ERROR;
 	case SQRL_TRANSACTION_IDENTITY_GENERATE:
@@ -287,9 +334,9 @@ DONE:
 	if( transaction.user ) {
 		transaction.user = sqrl_user_release( transaction.user );
 	}
-	if( transaction.altIdentity ) {
-		free( transaction.altIdentity );
-		transaction.altIdentity = NULL;
+	if( transaction.string ) {
+		free( transaction.string );
+		transaction.string = NULL;
 	}
 	return retVal;
 }
