@@ -452,7 +452,16 @@ int main( int argc, char *argv[] )
 	} else if( filename ) {
 		u = sqrl_user_create_from_file( filename );
 		if( u ) {
-			text = sqrl_user_save_to_buffer( u, NULL, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+			UT_string *buf;
+			utstring_new( buf );
+			WITH_USER(user,u);
+			sqrl_user_update_storage( u );
+			sqrl_storage_save_to_buffer( user->storage, buf, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+			END_WITH_USER(user);
+			text = malloc( utstring_len( buf ) + 1 );
+			strcpy( text, utstring_body( buf ));
+			utstring_free( buf );
+			buf = NULL;
 			printf( "Loaded file Identity:\n");
 			printBreak( text, 64 );
 		} else {

@@ -218,7 +218,7 @@ bool sqrl_user_encrypt( Sqrl_User u, UT_string *text )
 }
 
 DLL_PUBLIC
-bool sqrl_user_decrypt( Sqrl_Key key, UT_string *text )
+bool sqrl_user_decrypt( Sqrl_User u, UT_string *text )
 {
 	return false;
 }

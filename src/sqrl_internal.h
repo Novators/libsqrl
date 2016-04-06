@@ -13,8 +13,7 @@ For more details, see the LICENSE file included with this package.
 
 #include "config.h"
 #include "crypto/gcm.h"
-#include "sqrl_client.h"
-#include "sqrl_server.h"
+#include "sqrl_expert.h"
 
 #define DEBUG_ERROR 1
 #define DEBUG_INFO 1
@@ -29,7 +28,7 @@ do {if(DEBUG_PRINT_VAR && t) printf(s); } while( 0 )
 
 #ifdef DEBUG
 #define DEBUG_PRINT_VAR 1
-#define DEBUG_PRINT_REFERENCE_COUNT 0
+#define DEBUG_PRINT_REFERENCE_COUNT 1
 #else
 #define DEBUG_PRINT_VAR 0
 #define DEBUG_PRINT_REFERENCE_COUNT 0
@@ -50,6 +49,20 @@ do{                                                   \
 #define SQRL_DECRYPT 0
 #define SQRL_MILLIS 2
 #define SQRL_ITERATIONS 0
+
+#define KEY_MK           1
+#define KEY_ILK          2
+#define KEY_PIUK0        3
+#define KEY_PIUK1        4
+#define KEY_PIUK2        5
+#define KEY_PIUK3        6
+#define KEY_IUK          7
+#define KEY_LOCAL        8
+#define KEY_RESCUE_CODE  9
+#define KEY_PASSWORD    10
+
+#define KEY_PASSWORD_MAX_LEN 512
+
 
 typedef int (*enscrypt_progress_fn)(int percent, void* data);
 double sqrl_get_real_time( );
@@ -124,7 +137,6 @@ struct Sqrl_User
 	SqrlMutex referenceCountMutex;
 	int referenceCount;
 	Sqrl_Storage storage;
-	char *filename;
 	char unique_id[SQRL_UNIQUE_ID_LENGTH+1];
 	struct Sqrl_Keys *keys;
 };
@@ -132,7 +144,10 @@ struct Sqrl_User
 struct sqrl_user_callback_data {
 	Sqrl_Client_Transaction *transaction;
 	int adder;
-	int divisor;
+	double multiplier;
+	int t1;
+	int t2;
+	int total;
 };
 
 #define SQRL_CAST_USER(a,b) struct Sqrl_User *(a) = (struct Sqrl_User*)(b)
@@ -158,24 +173,41 @@ if( user != NULL ) { \
 }
 
 
-void 		sqrl_user_default_options( Sqrl_User_Options *options );
-int sqrl_user_enscrypt_callback( int percent, void *data );
-void sqrl_user_ensure_keys_allocated( Sqrl_User u );
-uint8_t *sqrl_user_scratch( Sqrl_User user );
-bool sqrl_user_regen_keys( Sqrl_User u );
-uint8_t *sqrl_user_new_key( Sqrl_User u, int key_type );
-uint8_t *sqrl_user_key( Sqrl_User user, int key_type );
-void sqrl_user_remove_key( Sqrl_User user, int key_type );
-bool sqrl_user_has_key( Sqrl_User user, int key_type );
-bool sqrl_user_is_memlocked( Sqrl_User user );
-void sqrl_user_memlock( Sqrl_User user );
-void sqrl_user_memunlock( Sqrl_User user );
-bool sqrl_user_rekey( Sqrl_User u );
-bool sqrl_user_update_storage( Sqrl_User user );
-bool sqrl_user_try_load_rescue( Sqrl_User u, bool retry );
-bool sqrl_user_try_load_password( Sqrl_User u, bool retry );
-bool sqrl_user_set_password( Sqrl_User u, char *password, size_t password_len );
-bool sqrl_user_force_decrypt( Sqrl_User u );
+void        sqrl_user_default_options( Sqrl_User_Options *options );
+Sqrl_User   sqrl_user_create();
+Sqrl_User   sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len );
+Sqrl_User   sqrl_user_create_from_file( const char *filename );
+int         sqrl_user_enscrypt_callback( int percent, void *data );
+void        sqrl_user_ensure_keys_allocated( Sqrl_User u );
+bool        sqrl_user_force_decrypt( Sqrl_Client_Transaction *transaction );
+bool        sqrl_user_force_rescue( Sqrl_Client_Transaction *transaction );
+bool        sqrl_user_has_key( Sqrl_User user, int key_type );
+void        sqrl_user_hintlock( Sqrl_User user );
+void        sqrl_user_hintunlock( 
+                Sqrl_Client_Transaction *transaction, 
+				char *hint, 
+				size_t length );
+bool        sqrl_user_is_hintlocked( Sqrl_User user );
+bool        sqrl_user_is_memlocked( Sqrl_User user );
+uint8_t*    sqrl_user_key( Sqrl_Client_Transaction *transaction, int key_type );
+bool        sqrl_user_try_load_password( Sqrl_Client_Transaction *transaction, bool retry );
+bool        sqrl_user_try_load_rescue( Sqrl_Client_Transaction *transaction, bool retry );
+void        sqrl_user_memlock( Sqrl_User user );
+void        sqrl_user_memunlock( Sqrl_User user );
+uint8_t*    sqrl_user_new_key( Sqrl_User u, int key_type );
+bool        sqrl_user_regen_keys( Sqrl_Client_Transaction *transaction );
+bool        sqrl_user_rekey( Sqrl_Client_Transaction *transaction );
+void        sqrl_user_remove_key( Sqrl_User user, int key_type );
+bool        sqrl_user_save( Sqrl_Client_Transaction *transaction );
+bool        sqrl_user_save_to_buffer( Sqrl_Client_Transaction *transaction );
+uint8_t*    sqrl_user_scratch( Sqrl_User user );
+bool        sqrl_user_set_password( 
+				Sqrl_User u, 
+				char *password, 
+				size_t password_len );
+bool        sqrl_user_update_storage( Sqrl_Client_Transaction *transaction );
+
+
 
 #define BIT_CHECK(v,b) ((v & b) == b)
 #define BIT_SET(v,b) v |= b
@@ -184,11 +216,6 @@ bool sqrl_user_force_decrypt( Sqrl_User u );
 struct Sqrl_User_List {
 	struct Sqrl_User *user;
 	struct Sqrl_User_List *next;
-};
-
-struct Sqrl_Transaction_List {
-	struct Sqrl_Client_Transaction *transaction;
-	struct Sqrl_Transaction_List *next;
 };
 
 extern struct Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
@@ -213,7 +240,10 @@ int sqrl_client_call_progress(
 	Sqrl_Client_Transaction *transaction,
 	int progress );
 void sqrl_client_call_save_suggested(
-	Sqrl_User *user);
+	Sqrl_User user);
+void sqrl_client_call_transaction_complete(
+	Sqrl_Client_Transaction *transaction );
+
 
 bool sqrl_client_require_password( Sqrl_Client_Transaction *transaction );
 bool sqrl_client_require_hint( Sqrl_Client_Transaction *transaction );
