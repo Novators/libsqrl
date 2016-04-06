@@ -121,7 +121,7 @@ target_link_libraries(client_test sqrl)
 #documentation
 find_package(Doxygen QUIET)
 if(DOXYGEN_FOUND)
-	set(HEADERS src/sqrl_common.h src/sqrl_client.h src/sqrl_server.h)
+	set(HEADERS src/sqrl_common.h src/sqrl_client.h src/sqrl_server.h src/sqrl_expert.h)
 	set(DOCSRC ${HEADERS} ${SRC} html/mainpage.dox)
 	string(REPLACE ";" " " DOCSRCSTR "${DOCSRC}")
 	configure_file(${CMAKE_SOURCE_DIR}/Doxyfile.in ${CMAKE_SOURCE_DIR}/Doxyfile)

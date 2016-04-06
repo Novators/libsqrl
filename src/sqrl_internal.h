@@ -13,8 +13,7 @@ For more details, see the LICENSE file included with this package.
 
 #include "config.h"
 #include "crypto/gcm.h"
-#include "sqrl_client.h"
-#include "sqrl_server.h"
+#include "sqrl_expert.h"
 
 #define DEBUG_ERROR 1
 #define DEBUG_INFO 1
