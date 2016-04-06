@@ -12,7 +12,7 @@ For more details, see the LICENSE file included with this package.
 
 #include <stdio.h>
 #include <unistd.h>
-#include "../sqrl_client.h"
+#include "../sqrl_expert.h"
 
 int main() 
 {

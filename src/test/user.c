@@ -103,6 +103,9 @@ int main()
 	char *buf;
 	int i;
 
+	Sqrl_Client_Transaction genericTransaction;
+	memset( &genericTransaction, 0, sizeof( Sqrl_Client_Transaction ));
+
 	Sqrl_Client_Callbacks cbs;
 	memset( &cbs, 0, sizeof( Sqrl_Client_Callbacks ));
 	cbs.onAuthenticationRequired = onAuthenticationRequired;
@@ -110,6 +113,7 @@ int main()
 	sqrl_client_set_callbacks( &cbs );
 
 	Sqrl_User *user = sqrl_user_create();
+	genericTransaction.user = user;
 
 	printf( "    PW: %s\n", myPassword );
 	uint8_t saved[SQRL_KEY_SIZE*7];
@@ -119,65 +123,85 @@ int main()
 
 	char str[128];
 	for( i = 4; i > 0; i-- ) {
-		sqrl_user_rekey( user );
-		key = sqrl_user_key( user, KEY_IUK );
+		sqrl_user_rekey( &genericTransaction );
+		key = sqrl_user_key( &genericTransaction, KEY_IUK );
 		memcpy( sPointer, key, SQRL_KEY_SIZE );
 		sPointer += SQRL_KEY_SIZE;
 		sodium_bin2hex( str, 128, key, SQRL_KEY_SIZE );
 		printKV( "PIUK", str );
 	}
 
-	sqrl_user_rekey( user );
-	key = sqrl_user_key( user, KEY_IUK );
+	sqrl_user_rekey( &genericTransaction );
+	key = sqrl_user_key( &genericTransaction, KEY_IUK );
 	memcpy( sPointer, key, SQRL_KEY_SIZE );
 	sPointer += SQRL_KEY_SIZE;
 	sodium_bin2hex( str, 128, key, SQRL_KEY_SIZE );
 	printKV( "IUK", str );
-	key = sqrl_user_key( user, KEY_ILK );
+	key = sqrl_user_key( &genericTransaction, KEY_ILK );
 	memcpy( sPointer, key, SQRL_KEY_SIZE );
 	sPointer += SQRL_KEY_SIZE;
 	sodium_bin2hex( str, 128, key, SQRL_KEY_SIZE );
 	printKV( "ILK", str );
-	key = sqrl_user_key( user, KEY_MK );
+	key = sqrl_user_key( &genericTransaction, KEY_MK );
 	memcpy( sPointer, key, SQRL_KEY_SIZE );
 	sodium_bin2hex( str, 128, key, SQRL_KEY_SIZE );
 	printKV( "MK", str );
 	strcpy( myRescueCode, sqrl_user_get_rescue_code( user ));
 	printKV( "RC", str );
 
-	buf = sqrl_user_save_to_buffer( user, NULL, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+	UT_string *ubuf;
+	utstring_new( ubuf );
+	WITH_USER(u,user);
+	Sqrl_Client_Transaction transaction;
+	memset( &transaction, 0, sizeof( Sqrl_Client_Transaction ));
+	transaction.type = SQRL_TRANSACTION_IDENTITY_SAVE;
+	transaction.user = user;
+	sqrl_user_update_storage( &transaction );
+	sqrl_storage_save_to_buffer( u->storage, ubuf, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+	END_WITH_USER(u);
+	buf = malloc( utstring_len( ubuf ) + 1 );
+	strcpy( buf, utstring_body( ubuf ));
+	utstring_free( ubuf );
+	ubuf = NULL;
 	ASSERT( "export_len", strlen( buf ) == 470 )
 
 	user = sqrl_user_release( user );
 	user = sqrl_user_create_from_buffer( buf, strlen(buf) );
+	genericTransaction.user = user;
 
-	key = sqrl_user_key( user, KEY_MK );
+	key = sqrl_user_key( &genericTransaction, KEY_MK );
 	ASSERT( "load_mk", 0 == sodium_memcmp( key, saved + (SQRL_KEY_SIZE * 6), SQRL_KEY_SIZE ));
 
 	ASSERT( "hintlock_1", !sqrl_user_is_hintlocked( user ) )
 	sqrl_user_hintlock( user );
 	ASSERT( "hintlock_2", sqrl_user_is_hintlocked( user ) )
-	sqrl_user_hintunlock( user, NULL, 0 );
+	Sqrl_Client_Transaction trans;
+	memset( &trans, 0, sizeof( Sqrl_Client_Transaction ));
+	trans.user = user;
+	trans.type = SQRL_TRANSACTION_IDENTITY_UNLOCK;
+	sqrl_user_hintunlock( &trans, NULL, 0 );
 	ASSERT( "hintlock_3", !sqrl_user_is_hintlocked( user ) )
 
-	key = sqrl_user_key( user, KEY_ILK );
+	key = sqrl_user_key( &genericTransaction, KEY_ILK );
 	ASSERT( "load_ilk", 0 == sodium_memcmp( key, saved + (SQRL_KEY_SIZE * 5), SQRL_KEY_SIZE ));
-	key = sqrl_user_key( user, KEY_PIUK0 );
+	key = sqrl_user_key( &genericTransaction, KEY_PIUK0 );
 	ASSERT( "load_piuk1", 0 == sodium_memcmp( key, saved + (SQRL_KEY_SIZE * 3), SQRL_KEY_SIZE ));
-	key = sqrl_user_key( user, KEY_PIUK1 );
+	key = sqrl_user_key( &genericTransaction, KEY_PIUK1 );
 	ASSERT( "load_piuk2", 0 == sodium_memcmp( key, saved + (SQRL_KEY_SIZE * 2), SQRL_KEY_SIZE ));
-	key = sqrl_user_key( user, KEY_PIUK2 );
+	key = sqrl_user_key( &genericTransaction, KEY_PIUK2 );
 	ASSERT( "load_piuk3", 0 == sodium_memcmp( key, saved + (SQRL_KEY_SIZE * 1), SQRL_KEY_SIZE ));
-	key = sqrl_user_key( user, KEY_PIUK3 );
+	key = sqrl_user_key( &genericTransaction, KEY_PIUK3 );
 	ASSERT( "load_piuk4", 0 == sodium_memcmp( key, saved, SQRL_KEY_SIZE ));
 
 	user = sqrl_user_release( user );
 	user = sqrl_user_create_from_buffer( buf, strlen( buf ));
+	genericTransaction.user = user;
+
 	sPointer = loaded;
 	int keys[] = { KEY_PIUK3, KEY_PIUK2, KEY_PIUK1, KEY_PIUK0, KEY_IUK, KEY_ILK, KEY_MK };
 	char names[][6] = { "PIUK4", "PIUK3", "PIUK2", "PIUK1", "  IUK", "  ILK", "   MK" };
 	for( i = 0; i < 7; i++ ) {
-		key = sqrl_user_key( user, keys[i] );
+		key = sqrl_user_key( &genericTransaction, keys[i] );
 		memcpy( sPointer, key, SQRL_KEY_SIZE );
 		sPointer += SQRL_KEY_SIZE;
 	}

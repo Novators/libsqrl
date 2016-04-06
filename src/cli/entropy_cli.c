@@ -13,7 +13,7 @@ For more details, see the LICENSE file included with this package.
 #endif
 #include <sodium.h>
 #include <stdint.h>
-#include "../sqrl_client.h"
+#include "../sqrl_expert.h"
 #include "../entropy/rdrand.h"
 
 int main(int argc, char **argv)

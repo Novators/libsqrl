@@ -16,7 +16,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/libutils.cmake)
 
 set(sqrl_version_major 1)
 set(sqrl_version_minor 1)
-set(sqrl_build 18)
+set(sqrl_build 19)
 set(sqrl_version "${sqrl_version_major}.${sqrl_version_minor} build ${sqrl_build}")
 
 #set(CMAKE_BUILD_TYPE Release)
@@ -115,10 +115,13 @@ target_link_libraries(peek sqrl)
 add_executable(uri_test src/test/uri_test.c)
 target_link_libraries(uri_test sqrl)
 
+add_executable(client_test src/test/client.c)
+target_link_libraries(client_test sqrl)
+
 #documentation
 find_package(Doxygen QUIET)
 if(DOXYGEN_FOUND)
-	set(HEADERS src/sqrl_common.h src/sqrl_client.h src/sqrl_server.h)
+	set(HEADERS src/sqrl_common.h src/sqrl_client.h src/sqrl_server.h src/sqrl_expert.h)
 	set(DOCSRC ${HEADERS} ${SRC} html/mainpage.dox)
 	string(REPLACE ";" " " DOCSRCSTR "${DOCSRC}")
 	configure_file(${CMAKE_SOURCE_DIR}/Doxyfile.in ${CMAKE_SOURCE_DIR}/Doxyfile)
@@ -133,6 +136,7 @@ endif(DOXYGEN_FOUND)
 
 # Tests
 include(CTest)
+add_test(client_test client_test)
 add_test(uri_test uri_test)
 add_test(user_test user_test)
 add_test(encdec_test encdec_test)

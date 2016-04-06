@@ -15,9 +15,10 @@ int sqrl_user_enscrypt_callback( int percent, void *data )
 {
 	struct sqrl_user_callback_data *cbdata = (struct sqrl_user_callback_data*)data;
 	if( cbdata ) {
-		int progress = cbdata->adder + (percent / cbdata->divisor);
+		int progress = cbdata->adder + (percent * cbdata->multiplier);
 		if( progress > 100 ) progress = 100;
 		if( progress < 0 ) progress = 0;
+		if( percent == 100 && progress >= 99 ) progress = 100;
 		return sqrl_client_call_progress( cbdata->transaction, progress );
 	} else {
 		return 1;
@@ -47,6 +48,32 @@ printf( "%s: %d Users\n", tag, _pucI )
 #else
 #define PRINT_USER_COUNT(tag)
 #endif
+
+/**
+Finds a previously allocated \p Sqrl_User.  Be sure to release your reference
+with \p sqrl_user_release when you are finished with the \p Sqrl_User.
+
+@param unique_id A string of length \p SQRL_UNIQUE_ID_LENGTH identifying the \p Sqrl_User.
+@return Sqrl_User A \p Sqrl_User object, or NULL if not available.
+*/
+DLL_PUBLIC
+Sqrl_User sqrl_user_find( const char *unique_id )
+{
+	Sqrl_User user = NULL;
+	struct Sqrl_User_List *l;
+	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
+	l = SQRL_USER_LIST;
+	while( l ) {
+		if( l->user && sqrl_user_unique_id_match( l->user, unique_id )) {
+			user = l->user;
+			sqrl_user_hold( user );
+			break;
+		}
+		l = l->next;
+	}
+	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+	return user;
+}
 
 /**
 Creates an empty \p Sqrl_User, ready to generate or load identity data.
@@ -260,12 +287,12 @@ void sqrl_user_hintlock( Sqrl_User u )
 		return;
 	}
 	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_LOCK_IDENTITY;
+	transaction.type = SQRL_TRANSACTION_IDENTITY_LOCK;
 	transaction.user = u;
 	struct sqrl_user_callback_data cbdata;
 	cbdata.transaction = &transaction;
 	cbdata.adder = 0;
-	cbdata.divisor = 1;
+	cbdata.multiplier = 1;
 
 	Sqrl_Crypt_Context sctx;
 	uint8_t iv[12] = {0};
@@ -320,29 +347,25 @@ Decrypts the memory of a \p Sqrl_User using a hint (truncated password)
 @param callback_data Data for \p callback
 */
 DLL_PUBLIC
-void sqrl_user_hintunlock( Sqrl_User u, 
+void sqrl_user_hintunlock( Sqrl_Client_Transaction *transaction, 
 				char *hint, 
 				size_t length )
 {
+	if( !transaction ) return;
+	Sqrl_User u = transaction->user;
+	if( !u ) return;
 	if( !sqrl_user_is_hintlocked( u )) return;
 	if( hint == NULL || length == 0 ) {
-		Sqrl_Client_Transaction transaction;
-		memset( &transaction, 0, sizeof( Sqrl_Client_Transaction ));
-		transaction.type = SQRL_TRANSACTION_UNLOCK_IDENTITY;
-		transaction.user = u;
-		sqrl_client_require_hint( &transaction );
+		sqrl_client_require_hint( transaction );
 		return;
 	}
 	WITH_USER(user,u);
 	if( user == NULL ) return;
-	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_UNLOCK_IDENTITY;
-	transaction.user = u;
 
 	struct sqrl_user_callback_data cbdata;
-	cbdata.transaction = &transaction;
+	cbdata.transaction = transaction;
 	cbdata.adder = 0;
-	cbdata.divisor = 1;
+	cbdata.multiplier = 1;
 
 	Sqrl_Crypt_Context sctx;
 	uint8_t iv[12] = {0};
@@ -371,9 +394,9 @@ DONE:
 	END_WITH_USER(user);
 }
 
-bool _su_keygen( Sqrl_User u, int key_type, uint8_t *key )
+bool _su_keygen( Sqrl_Client_Transaction *transaction, int key_type, uint8_t *key )
 {
-	WITH_USER(user,u);
+	WITH_USER(user,transaction->user);
 	if( !user ) return false;
 	bool retVal = false;
 	int i;
@@ -382,10 +405,10 @@ bool _su_keygen( Sqrl_User u, int key_type, uint8_t *key )
 	switch( key_type ) {
 	case KEY_IUK:
 		for( i = 0; i < 4; i++ ) {
-			if( sqrl_user_has_key( u, keys[i] )) {
-				temp[i] = sqrl_user_key( u, keys[i] );
+			if( sqrl_user_has_key( transaction->user, keys[i] )) {
+				temp[i] = sqrl_user_key( transaction, keys[i] );
 			} else {
-				temp[i] = sqrl_user_new_key( u, keys[i] );
+				temp[i] = sqrl_user_new_key( transaction->user, keys[i] );
 			}
 		}
 		memcpy( temp[3], temp[2], SQRL_KEY_SIZE );
@@ -396,8 +419,8 @@ bool _su_keygen( Sqrl_User u, int key_type, uint8_t *key )
 		retVal = true;
 		break;
 	case KEY_MK:
-		if( sqrl_user_has_key( u, KEY_IUK )) {
-			temp[0] = sqrl_user_key( u, KEY_IUK );
+		if( sqrl_user_has_key( transaction->user, KEY_IUK )) {
+			temp[0] = sqrl_user_key( transaction, KEY_IUK );
 			if( temp[0] ) {
 				sqrl_gen_mk( key, temp[0] );
 				retVal = true;
@@ -405,14 +428,14 @@ bool _su_keygen( Sqrl_User u, int key_type, uint8_t *key )
 		}
 		break;
 	case KEY_ILK:
-		temp[0] = sqrl_user_key( u, KEY_IUK );
+		temp[0] = sqrl_user_key( transaction, KEY_IUK );
 		if( temp[0] ) {
 			sqrl_gen_ilk( key, temp[0] );
 			retVal = true;
 		}
 		break;
 	case KEY_LOCAL:
-		temp[0] = sqrl_user_key( u, KEY_MK );
+		temp[0] = sqrl_user_key( transaction, KEY_MK );
 		if( temp[0] ) {
 			sqrl_gen_local( key, temp[0] );
 			retVal = true;
@@ -436,42 +459,44 @@ bool _su_keygen( Sqrl_User u, int key_type, uint8_t *key )
 	return retVal;
 }
 
-bool sqrl_user_regen_keys( Sqrl_User u )
+bool sqrl_user_regen_keys( Sqrl_Client_Transaction *transaction )
 {
-	WITH_USER(user,u);
+	WITH_USER(user,transaction->user);
 	if( user == NULL ) return false;
 	uint8_t *key;
 	int keys[] = { KEY_MK, KEY_ILK, KEY_LOCAL };
 	int i;
 	for( i = 0; i < 3; i++ ) {
-		key = sqrl_user_new_key( u, keys[i] );
-		_su_keygen( u, keys[i], key );
+		key = sqrl_user_new_key( transaction->user, keys[i] );
+		_su_keygen( transaction, keys[i], key );
 	}
 	END_WITH_USER(user);
 	return true;
 }
 
-bool sqrl_user_rekey( Sqrl_User u )
+bool sqrl_user_rekey( Sqrl_Client_Transaction *transaction )
 {
+	if( !transaction ) return false;
 	bool retVal = true;
-	WITH_USER(user,u);
+	WITH_USER(user,transaction->user);
 	if( user == NULL ) return false;
 	uint8_t *key;
-	if( sqrl_user_has_key( u, KEY_IUK )) {
-		key = sqrl_user_key( u, KEY_IUK );
+	if( sqrl_user_has_key( transaction->user, KEY_IUK )) {
+		key = sqrl_user_key( transaction, KEY_IUK );
 	} else {
-		key = sqrl_user_new_key( u, KEY_IUK );
+		key = sqrl_user_new_key( transaction->user, KEY_IUK );
 	}
-	if( ! _su_keygen( u, KEY_IUK, key )) {
+	if( ! _su_keygen( transaction, KEY_IUK, key )) {
 		goto ERROR;
 	}
-	key = sqrl_user_new_key( u, KEY_RESCUE_CODE );
-	if( ! _su_keygen( u, KEY_RESCUE_CODE, key )) {
+	key = sqrl_user_new_key( transaction->user, KEY_RESCUE_CODE );
+	if( ! _su_keygen( transaction, KEY_RESCUE_CODE, key )) {
 		goto ERROR;
 	}
-	if( ! sqrl_user_regen_keys( u )) {
+	if( ! sqrl_user_regen_keys( transaction )) {
 		goto ERROR;
 	}
+	user->flags |= (USER_FLAG_T1_CHANGED | USER_FLAG_T2_CHANGED);
 	goto DONE;
 
 ERROR:
@@ -515,8 +540,10 @@ uint8_t *sqrl_user_new_key( Sqrl_User u, int key_type )
 	return NULL;
 }
 
-uint8_t *sqrl_user_key( Sqrl_User u, int key_type )
+uint8_t *sqrl_user_key( Sqrl_Client_Transaction *transaction, int key_type )
 {
+	if( !transaction ) return NULL;
+	Sqrl_User u = transaction->user;
 	WITH_USER(user,u);
 	if( user == NULL ) return NULL;
 	int offset, empty, i;
@@ -550,7 +577,7 @@ LOOP:
 			END_WITH_USER(user);
 			return NULL;
 		case KEY_IUK:
-			sqrl_user_try_load_rescue( u, true );
+			sqrl_user_try_load_rescue( transaction, true );
 			goto LOOP;
 			break;
 		case KEY_MK:
@@ -559,7 +586,7 @@ LOOP:
 		case KEY_PIUK1:
 		case KEY_PIUK2:
 		case KEY_PIUK3:
-			sqrl_user_try_load_password( u, true );
+			sqrl_user_try_load_password( transaction, true );
 			goto LOOP;
 			break;
 		}
@@ -618,7 +645,10 @@ char *sqrl_user_get_rescue_code( Sqrl_User u )
 	if( ! sqrl_user_has_key( u, KEY_RESCUE_CODE )) {
 		return NULL;
 	}
-	return (char*)(sqrl_user_key( u, KEY_RESCUE_CODE ));
+	Sqrl_Client_Transaction t;
+	memset( &t, 0, sizeof( Sqrl_Client_Transaction ));
+	t.user = u;
+	return (char*)(sqrl_user_key( &t, KEY_RESCUE_CODE ));
 }
 
 /**
@@ -646,9 +676,19 @@ bool sqrl_user_set_rescue_code( Sqrl_User u, char *rc )
 	return true;
 }
 
-bool sqrl_user_force_decrypt( Sqrl_User u )
+bool sqrl_user_force_decrypt( Sqrl_Client_Transaction *transaction )
 {
-	if( sqrl_user_key( u, KEY_MK )) {
+	if( !transaction ) return false;
+	if( sqrl_user_key( transaction, KEY_MK )) {
+		return true;
+	}
+	return false;
+}
+
+bool sqrl_user_force_rescue( Sqrl_Client_Transaction *transaction )
+{
+	if( !transaction ) return false;
+	if( sqrl_user_key( transaction, KEY_IUK )) {
 		return true;
 	}
 	return false;

@@ -41,3 +41,4 @@ crypto_test
 makevectors
 user_test
 peek
+client_test

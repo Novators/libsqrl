@@ -46,12 +46,7 @@ Sqrl_Uri *sqrl_uri_create_copy( Sqrl_Uri *original )
 		if( nuri->url )
 			memcpy( nuri->url, original->url, sz );
 	}
-	if( original->scheme ) {
-		sz = strlen( original->scheme );
-		nuri->scheme = calloc( sz + 1, 1 );
-		if( nuri->scheme )
-			memcpy( nuri->scheme, original->scheme, sz );
-	}
+	nuri->scheme = original->scheme;
 	return nuri;
 }
 
@@ -142,12 +137,20 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 		if ( !_is_scheme_char(curstr[i]) ) goto ERROR;
 	}
 	/* Copy the scheme to the storage */
-	puri->scheme = malloc(sizeof(char) * (len + 1));
-	if ( NULL == puri->scheme ) goto ERROR;
+	char *sch = malloc( sizeof(char) * (len + 1 ));
+	if ( NULL == sch ) goto ERROR;
 	
-	(void)strncpy(puri->scheme, curstr, len);
-	puri->scheme[len] = '\0';
-	sqrl_lcstr( puri->scheme );
+	(void)strncpy(sch, curstr, len);
+	sch[len] = '\0';
+	sqrl_lcstr( sch );
+	if( strcmp( sch, "sqrl" ) == 0 ) puri->scheme = SQRL_SCHEME_SQRL;
+	else if( strcmp( sch, "file" ) == 0 ) puri->scheme = SQRL_SCHEME_FILE;
+	else {
+		free( sch );
+		goto ERROR;
+	}
+	free( sch );
+
 	/* Skip ':' */
 	tmpstr++;
 	curstr = tmpstr;
@@ -313,37 +316,26 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 	
 	/* SQRL Specific... */
 SQRL:
-	if( 0 == strcmp( puri->scheme, "sqrl" )) {
+	switch( puri->scheme ) {
+	case SQRL_SCHEME_SQRL:
 		puri->url = (char*) malloc( strlen( uri ) + 2 );
 		strcpy( puri->url + 1, theUrl );
 		memcpy( puri->url, "https", 5 );
 		utstring_new( prefix );
 		utstring_bincpy( prefix, "https://", 8 );
-	} else if( 0 == strcmp( puri->scheme, "file" )) {
-		// File
-		puri->url = (char*) malloc( strlen( uri ) - 6 );
-		strcpy( puri->url, theUrl + 7 );
+		break;
+	case SQRL_SCHEME_FILE:
+		puri->url = (char*) malloc( strlen( uri ) + 2 );
+		strcpy( puri->url, uri );
+		puri->challenge = (char*) malloc( strlen( uri ) - 6 );
+		strcpy( puri->challenge, theUrl + 7 );
 		goto END;
-	} else {
-		// Invalid Scheme
-		goto ERROR;
 	}
 	puri->challenge = (char*) malloc( strlen( uri ) + 1 );
 	if( puri->challenge == NULL || puri->url == NULL ) goto ERROR;
 
 	strcpy( puri->challenge, theUrl );
 
-/*
-	if( puri->scheme[0] == 's' ) {
-		memcpy( puri->url, "https", 5 );
-		utstring_bincpy( prefix, "https://", 8 );
-	} else if( puri->scheme[0] == 'q' ) {
-		memcpy( puri->url, "http", 4 );
-		utstring_bincpy( prefix, "http://", 7 );
-	} else {
-		goto ERROR;
-	}
-*/
 	size_t hl = strlen( host );
 	size_t pl = 0;
 	size_t ul = hl + 1;
@@ -404,7 +396,6 @@ Sqrl_Uri* sqrl_uri_free( Sqrl_Uri *uri )
 		if( uri->host ) free( uri->host );
 		if( uri->prefix ) free( uri->prefix );
 		if( uri->url ) free( uri->url );
-		if( uri->scheme ) free( uri->scheme );
 		free(uri);
 	}
 	return NULL;
