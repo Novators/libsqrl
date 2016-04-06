@@ -148,7 +148,11 @@ int main()
 	UT_string *ubuf;
 	utstring_new( ubuf );
 	WITH_USER(u,user);
-	sqrl_user_update_storage( user );
+	Sqrl_Client_Transaction transaction;
+	memset( &transaction, 0, sizeof( Sqrl_Client_Transaction ));
+	transaction.type = SQRL_TRANSACTION_IDENTITY_SAVE;
+	transaction.user = user;
+	sqrl_user_update_storage( &transaction );
 	sqrl_storage_save_to_buffer( u->storage, ubuf, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
 	END_WITH_USER(u);
 	buf = malloc( utstring_len( ubuf ) + 1 );

@@ -377,26 +377,50 @@ DONE:
 	return retVal;
 }
 
-bool sqrl_user_update_storage( Sqrl_User u ) 
+void sqrl_user_save_callback_data( struct sqrl_user_callback_data *cbdata )
 {
+	WITH_USER(user,cbdata->transaction->user);
+	cbdata->adder = 0;
+	cbdata->multiplier = 1;
+	cbdata->total = 0;
+	cbdata->t1 = 0;
+	cbdata->t2 = 0;
+	int eS = (int)sqrl_user_get_enscrypt_seconds( cbdata->transaction->user );
+	bool t1 = (user->flags & USER_FLAG_T1_CHANGED) == USER_FLAG_T1_CHANGED;
+	bool t2 = (user->flags & USER_FLAG_T2_CHANGED) == USER_FLAG_T2_CHANGED;
+	if( t1 ) {
+		cbdata->t1 = eS * SQRL_MILLIS_PER_SECOND;
+		cbdata->total += cbdata->t1;
+	}
+	if( t2 ) {
+		cbdata->t2 = SQRL_RESCUE_ENSCRYPT_SECONDS * SQRL_MILLIS_PER_SECOND;
+		cbdata->total += cbdata->t2;
+	}
+	if( cbdata->total > cbdata->t1 ) {
+		cbdata->multiplier = (cbdata->t1 / (double)cbdata->total);
+	} else {
+		cbdata->multiplier = 1;
+	}
+	END_WITH_USER(user);
+}
+
+bool sqrl_user_update_storage( Sqrl_Client_Transaction *transaction ) 
+{
+	Sqrl_User u = transaction->user;
 	WITH_USER(user,u);
 	if( !user ) return false;
 	if( user->storage == NULL ) {
 		user->storage = sqrl_storage_create();
 	}
-
 	struct sqrl_user_callback_data cbdata;
+	memset( &cbdata, 0, sizeof( struct sqrl_user_callback_data ));
+	cbdata.transaction = transaction;
+	sqrl_user_save_callback_data( &cbdata );
+
 	Sqrl_Block block;
 	sqrl_block_clear( &block );
 	Sqrl_Crypt_Context sctx;
 	bool retVal = true;
-
-	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_IDENTITY_SAVE;
-	transaction.user = u;
-	cbdata.transaction = &transaction;
-	cbdata.adder = 0;
-	cbdata.divisor = 1;
 
 	if( (user->flags & USER_FLAG_T1_CHANGED) == USER_FLAG_T1_CHANGED ||
 		! sqrl_storage_block_exists( user->storage, SQRL_BLOCK_USER )) 
@@ -410,6 +434,13 @@ bool sqrl_user_update_storage( Sqrl_User u )
 	if( (user->flags & USER_FLAG_T2_CHANGED) == USER_FLAG_T2_CHANGED ||
 		! sqrl_storage_block_exists( user->storage, SQRL_BLOCK_RESCUE ))
 	{
+		cbdata.adder = cbdata.t1;
+		if( cbdata.total > cbdata.t2 ) {
+			cbdata.adder = (cbdata.t1 * 100 / cbdata.total);
+			cbdata.multiplier = (cbdata.t2 / (double)cbdata.total);
+		} else {
+			cbdata.multiplier = 1;
+		}
 		if( sus_block_2( u, user->storage, &block, cbdata )) {
 			sqrl_storage_block_put( user->storage, &block );
 		}
@@ -500,7 +531,7 @@ bool sqrl_user_save( Sqrl_Client_Transaction *transaction )
 
 	WITH_USER(user,transaction->user);
 	if( user == NULL ) return false;
-	if( sqrl_user_update_storage( transaction->user )) {
+	if( sqrl_user_update_storage( transaction )) {
 		if( sqrl_storage_save_to_file( user->storage, filename, exportType, encoding ) > 0 ) {
 			END_WITH_USER(user);
 			return true;
@@ -523,9 +554,9 @@ bool sqrl_user_save_to_buffer( Sqrl_Client_Transaction *transaction )
 	struct sqrl_user_callback_data cbdata;
 	cbdata.transaction = transaction;
 	cbdata.adder = 0;
-	cbdata.divisor = 1;
+	cbdata.multiplier = 1;
 
-	if( sqrl_user_update_storage( transaction->user )) {
+	if( sqrl_user_update_storage( transaction )) {
 		if( sqrl_storage_save_to_buffer( user->storage, buf, exportType, encoding )) {
 			if( transaction->string ) free( transaction->string );
 			transaction->string = malloc( utstring_len(buf) + 1 );
@@ -565,7 +596,7 @@ bool sqrl_user_try_load_password( Sqrl_User u, bool retry )
 	struct sqrl_user_callback_data cbdata;
 	cbdata.transaction = &transaction;
 	cbdata.adder = 0;
-	cbdata.divisor = 1;
+	cbdata.multiplier = 1;
 LOOP:
 	if( !sqrl_storage_block_exists( user->storage, SQRL_BLOCK_USER )) {
 		retVal = sqrl_user_try_load_rescue( u, retry );
@@ -615,7 +646,7 @@ bool sqrl_user_try_load_rescue( Sqrl_User u, bool retry )
 	struct sqrl_user_callback_data cbdata;
 	cbdata.transaction = &transaction;
 	cbdata.adder = 0;
-	cbdata.divisor = 1;
+	cbdata.multiplier = 1;
 
 LOOP:
 	if( !sqrl_storage_block_exists( user->storage, SQRL_BLOCK_RESCUE )) {

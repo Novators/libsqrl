@@ -15,9 +15,10 @@ int sqrl_user_enscrypt_callback( int percent, void *data )
 {
 	struct sqrl_user_callback_data *cbdata = (struct sqrl_user_callback_data*)data;
 	if( cbdata ) {
-		int progress = cbdata->adder + (percent / cbdata->divisor);
+		int progress = cbdata->adder + (percent * cbdata->multiplier);
 		if( progress > 100 ) progress = 100;
 		if( progress < 0 ) progress = 0;
+		if( percent == 100 && progress >= 99 ) progress = 100;
 		return sqrl_client_call_progress( cbdata->transaction, progress );
 	} else {
 		return 1;
@@ -291,7 +292,7 @@ void sqrl_user_hintlock( Sqrl_User u )
 	struct sqrl_user_callback_data cbdata;
 	cbdata.transaction = &transaction;
 	cbdata.adder = 0;
-	cbdata.divisor = 1;
+	cbdata.multiplier = 1;
 
 	Sqrl_Crypt_Context sctx;
 	uint8_t iv[12] = {0};
@@ -364,7 +365,7 @@ void sqrl_user_hintunlock( Sqrl_Client_Transaction *transaction,
 	struct sqrl_user_callback_data cbdata;
 	cbdata.transaction = transaction;
 	cbdata.adder = 0;
-	cbdata.divisor = 1;
+	cbdata.multiplier = 1;
 
 	Sqrl_Crypt_Context sctx;
 	uint8_t iv[12] = {0};
@@ -494,6 +495,7 @@ bool sqrl_user_rekey( Sqrl_User u )
 	if( ! sqrl_user_regen_keys( u )) {
 		goto ERROR;
 	}
+	user->flags |= (USER_FLAG_T1_CHANGED | USER_FLAG_T2_CHANGED);
 	goto DONE;
 
 ERROR:

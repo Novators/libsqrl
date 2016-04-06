@@ -132,7 +132,10 @@ struct Sqrl_User
 struct sqrl_user_callback_data {
 	Sqrl_Client_Transaction *transaction;
 	int adder;
-	int divisor;
+	double multiplier;
+	int t1;
+	int t2;
+	int total;
 };
 
 #define SQRL_CAST_USER(a,b) struct Sqrl_User *(a) = (struct Sqrl_User*)(b)
@@ -189,7 +192,7 @@ bool        sqrl_user_set_password(
 				Sqrl_User u, 
 				char *password, 
 				size_t password_len );
-bool        sqrl_user_update_storage( Sqrl_User user );
+bool        sqrl_user_update_storage( Sqrl_Client_Transaction *transaction );
 
 
 
