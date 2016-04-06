@@ -10,12 +10,12 @@ For more details, see the LICENSE file included with this package.
 #include "sqrl_internal.h"
 
 bool su_init_t2( 
-	Sqrl_User u, 
+	Sqrl_Client_Transaction *transaction, 
 	Sqrl_Crypt_Context *sctx, 
 	Sqrl_Block *block,
 	bool forSaving )
 {
-	SQRL_CAST_USER( user, u );
+	SQRL_CAST_USER( user, transaction->user );
 	sctx->plain_text = user->keys->scratch;
 	if( forSaving ) {
 		if( !sqrl_block_init( block, 2, 73 )) {
@@ -27,7 +27,7 @@ bool su_init_t2(
 		sqrl_block_seek( block, 20 );
 		sctx->nFactor = SQRL_DEFAULT_N_FACTOR;
 		sqrl_block_write_int8( block, SQRL_DEFAULT_N_FACTOR );
-		memcpy( sctx->plain_text, sqrl_user_key( u, KEY_IUK ), SQRL_KEY_SIZE );
+		memcpy( sctx->plain_text, sqrl_user_key( transaction, KEY_IUK ), SQRL_KEY_SIZE );
 		sctx->flags = SQRL_ENCRYPT | SQRL_MILLIS;
 		sctx->count = SQRL_RESCUE_ENSCRYPT_SECONDS * SQRL_MILLIS_PER_SECOND;
 	} else {
@@ -50,22 +50,22 @@ bool su_init_t2(
 	return true;
 }
 
-bool sul_block_2( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
+bool sul_block_2( Sqrl_Client_Transaction *transaction, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
 {
-	SQRL_CAST_USER(user,u);
+	SQRL_CAST_USER(user,transaction->user);
 	bool retVal = false;
 	Sqrl_Crypt_Context sctx;
 	bool relock;
-	if( ! sqrl_user_has_key( u, KEY_RESCUE_CODE )) {
+	if( ! sqrl_user_has_key( transaction->user, KEY_RESCUE_CODE )) {
 		return false;
 	}
 	
-	if( !su_init_t2( u, &sctx, block, false )) {
+	if( !su_init_t2( transaction, &sctx, block, false )) {
 		goto ERROR;
 	}
 
 	uint8_t *key = user->keys->scratch + sctx.text_len;
-	char *rc = (char*)sqrl_user_key( u, KEY_RESCUE_CODE );
+	char *rc = (char*)sqrl_user_key( transaction, KEY_RESCUE_CODE );
 	sqrl_block_seek( block, 21 );
 	sctx.count = sqrl_block_read_int32( block );
 	sctx.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
@@ -77,7 +77,7 @@ bool sul_block_2( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 			sqrl_user_enscrypt_callback, 
 			&cbdata ) > 0 ) {
 		if( sqrl_crypt_gcm( &sctx, key )) {
-			uint8_t *iuk = sqrl_user_new_key( u, KEY_IUK );
+			uint8_t *iuk = sqrl_user_new_key( transaction->user, KEY_IUK );
 			memcpy( iuk, sctx.plain_text, SQRL_KEY_SIZE );
 			retVal = true;
 			goto DONE;
@@ -93,30 +93,30 @@ DONE:
 
 }
 
-bool sus_block_2( Sqrl_User u, Sqrl_Storage storage, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
+bool sus_block_2( Sqrl_Client_Transaction *transaction, Sqrl_Storage storage, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
 {
-	SQRL_CAST_USER(user,u);
+	SQRL_CAST_USER(user,transaction->user);
 	bool retVal = true;
 	Sqrl_Crypt_Context sctx;
 	bool relock;
-	if( ! sqrl_user_has_key( u, KEY_IUK )
-		|| ! sqrl_user_has_key( u, KEY_RESCUE_CODE )) {
+	if( ! sqrl_user_has_key( transaction->user, KEY_IUK )
+		|| ! sqrl_user_has_key( transaction->user, KEY_RESCUE_CODE )) {
 		return false;
 	}
 	
-	if( !su_init_t2( u, &sctx, block, true )) {
+	if( !su_init_t2( transaction, &sctx, block, true )) {
 		goto ERROR;
 	}
 
 	uint8_t *key = user->keys->scratch + sctx.text_len;
-	char *rc = (char*)sqrl_user_key( u, KEY_RESCUE_CODE );
+	char *rc = (char*)sqrl_user_key( transaction, KEY_RESCUE_CODE );
 	uint32_t iterations = sqrl_crypt_enscrypt( &sctx, key, rc, SQRL_RESCUE_CODE_LENGTH, sqrl_user_enscrypt_callback, &cbdata );
 	sqrl_block_seek( block, 21 );
 	sqrl_block_write_int32( block, sctx.count );
 
 	// Cipher Text
 	sctx.flags = SQRL_ENCRYPT | SQRL_ITERATIONS;
-	uint8_t *iuk = sqrl_user_key( u, KEY_IUK );
+	uint8_t *iuk = sqrl_user_key( transaction, KEY_IUK );
 	memcpy( sctx.plain_text, iuk, sctx.text_len );
 	if( !sqrl_crypt_gcm( &sctx, key )) {
 		goto ERROR;
@@ -138,9 +138,9 @@ DONE:
 	return retVal;
 }
 
-bool sul_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
+bool sul_block_3( Sqrl_Client_Transaction *transaction, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
 {
-	SQRL_CAST_USER(user,u);
+	SQRL_CAST_USER(user,transaction->user);
 	bool retVal = true;
 	int i;
 	Sqrl_Crypt_Context sctx;
@@ -158,7 +158,7 @@ bool sul_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	sctx.plain_text = user->keys->scratch;
 	sctx.iv = sctx.plain_text + sctx.text_len;
 	memset( sctx.iv, 0, 12 );
-	keyPointer = sqrl_user_key( u, KEY_MK );
+	keyPointer = sqrl_user_key( transaction, KEY_MK );
 	sctx.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
 	if( !sqrl_crypt_gcm( &sctx, keyPointer )) {
 		goto ERROR;
@@ -167,7 +167,7 @@ bool sul_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	int pt_offset = 0;
 	int piuks[] = { KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3 };
 	for( i = 0; i < 4; i++ ) {
-		keyPointer = sqrl_user_new_key( u, piuks[i] );
+		keyPointer = sqrl_user_new_key( transaction->user, piuks[i] );
 		memcpy( keyPointer, sctx.plain_text + pt_offset, SQRL_KEY_SIZE );
 		pt_offset += SQRL_KEY_SIZE;
 	}
@@ -182,9 +182,9 @@ DONE:
 
 }
 
-bool sus_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
+bool sus_block_3( Sqrl_Client_Transaction *transaction, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
 {
-	SQRL_CAST_USER(user,u);
+	SQRL_CAST_USER(user,transaction->user);
 	bool retVal = true;
 	int i;
 	Sqrl_Crypt_Context sctx;
@@ -202,8 +202,8 @@ bool sus_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	int pt_offset = 0;
 	int piuks[] = { KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3 };
 	for( i = 0; i < 4; i++ ) {
-		if( sqrl_user_has_key( u, piuks[i] )) {
-			keyPointer = sqrl_user_key( u, piuks[i] );
+		if( sqrl_user_has_key( transaction->user, piuks[i] )) {
+			keyPointer = sqrl_user_key( transaction, piuks[i] );
 			memcpy( sctx.plain_text + pt_offset, keyPointer, SQRL_KEY_SIZE );
 		} else {
 			memset( sctx.plain_text + pt_offset, 0, SQRL_KEY_SIZE );
@@ -212,7 +212,7 @@ bool sus_block_3( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	}
 	sctx.iv = sctx.plain_text + pt_offset;
 	memset( sctx.iv, 0, 12 );
-	keyPointer = sqrl_user_key( u, KEY_MK );
+	keyPointer = sqrl_user_key( transaction, KEY_MK );
 	sctx.count = 100;
 	sctx.flags = SQRL_ENCRYPT | SQRL_MILLIS;
 	if( !sqrl_crypt_gcm( &sctx, keyPointer )) {
@@ -228,9 +228,9 @@ DONE:
 	return retVal;
 }
 
-bool sul_block_1( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
+bool sul_block_1( Sqrl_Client_Transaction *transaction, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
 {
-	WITH_USER(user,u);
+	WITH_USER(user,transaction->user);
 	if( !user ) return false;
 	bool retVal = true;
 	Sqrl_Crypt_Context sctx;
@@ -282,9 +282,9 @@ bool sul_block_1( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 			sqrl_user_enscrypt_callback, 
 			&cbdata ) > 0 ) {
 		if( sqrl_crypt_gcm( &sctx, key )) {
-			key = sqrl_user_new_key( u, KEY_MK );
+			key = sqrl_user_new_key( transaction->user, KEY_MK );
 			memcpy( key, sctx.plain_text, SQRL_KEY_SIZE );
-			key = sqrl_user_new_key( u, KEY_ILK );
+			key = sqrl_user_new_key( transaction->user, KEY_ILK );
 			memcpy( key, sctx.plain_text + SQRL_KEY_SIZE, SQRL_KEY_SIZE );
 			goto DONE;
 		}
@@ -299,9 +299,9 @@ DONE:
 	return retVal;
 }
 
-bool sus_block_1( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
+bool sus_block_1( Sqrl_Client_Transaction *transaction, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
 {
-	WITH_USER(user,u);
+	WITH_USER(user,transaction->user);
 	if( !user ) return false;
 	bool retVal = true;
 	Sqrl_Crypt_Context sctx;
@@ -341,13 +341,13 @@ bool sus_block_1( Sqrl_User u, Sqrl_Block *block, struct sqrl_user_callback_data
 	// Plain Text
 	sctx.plain_text = user->keys->scratch;
 	if( sqrl_user_has_key( (Sqrl_User)user, KEY_MK )) {
-		keyPointer = sqrl_user_key( (Sqrl_User)user, KEY_MK );
+		keyPointer = sqrl_user_key( transaction, KEY_MK );
 		memcpy( sctx.plain_text, keyPointer, SQRL_KEY_SIZE );
 	} else {
 		memset( sctx.plain_text, 0, SQRL_KEY_SIZE );
 	}
 	if( sqrl_user_has_key( (Sqrl_User)user, KEY_ILK )) {
-		keyPointer = sqrl_user_key( (Sqrl_User)user, KEY_ILK );
+		keyPointer = sqrl_user_key( transaction, KEY_ILK );
 		memcpy( sctx.plain_text + SQRL_KEY_SIZE, keyPointer, SQRL_KEY_SIZE );
 	} else {
 		memset( sctx.plain_text + SQRL_KEY_SIZE, 0, SQRL_KEY_SIZE );
@@ -425,7 +425,7 @@ bool sqrl_user_update_storage( Sqrl_Client_Transaction *transaction )
 	if( (user->flags & USER_FLAG_T1_CHANGED) == USER_FLAG_T1_CHANGED ||
 		! sqrl_storage_block_exists( user->storage, SQRL_BLOCK_USER )) 
 	{
-		if( sus_block_1( u, &block, cbdata )) {
+		if( sus_block_1( transaction, &block, cbdata )) {
 			sqrl_storage_block_put( user->storage, &block );
 		}
 		sqrl_block_free( &block );
@@ -441,7 +441,7 @@ bool sqrl_user_update_storage( Sqrl_Client_Transaction *transaction )
 		} else {
 			cbdata.multiplier = 1;
 		}
-		if( sus_block_2( u, user->storage, &block, cbdata )) {
+		if( sus_block_2( transaction, user->storage, &block, cbdata )) {
 			sqrl_storage_block_put( user->storage, &block );
 		}
 		sqrl_block_free( &block );
@@ -450,7 +450,7 @@ bool sqrl_user_update_storage( Sqrl_Client_Transaction *transaction )
 	if( (user->flags & USER_FLAG_T2_CHANGED) == USER_FLAG_T2_CHANGED ||
 		! sqrl_storage_block_exists( user->storage, SQRL_BLOCK_PREVIOUS ))
 	{
-		if( sus_block_3( u, &block, cbdata )) {
+		if( sus_block_3( transaction, &block, cbdata )) {
 			sqrl_storage_block_put( user->storage, &block );
 		}
 		sqrl_block_free( &block );
@@ -584,22 +584,21 @@ DONE:
 	return retVal;
 }
 
-bool sqrl_user_try_load_password( Sqrl_User u, bool retry )
+bool sqrl_user_try_load_password( Sqrl_Client_Transaction *transaction, bool retry )
 {
+	if( !transaction ) return false;
+	Sqrl_User u = transaction->user;
 	WITH_USER(user,u);
 	if( !user ) return false;
 	bool retVal = false;
 	Sqrl_Block block;
-	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_IDENTITY_LOAD;
-	transaction.user = u;
 	struct sqrl_user_callback_data cbdata;
-	cbdata.transaction = &transaction;
+	cbdata.transaction = transaction;
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
 LOOP:
 	if( !sqrl_storage_block_exists( user->storage, SQRL_BLOCK_USER )) {
-		retVal = sqrl_user_try_load_rescue( u, retry );
+		retVal = sqrl_user_try_load_rescue( transaction, retry );
 		goto DONE;
 	}
 	if( user->keys->password_len == 0 ) {
@@ -608,16 +607,15 @@ LOOP:
 
 	memset( &block, 0, sizeof( Sqrl_Block ));
 	sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_USER );
-	if( ! sul_block_1( u, &block, cbdata )) {
+	if( ! sul_block_1( transaction, &block, cbdata )) {
 		sqrl_block_free( &block );
 		goto NEEDAUTH;
 	}
 	sqrl_block_free( &block );
-	//sqrl_user_regen_keys( u );
 	if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_PREVIOUS ) &&
 		sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_PREVIOUS ))
 	{
-		sul_block_3( u, &block, cbdata );
+		sul_block_3( transaction, &block, cbdata );
 		sqrl_block_free( &block );
 	}
 	retVal = true;
@@ -626,7 +624,7 @@ LOOP:
 NEEDAUTH:
 	if( retry ) {
 		retry = false;
-		sqrl_client_call_authentication_required( &transaction, SQRL_CREDENTIAL_PASSWORD );
+		sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_PASSWORD );
 		goto LOOP;
 	}
 
@@ -635,16 +633,15 @@ DONE:
 	return retVal;
 }
 
-bool sqrl_user_try_load_rescue( Sqrl_User u, bool retry )
+bool sqrl_user_try_load_rescue( Sqrl_Client_Transaction *transaction, bool retry )
 {
+	if( !transaction ) return false;
+	Sqrl_User u = transaction->user;
 	WITH_USER(user,u);
 	if( !user ) return false;
 	bool retVal = false;
-	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_IDENTITY_RESCUE;
-	transaction.user = u;
 	struct sqrl_user_callback_data cbdata;
-	cbdata.transaction = &transaction;
+	cbdata.transaction = transaction;
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
 
@@ -659,16 +656,16 @@ LOOP:
 	Sqrl_Block block;
 	memset( &block, 0, sizeof( Sqrl_Block ));
 	sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_RESCUE );
-	if( ! sul_block_2( u, &block, cbdata )) {
+	if( ! sul_block_2( transaction, &block, cbdata )) {
 		sqrl_block_free( &block );
 		goto NEEDAUTH;
 	}
 	sqrl_block_free( &block );
-	sqrl_user_regen_keys( u );
+	sqrl_user_regen_keys( transaction );
 	if( sqrl_storage_block_exists( user->storage, SQRL_BLOCK_PREVIOUS ) &&
 		sqrl_storage_block_get( user->storage, &block, SQRL_BLOCK_PREVIOUS ))
 	{
-		sul_block_3( u, &block, cbdata );
+		sul_block_3( transaction, &block, cbdata );
 		sqrl_block_free( &block );
 	}
 	goto DONE;
@@ -676,7 +673,7 @@ LOOP:
 NEEDAUTH:
 	if( retry ) {
 		retry = false;
-		sqrl_client_call_authentication_required( &transaction, SQRL_CREDENTIAL_RESCUE_CODE );
+		sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_RESCUE_CODE );
 		goto LOOP;
 	}
 

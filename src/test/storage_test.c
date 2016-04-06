@@ -92,6 +92,9 @@ int main()
 	Sqrl_User user = NULL;
 	uint8_t *key = NULL;
 	
+	Sqrl_Client_Transaction t;
+	memset( &t, 0, sizeof( Sqrl_Client_Transaction ));
+
 	Sqrl_Client_Callbacks cbs;
 	memset( &cbs, 0, sizeof( Sqrl_Client_Callbacks ));
 	cbs.onAuthenticationRequired = onAuthenticationRequired;
@@ -109,11 +112,13 @@ int main()
 	storage = sqrl_storage_destroy( storage );
 
 	user = sqrl_user_create_from_file( "test1.sqrl" );
-	key = sqrl_user_key( user, KEY_MK );
+	t.user = user;
+	key = sqrl_user_key( &t, KEY_MK );
 	if( !key ) {
 		printf( "Load Failed\n" );
 		goto ERROR;
 	}
+
 	strcpy( myPassword, "asdfjkl" );
 	sqrl_user_set_password( user, myPassword, 7 );
 	UT_string *buf;
@@ -131,8 +136,9 @@ int main()
 	user = sqrl_user_create_from_buffer( utstring_body( buf ), utstring_len(buf));
 	utstring_free( buf );
 	buf = NULL;
+	t.user = user;
 
-	key = sqrl_user_key( user, KEY_MK );
+	key = sqrl_user_key( &t, KEY_MK );
 	if( !key ) {
 		printf( "New Password Failed\n" );
 		goto ERROR;

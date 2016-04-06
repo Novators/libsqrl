@@ -271,7 +271,7 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	case SQRL_TRANSACTION_IDENTITY_REKEY:
 		if( !transaction.user ) goto ERROR;
 		sqrl_user_hold( transaction.user );
-		sqrl_user_rekey( transaction.user );
+		sqrl_user_rekey( &transaction );
 		if( sqrl_client_require_password( &transaction )) {
 			sqrl_client_call_save_suggested( transaction.user );
 			goto SUCCESS;
@@ -295,7 +295,7 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	case SQRL_TRANSACTION_IDENTITY_GENERATE:
 		if( transaction.user ) goto ERROR;
 		transaction.user = sqrl_user_create();
-		sqrl_user_rekey( transaction.user );
+		sqrl_user_rekey( &transaction );
 		if( sqrl_client_require_password( &transaction )) {
 			sqrl_client_call_save_suggested( transaction.user );
 			goto SUCCESS;
