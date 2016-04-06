@@ -479,12 +479,6 @@ Sqrl_User sqrl_user_create_from_file( const char *filename )
 	if( user == NULL ) {
 		goto ERROR;
 	}
-	user->filename = malloc( strlen( filename ) + 1 );
-	if( !user->filename ) {
-		END_WITH_USER(user);
-		goto ERROR;
-	}
-	strcpy( user->filename, filename );
 	user->storage = storage;
 	_suc_load_unique_id( user );
 	END_WITH_USER(user);

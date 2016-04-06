@@ -12,9 +12,6 @@ For more details, see the LICENSE file included with this package.
 #include "sqrl_client.h"
 #include "sqrl_server.h"
 
-typedef void* Sqrl_Key;
-
-
 /**
 \defgroup entropy Entropy Harvester
 

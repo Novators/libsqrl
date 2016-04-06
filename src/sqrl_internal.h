@@ -123,7 +123,6 @@ struct Sqrl_User
 	SqrlMutex referenceCountMutex;
 	int referenceCount;
 	Sqrl_Storage storage;
-	char *filename;
 	char unique_id[SQRL_UNIQUE_ID_LENGTH+1];
 	struct Sqrl_Keys *keys;
 };
