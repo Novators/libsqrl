@@ -115,6 +115,9 @@ target_link_libraries(peek sqrl)
 add_executable(uri_test src/test/uri_test.c)
 target_link_libraries(uri_test sqrl)
 
+add_executable(client_test src/test/client.c)
+target_link_libraries(client_test sqrl)
+
 #documentation
 find_package(Doxygen QUIET)
 if(DOXYGEN_FOUND)
@@ -133,6 +136,7 @@ endif(DOXYGEN_FOUND)
 
 # Tests
 include(CTest)
+add_test(client_test client_test)
 add_test(uri_test uri_test)
 add_test(user_test user_test)
 add_test(encdec_test encdec_test)

@@ -392,7 +392,7 @@ bool sqrl_user_update_storage( Sqrl_User u )
 	bool retVal = true;
 
 	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_SAVE_IDENTITY;
+	transaction.type = SQRL_TRANSACTION_IDENTITY_SAVE;
 	transaction.user = u;
 	cbdata.transaction = &transaction;
 	cbdata.adder = 0;
@@ -512,7 +512,7 @@ char *sqrl_user_save_to_buffer( Sqrl_User u, size_t *buffer_len, Sqrl_Export exp
 	UT_string *buf;
 	utstring_new( buf );
 	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_SAVE_IDENTITY;
+	transaction.type = SQRL_TRANSACTION_IDENTITY_SAVE;
 	transaction.user = u;
 	struct sqrl_user_callback_data cbdata;
 	cbdata.transaction = &transaction;
@@ -553,7 +553,7 @@ bool sqrl_user_try_load_password( Sqrl_User u, bool retry )
 	bool retVal = false;
 	Sqrl_Block block;
 	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_LOAD_IDENTITY;
+	transaction.type = SQRL_TRANSACTION_IDENTITY_LOAD;
 	transaction.user = u;
 	struct sqrl_user_callback_data cbdata;
 	cbdata.transaction = &transaction;
@@ -603,7 +603,7 @@ bool sqrl_user_try_load_rescue( Sqrl_User u, bool retry )
 	if( !user ) return false;
 	bool retVal = false;
 	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_RECOVER_IDENTITY;
+	transaction.type = SQRL_TRANSACTION_IDENTITY_RESCUE;
 	transaction.user = u;
 	struct sqrl_user_callback_data cbdata;
 	cbdata.transaction = &transaction;

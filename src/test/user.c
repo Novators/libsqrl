@@ -157,7 +157,10 @@ int main()
 	ASSERT( "hintlock_1", !sqrl_user_is_hintlocked( user ) )
 	sqrl_user_hintlock( user );
 	ASSERT( "hintlock_2", sqrl_user_is_hintlocked( user ) )
-	sqrl_user_hintunlock( user, NULL, 0 );
+	Sqrl_Client_Transaction trans;
+	memset( &trans, 0, sizeof( Sqrl_Client_Transaction ));
+	trans.user = user;
+	sqrl_user_hintunlock( &trans, NULL, 0 );
 	ASSERT( "hintlock_3", !sqrl_user_is_hintlocked( user ) )
 
 	key = sqrl_user_key( user, KEY_ILK );

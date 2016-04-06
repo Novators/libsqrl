@@ -162,7 +162,7 @@ typedef void* Sqrl_Storage;
 */
 typedef enum {
 	/** Binary Format */
-	SQRL_ENCODING_BINARY,
+	SQRL_ENCODING_BINARY = 0,
 	/** base64 Encoded Format (larger, but safe for text file)*/
 	SQRL_ENCODING_BASE64
 } Sqrl_Encoding;
@@ -172,7 +172,7 @@ typedef enum {
 */
 typedef enum {
 	/** Exports ALL blocks in the storage object */
-	SQRL_EXPORT_ALL,
+	SQRL_EXPORT_ALL = 0,
 	/** Exports ONLY the type 2 (Rescue) and type 3 (Previous) blocks */
 	SQRL_EXPORT_RESCUE
 } Sqrl_Export;
@@ -277,28 +277,37 @@ typedef enum {
 	SQRL_CREDENTIAL_PASSWORD,
 	SQRL_CREDENTIAL_HINT,
 	SQRL_CREDENTIAL_RESCUE_CODE,
-	SQRL_CREDENTIAL_OLD_PASSWORD
+	SQRL_CREDENTIAL_NEW_PASSWORD
 } Sqrl_Credential_Type;
 
 typedef enum {
 	SQRL_TRANSACTION_UNKNOWN = 0,
-	SQRL_TRANSACTION_IDENT,
-	SQRL_TRANSACTION_DISABLE,
-	SQRL_TRANSACTION_ENABLE,
-	SQRL_TRANSACTION_REMOVE,
-	SQRL_TRANSACTION_SAVE_IDENTITY,
-	SQRL_TRANSACTION_RECOVER_IDENTITY,
-	SQRL_TRANSACTION_REKEY_IDENTITY,
-	SQRL_TRANSACTION_UNLOCK_IDENTITY,
-	SQRL_TRANSACTION_LOCK_IDENTITY,
-	SQRL_TRANSACTION_LOAD_IDENTITY,
-	SQRL_TRANSACTION_CHANGE_PASSWORD
+	SQRL_TRANSACTION_AUTH_IDENT,
+	SQRL_TRANSACTION_AUTH_DISABLE,
+	SQRL_TRANSACTION_AUTH_ENABLE,
+	SQRL_TRANSACTION_AUTH_REMOVE,
+	SQRL_TRANSACTION_IDENTITY_SAVE,
+	SQRL_TRANSACTION_IDENTITY_RESCUE,
+	SQRL_TRANSACTION_IDENTITY_REKEY,
+	SQRL_TRANSACTION_IDENTITY_UNLOCK,
+	SQRL_TRANSACTION_IDENTITY_LOCK,
+	SQRL_TRANSACTION_IDENTITY_LOAD,
+	SQRL_TRANSACTION_IDENTITY_GENERATE,
+	SQRL_TRANSACTION_IDENTITY_CHANGE_PASSWORD
 } Sqrl_Transaction_Type;
+
+typedef enum {
+	SQRL_TRANSACTION_STATUS_SUCCESS = 0,
+	SQRL_TRANSACTION_STATUS_FAILED,
+	SQRL_TRANSACTION_STATUS_CANCELLED,
+	SQRL_TRANSACTION_STATUS_WORKING
+} Sqrl_Transaction_Status;
 
 typedef struct Sqrl_Client_Transaction {
 	Sqrl_Transaction_Type type;
 	Sqrl_User *user;
-	Sqrl_Uri *url;
+	Sqrl_Uri *uri;
+	Sqrl_Transaction_Status status;
 	bool altIdentitySpecified;
 	char *altIdentity;
 	Sqrl_Export exportType;
@@ -326,6 +335,8 @@ typedef int (sqrl_ccb_progress)(
 	int progress );
 typedef void (sqrl_ccb_save_suggested)(
 	Sqrl_User *user);
+typedef void (sqrl_ccb_transaction_complete)(
+	Sqrl_Client_Transaction *transaction );
 
 typedef struct Sqrl_Client_Callbacks {
 	sqrl_ccb_select_user *onSelectUser;
@@ -335,15 +346,15 @@ typedef struct Sqrl_Client_Callbacks {
 	sqrl_ccb_send *onSend;
 	sqrl_ccb_progress *onProgress;
 	sqrl_ccb_save_suggested *onSaveSuggested;
+	sqrl_ccb_transaction_complete *onTransactionComplete;
 } Sqrl_Client_Callbacks;
 void sqrl_client_get_callbacks( Sqrl_Client_Callbacks *callbacks );
 void sqrl_client_set_callbacks( Sqrl_Client_Callbacks *callbacks );
 
-Sqrl_Client_Transaction *sqrl_client_begin_transaction(
+Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	Sqrl_Transaction_Type type,
-	const char *uri, size_t uri_len );
-Sqrl_Client_Transaction *sqrl_client_end_transaction(
-	Sqrl_Client_Transaction *transaction );
+	Sqrl_User user,
+	const char *uri );
 void sqrl_client_answer( 
 	Sqrl_Client_Transaction *transaction,
 	Sqrl_Button answer );

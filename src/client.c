@@ -93,6 +93,13 @@ void sqrl_client_call_save_suggested(
 	(SQRL_CLIENT_CALLBACKS->onSaveSuggested)(user);
 }
 
+void sqrl_client_call_transaction_complete(
+	Sqrl_Client_Transaction *transaction )
+{
+	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onTransactionComplete ) return;
+	(SQRL_CLIENT_CALLBACKS->onTransactionComplete)(transaction);
+}
+
 DLL_PUBLIC
 void sqrl_client_authenticate(
 	Sqrl_Client_Transaction *transaction,
@@ -109,7 +116,7 @@ void sqrl_client_authenticate(
 	case SQRL_CREDENTIAL_HINT:
 		if( sqrl_user_is_hintlocked( transaction->user )) {
 			if( user->options.hintLength == credentialLength ) {
-				sqrl_user_hintunlock( transaction->user, credential, credentialLength );
+				sqrl_user_hintunlock( transaction, credential, credentialLength );
 			}
 		}
 		break;
@@ -118,14 +125,10 @@ void sqrl_client_authenticate(
 			sqrl_user_set_rescue_code( transaction->user, credential );
 		}
 		break;
-	case SQRL_CREDENTIAL_OLD_PASSWORD:
-		if( transaction->type == SQRL_TRANSACTION_CHANGE_PASSWORD ) {
+	case SQRL_CREDENTIAL_NEW_PASSWORD:
+		if( transaction->type == SQRL_TRANSACTION_IDENTITY_CHANGE_PASSWORD ) {
 			sqrl_user_set_password( transaction->user, credential, credentialLength );
-			if( sqrl_user_force_decrypt( transaction->user )) {
-				if( sqrl_client_require_password( transaction )) {
-					sqrl_client_call_save_suggested( transaction->user );
-				}
-			}
+			sqrl_client_call_save_suggested( transaction->user );
 		}
 		break;
 	}
@@ -182,3 +185,111 @@ DONE:
 	return retVal;
 }
 
+/**
+Begins a SQRL transaction.
+
+If you are 
+
+@param type \p Sqrl_Transaction_Type of transaction.
+@param uri the NULL-terminated URI string
+*/
+DLL_PUBLIC
+Sqrl_Transaction_Status sqrl_client_begin_transaction(
+	Sqrl_Transaction_Type type,
+	Sqrl_User user,
+	const char *uri )
+{
+	Sqrl_Transaction_Status retVal = SQRL_TRANSACTION_STATUS_WORKING;
+	uint8_t *key;
+	Sqrl_Client_Transaction transaction;
+	memset( &transaction, 0, sizeof( Sqrl_Client_Transaction ));
+	transaction.type = type;
+	transaction.status = retVal;
+	if( uri ) {
+		transaction.uri = sqrl_uri_parse( uri );
+		if( !transaction.uri ) goto ERROR;
+	}
+	if( user ) {
+		transaction.user = user;
+		sqrl_user_hold( user );
+	}
+	switch( type ) {
+	case SQRL_TRANSACTION_UNKNOWN:
+		goto ERROR;
+	case SQRL_TRANSACTION_AUTH_IDENT:
+		goto NI;
+	case SQRL_TRANSACTION_AUTH_DISABLE:
+		goto NI;
+	case SQRL_TRANSACTION_AUTH_ENABLE:
+		goto NI;
+	case SQRL_TRANSACTION_AUTH_REMOVE:
+		goto NI;
+	case SQRL_TRANSACTION_IDENTITY_SAVE:
+		goto NI;
+	case SQRL_TRANSACTION_IDENTITY_RESCUE:
+		goto NI;
+	case SQRL_TRANSACTION_IDENTITY_REKEY:
+		if( !transaction.user ) goto ERROR;
+		sqrl_user_hold( transaction.user );
+		sqrl_user_rekey( transaction.user );
+		if( sqrl_client_require_password( &transaction )) {
+			sqrl_client_call_save_suggested( transaction.user );
+			goto SUCCESS;
+		}
+		goto ERROR;
+	case SQRL_TRANSACTION_IDENTITY_LOAD:
+		if( !transaction.uri || transaction.uri->scheme != SQRL_SCHEME_FILE ) goto ERROR;
+		if( transaction.user ) goto ERROR;
+		transaction.user = sqrl_user_create_from_file( transaction.uri->challenge );
+		if( transaction.user ) {
+			goto SUCCESS;
+		}
+		goto ERROR;
+	case SQRL_TRANSACTION_IDENTITY_GENERATE:
+		if( transaction.user ) goto ERROR;
+		transaction.user = sqrl_user_create();
+		sqrl_user_rekey( transaction.user );
+		if( sqrl_client_require_password( &transaction )) {
+			sqrl_client_call_save_suggested( transaction.user );
+			goto SUCCESS;
+		}
+		goto ERROR;
+	case SQRL_TRANSACTION_IDENTITY_CHANGE_PASSWORD:
+		goto NI;
+	default:
+		goto ERROR;
+	}
+	goto DONE;
+
+NI:
+	printf( "Transaction Type %d not implemented.\n", type );
+	goto ERROR;
+
+SUCCESS:
+	retVal = SQRL_TRANSACTION_STATUS_SUCCESS;
+	goto DONE;
+
+CANCEL:
+	retVal =  SQRL_TRANSACTION_STATUS_CANCELLED;
+	goto DONE;
+
+ERROR:
+	retVal = SQRL_TRANSACTION_STATUS_FAILED;
+	goto DONE;
+
+DONE:
+	transaction.status = retVal;
+	sqrl_client_call_transaction_complete( &transaction );
+
+	if( transaction.uri ) {
+		transaction.uri = sqrl_uri_free( transaction.uri );
+	}
+	if( transaction.user ) {
+		transaction.user = sqrl_user_release( transaction.user );
+	}
+	if( transaction.altIdentity ) {
+		free( transaction.altIdentity );
+		transaction.altIdentity = NULL;
+	}
+	return retVal;
+}

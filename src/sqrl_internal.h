@@ -167,9 +167,10 @@ void        sqrl_user_ensure_keys_allocated( Sqrl_User u );
 bool        sqrl_user_force_decrypt( Sqrl_User u );
 bool        sqrl_user_has_key( Sqrl_User user, int key_type );
 void        sqrl_user_hintlock( Sqrl_User user );
-void        sqrl_user_hintunlock( Sqrl_User user, 
-                char *hint, 
-                size_t len );
+void        sqrl_user_hintunlock( 
+                Sqrl_Client_Transaction *transaction, 
+				char *hint, 
+				size_t length );
 bool        sqrl_user_is_hintlocked( Sqrl_User user );
 bool        sqrl_user_is_memlocked( Sqrl_User user );
 uint8_t*    sqrl_user_key( Sqrl_User user, int key_type );
@@ -209,11 +210,6 @@ struct Sqrl_User_List {
 	struct Sqrl_User_List *next;
 };
 
-struct Sqrl_Transaction_List {
-	struct Sqrl_Client_Transaction *transaction;
-	struct Sqrl_Transaction_List *next;
-};
-
 extern struct Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
 
 void sqrl_client_call_select_user( 
@@ -237,6 +233,9 @@ int sqrl_client_call_progress(
 	int progress );
 void sqrl_client_call_save_suggested(
 	Sqrl_User *user);
+void sqrl_client_call_transaction_complete(
+	Sqrl_Client_Transaction *transaction );
+
 
 bool sqrl_client_require_password( Sqrl_Client_Transaction *transaction );
 bool sqrl_client_require_hint( Sqrl_Client_Transaction *transaction );

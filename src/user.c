@@ -286,7 +286,7 @@ void sqrl_user_hintlock( Sqrl_User u )
 		return;
 	}
 	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_LOCK_IDENTITY;
+	transaction.type = SQRL_TRANSACTION_IDENTITY_LOCK;
 	transaction.user = u;
 	struct sqrl_user_callback_data cbdata;
 	cbdata.transaction = &transaction;
@@ -346,27 +346,23 @@ Decrypts the memory of a \p Sqrl_User using a hint (truncated password)
 @param callback_data Data for \p callback
 */
 DLL_PUBLIC
-void sqrl_user_hintunlock( Sqrl_User u, 
+void sqrl_user_hintunlock( Sqrl_Client_Transaction *transaction, 
 				char *hint, 
 				size_t length )
 {
+	if( !transaction ) return;
+	Sqrl_User u = transaction->user;
+	if( !u ) return;
 	if( !sqrl_user_is_hintlocked( u )) return;
 	if( hint == NULL || length == 0 ) {
-		Sqrl_Client_Transaction transaction;
-		memset( &transaction, 0, sizeof( Sqrl_Client_Transaction ));
-		transaction.type = SQRL_TRANSACTION_UNLOCK_IDENTITY;
-		transaction.user = u;
-		sqrl_client_require_hint( &transaction );
+		sqrl_client_require_hint( transaction );
 		return;
 	}
 	WITH_USER(user,u);
 	if( user == NULL ) return;
-	Sqrl_Client_Transaction transaction;
-	transaction.type = SQRL_TRANSACTION_UNLOCK_IDENTITY;
-	transaction.user = u;
 
 	struct sqrl_user_callback_data cbdata;
-	cbdata.transaction = &transaction;
+	cbdata.transaction = transaction;
 	cbdata.adder = 0;
 	cbdata.divisor = 1;
 
