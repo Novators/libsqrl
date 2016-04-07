@@ -608,6 +608,8 @@ UT_string *sqrl_site_client_body( Sqrl_Client_Site *site )
 	return result;
 }
 
+static struct Sqrl_Site_List *SQRL_SITE_LIST = NULL;
+
 Sqrl_Client_Site *sqrl_client_site_create( Sqrl_Client_Transaction *transaction )
 {
 	if( !transaction ) return NULL;
@@ -615,6 +617,7 @@ Sqrl_Client_Site *sqrl_client_site_create( Sqrl_Client_Transaction *transaction 
 	site->transaction = transaction;
 	site->currentTransaction = SQRL_TRANSACTION_AUTH_QUERY;
 	site->previous_identity = -1;
+	site->mutex = sqrl_mutex_create();
 
 	if( site->transaction->uri ) {
 		utstring_new( site->serverString );
@@ -622,7 +625,64 @@ Sqrl_Client_Site *sqrl_client_site_create( Sqrl_Client_Transaction *transaction 
 		printf( "%10s: %s\n", "server_str", site->transaction->uri->challenge );
 		FLAG_SET( site->flags, SITE_FLAG_VALID_SERVER_STRING );
 	}
+	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.site );
+	struct Sqrl_Site_List *item = calloc( 1, sizeof( struct Sqrl_Site_List ));
+	struct Sqrl_Site_List *list = SQRL_SITE_LIST;
+	item->site = site;
+	if( ! SQRL_SITE_LIST ) {
+		SQRL_SITE_LIST = item;
+	} else {
+		while( list->next ) {
+			list = list->next;
+		}
+		list->next = item;
+	}
+	sqrl_mutex_enter( site->mutex );
+	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.site );
 	return site;
+}
+
+static struct Sqrl_Site_List *_scsm( struct Sqrl_Site_List *cur, double now, bool forceDeleteAll )
+{
+	if( cur == NULL ) {
+		// End of list
+		return NULL;
+	}
+
+	sqrl_mutex_enter( cur->site->mutex );
+	if( forceDeleteAll || (now - cur->site->lastAction) > SQRL_CLIENT_SITE_TIMEOUT ) {
+		// Delete this one
+		struct Sqrl_Site_List *next = cur->next;
+
+		// TODO: release transaction
+		if( cur->site->serverFriendlyName ) {
+			free( cur->site->serverFriendlyName );
+		}
+		if( cur->site->serverString ) {
+			utstring_free( cur->site->serverString );
+		}
+		if( cur->site->clientString ) {
+			utstring_free( cur->site->clientString );
+		}
+		sqrl_mutex_destroy( cur->site->mutex );
+		sodium_memzero( cur->site->keys, sizeof( cur->site->keys ));
+		free( cur->site );
+
+		return next;
+	}
+	sqrl_mutex_leave( cur->site->mutex );
+
+	// Continue checking list
+	cur->next = _scsm( cur->next, now, forceDeleteAll );
+	return cur;
+}
+
+void sqrl_client_site_maintenance( bool forceDeleteAll )
+{
+	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.site );
+	double now = sqrl_get_real_time();
+	SQRL_SITE_LIST = _scsm( SQRL_SITE_LIST, now, forceDeleteAll );
+	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.site );
 }
 
 Sqrl_Transaction_Status sqrl_client_do_loop( Sqrl_Client_Site *site )
@@ -642,8 +702,23 @@ Sqrl_Transaction_Status sqrl_client_do_loop( Sqrl_Client_Site *site )
 Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Client_Transaction *transaction )
 {
 	if( !transaction ) return SQRL_TRANSACTION_STATUS_FAILED;
-	// TODO: Find existing Sqrl_Client_Site for transaction
 	Sqrl_Client_Site *site = NULL;
+	Sqrl_Transaction_Status retVal = SQRL_TRANSACTION_STATUS_WORKING;
+
+	// Retrieve an existing Sqrl_Client_Site (if available)
+	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.site );
+	struct Sqrl_Site_List *list = SQRL_SITE_LIST;
+	while( list ) {
+		if( list->site->transaction == transaction ) {
+			site = list->site;
+			break;
+		}
+		list = list->next;
+	}
+	if( site ) {
+		sqrl_mutex_enter( site->mutex );
+	}
+	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.site );
 
 	if( !site ) {
 		// No existing site... Create a new one.
@@ -652,8 +727,9 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Client_Transaction 
 
 	if( !site ) return SQRL_TRANSACTION_STATUS_FAILED;
 	if( !FLAG_CHECK( site->flags, SITE_FLAG_VALID_SERVER_STRING )) {
-		return SQRL_TRANSACTION_STATUS_FAILED;
+		goto ERROR;
 	}
+	site->lastAction = sqrl_get_real_time();
 	if( site->currentTransaction == SQRL_TRANSACTION_AUTH_QUERY ) {
 		if( (site->tif & SQRL_TIF_ID_MATCH) || (site->tif & SQRL_TIF_PREVIOUS_ID_MATCH) ) {
 			// Already found a match.
@@ -667,12 +743,20 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Client_Transaction 
 				// Tried all previous identities
 				site->previous_identity = 0;
 				if( transaction->type != SQRL_TRANSACTION_AUTH_IDENT ) {
-					return SQRL_TRANSACTION_STATUS_FAILED;
+					goto ERROR;
 				}
 				// If it's an ident, we'll continue (create new account)
 			}
 		}
 	}
 	FLAG_CLEAR( site->flags, SITE_FLAG_VALID_CLIENT_STRING );
-	return sqrl_client_do_loop( site );
+	retVal = sqrl_client_do_loop( site );
+	goto DONE;
+
+ERROR:
+	retVal = SQRL_TRANSACTION_STATUS_FAILED;
+
+DONE:
+	sqrl_mutex_leave( site->mutex );
+	return retVal;
 }

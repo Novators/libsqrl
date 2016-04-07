@@ -84,6 +84,7 @@ int sqrl_init()
 	if( !sqrl_is_initialized ) {
 		sqrl_is_initialized = true;
 		SQRL_GLOBAL_MUTICES.user = sqrl_mutex_create();
+		SQRL_GLOBAL_MUTICES.site = sqrl_mutex_create();
 		#ifdef DEBUG
 		DEBUG_PRINTF( DEBUG_INFO, "libsqrl %s\n", SQRL_LIB_VERSION );
 		#endif

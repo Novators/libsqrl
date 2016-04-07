@@ -164,5 +164,5 @@ int main()
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, NULL, sqrlUrl, strlen( sqrlUrl ))) {
         PC( "INCOMPLETE", "AUTH_IDENT" );
     }
-
+    user = sqrl_user_release( user );
 }

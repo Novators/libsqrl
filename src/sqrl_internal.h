@@ -75,6 +75,7 @@ typedef void* SqrlMutex;
 
 struct Sqrl_Global_Mutices {
 	SqrlMutex user;
+	SqrlMutex site;
 };
 
 extern struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
@@ -275,9 +276,20 @@ typedef struct Sqrl_Client_Site {
 	uint8_t keys[9][SQRL_KEY_SIZE];
 	Sqrl_Transaction_Type currentTransaction;
 	int previous_identity;
+	double lastAction;
+	SqrlMutex mutex;
 } Sqrl_Client_Site;
 
+// Site information saved for 5 minutes (600 seconds) past last action
+#define SQRL_CLIENT_SITE_TIMEOUT 600
+
+struct Sqrl_Site_List {
+	struct Sqrl_Client_Site *site;
+	struct Sqrl_Site_List *next;
+};
+
 Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Client_Transaction *transaction );
+void sqrl_client_site_maintenance( bool forceDeleteAll );
 
 /* crypt.c */
 void 		sqrl_sign( const UT_string *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] );
