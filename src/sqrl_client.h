@@ -178,6 +178,7 @@ typedef struct Sqrl_Client_Transaction {
 	char *altIdentity;
 	Sqrl_Export exportType;
 	Sqrl_Encoding encodingType;
+	void *data;
 } Sqrl_Client_Transaction;
 
 typedef Sqrl_User (sqrl_ccb_select_user)(

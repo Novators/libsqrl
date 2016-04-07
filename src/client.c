@@ -314,7 +314,7 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 			sqrl_client_call_select_user( &transaction );
 			if( !transaction.user ) goto ERROR;
 		}
-		retVal = sqrl_client_do_ident( &transaction );
+		retVal = sqrl_client_resume_transaction( &transaction );
 		goto DONE;
 	case SQRL_TRANSACTION_AUTH_DISABLE:
 		goto NI;

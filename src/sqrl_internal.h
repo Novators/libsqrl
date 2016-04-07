@@ -253,6 +253,16 @@ bool sqrl_client_require_password( Sqrl_Client_Transaction *transaction );
 bool sqrl_client_require_hint( Sqrl_Client_Transaction *transaction );
 bool sqrl_client_require_rescue_code( Sqrl_Client_Transaction *transaction );
 
+#define SITE_KEY_LOOKUP 0
+#define SITE_KEY_SEC 1
+#define SITE_KEY_PUB 2
+#define SITE_KEY_PSEC 3
+#define SITE_KEY_PPUB 4
+#define SITE_KEY_SUK 5
+#define SITE_KEY_VUK 6
+#define SITE_KEY_URSK 7
+#define SITE_KEY_URPK 8
+
 typedef struct Sqrl_Client_Site {
 	Sqrl_Client_Transaction *transaction;
 	uint16_t userOptFlags;
@@ -262,19 +272,12 @@ typedef struct Sqrl_Client_Site {
 	uint32_t tif;
 	UT_string *serverString;
 	UT_string *clientString;
-	uint8_t *key_sec;
-	uint8_t *key_pub;
-	uint8_t *key_psec;
-	uint8_t *key_ppub;
-	uint8_t *key_suk;
-	uint8_t *key_vuk;
-	uint8_t *key_ursk;
-	uint8_t *key_urpk;
+	uint8_t keys[9][SQRL_KEY_SIZE];
 	Sqrl_Transaction_Type currentTransaction;
 	int previous_identity;
 } Sqrl_Client_Site;
 
-Sqrl_Transaction_Status sqrl_client_do_ident( Sqrl_Client_Transaction *transaction );
+Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Client_Transaction *transaction );
 
 /* crypt.c */
 void 		sqrl_sign( const UT_string *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] );
