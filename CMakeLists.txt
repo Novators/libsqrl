@@ -158,7 +158,7 @@ if(DOXYGEN_FOUND)
 		${CMAKE_SOURCE_DIR}/src/sqrl_client.h 
 		${CMAKE_SOURCE_DIR}/src/sqrl_server.h 
 		${CMAKE_SOURCE_DIR}/src/sqrl_expert.h)
-	set(DOCSRC ${HEADERS} ${SRC} ${CMAKE_SOURCE_DIR}/html/mainpage.dox)
+	set(DOCSRC ${HEADERS} ${SRC} ${CMAKE_BINARY_DIR}/html/mainpage.dox)
 	string(REPLACE ";" " " DOCSRCSTR "${DOCSRC}")
 	file(COPY ${CMAKE_SOURCE_DIR}/html DESTINATION ${CMAKE_BINARY_DIR})
 	configure_file(${CMAKE_SOURCE_DIR}/Doxyfile.in ${CMAKE_BINARY_DIR}/Doxyfile)
