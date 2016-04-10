@@ -1,12 +1,5 @@
 reset.sh
-*.tlog
-*.vcxproj*
-sqrl.opensdf
-sqrl.sdf
-sqrl.sln
 .DS_Store
 DartConfiguration.tcl
-merge_archives_sqrl.cmake
-site_test
 upload_docs.sh
 build

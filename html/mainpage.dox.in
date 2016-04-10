@@ -23,7 +23,9 @@ Installation and Testing:
 @code
 git clone https://github.com/Novators/libsqrl.git
 cd libsqrl
-cmake .
+mkdir build
+cd build
+cmake ..
 make
 make check
 @endcode
