@@ -24,6 +24,8 @@ For more details, see the LICENSE file included with this package.
 #include "rdrand.h"
 #include "../sqrl_internal.h"
 
+
+
 struct sqrl_entropy_pool
 {
 	crypto_hash_sha512_state state;
@@ -33,11 +35,7 @@ struct sqrl_entropy_pool
 	bool stopping;
 	int sleeptime;
 	SqrlMutex mutex;
-#ifdef _WIN32
-	HANDLE threadHandle;
-#else
-	pthread_t thread;
-#endif
+	SqrlThread thread;
 };
 
 #if defined(__MACH__)
@@ -69,11 +67,8 @@ static void sqrl_entropy_update()
 	sqrl_mutex_leave(pool->mutex);
 }
 
-#ifdef _WIN32
-DWORD WINAPI sqrl_entropy_thread(LPVOID input)
-#else
-void *sqrl_entropy_thread( void *input )
-#endif
+SQRL_THREAD_FUNCTION_RETURN_TYPE
+sqrl_entropy_thread( SQRL_THREAD_FUNCTION_INPUT_TYPE input )
 {
 	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)input;
 
@@ -85,11 +80,7 @@ void *sqrl_entropy_thread( void *input )
 	pool->estimated_entropy = 0;
 	pool->initialized = false;
 	sqrl_mutex_leave(pool->mutex);
-#ifdef _WIN32
-	ExitThread(0);
-#else
-	pthread_exit( NULL );
-#endif
+	SQRL_THREAD_LEAVE;
 }
 
 static struct sqrl_entropy_pool *sqrl_entropy_create()
@@ -107,16 +98,7 @@ static struct sqrl_entropy_pool *sqrl_entropy_create()
 	crypto_hash_sha512_init( &pool->state );
 	sqrl_add_entropy_bracket( pool, NULL );
 	pool->mutex = sqrl_mutex_create();
-#ifdef _WIN32
-	pool->threadHandle = CreateThread(NULL, 0, sqrl_entropy_thread, (void*)pool, 0, NULL);
-#else
-	pthread_attr_t attr;
-	pthread_attr_init( &attr );
-	pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_JOINABLE );
-
-	pthread_create( &pool->thread, &attr, sqrl_entropy_thread, (void*)pool );
-	pthread_attr_destroy( &attr );
-#endif
+	pool->thread = sqrl_thread_create( sqrl_entropy_thread, (SQRL_THREAD_FUNCTION_INPUT_TYPE)pool );
 	return pool;	
 }
 

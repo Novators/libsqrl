@@ -62,3 +62,22 @@ void sqrl_mutex_leave( SqrlMutex sm )
     #endif
 }
 
+SqrlThread sqrl_thread_create( sqrl_thread_function function, SQRL_THREAD_FUNCTION_INPUT_TYPE input )
+{
+#ifdef WIN32
+    return CreateThread( NULL, 0, function, data, 0, NULL );
+#endif
+#ifdef UNIX
+    pthread_attr_t attr;
+    pthread_attr_init( &attr );
+    pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_JOINABLE );
+
+    SqrlThread thread;
+
+    pthread_create( &thread, &attr, function, input );
+    pthread_attr_destroy( &attr );
+    return thread;
+#endif
+}
+
+

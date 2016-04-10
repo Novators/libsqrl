@@ -32,7 +32,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/libutils.cmake)
 set(sqrl_version_major 1)
 # Minor version is build year
 set(sqrl_version_minor 2016)
-set(sqrl_build 22)
+set(sqrl_build 23)
 set(sqrl_version "${sqrl_version_major}.${sqrl_version_minor} build ${sqrl_build}")
 
 #set(CMAKE_BUILD_TYPE Release)
