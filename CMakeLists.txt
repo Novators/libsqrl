@@ -28,9 +28,11 @@ include(${CMAKE_SOURCE_DIR}/cmake/find_sse.cmake)
 #include(${CMAKE_SOURCE_DIR}/cmake/mergestaticlibs.cmake)
 include(${CMAKE_SOURCE_DIR}/cmake/libutils.cmake)
 
+# Major version corresponds to SQRL protocol version
 set(sqrl_version_major 1)
-set(sqrl_version_minor 1)
-set(sqrl_build 21)
+# Minor version is build year
+set(sqrl_version_minor 2016)
+set(sqrl_build 22)
 set(sqrl_version "${sqrl_version_major}.${sqrl_version_minor} build ${sqrl_build}")
 
 #set(CMAKE_BUILD_TYPE Release)
@@ -57,7 +59,7 @@ file(COPY
 	${CMAKE_SOURCE_DIR}/data/test2.sqrl
 	${CMAKE_SOURCE_DIR}/data/vectors 
 	DESTINATION ${CMAKE_BINARY_DIR})
-configure_file(README.in ${CMAKE_SOURCE_DIR}README.md)
+configure_file(README.in ${CMAKE_SOURCE_DIR}/README.md)
 
 
 set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
