@@ -78,9 +78,10 @@ Sqrl_User sqrl_user_find( const char *unique_id )
 /**
 Creates an empty \p Sqrl_User, ready to generate or load identity data.
 
+\note Call \p sqrl_user_release() when finished with the returned reference.
+
 @return Pointer to new \p Sqrl_User
 */
-DLL_PUBLIC
 Sqrl_User sqrl_user_create()
 {
 	struct Sqrl_User *user = calloc( 1, sizeof( struct Sqrl_User ));
@@ -108,6 +109,9 @@ Sqrl_User sqrl_user_create()
 	return (Sqrl_User)user;
 }
 
+/**
+Counts the number of \p Sqrl_Users currently in memory
+*/
 int sqrl_user_count()
 {
     sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
@@ -122,7 +126,11 @@ int sqrl_user_count()
 }
 
 /** 
-Holds a \p Sqrl_User in memory.
+Creates a reference to a \p Sqrl_User.  The \p Sqrl_User will not be 
+freed from memory until all references have been released with \p sqrl_user_release().
+
+@param user The \p Sqrl_User
+@return Reference to \p user, or NULL
 */
 DLL_PUBLIC
 Sqrl_User sqrl_user_hold( Sqrl_User u )
@@ -147,7 +155,8 @@ Sqrl_User sqrl_user_hold( Sqrl_User u )
 }
 
 /**
-Securely erases and frees memory of a \p Sqrl_User
+Releases a reference to a \p Sqrl_User.  When all references have been released,
+securely erases and frees the memory used by the \p Sqrl_User object.
 
 @param u A \p Sqrl_User
 @return NULL
@@ -226,7 +235,7 @@ void sqrl_client_user_maintenance( bool forceLockAll )
 
 
 /**
-Gets a \p Sqrl_User from memory.
+Finds a \p Sqrl_User in memory, and returns a new reference to it.
 
 \warning \p sqrl_user_release the \p Sqrl_User when finished!
 
@@ -299,9 +308,10 @@ bool sqrl_user_is_hintlocked( Sqrl_User u )
 Encrypts the memory of a \p Sqrl_User using a hint (truncated password).
 The length of the hint is specified in the user's \p Sqrl_User_Options.
 
+\note This will start a new \p Sqrl_Transaction.  Status can be monitored 
+through the \p sqrl_ccb_progress callback.
+
 @param u A \p Sqrl_User
-@param callback Function to call during decryption
-@param callback_data Data for \p callback
 */
 DLL_PUBLIC
 void sqrl_user_hintlock( Sqrl_User u )
@@ -368,11 +378,12 @@ DONE:
 /**
 Decrypts the memory of a \p Sqrl_User using a hint (truncated password)
 
-@param u A \p Sqrl_User
+\note This will start a new \p Sqrl_Transaction.  Status can be monitored 
+through the \p sqrl_ccb_progress callback.
+
+@param transaction The \p Sqrl_Transaction that is requesting unlock
 @param hint The password hint
 @param length Length of \p hint
-@param callback Function to call during decryption
-@param callback_data Data for \p callback
 */
 DLL_PUBLIC
 void sqrl_user_hintunlock( Sqrl_Transaction t, 
@@ -691,7 +702,7 @@ void sqrl_user_remove_key( Sqrl_User u, int key_type )
 /**
 Gets the Rescue Code for a \p Sqrl_User.  This is only available after rekeying an identity.
 
-@param u A \p Sqrl_User
+@param transaction the \p Sqrl_Transaction
 @return Pointer to 24 character string
 @return NULL if Rescue Code is not available
 */

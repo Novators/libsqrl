@@ -129,6 +129,12 @@ void sqrl_transaction_set_user( Sqrl_Transaction t, Sqrl_User u )
     END_WITH_TRANSACTION(transaction);
 }
 
+/**
+Gets the current \p Sqrl_Transaction_Status of a \p Sqrl_Transaction
+
+@param transaction the \p Sqrl_Transaction
+@return \p Sqrl_Transaction_Status
+*/
 Sqrl_Transaction_Status sqrl_transaction_status( Sqrl_Transaction t )
 {
     Sqrl_Transaction_Status status = SQRL_TRANSACTION_STATUS_FAILED;
@@ -137,6 +143,12 @@ Sqrl_Transaction_Status sqrl_transaction_status( Sqrl_Transaction t )
     return status;
 }
 
+/**
+Gets the \p Sqrl_Transaction_Type of a \p Sqrl_Transaction
+
+@param transaction the \p Sqrl_Transaction
+@return \p Sqrl_Transaction_Type
+*/
 Sqrl_Transaction_Type sqrl_transaction_type( Sqrl_Transaction t )
 {
     Sqrl_Transaction_Type type = SQRL_TRANSACTION_UNKNOWN;
@@ -145,6 +157,13 @@ Sqrl_Transaction_Type sqrl_transaction_type( Sqrl_Transaction t )
     return type;
 }
 
+/**
+Gets the \p Sqrl_User associated with a \p Sqrl_Transaction
+
+@param transaction the \p Sqrl_Transaction
+@return \p Sqrl_User the associated user
+@return NULL A \p Sqrl_User is not associated with this transaction
+*/
 Sqrl_User sqrl_transaction_user( Sqrl_Transaction t )
 {
     Sqrl_User user = NULL;
@@ -153,6 +172,16 @@ Sqrl_User sqrl_transaction_user( Sqrl_Transaction t )
     return user;
 }
 
+/**
+Gets a string from a \p Sqrl_Transaction.  Typically used to retrieve
+the result of a \p sqrl_client_export_user() during the 
+\p sqrl_ccb_transaction_complete callback.
+
+@param transaction The \p Sqrl_Transaction
+@param buf A string buffer to hold the result.  If NULL, returns size of string only.
+@param len Pointer to \p size_t containing the length of \p buf.  If buf is not NULL, modified to contain length of string.
+@return \p size_t Length of the \p Sqrl_Transaction's string
+*/
 size_t sqrl_transaction_string( Sqrl_Transaction t, char *buf, size_t *len )
 {
     WITH_TRANSACTION(transaction,t);

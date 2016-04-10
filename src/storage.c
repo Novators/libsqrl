@@ -465,7 +465,6 @@ int sqrl_storage_save_to_file( Sqrl_Storage storage, const char *filename, Sqrl_
 	return retVal;
 }
 
-DLL_PUBLIC
 void sqrl_storage_unique_id( Sqrl_Storage storage, char *unique_id )
 {
 	if( !unique_id ) return;

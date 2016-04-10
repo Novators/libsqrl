@@ -10,6 +10,12 @@ For more details, see the LICENSE file included with this package.
 
 Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
 
+/**
+Makes a copy of the \p Sqrl_Client_Callbacks that libsqrl is currently using.
+
+@param callbacks An allocated \p Sqrl_Client_Callbacks structure
+*/
+DLL_PUBLIC
 void sqrl_client_get_callbacks( Sqrl_Client_Callbacks *callbacks )
 {
 	if( !callbacks ) return;
@@ -19,6 +25,13 @@ void sqrl_client_get_callbacks( Sqrl_Client_Callbacks *callbacks )
 	memcpy( callbacks, SQRL_CLIENT_CALLBACKS, sizeof( Sqrl_Client_Callbacks ));
 }
 
+/**
+Updates the active \p Sqrl_Client_Callbacks.  Libsqrl makes a copy of \p callbacks
+to use internally.
+
+@param callbacks The updated callbacks to use
+*/
+DLL_PUBLIC
 void sqrl_client_set_callbacks( Sqrl_Client_Callbacks *callbacks )
 {
 	if( !callbacks ) {
@@ -142,6 +155,17 @@ void sqrl_client_call_transaction_complete(
 	}
 }
 
+/**
+Authenticates the user to libsqrl.  This should only be called in response to 
+a \p sqrl_ccb_authentication_required request.
+
+\note \p sqrl_client_authenticate WILL securely zero the \p credential string.
+
+@param transaction The \p Sqrl_Transaction
+@param credentialType One of \p Sqrl_Credential_Type
+@param credential String containing user's password, rescue code, etc.
+@param credentialLength Length of \p credential
+*/
 DLL_PUBLIC
 void sqrl_client_authenticate(
 	Sqrl_Transaction t,
@@ -261,8 +285,13 @@ DONE:
 }
 
 /**
-Begins a save transaction->
+Exports a \p Sqrl_User to GRC's S4 format
 
+@param user The \p Sqrl_User
+@param uri A \p Sqrl_Uri specifying the file path to save to.  If not specified, export will be returned to the \p sqrl_ccb_transaction_complete callback as a string.
+@param exportType \p Sqrl_Export
+@param encodingType \p Sqrl_Encoding
+@return SQRL_TRANSACION_STATUS_SUCCESS | SQRL_TRANSACTION_STATUS_FAILED
 */
 DLL_PUBLIC
 Sqrl_Transaction_Status sqrl_client_export_user(
@@ -301,12 +330,13 @@ DONE:
 }
 
 /**
-Begins a SQRL transaction->
+Starts a new \p Sqrl_Transaction
 
-If you are 
-
-@param type \p Sqrl_Transaction_Type of transaction->
-@param uri the NULL-terminated URI string
+@param type \p Sqrl_Transaction_Type of transaction
+@param user A \p Sqrl_User, or NULL
+@param string A string representing a uri (SQRL or FILE) or an imported (text / base64) S4 identity.
+@param string_len Length of \p string
+@return \p Sqrl_Transaction_Status
 */
 DLL_PUBLIC
 Sqrl_Transaction_Status sqrl_client_begin_transaction(
@@ -421,6 +451,14 @@ DONE:
 	return retVal;
 }
 
+/**
+Call \p sqrl_client_receive with the server's response to a \p sqrl_ccb_send callback.
+
+@param transaction The \p Sqrl_Transaction
+@param payload The entire body of the server's response.
+@param payload_len Length of \p payload 
+*/
+DLL_PUBLIC
 void sqrl_client_receive( 
 	Sqrl_Transaction transaction,
 	const char *payload, size_t payload_len )

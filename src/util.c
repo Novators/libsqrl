@@ -77,8 +77,8 @@ void sqrl_mutex_leave( SqrlMutex sm )
 struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
 
 /**
- * Initializes the SQRL library.  Must be called once, before any SQRL functions are used.
- */
+Initializes the SQRL library.  Must be called once, before any SQRL functions are used.
+*/
 DLL_PUBLIC
 int sqrl_init()
 {
@@ -96,6 +96,15 @@ int sqrl_init()
 	return 0;
 }
 
+/**
+Performs clean-up as a client is closing.  Erases and frees memory used by libsqrl.
+If a User cannot safely be freed, it is hintlocked (encrypted).
+
+\note Do not call any libsqrl functions after \p sqrl_stop()
+
+@return Number of objects that could not safely be removed from memory, so they were encrypted.
+@return -1 if libsqrl has not been initialized with \p sqrl_init()
+*/
 DLL_PUBLIC
 int sqrl_stop()
 {
