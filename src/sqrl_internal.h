@@ -8,10 +8,18 @@ For more details, see the LICENSE file included with this package.
 #ifndef SQRL_INTERNAL_H_INCLUDED
 #define SQRL_INTERNAL_H_INCLUDED
 
+#include <sqrl_config.h>
+
+#ifdef UNIX
+#include <unistd.h>
+#include <pthread.h>
+#endif
+#ifdef WIN32
+#include <Windows.h>
+#endif
+
 #include <stdio.h>
 #include <sodium.h>
-
-#include <sqrl_config.h>
 #include "crypto/gcm.h"
 #include "sqrl_expert.h"
 

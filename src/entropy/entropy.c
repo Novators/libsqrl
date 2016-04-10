@@ -6,17 +6,6 @@ This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
 
-#ifdef _WIN32
-#include <Windows.h>
-#define SQRL_LOCK_MUTEX(a) EnterCriticalSection(&a->criticalSection)
-#define SQRL_UNLOCK_MUTEX(a) LeaveCriticalSection(&a->criticalSection)
-#else
-#include <pthread.h>
-#define SQRL_LOCK_MUTEX(a) pthread_mutex_lock( &a->mutex );
-#define SQRL_UNLOCK_MUTEX(a) pthread_mutex_unlock( &a->mutex );
-#endif
-
-
 // fast ~= 50 times per second
 // slow ~= 5 times per second
 // Depending on processor speed.
@@ -43,12 +32,11 @@ struct sqrl_entropy_pool
 	bool initialized;
 	bool stopping;
 	int sleeptime;
+	SqrlMutex mutex;
 #ifdef _WIN32
 	HANDLE threadHandle;
-	CRITICAL_SECTION criticalSection;
 #else
 	pthread_t thread;
-	pthread_mutex_t mutex;
 #endif
 };
 
@@ -75,10 +63,10 @@ static void sqrl_entropy_update()
 	struct sqrl_entropy_pool *pool = sqrl_entropy_get_pool();
 	struct sqrl_fast_flux_entropy ffe;
 	sqrl_store_fast_flux_entropy( &ffe );
-	SQRL_LOCK_MUTEX(pool);
+	sqrl_mutex_enter(pool->mutex);
 	crypto_hash_sha512_update( &pool->state, (unsigned char*)&ffe, sizeof( struct sqrl_fast_flux_entropy ));
 	sqrl_increment_entropy( pool, 1 );
-	SQRL_UNLOCK_MUTEX(pool);
+	sqrl_mutex_leave(pool->mutex);
 }
 
 #ifdef _WIN32
@@ -93,10 +81,10 @@ void *sqrl_entropy_thread( void *input )
 		sqrl_entropy_update();
 		sqrl_sleep( pool->sleeptime );
 	}
-	SQRL_LOCK_MUTEX(pool);
+	sqrl_mutex_enter(pool->mutex);
 	pool->estimated_entropy = 0;
 	pool->initialized = false;
-	SQRL_UNLOCK_MUTEX(pool);
+	sqrl_mutex_leave(pool->mutex);
 #ifdef _WIN32
 	ExitThread(0);
 #else
@@ -118,14 +106,10 @@ static struct sqrl_entropy_pool *sqrl_entropy_create()
 
 	crypto_hash_sha512_init( &pool->state );
 	sqrl_add_entropy_bracket( pool, NULL );
-
+	pool->mutex = sqrl_mutex_create();
 #ifdef _WIN32
-	InitializeCriticalSection(&pool->criticalSection);
 	pool->threadHandle = CreateThread(NULL, 0, sqrl_entropy_thread, (void*)pool, 0, NULL);
-	
 #else
-	pthread_mutex_init(&pool->mutex, NULL);
-
 	pthread_attr_t attr;
 	pthread_attr_init( &attr );
 	pthread_attr_setdetachstate( &attr, PTHREAD_CREATE_JOINABLE );
@@ -167,7 +151,7 @@ void sqrl_entropy_add( uint8_t* msg, size_t msg_len )
 {
 	struct sqrl_entropy_pool *pool = sqrl_entropy_get_pool();
 	if( pool->initialized ) {
-		SQRL_LOCK_MUTEX(pool);
+		sqrl_mutex_enter(pool->mutex);
 		if( pool->initialized ) {
 			struct sqrl_fast_flux_entropy ffe;
 			sqrl_store_fast_flux_entropy( &ffe );
@@ -180,7 +164,7 @@ void sqrl_entropy_add( uint8_t* msg, size_t msg_len )
 				free( buf );
 			}
 		}
-		SQRL_UNLOCK_MUTEX(pool);
+		sqrl_mutex_leave(pool->mutex);
 	}
 }
 
@@ -205,7 +189,7 @@ START:
 	}
 	if( pool->initialized &&
 		pool->estimated_entropy >= desired_entropy ) {
-		SQRL_LOCK_MUTEX(pool);
+		sqrl_mutex_enter(pool->mutex);
 		if( pool->initialized &&
 			pool->estimated_entropy >= desired_entropy ) {
 			sqrl_add_entropy_bracket( pool, NULL );
@@ -215,10 +199,10 @@ START:
 			received_entropy = pool->estimated_entropy;
 			pool->estimated_entropy = 0;
 		} else {
-			SQRL_UNLOCK_MUTEX(pool);
+			sqrl_mutex_leave(pool->mutex);
 			goto START;
 		}
-		SQRL_UNLOCK_MUTEX(pool);
+		sqrl_mutex_leave(pool->mutex);
 	} else{
 		goto START;
 	}
@@ -265,7 +249,7 @@ int sqrl_entropy_get( uint8_t* buf, int desired_entropy )
 	int received_entropy = 0;
 	if( pool->initialized &&
 		pool->estimated_entropy >= desired_entropy ) {
-		SQRL_LOCK_MUTEX(pool);
+		sqrl_mutex_enter(pool->mutex);
 		if( pool->initialized &&
 			pool->estimated_entropy >= desired_entropy ) {
 			sqrl_add_entropy_bracket( pool, NULL );
@@ -275,7 +259,7 @@ int sqrl_entropy_get( uint8_t* buf, int desired_entropy )
 			received_entropy = pool->estimated_entropy;
 			pool->estimated_entropy = 0;
 		}
-		SQRL_UNLOCK_MUTEX(pool);
+		sqrl_mutex_leave(pool->mutex);
 	}
 	if( pool->estimated_entropy < desired_entropy ) {
 		pool->entropy_target = desired_entropy;

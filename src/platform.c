@@ -8,14 +8,6 @@ For more details, see the LICENSE file included with this package.
 
 #include "sqrl_internal.h"
 
-#ifdef UNIX
-#include <unistd.h>
-#include <pthread.h>
-#endif
-#ifdef WIN32
-#include <Windows.h>
-#endif
-
 void sqrl_sleep(int sleepMs)
 {
 #ifdef UNIX
