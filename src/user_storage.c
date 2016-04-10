@@ -518,6 +518,7 @@ Sqrl_User sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len )
 	} else {
 		storage = sqrl_storage_destroy( storage );
 	}
+	utstring_free( buf );
 	return u;
 }
 

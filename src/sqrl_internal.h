@@ -30,12 +30,14 @@ do {if(DEBUG_PRINT_VAR && t) printf(s); } while( 0 )
 
 #ifdef DEBUG
 #define DEBUG_PRINT_VAR 1
-#define DEBUG_PRINT_REFERENCE_COUNT 0
+#define DEBUG_PRINT_USER_COUNT 1
+#define DEBUG_PRINT_TRANSACTION_COUNT 0
 #define DEBUG_PRINTF(fmt, ...) printf( fmt, __VA_ARGS__)
 #define DEBUG_PRINT(s) printf( s );
 #else
 #define DEBUG_PRINT_VAR 0
-#define DEBUG_PRINT_REFERENCE_COUNT 0
+#define DEBUG_PRINT_USER_COUNT 0
+#define DEBUG_PRINT_TRANSACTION_COUNT 0
 #define DEBUG_PRINTF(fmt, ...)
 #define DEBUG_PRINT(s) printf( s );
 #endif

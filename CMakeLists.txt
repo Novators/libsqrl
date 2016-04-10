@@ -183,6 +183,6 @@ add_test(crypto_test ${EXECUTABLE_OUTPUT_PATH}/crypto_test)
 add_test(storage_test ${EXECUTABLE_OUTPUT_PATH}/storage_test)
 add_test(NAME sodium-test
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/src/libsodium/src/libsodium
-	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/makecheck.sh)
+	COMMAND make check)
 
 add_custom_target(check ${CMAKE_CTEST_COMMAND})

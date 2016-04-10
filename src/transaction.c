@@ -11,7 +11,7 @@ For more details, see the LICENSE file included with this package.
 
 struct Sqrl_Transaction_List *SQRL_TRANSACTION_LIST = NULL;
 
-#if defined(DEBUG) && DEBUG_PRINT_REFERENCE_COUNT==1
+#if defined(DEBUG) && DEBUG_PRINT_TRANSACTION_COUNT==1
 #define PRINT_TRANSACTION_COUNT(tag) \
 int _ptcI = 0;\
 struct Sqrl_Transaction_List *_ptcC = SQRL_TRANSACTION_LIST;\
@@ -32,17 +32,9 @@ Sqrl_Transaction sqrl_transaction_create( Sqrl_Transaction_Type type )
     transaction->referenceCount = 1;
     transaction->mutex = sqrl_mutex_create();
     list->transaction = transaction;
-    struct Sqrl_Transaction_List *l;
     sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
-    if( SQRL_TRANSACTION_LIST ) {
-        l = SQRL_TRANSACTION_LIST;
-        while( l->next ) {
-            l = l->next;
-        }
-        l->next = list;
-    } else {
-        SQRL_TRANSACTION_LIST = list;
-    }
+    list->next = SQRL_TRANSACTION_LIST;
+    SQRL_TRANSACTION_LIST = list;
     PRINT_TRANSACTION_COUNT( "trn_create" );
     sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
     return (Sqrl_Transaction)transaction;
@@ -124,6 +116,10 @@ void sqrl_transaction_set_user( Sqrl_Transaction t, Sqrl_User u )
     if( !u ) return;
     WITH_TRANSACTION(transaction,t);
     if( !transaction ) return;
+    if( transaction->user == u ) {
+        END_WITH_TRANSACTION(transaction);
+        return;
+    }
     transaction->user = sqrl_user_release( transaction->user );
     transaction->user = sqrl_user_hold( u );
     END_WITH_TRANSACTION(transaction);

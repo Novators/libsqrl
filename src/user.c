@@ -36,7 +36,7 @@ void sqrl_user_ensure_keys_allocated( Sqrl_User u )
 	}
 }
 
-#if defined(DEBUG) && DEBUG_PRINT_REFERENCE_COUNT==1
+#if defined(DEBUG) && DEBUG_PRINT_USER_COUNT==1
 #define PRINT_USER_COUNT(tag) \
 int _pucI = 0;\
 struct Sqrl_User_List *_pucC = SQRL_USER_LIST;\
@@ -91,19 +91,8 @@ Sqrl_User sqrl_user_create()
 	struct Sqrl_User_List *l = calloc( 1, sizeof( struct Sqrl_User_List ));
 	l->user = user;
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
-
-	struct Sqrl_User_List *list = SQRL_USER_LIST;
-	if( list == NULL ) {
-		SQRL_USER_LIST = l;
-	} else {
-		while( 1 ) {
-			if( list->next == NULL ) {
-				list->next = l;
-				break;
-			}
-			list = list->next;
-		}
-	}
+	l->next = SQRL_USER_LIST;
+	SQRL_USER_LIST = l;
 	PRINT_USER_COUNT("usr_create");
 	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
 	return (Sqrl_User)user;
