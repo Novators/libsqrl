@@ -12,9 +12,10 @@ For more details, see the LICENSE file included with this package.
 char myPassword[32];
 
 bool onAuthenticationRequired(
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction t,
 	Sqrl_Credential_Type credentialType )
 {
+	SQRL_CAST_TRANSACTION(transaction,t);
 	char *cred = NULL;
 	uint8_t len;
 
@@ -58,13 +59,13 @@ char transactionType[11][10] = {
 };
 bool showingProgress = false;
 int nextProgress = 0;
-int onProgress( Sqrl_Client_Transaction *transaction, int p )
+int onProgress( Sqrl_Transaction transaction, int p )
 {
 	if( !showingProgress ) {
 		// Transaction type
 		showingProgress = true;
 		nextProgress = 2;
-		printf( "%6s: ", transactionType[transaction->type] );
+		printf( "%6s: ", transactionType[sqrl_transaction_type( transaction )] );
 	}
 	const char sym[] = "|****";
 	while( p >= nextProgress ) {
@@ -92,8 +93,7 @@ int main()
 	Sqrl_User user = NULL;
 	uint8_t *key = NULL;
 	
-	Sqrl_Client_Transaction t;
-	memset( &t, 0, sizeof( Sqrl_Client_Transaction ));
+	Sqrl_Transaction t = sqrl_transaction_create( SQRL_TRANSACTION_UNKNOWN );
 
 	Sqrl_Client_Callbacks cbs;
 	memset( &cbs, 0, sizeof( Sqrl_Client_Callbacks ));
@@ -112,8 +112,8 @@ int main()
 	storage = sqrl_storage_destroy( storage );
 
 	user = sqrl_user_create_from_file( "test1.sqrl" );
-	t.user = user;
-	key = sqrl_user_key( &t, KEY_MK );
+	sqrl_transaction_set_user( t, user );
+	key = sqrl_user_key( t, KEY_MK );
 	if( !key ) {
 		printf( "Load Failed\n" );
 		goto ERROR;
@@ -124,11 +124,10 @@ int main()
 	UT_string *buf;
 	utstring_new( buf );
 	WITH_USER(u,user);
-	Sqrl_Client_Transaction transaction;
-	memset( &transaction, 0, sizeof( Sqrl_Client_Transaction ));
-	transaction.type = SQRL_TRANSACTION_IDENTITY_SAVE;
-	transaction.user = user;
-	sqrl_user_update_storage( &transaction );
+	Sqrl_Transaction transaction = sqrl_transaction_create( SQRL_TRANSACTION_IDENTITY_SAVE );
+	sqrl_transaction_set_user( transaction, user );
+	sqrl_user_update_storage( transaction );
+	transaction = sqrl_transaction_release( transaction );
 	sqrl_storage_save_to_buffer( u->storage, buf, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
 	END_WITH_USER(u);
 	user = sqrl_user_release( user );
@@ -136,9 +135,9 @@ int main()
 	user = sqrl_user_create_from_buffer( utstring_body( buf ), utstring_len(buf));
 	utstring_free( buf );
 	buf = NULL;
-	t.user = user;
+	sqrl_transaction_set_user( t, user );
 
-	key = sqrl_user_key( &t, KEY_MK );
+	key = sqrl_user_key( t, KEY_MK );
 	if( !key ) {
 		printf( "New Password Failed\n" );
 		goto ERROR;
@@ -153,6 +152,7 @@ DONE:
 		storage = sqrl_storage_destroy( storage );
 	}
 	user = sqrl_user_release( user );
+	t = sqrl_transaction_release( t );
 	if( bError ) {
 		printf( "FAIL\n" );
 		exit(1);

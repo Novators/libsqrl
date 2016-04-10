@@ -37,27 +37,26 @@ void sqrl_client_set_callbacks( Sqrl_Client_Callbacks *callbacks )
 	}
 }
 
-Sqrl_User sqrl_client_call_select_user( Sqrl_Client_Transaction *transaction )
+Sqrl_User sqrl_client_call_select_user( Sqrl_Transaction t )
 {
-	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onSelectUser ) return NULL;
-	Sqrl_User user = (SQRL_CLIENT_CALLBACKS->onSelectUser)( transaction );
-	if( user ) {
-		if( transaction->user ) {
-			transaction->user = sqrl_user_release( transaction->user );
+	if( SQRL_CLIENT_CALLBACKS && SQRL_CLIENT_CALLBACKS->onSelectUser ) {
+		Sqrl_User user = (SQRL_CLIENT_CALLBACKS->onSelectUser)( t );
+		if( user ) {
+			sqrl_transaction_set_user( t, user );
 		}
-		transaction->user = user;
-		sqrl_user_hold( user );
+		return user;
 	}
-	return user;
+	return NULL;
 }
 
 DLL_PUBLIC
 void sqrl_client_transaction_set_alternate_identity(
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction t,
 	const char *altIdentity )
 {
-	if( !transaction ) return;
 	if( altIdentity ) {
+		WITH_TRANSACTION(transaction,t);
+		if( !transaction ) return;
 		if( transaction->altIdentity ) {
 			free( transaction->altIdentity );
 		}
@@ -66,79 +65,96 @@ void sqrl_client_transaction_set_alternate_identity(
 			transaction->altIdentity = malloc( len + 1 );
 			strcpy( transaction->altIdentity, altIdentity );
 		}
+		END_WITH_TRANSACTION(transaction);
 	}
 }
 
-void sqrl_client_call_select_alternate_identity( Sqrl_Client_Transaction *transaction )
+void sqrl_client_call_select_alternate_identity( Sqrl_Transaction t )
 {
+	WITH_TRANSACTION(transaction,t);
+	if( !transaction ) return;	
 	if( transaction->altIdentity ) {
 		free( transaction->altIdentity );
 		transaction->altIdentity = NULL;
 	}
-	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onSelectAlternateIdentity ) return;
-	(SQRL_CLIENT_CALLBACKS->onSelectAlternateIdentity)( transaction );
+	if( SQRL_CLIENT_CALLBACKS && SQRL_CLIENT_CALLBACKS->onSelectAlternateIdentity ) {
+		(SQRL_CLIENT_CALLBACKS->onSelectAlternateIdentity)( t );
+	}
+	END_WITH_TRANSACTION(transaction);
 }
 
-bool sqrl_client_call_authentication_required( Sqrl_Client_Transaction *transaction, Sqrl_Credential_Type credentialType )
+bool sqrl_client_call_authentication_required( Sqrl_Transaction t, Sqrl_Credential_Type credentialType )
 {
-	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onAuthenticationRequired ) return false;
-	return (SQRL_CLIENT_CALLBACKS->onAuthenticationRequired)( transaction, credentialType );
+	bool retVal = false;
+	if( SQRL_CLIENT_CALLBACKS && SQRL_CLIENT_CALLBACKS->onAuthenticationRequired ) {
+		retVal = (SQRL_CLIENT_CALLBACKS->onAuthenticationRequired)( t, credentialType );
+	}
+	return retVal;
 }
 
 void sqrl_client_call_ask(
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction t,
 	const char *message, size_t message_len,
 	const char *firstButton, size_t firstButton_len,
 	const char *secondButton, size_t secondButton_len )
 {
-	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onAsk ) return;
-	(SQRL_CLIENT_CALLBACKS->onAsk)( transaction, message, message_len,
-		firstButton, firstButton_len, secondButton, secondButton_len );
+	if( SQRL_CLIENT_CALLBACKS && SQRL_CLIENT_CALLBACKS->onAsk ) {
+		(SQRL_CLIENT_CALLBACKS->onAsk)( t, message, message_len,
+			firstButton, firstButton_len, secondButton, secondButton_len );
+	}
 }
 
 void sqrl_client_call_send(
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction t,
 	const char *url, size_t url_len,
 	const char *payload, size_t payload_len )
 {
-	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onSend ) return;
-	(SQRL_CLIENT_CALLBACKS->onSend)( transaction, url, url_len, payload, payload_len );
+	if( SQRL_CLIENT_CALLBACKS && SQRL_CLIENT_CALLBACKS->onSend ) {
+		(SQRL_CLIENT_CALLBACKS->onSend)( t, url, url_len, payload, payload_len );
+	}
 }
 
 int sqrl_client_call_progress(
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction t,
 	int progress )
 {
-	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onProgress ) {
-		return 1;
+	int retVal = 1;
+	if( SQRL_CLIENT_CALLBACKS && SQRL_CLIENT_CALLBACKS->onProgress ) {
+		retVal = (SQRL_CLIENT_CALLBACKS->onProgress)( t, progress );
 	}
-	return (SQRL_CLIENT_CALLBACKS->onProgress)( transaction, progress );
+	return retVal;
 
 }
 
 void sqrl_client_call_save_suggested(
-	Sqrl_User user)
+	Sqrl_User u)
 {
-	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onSaveSuggested ) return;
-	(SQRL_CLIENT_CALLBACKS->onSaveSuggested)(user);
+	if( SQRL_CLIENT_CALLBACKS && SQRL_CLIENT_CALLBACKS->onSaveSuggested ) {
+		(SQRL_CLIENT_CALLBACKS->onSaveSuggested)(u);
+	}
 }
 
 void sqrl_client_call_transaction_complete(
-	Sqrl_Client_Transaction *transaction )
+	Sqrl_Transaction t )
 {
-	if( !SQRL_CLIENT_CALLBACKS || !SQRL_CLIENT_CALLBACKS->onTransactionComplete ) return;
-	(SQRL_CLIENT_CALLBACKS->onTransactionComplete)(transaction);
+	if( SQRL_CLIENT_CALLBACKS && SQRL_CLIENT_CALLBACKS->onTransactionComplete ) {
+		(SQRL_CLIENT_CALLBACKS->onTransactionComplete)(t);
+	}
 }
 
 DLL_PUBLIC
 void sqrl_client_authenticate(
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction t,
 	Sqrl_Credential_Type credentialType,
 	char *credential, size_t credentialLength )
 {
+	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return;
-	WITH_USER(user,transaction->user);
-	if( !user ) return;
+	SQRL_CAST_USER(user,transaction->user);
+	if( !user ) {
+		END_WITH_TRANSACTION(transaction);
+		return;
+	}
 	switch( credentialType ) {
 	case SQRL_CREDENTIAL_PASSWORD:
 		sqrl_user_set_password( transaction->user, credential, credentialLength );
@@ -162,44 +178,50 @@ void sqrl_client_authenticate(
 		}
 		break;
 	}
-	END_WITH_USER(user);
+	END_WITH_TRANSACTION(transaction);
 	sodium_memzero( credential, credentialLength );
 }
 
-bool sqrl_client_require_hint( Sqrl_Client_Transaction *transaction )
+bool sqrl_client_require_hint( Sqrl_Transaction t )
 {
+	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return false;
 
 	bool retVal = sqrl_user_is_hintlocked( transaction->user );
 	if( retVal ) {
 		retVal = sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_HINT );
 	}
+	END_WITH_TRANSACTION(transaction);
 	return retVal;
 }
 
-bool sqrl_client_require_new_password( Sqrl_Client_Transaction *transaction )
+bool sqrl_client_require_new_password( Sqrl_Transaction t )
 {
-	if( !transaction ) return false;
-	WITH_USER(user,transaction->user);
-	if( !user ) return false;
 	bool retVal = true;
+	WITH_TRANSACTION(transaction,t);
+	if( !transaction ) return false;
+	SQRL_CAST_USER(user,transaction->user);
+	if( !user ) goto ERROR;
 	if( sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_NEW_PASSWORD ) &&
 		user->keys->password_len > 0 ) {
 		goto DONE;
 	}
+
+ERROR:
 	retVal = false;
 
 DONE:
-	END_WITH_USER(user);
+	END_WITH_TRANSACTION(transaction);
 	return retVal;
 }
 
-bool sqrl_client_require_password( Sqrl_Client_Transaction *transaction )
+bool sqrl_client_require_password( Sqrl_Transaction t )
 {
-	if( !transaction ) return false;
-	WITH_USER(user,transaction->user);
-	if( !user ) return false;
 	bool retVal = true;
+	WITH_TRANSACTION(transaction,t);
+	if( !transaction ) goto ERROR;
+	SQRL_CAST_USER(user,transaction->user);
+	if( !user ) goto ERROR;
 	if( user->keys->password_len > 0 ) {
 		goto DONE;
 	}
@@ -207,18 +229,21 @@ bool sqrl_client_require_password( Sqrl_Client_Transaction *transaction )
 		user->keys->password_len > 0 ) {
 		goto DONE;
 	}
+
+ERROR:
 	retVal = false;
 
 DONE:
-	END_WITH_USER(user);
+	END_WITH_TRANSACTION(transaction);
 	return retVal;
 }
 
-bool sqrl_client_require_rescue_code( Sqrl_Client_Transaction *transaction )
+bool sqrl_client_require_rescue_code( Sqrl_Transaction t )
 {
-	if( !transaction ) return false;
-	if( !transaction->user ) return false;
 	bool retVal = true;
+	WITH_TRANSACTION(transaction,t);
+	if( !transaction ) goto ERROR;
+	if( !transaction->user ) goto ERROR;
 	if( sqrl_user_has_key( transaction->user, KEY_RESCUE_CODE ) ) {
 		goto DONE;
 	}
@@ -226,14 +251,17 @@ bool sqrl_client_require_rescue_code( Sqrl_Client_Transaction *transaction )
 		sqrl_user_has_key( transaction->user, KEY_RESCUE_CODE) ) {
 		goto DONE;
 	}
+
+ERROR:
 	retVal = false;
 
 DONE:
+	END_WITH_TRANSACTION( transaction );
 	return retVal;
 }
 
 /**
-Begins a save transaction.
+Begins a save transaction->
 
 */
 DLL_PUBLIC
@@ -244,20 +272,19 @@ Sqrl_Transaction_Status sqrl_client_export_user(
 	Sqrl_Encoding encodingType )
 {
 	Sqrl_Transaction_Status status = SQRL_TRANSACTION_STATUS_WORKING;
-	Sqrl_Client_Transaction transaction;
-	memset( &transaction, 0, sizeof( Sqrl_Client_Transaction ));
-	transaction.type = SQRL_TRANSACTION_IDENTITY_SAVE;
-	transaction.user = user;
-	sqrl_user_hold( user );
-	transaction.exportType = exportType;
-	transaction.encodingType = encodingType;
+	Sqrl_Transaction t = sqrl_transaction_create( SQRL_TRANSACTION_IDENTITY_SAVE );
+	SQRL_CAST_TRANSACTION(transaction,t);
+	sqrl_transaction_set_user( t, user );
+	transaction->status = status;
+	transaction->exportType = exportType;
+	transaction->encodingType = encodingType;
 	if( uri ) {
-		transaction.uri = sqrl_uri_parse( uri );
-		if( !transaction.uri ) goto ERROR;
-		if( transaction.uri->scheme != SQRL_SCHEME_FILE ) goto ERROR;
-		if( !sqrl_user_save( &transaction )) goto ERROR;
+		transaction->uri = sqrl_uri_parse( uri );
+		if( !transaction->uri ) goto ERROR;
+		if( transaction->uri->scheme != SQRL_SCHEME_FILE ) goto ERROR;
+		if( !sqrl_user_save( t )) goto ERROR;
 	} else {
-		if( !sqrl_user_save_to_buffer( &transaction )) goto ERROR;
+		if( !sqrl_user_save_to_buffer( t )) goto ERROR;
 	}
 	status = SQRL_TRANSACTION_STATUS_SUCCESS;
 	goto DONE;
@@ -266,20 +293,19 @@ ERROR:
 	status = SQRL_TRANSACTION_STATUS_FAILED;
 
 DONE:
-	transaction.status = status;
-	sqrl_client_call_transaction_complete( &transaction );
+	transaction->status = status;
+	sqrl_client_call_transaction_complete( transaction );
 
-	transaction.user = sqrl_user_release( transaction.user );
-	transaction.uri = sqrl_uri_free( transaction.uri );
+	transaction = sqrl_transaction_release( transaction );
 	return status;
 }
 
 /**
-Begins a SQRL transaction.
+Begins a SQRL transaction->
 
 If you are 
 
-@param type \p Sqrl_Transaction_Type of transaction.
+@param type \p Sqrl_Transaction_Type of transaction->
 @param uri the NULL-terminated URI string
 */
 DLL_PUBLIC
@@ -291,30 +317,27 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 {
 	Sqrl_Transaction_Status retVal = SQRL_TRANSACTION_STATUS_WORKING;
 	uint8_t *key;
-	Sqrl_Client_Transaction transaction;
-	memset( &transaction, 0, sizeof( Sqrl_Client_Transaction ));
-	transaction.type = type;
-	transaction.status = retVal;
+	Sqrl_User tmpUser;
+	Sqrl_Transaction t = sqrl_transaction_create( type );
+	SQRL_CAST_TRANSACTION(transaction,t);
+	transaction->status = retVal;
 
 	if( string ) {
-		transaction.uri = sqrl_uri_parse( string );
+		transaction->uri = sqrl_uri_parse( string );
 	}
-	if( user ) {
-		transaction.user = user;
-		sqrl_user_hold( user );
-	}
+	sqrl_transaction_set_user( t, user );
 	switch( type ) {
 	case SQRL_TRANSACTION_UNKNOWN:
 		goto ERROR;
 	case SQRL_TRANSACTION_AUTH_IDENT:
-		if( !transaction.uri || transaction.uri->scheme != SQRL_SCHEME_SQRL ) {
+		if( !transaction->uri || transaction->uri->scheme != SQRL_SCHEME_SQRL ) {
 			goto ERROR;
 		}
-		if( !transaction.user ) {
-			sqrl_client_call_select_user( &transaction );
-			if( !transaction.user ) goto ERROR;
+		if( !transaction->user ) {
+			sqrl_client_call_select_user( transaction );
+			if( !transaction->user ) goto ERROR;
 		}
-		retVal = sqrl_client_resume_transaction( &transaction );
+		retVal = sqrl_client_resume_transaction( transaction, NULL, 0 );
 		goto DONE;
 	case SQRL_TRANSACTION_AUTH_DISABLE:
 		goto NI;
@@ -323,47 +346,48 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	case SQRL_TRANSACTION_AUTH_REMOVE:
 		goto NI;
 	case SQRL_TRANSACTION_IDENTITY_RESCUE:
-		if( !transaction.user ) goto ERROR;
-		if( sqrl_user_force_rescue( &transaction )) {
+		if( !transaction->user ) goto ERROR;
+		if( sqrl_user_force_rescue( transaction )) {
 			goto SUCCESS;
 		}
 		goto ERROR;
 	case SQRL_TRANSACTION_IDENTITY_REKEY:
-		if( !transaction.user ) goto ERROR;
-		sqrl_user_rekey( &transaction );
-		if( sqrl_client_require_password( &transaction )) {
-			sqrl_client_call_save_suggested( transaction.user );
+		if( !transaction->user ) goto ERROR;
+		sqrl_user_rekey( transaction );
+		if( sqrl_client_require_password( transaction )) {
+			sqrl_client_call_save_suggested( transaction->user );
 			goto SUCCESS;
 		}
 		goto ERROR;
 	case SQRL_TRANSACTION_IDENTITY_LOAD:
-		if( transaction.user ) goto ERROR;
-		if( transaction.uri ) {
-			if( transaction.uri->scheme != SQRL_SCHEME_FILE ) goto ERROR;
-			transaction.user = sqrl_user_create_from_file( transaction.uri->challenge );
-			if( transaction.user ) {
+		if( transaction->user ) goto ERROR;
+		if( transaction->uri ) {
+			if( transaction->uri->scheme != SQRL_SCHEME_FILE ) goto ERROR;
+			transaction->user = sqrl_user_create_from_file( transaction->uri->challenge );
+			if( transaction->user ) {
 				goto SUCCESS;
 			}
 		} else {
-			transaction.user = sqrl_user_create_from_buffer( string, string_len );
-			if( transaction.user ) {
+			transaction->user = sqrl_user_create_from_buffer( string, string_len );
+			if( transaction->user ) {
 				goto SUCCESS;
 			}
 		}
 		goto ERROR;
 	case SQRL_TRANSACTION_IDENTITY_GENERATE:
-		if( transaction.user ) goto ERROR;
-		transaction.user = sqrl_user_create();
-		sqrl_user_rekey( &transaction );
-		if( sqrl_client_require_password( &transaction )) {
-			sqrl_client_call_save_suggested( transaction.user );
+		if( transaction->user ) goto ERROR;
+		tmpUser = sqrl_user_create();
+		sqrl_transaction_set_user( t, tmpUser );
+		tmpUser = sqrl_user_release( tmpUser );
+		if( sqrl_user_rekey( t ) && sqrl_client_require_password( t )) {
+			sqrl_client_call_save_suggested( transaction->user );
 			goto SUCCESS;
 		}
 		goto ERROR;
 	case SQRL_TRANSACTION_IDENTITY_CHANGE_PASSWORD:
-		if( !transaction.user ) goto ERROR;
-		if( sqrl_user_force_decrypt( &transaction )) {
-			if( sqrl_client_require_new_password( &transaction )) {
+		if( !transaction->user ) goto ERROR;
+		if( sqrl_user_force_decrypt( transaction )) {
+			if( sqrl_client_require_new_password( transaction )) {
 				goto SUCCESS;
 			}
 		}
@@ -390,18 +414,16 @@ ERROR:
 	goto DONE;
 
 DONE:
-	transaction.status = retVal;
-	sqrl_client_call_transaction_complete( &transaction );
+	transaction->status = retVal;
+	sqrl_client_call_transaction_complete( t );
 
-	if( transaction.uri ) {
-		transaction.uri = sqrl_uri_free( transaction.uri );
-	}
-	if( transaction.user ) {
-		transaction.user = sqrl_user_release( transaction.user );
-	}
-	if( transaction.string ) {
-		free( transaction.string );
-		transaction.string = NULL;
-	}
+	t = sqrl_transaction_release( t );
 	return retVal;
+}
+
+void sqrl_client_receive( 
+	Sqrl_Transaction transaction,
+	const char *payload, size_t payload_len )
+{
+	sqrl_client_resume_transaction( transaction, payload, payload_len );
 }

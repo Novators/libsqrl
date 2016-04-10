@@ -79,19 +79,40 @@ struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
 /**
  * Initializes the SQRL library.  Must be called once, before any SQRL functions are used.
  */
+DLL_PUBLIC
 int sqrl_init()
 {
 	if( !sqrl_is_initialized ) {
 		sqrl_is_initialized = true;
 		SQRL_GLOBAL_MUTICES.user = sqrl_mutex_create();
 		SQRL_GLOBAL_MUTICES.site = sqrl_mutex_create();
+		SQRL_GLOBAL_MUTICES.transaction = sqrl_mutex_create();
 		#ifdef DEBUG
-		DEBUG_PRINTF( DEBUG_INFO, "libsqrl %s\n", SQRL_LIB_VERSION );
+		DEBUG_PRINTF( "libsqrl %s\n", SQRL_LIB_VERSION );
 		#endif
 		gcm_initialize();
 		return sodium_init();
 	}
 	return 0;
+}
+
+DLL_PUBLIC
+int sqrl_stop()
+{
+	if( sqrl_is_initialized ) {
+		sqrl_client_site_maintenance( true );
+		sqrl_client_user_maintenance( true );
+		int transactionCount = sqrl_transaction_count();
+		int userCount = sqrl_user_count();
+		int siteCount = sqrl_site_count();
+#ifdef DEBUG
+		DEBUG_PRINTF( "%10s: %d open sites\n", "sqrl_stop", siteCount );
+		DEBUG_PRINTF( "%10s: %d open transactions\n", "sqrl_stop", transactionCount );
+		DEBUG_PRINTF( "%10s: %d open users\n", "sqrl_stop", userCount );
+#endif
+		return transactionCount + userCount + siteCount;
+	}
+	return -1;
 }
 
 DLL_PUBLIC

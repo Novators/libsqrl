@@ -27,7 +27,7 @@ char *rescueCode = t1_rescue_code;
 #define PC(a,b) printf( "%10s: %s\n", (a), (b))
 
 bool onAuthenticationRequired(
-    Sqrl_Client_Transaction *transaction,
+    Sqrl_Transaction transaction,
     Sqrl_Credential_Type credentialType )
 {
     char *cred = NULL;
@@ -41,7 +41,7 @@ bool onAuthenticationRequired(
         break;
     case SQRL_CREDENTIAL_HINT:
         PC( "AUTH_REQ", "Hint" );
-        len = sqrl_user_get_hint_length( transaction->user );
+        len = sqrl_user_get_hint_length( sqrl_transaction_user( transaction ));
         cred = malloc( len + 1 );
         strncpy( cred, password, len );
         break;
@@ -65,8 +65,9 @@ bool onAuthenticationRequired(
     return true;
 }
 
-char transactionType[13][10] = {
+char transactionType[14][10] = {
     "UNKNWN",
+    "QUERY",
     "IDENT",
     "DISABLE",
     "ENABLE",
@@ -88,13 +89,13 @@ char statusText[4][10] = {
 };
 bool showingProgress = false;
 int nextProgress = 0;
-int onProgress( Sqrl_Client_Transaction *transaction, int p )
+int onProgress( Sqrl_Transaction transaction, int p )
 {
     if( !showingProgress ) {
         // Transaction type
         showingProgress = true;
         nextProgress = 2;
-        printf( "%10s: ", transactionType[transaction->type] );
+        printf( "%10s: ", transactionType[sqrl_transaction_type(transaction)] );
     }
     const char sym[] = "|****";
     while( p >= nextProgress ) {
@@ -112,17 +113,19 @@ int onProgress( Sqrl_Client_Transaction *transaction, int p )
 
 }
 
-void onTransactionComplete( Sqrl_Client_Transaction *transaction )
+void onTransactionComplete( Sqrl_Transaction transaction )
 {
-    PC( transactionType[transaction->type], statusText[transaction->status] );
-    if( transaction->status == SQRL_TRANSACTION_STATUS_SUCCESS ) {
-        switch( transaction->type ) {
+    Sqrl_Transaction_Type type = sqrl_transaction_type(transaction);
+    Sqrl_Transaction_Status status = sqrl_transaction_status(transaction);
+    Sqrl_User user = sqrl_transaction_user(transaction);
+    PC( transactionType[type], statusText[status] );
+    if( status == SQRL_TRANSACTION_STATUS_SUCCESS ) {
+        switch( type ) {
         case SQRL_TRANSACTION_IDENTITY_LOAD:
-            sqrl_user_hold( transaction->user );
             if( !t1_user ) {
-                t1_user = transaction->user;
+                t1_user = sqrl_user_hold( user );
             } else if( !load_user ) {
-                load_user = transaction->user;
+                load_user = sqrl_user_hold( user );
                 sqrl_user_unique_id( load_user, load_uid );
             } else {
                 PC( "FAIL", "Loaded too many users!" );
@@ -130,20 +133,27 @@ void onTransactionComplete( Sqrl_Client_Transaction *transaction )
             }
             break;
         case SQRL_TRANSACTION_IDENTITY_GENERATE:
-            gen_user = transaction->user;
-            sqrl_user_hold( gen_user );
-            char *rc = sqrl_user_get_rescue_code( gen_user );
-            strcpy( gen_rescue_code, rc );
-            PC( "GEN_RC", gen_rescue_code );
-            sqrl_client_export_user( gen_user, NULL, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+            gen_user = sqrl_user_hold( user );
+            char *rc = sqrl_user_get_rescue_code( transaction );
+            if( rc ) {
+                strcpy( gen_rescue_code, rc );
+                PC( "GEN_RC", gen_rescue_code );
+                sqrl_client_export_user( gen_user, NULL, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+            } else {
+                printf( "RC not retrieved\n" );
+                exit(1);
+            }
             break;
         case SQRL_TRANSACTION_IDENTITY_SAVE:
             if( !gen_data ) {
-                gen_data = malloc( transaction->string_len + 1 );
-                strcpy( gen_data, transaction->string );
-                sqrl_user_unique_id( gen_user, gen_uid );
-                PC( "SAVE_UID", gen_uid );
-                PC( "SAVE_DATA", gen_data );
+                size_t len = sqrl_transaction_string( transaction, NULL, 0 );
+                if( len ) {
+                    gen_data = malloc( ++len );
+                    sqrl_transaction_string( transaction, gen_data, &len );
+                    sqrl_user_unique_id( gen_user, gen_uid );
+                    PC( "SAVE_UID", gen_uid );
+                    PC( "SAVE_DATA", gen_data );
+                }
             }
         default:
             break;
@@ -181,6 +191,7 @@ int main()
         printf( "Failed to Load Identity!\n" );
         exit(1);
     }
+    
     sqrl_user_unique_id( t1_user, txtBuffer );
     PC( "USER", txtBuffer );
     if( 0 != strcmp( txtBuffer, t1_uid )) {
@@ -235,4 +246,5 @@ int main()
     t1_user = sqrl_user_release( t1_user );
     load_user = sqrl_user_release( load_user );
     PC( "ALL", "PASS" );
+    return sqrl_stop();
 }

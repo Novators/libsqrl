@@ -29,7 +29,7 @@ For more details, see the LICENSE file included with this package.
 static char kv_strings[SITE_KV_COUNT][SITE_KV_LENGTH+1] = { 
 	"ver", "tif", "qry", "ask", "suk", "nut"};
 
-void sqrl_site_free( Sqrl_Client_Site *site )
+void sqrl_site_free( Sqrl_Site *site )
 {
 	if( !site ) return;
 	if( site->serverString ) {
@@ -49,9 +49,10 @@ void sqrl_site_free( Sqrl_Client_Site *site )
 static int previousKeys[] = {KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3};
 static uint8_t emptyKey[SQRL_KEY_SIZE] = {0};
 
-bool sqrl_site_set_user_keys( Sqrl_Client_Site *site )
+bool sqrl_site_set_user_keys( Sqrl_Site *site )
 {
 	if( !site ) return false;
+	SQRL_CAST_TRANSACTION(transaction,site->transaction);
 	bool retVal = true;
 	UT_string *uid;
 	UT_string *host;
@@ -61,18 +62,18 @@ bool sqrl_site_set_user_keys( Sqrl_Client_Site *site )
 	utstring_new( uid );
 	utstring_new( host );
 
-	mk = sqrl_user_key( site->transaction, KEY_MK );
+	mk = sqrl_user_key( transaction, KEY_MK );
 	if( !mk ) goto ERROR;
 
-	if( !site->transaction->altIdentity ) {
+	if( !transaction->altIdentity ) {
 		sqrl_client_call_select_alternate_identity( site->transaction );
 	}
 
 	// Create host string...
-	if( site->transaction->altIdentity ) {
-		utstring_printf( host, "%s+%s", site->transaction->uri->host, site->transaction->altIdentity );
+	if( transaction->altIdentity ) {
+		utstring_printf( host, "%s+%s", transaction->uri->host, transaction->altIdentity );
 	} else {
-		utstring_printf( host, "%s", site->transaction->uri->host );
+		utstring_printf( host, "%s", transaction->uri->host );
 	}
 
 	// Generate site private key
@@ -92,7 +93,7 @@ bool sqrl_site_set_user_keys( Sqrl_Client_Site *site )
 	site->keys[SITE_KEY_LOOKUP][SITE_KEY_PUB] = 1;
 
 	// Copy User Option Flags
-	site->userOptFlags = sqrl_user_get_flags( site->transaction->user );
+	site->userOptFlags = sqrl_user_get_flags( transaction->user );
 
 	// Generate previous keys
 	piuk = sqrl_user_key( site->transaction, previousKeys[ site->previous_identity ]);
@@ -140,7 +141,7 @@ DONE:
 	return retVal;
 }
 
-void parseVer( struct Sqrl_Client_Site *site, char *str, size_t string_len )
+void parseVer( struct Sqrl_Site *site, char *str, size_t string_len )
 {
 	if( !site || !str || string_len == 0 ) return;
 	long srv[SQRL_KNOWN_VERSIONS_COUNT + 1] = {0};
@@ -179,13 +180,14 @@ void parseVer( struct Sqrl_Client_Site *site, char *str, size_t string_len )
 	}
 }
 
-void parseQry( struct Sqrl_Client_Site *site, const char *url, size_t url_len )
+void parseQry( struct Sqrl_Site *site, const char *url, size_t url_len )
 {
 	if( !site || !url || url_len == 0 ) return;
 	UT_string *chal;
 	UT_string *srvStr;
 	UT_string *newUrl;
-	Sqrl_Uri *suri = site->transaction->uri;
+	SQRL_CAST_TRANSACTION(transaction,site->transaction);
+	Sqrl_Uri *suri = transaction->uri;
 
 	utstring_new( chal );
 	utstring_new( srvStr );
@@ -215,7 +217,7 @@ void parseQry( struct Sqrl_Client_Site *site, const char *url, size_t url_len )
 	utstring_free( chal );
 }
 
-void parseSuk( struct Sqrl_Client_Site *site, char *value, size_t value_len )
+void parseSuk( struct Sqrl_Site *site, char *value, size_t value_len )
 {
 	if( !site || !value || value_len == 0 ) return;
 	site->keys[SITE_KEY_LOOKUP][SITE_KEY_SUK] = 0;
@@ -233,7 +235,7 @@ void parseSuk( struct Sqrl_Client_Site *site, char *value, size_t value_len )
 	utstring_free( s );
 }
 
-int parseKeyValue( struct Sqrl_Client_Site *site, char *key, size_t key_len, char *value, size_t value_len )
+int parseKeyValue( struct Sqrl_Site *site, char *key, size_t key_len, char *value, size_t value_len )
 {
 	if( key_len != SITE_KV_LENGTH ) return -1;
 	int key_type = -1;
@@ -273,8 +275,9 @@ int parseKeyValue( struct Sqrl_Client_Site *site, char *key, size_t key_len, cha
 	return key_type;
 }
 
-void sqrl_site_parse_result( Sqrl_Client_Site *site, const char *result, size_t result_len )
+void sqrl_site_parse_result( Sqrl_Site *site, const char *result, size_t result_len )
 {
+	printf( "Parsing...\n" );
 	if( !site || !result || result_len == 0 ) return;
 	int found_keys = 0;
 	int current_key = 0;
@@ -291,7 +294,8 @@ void sqrl_site_parse_result( Sqrl_Client_Site *site, const char *result, size_t 
 	FLAG_CLEAR(site->flags, SITE_FLAG_VALID_SERVER_STRING);
 
 	utstring_new( rStr );
-	sqrl_b64u_decode( rStr, result, result_len );
+	//sqrl_b64u_decode( rStr, result, result_len );
+	utstring_bincpy( rStr, result, result_len );
 
 	key = utstring_body( rStr );
 	end = key + utstring_len( rStr );
@@ -331,7 +335,7 @@ void sqrl_site_parse_result( Sqrl_Client_Site *site, const char *result, size_t 
 
 }
 
-int sqrl_site_tif( Sqrl_Client_Site *site )
+int sqrl_site_tif( Sqrl_Site *site )
 {
 	if( !site ) return false;
 	int retVal = site->tif;
@@ -339,7 +343,7 @@ int sqrl_site_tif( Sqrl_Client_Site *site )
 	return retVal;
 }
 
-bool sqrl_site_has_server_friendly_name( Sqrl_Client_Site *site )
+bool sqrl_site_has_server_friendly_name( Sqrl_Site *site )
 {
 	bool retVal = false;
 	if( !site ) return false;
@@ -348,7 +352,7 @@ bool sqrl_site_has_server_friendly_name( Sqrl_Client_Site *site )
 	return retVal;
 }
 
-UT_string *sqrl_site_server_friendly_name( Sqrl_Client_Site *site )
+UT_string *sqrl_site_server_friendly_name( Sqrl_Site *site )
 {
 	if( !site ) return NULL;
 	UT_string *ret = NULL;
@@ -359,20 +363,21 @@ UT_string *sqrl_site_server_friendly_name( Sqrl_Client_Site *site )
 	return ret;
 }
 
-UT_string *sqrl_site_domain( Sqrl_Client_Site *site )
+UT_string *sqrl_site_domain( Sqrl_Site *site )
 {
 	if( !site ) return NULL;
 	UT_string *ret = NULL;
 
-	if( site->transaction->uri && site->transaction->uri->host ) {
+	SQRL_CAST_TRANSACTION(transaction,site->transaction);
+	if( transaction->uri && transaction->uri->host ) {
 		utstring_new( ret );
-		utstring_bincpy( ret, site->transaction->uri->host, strlen( site->transaction->uri->host ));
+		utstring_bincpy( ret, transaction->uri->host, strlen( transaction->uri->host ));
 	}
 
 	return ret;
 }
 
-void sqrl_site_encode_client_string( Sqrl_Client_Site *site, UT_string *newStr ) 
+void sqrl_site_encode_client_string( Sqrl_Site *site, UT_string *newStr ) 
 {
 	if( !site ) return;
 
@@ -400,7 +405,7 @@ void sqrl_site_add_key_value( UT_string *str, char *key, char *value )
 	}
 }
 
-void sqrl_site_generate_opts( struct Sqrl_Client_Site *site, UT_string *qry ) {
+void sqrl_site_generate_opts( struct Sqrl_Site *site, UT_string *qry ) {
 	if( !site || !qry ) return;
 	char sep[2] = "";
 	UT_string *val;
@@ -419,7 +424,7 @@ void sqrl_site_generate_opts( struct Sqrl_Client_Site *site, UT_string *qry ) {
 	// TODO: Handle CPS and SUK options
 }
 
-void sqrl_site_create_unlock_keys( struct Sqrl_Client_Site *site ) {
+void sqrl_site_create_unlock_keys( struct Sqrl_Site *site ) {
 	if( !site ) return;
 	uint8_t scratch[64];
 
@@ -437,7 +442,7 @@ void sqrl_site_create_unlock_keys( struct Sqrl_Client_Site *site ) {
 	sodium_munlock( scratch, 64 );
 }
 
-void sqrl_site_generate_keys( struct Sqrl_Client_Site *site, UT_string *clientString )
+void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 {
 	if( !site || !clientString ) return;
 	sqrl_site_add_key_value( clientString, "idk", NULL );
@@ -489,12 +494,12 @@ void sqrl_site_generate_keys( struct Sqrl_Client_Site *site, UT_string *clientSt
 /**
 Creates the client's body text for sending to the SQRL server
 
-@param site the \p Sqrl_Client_Site
+@param site the \p Sqrl_Site
 @param cmd One of: \p SQRL_TRANSACTION_AUTH_QUERY SQRL_TRANSACTION_AUTH_IDENT SQRL_TRANSACTION_AUTH_DISABLE SQRL_TRANSACTION_AUTH_ENABLE
 @return true on success, false on failure
 */
 DLL_PUBLIC 
-bool sqrl_site_generate_client_body( Sqrl_Client_Site *site )
+bool sqrl_site_generate_client_body( Sqrl_Site *site )
 {
 	if( !site ) return false;
 	bool success = sqrl_site_set_user_keys( site );
@@ -563,11 +568,11 @@ successful \p sqrl_site_generate_client_body()
 
 \warning Allocates a new UT_string object!  Be sure to call utstring_free() when done!
 
-@param site the \p Sqrl_Client_Site
+@param site the \p Sqrl_Site
 @return pointer to a new UT_string object containing the client's body text
 */
 DLL_PUBLIC 
-UT_string *sqrl_site_client_body( Sqrl_Client_Site *site ) 
+UT_string *sqrl_site_client_body( Sqrl_Site *site ) 
 {
 	if( !site ) return NULL;
 	UT_string *result, *buffer;
@@ -610,19 +615,33 @@ UT_string *sqrl_site_client_body( Sqrl_Client_Site *site )
 
 static struct Sqrl_Site_List *SQRL_SITE_LIST = NULL;
 
-Sqrl_Client_Site *sqrl_client_site_create( Sqrl_Client_Transaction *transaction )
+int sqrl_site_count()
 {
+    sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.site );
+    int i = 0;
+    struct Sqrl_Site_List *list = SQRL_SITE_LIST;
+    while( list ) {
+        i++;
+        list = list->next;
+    }
+    sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.site );
+    return i;
+}
+
+Sqrl_Site *sqrl_client_site_create( Sqrl_Transaction t )
+{
+	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return NULL;
-	Sqrl_Client_Site *site = calloc( 1, sizeof( Sqrl_Client_Site ));
-	site->transaction = transaction;
+	Sqrl_Site *site = calloc( 1, sizeof( Sqrl_Site ));
+	site->transaction = sqrl_transaction_hold(t);
 	site->currentTransaction = SQRL_TRANSACTION_AUTH_QUERY;
 	site->previous_identity = -1;
 	site->mutex = sqrl_mutex_create();
 
-	if( site->transaction->uri ) {
+	if( transaction->uri ) {
 		utstring_new( site->serverString );
-		sqrl_b64u_encode( site->serverString, (uint8_t*)site->transaction->uri->challenge, strlen( site->transaction->uri->challenge ));
-		printf( "%10s: %s\n", "server_str", site->transaction->uri->challenge );
+		sqrl_b64u_encode( site->serverString, (uint8_t*)transaction->uri->challenge, strlen( transaction->uri->challenge ));
+		printf( "%10s: %s\n", "server_str", transaction->uri->challenge );
 		FLAG_SET( site->flags, SITE_FLAG_VALID_SERVER_STRING );
 	}
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.site );
@@ -637,8 +656,8 @@ Sqrl_Client_Site *sqrl_client_site_create( Sqrl_Client_Transaction *transaction 
 		}
 		list->next = item;
 	}
-	sqrl_mutex_enter( site->mutex );
 	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.site );
+	END_WITH_TRANSACTION(transaction);
 	return site;
 }
 
@@ -655,6 +674,7 @@ static struct Sqrl_Site_List *_scsm( struct Sqrl_Site_List *cur, double now, boo
 		struct Sqrl_Site_List *next = cur->next;
 
 		// TODO: release transaction
+		cur->site->transaction = sqrl_transaction_release( cur->site->transaction );
 		if( cur->site->serverFriendlyName ) {
 			free( cur->site->serverFriendlyName );
 		}
@@ -685,51 +705,58 @@ void sqrl_client_site_maintenance( bool forceDeleteAll )
 	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.site );
 }
 
-Sqrl_Transaction_Status sqrl_client_do_loop( Sqrl_Client_Site *site )
+Sqrl_Transaction_Status sqrl_client_do_loop( Sqrl_Site *site )
 {
+	printf( "loop\n" );
 	if( !site ) return SQRL_TRANSACTION_STATUS_FAILED;
 	if( sqrl_site_generate_client_body( site )) {
 		UT_string *bdy;
 		bdy = sqrl_site_client_body( site );
+		SQRL_CAST_TRANSACTION(transaction,site->transaction);
 		sqrl_client_call_send(
-			site->transaction, site->transaction->uri->url, strlen( site->transaction->uri->url ),
+			site->transaction, transaction->uri->url, strlen( transaction->uri->url ),
 			utstring_body( bdy ), utstring_len( bdy ));
 		utstring_free( bdy );
 	}
 	return SQRL_TRANSACTION_STATUS_WORKING;
 }
 
-Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Client_Transaction *transaction )
+Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, const char *response, size_t response_len )
 {
+	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return SQRL_TRANSACTION_STATUS_FAILED;
-	Sqrl_Client_Site *site = NULL;
+	Sqrl_Site *site = NULL;
 	Sqrl_Transaction_Status retVal = SQRL_TRANSACTION_STATUS_WORKING;
 
-	// Retrieve an existing Sqrl_Client_Site (if available)
+	// Retrieve an existing Sqrl_Site (if available)
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.site );
 	struct Sqrl_Site_List *list = SQRL_SITE_LIST;
 	while( list ) {
-		if( list->site->transaction == transaction ) {
+		if( list->site->transaction == t ) {
 			site = list->site;
 			break;
 		}
 		list = list->next;
 	}
 	if( site ) {
-		sqrl_mutex_enter( site->mutex );
+		site->lastAction = sqrl_get_real_time();
 	}
 	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.site );
 
-	if( !site ) {
+	if( site ) {
+		if( response && response_len ) {
+			sqrl_site_parse_result( site, response, response_len );
+		}
+	} else {
 		// No existing site... Create a new one.
-		site = sqrl_client_site_create( transaction );
+		site = sqrl_client_site_create( t );
 	}
-
+	
 	if( !site ) return SQRL_TRANSACTION_STATUS_FAILED;
 	if( !FLAG_CHECK( site->flags, SITE_FLAG_VALID_SERVER_STRING )) {
+		printf( "!VALID_SERVER_STRING\n" );
 		goto ERROR;
 	}
-	site->lastAction = sqrl_get_real_time();
 	if( site->currentTransaction == SQRL_TRANSACTION_AUTH_QUERY ) {
 		if( (site->tif & SQRL_TIF_ID_MATCH) || (site->tif & SQRL_TIF_PREVIOUS_ID_MATCH) ) {
 			// Already found a match.
@@ -742,6 +769,7 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Client_Transaction 
 			} else {
 				// Tried all previous identities
 				site->previous_identity = 0;
+				site->currentTransaction = transaction->type;
 				if( transaction->type != SQRL_TRANSACTION_AUTH_IDENT ) {
 					goto ERROR;
 				}
@@ -757,6 +785,6 @@ ERROR:
 	retVal = SQRL_TRANSACTION_STATUS_FAILED;
 
 DONE:
-	sqrl_mutex_leave( site->mutex );
+	END_WITH_TRANSACTION(transaction);
 	return retVal;
 }

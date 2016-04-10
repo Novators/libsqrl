@@ -73,7 +73,7 @@ uint16_t   sqrl_user_check_flags( Sqrl_User u, uint16_t flags );
 void       sqrl_user_clear_flags( Sqrl_User u, uint16_t flags );
 Sqrl_User  sqrl_user_find( const char *unique_id );
 Sqrl_User  sqrl_user_release( Sqrl_User user );
-bool       sqrl_user_hold( Sqrl_User user );
+Sqrl_User  sqrl_user_hold( Sqrl_User user );
 uint8_t    sqrl_user_get_enscrypt_seconds( Sqrl_User u );
 uint16_t   sqrl_user_get_flags( Sqrl_User u );
 uint8_t    sqrl_user_get_hint_length( Sqrl_User u );
@@ -168,42 +168,31 @@ typedef enum {
 	SQRL_TRANSACTION_STATUS_WORKING
 } Sqrl_Transaction_Status;
 
-typedef struct Sqrl_Client_Transaction {
-	Sqrl_Transaction_Type type;
-	Sqrl_User *user;
-	Sqrl_Uri *uri;
-	char *string;
-	size_t string_len;
-	Sqrl_Transaction_Status status;
-	char *altIdentity;
-	Sqrl_Export exportType;
-	Sqrl_Encoding encodingType;
-	void *data;
-} Sqrl_Client_Transaction;
+typedef void *Sqrl_Transaction;
 
 typedef Sqrl_User (sqrl_ccb_select_user)(
-	Sqrl_Client_Transaction *transaction);
+	Sqrl_Transaction transaction);
 typedef void (sqrl_ccb_select_alternate_identity)(
-	Sqrl_Client_Transaction *transaction);
+	Sqrl_Transaction transaction);
 typedef bool (sqrl_ccb_authentication_required)(
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction transaction,
 	Sqrl_Credential_Type credentialType );
 typedef void (sqrl_ccb_ask)(
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction transaction,
 	const char *message, size_t message_len,
 	const char *firstButton, size_t firstButton_len,
 	const char *secondButton, size_t secondButton_len );
 typedef void (sqrl_ccb_send)(
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction transaction,
 	const char *url, size_t url_len,
 	const char *payload, size_t payload_len );
 typedef int (sqrl_ccb_progress)(
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction transaction,
 	int progress );
 typedef void (sqrl_ccb_save_suggested)(
 	Sqrl_User user);
 typedef void (sqrl_ccb_transaction_complete)(
-	Sqrl_Client_Transaction *transaction );
+	Sqrl_Transaction transaction );
 
 typedef struct Sqrl_Client_Callbacks {
 	sqrl_ccb_select_user *onSelectUser;
@@ -230,18 +219,22 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	const char *string,
 	size_t string_len );
 void sqrl_client_answer( 
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction transaction,
 	Sqrl_Button answer );
 void sqrl_client_receive( 
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction transaction,
 	const char *payload, size_t payload_len );
 void sqrl_client_authenticate(
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction transaction,
 	Sqrl_Credential_Type credentialType,
 	char *credential, size_t credentialLength );
 void sqrl_client_transaction_set_alternate_identity(
-	Sqrl_Client_Transaction *transaction,
+	Sqrl_Transaction transaction,
 	const char *altIdentity );
+Sqrl_Transaction_Type sqrl_transaction_type( Sqrl_Transaction t );
+Sqrl_User sqrl_transaction_user( Sqrl_Transaction t );
+Sqrl_Transaction_Status sqrl_transaction_status( Sqrl_Transaction t );
+size_t sqrl_transaction_string( Sqrl_Transaction t, char *buf, size_t *len );
 Sqrl_User sqrl_get_user( const char *unique_id );
 /** @} */ // endgroup Client
 

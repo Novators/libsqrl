@@ -17,7 +17,7 @@ Sqrl_User user = NULL;
 #define PC(a,b) printf( "%10s: %s\n", (a) ? (a) : "", (b))
 
 bool onAuthenticationRequired(
-    Sqrl_Client_Transaction *transaction,
+    Sqrl_Transaction transaction,
     Sqrl_Credential_Type credentialType )
 {
     char *cred = NULL;
@@ -31,7 +31,7 @@ bool onAuthenticationRequired(
         break;
     case SQRL_CREDENTIAL_HINT:
         PC( "AUTH_REQ", "Hint" );
-        len = sqrl_user_get_hint_length( transaction->user );
+        len = sqrl_user_get_hint_length( sqrl_transaction_user( transaction ));
         cred = malloc( len + 1 );
         strncpy( cred, password, len );
         break;
@@ -66,6 +66,7 @@ char transactionType[14][10] = {
     "GENRATE",
     "CHNG_PSWD"
 };
+
 char statusText[4][10] = {
     "SUCCESS",
     "FAILED",
@@ -74,13 +75,13 @@ char statusText[4][10] = {
 };
 bool showingProgress = false;
 int nextProgress = 0;
-int onProgress( Sqrl_Client_Transaction *transaction, int p )
+int onProgress( Sqrl_Transaction transaction, int p )
 {
     if( !showingProgress ) {
         // Transaction type
         showingProgress = true;
         nextProgress = 2;
-        printf( "%10s: ", transactionType[transaction->type] );
+        printf( "%10s: ", transactionType[sqrl_transaction_type(transaction)] );
     }
     const char sym[] = "|****";
     while( p >= nextProgress ) {
@@ -98,15 +99,16 @@ int onProgress( Sqrl_Client_Transaction *transaction, int p )
 
 }
 
-void onTransactionComplete( Sqrl_Client_Transaction *transaction )
+void onTransactionComplete( Sqrl_Transaction transaction )
 {
-    PC( transactionType[transaction->type], statusText[transaction->status] );
-    if( transaction->status == SQRL_TRANSACTION_STATUS_SUCCESS ) {
-        switch( transaction->type ) {
+    Sqrl_Transaction_Type type = sqrl_transaction_type( transaction );
+    Sqrl_Transaction_Status status = sqrl_transaction_status( transaction );
+    PC( transactionType[type], statusText[status] );
+    if( status == SQRL_TRANSACTION_STATUS_SUCCESS ) {
+        switch( type ) {
         case SQRL_TRANSACTION_IDENTITY_LOAD:
-            sqrl_user_hold( transaction->user );
             if( !user ) {
-                user = transaction->user;
+                user = sqrl_user_hold( sqrl_transaction_user( transaction ));
             } else {
                 PC( "FAIL", "Loaded too many users!" );
                 exit(1);
@@ -118,25 +120,39 @@ void onTransactionComplete( Sqrl_Client_Transaction *transaction )
     }
 }
 
-Sqrl_User onSelectUser( Sqrl_Client_Transaction *transaction )
+Sqrl_User onSelectUser( Sqrl_Transaction transaction )
 {
     PC( "SELECT", uid );
     return user;
 }
 
+#define MAX_LOOPS 5
+int loop;
+char data[MAX_LOOPS][128] = {
+"ver=1\r\nnut=nutty0\r\ntif=0\r\nqry=/auth.php\r\n",
+"ver=1\r\nnut=nutty1\r\ntif=0\r\nqry=/auth.php\r\n",
+"ver=1\r\nnut=nutty2\r\ntif=0\r\nqry=/auth.php\r\n",
+"ver=1\r\nnut=nutty3\r\ntif=0\r\nqry=/auth.php\r\n",
+"ver=1\r\nnut=nutty4\r\ntif=1\r\nqry=/auth.php\r\n"
+};
+
 void onSend(
-    Sqrl_Client_Transaction *transaction,
+    Sqrl_Transaction transaction,
     const char *url, size_t url_len,
     const char *payload, size_t payload_len )
 {
     PC( "CLIENT", url );
     PC( NULL, payload );
+    if( loop++ < MAX_LOOPS ) {
+        sqrl_client_receive( transaction, data[loop-1], strlen( data[loop-1] ));
+    }
 }
 
 
 int main() 
 {
     sqrl_init();
+    loop = 0;
     bool bError = false;
     char txtBuffer[4096] = {0};
     
@@ -165,4 +181,5 @@ int main()
         PC( "INCOMPLETE", "AUTH_IDENT" );
     }
     user = sqrl_user_release( user );
+    return sqrl_stop();
 }

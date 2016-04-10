@@ -21,17 +21,23 @@ For more details, see the LICENSE file included with this package.
 #define DEBUG_IDENTITY 0
 #define DEBUG_SITE 0
 
+/*
 #define DEBUG_PRINTF(t,fmt, ...) \
 do {if(DEBUG_PRINT_VAR && t) printf(fmt, __VA_ARGS__); } while(0)
 #define DEBUG_PRINT(t,s) \
 do {if(DEBUG_PRINT_VAR && t) printf(s); } while( 0 )
+*/
 
 #ifdef DEBUG
 #define DEBUG_PRINT_VAR 1
-#define DEBUG_PRINT_REFERENCE_COUNT 1
+#define DEBUG_PRINT_REFERENCE_COUNT 0
+#define DEBUG_PRINTF(fmt, ...) printf( fmt, __VA_ARGS__)
+#define DEBUG_PRINT(s) printf( s );
 #else
 #define DEBUG_PRINT_VAR 0
 #define DEBUG_PRINT_REFERENCE_COUNT 0
+#define DEBUG_PRINTF(fmt, ...)
+#define DEBUG_PRINT(s) printf( s );
 #endif
 // Some additional UTstring functions...
 #define utstring_shrink(s,l)                          \
@@ -76,6 +82,7 @@ typedef void* SqrlMutex;
 struct Sqrl_Global_Mutices {
 	SqrlMutex user;
 	SqrlMutex site;
+	SqrlMutex transaction;
 };
 
 extern struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
@@ -147,7 +154,7 @@ struct Sqrl_User
 };
 
 struct sqrl_user_callback_data {
-	Sqrl_Client_Transaction *transaction;
+	Sqrl_Transaction transaction;
 	int adder;
 	double multiplier;
 	int t1;
@@ -155,117 +162,23 @@ struct sqrl_user_callback_data {
 	int total;
 };
 
-#define SQRL_CAST_USER(a,b) struct Sqrl_User *(a) = (struct Sqrl_User*)(b)
-#define WITH_USER(user,u) \
-struct Sqrl_User *user = NULL; \
-bool wu_relock = false; \
-if( sqrl_user_hold( u )) { \
-	user = (struct Sqrl_User*)(u); \
-	sqrl_user_ensure_keys_allocated(user); \
-	wu_relock = sqrl_user_is_memlocked(user); \
-	if( wu_relock ) { \
-		sqrl_user_memunlock( user ); \
-	} \
-}
-
-#define END_WITH_USER(user) \
-if( user != NULL ) { \
-	if( wu_relock ) { \
-		sqrl_user_memlock( user ); \
-	} \
-	sqrl_user_release( (Sqrl_User)(user) ); \
-	user = NULL; \
-}
-
-
-void        sqrl_user_default_options( Sqrl_User_Options *options );
-Sqrl_User   sqrl_user_create();
-Sqrl_User   sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len );
-Sqrl_User   sqrl_user_create_from_file( const char *filename );
-int         sqrl_user_enscrypt_callback( int percent, void *data );
-void        sqrl_user_ensure_keys_allocated( Sqrl_User u );
-bool        sqrl_user_force_decrypt( Sqrl_Client_Transaction *transaction );
-bool        sqrl_user_force_rescue( Sqrl_Client_Transaction *transaction );
-bool        sqrl_user_has_key( Sqrl_User user, int key_type );
-void        sqrl_user_hintlock( Sqrl_User user );
-void        sqrl_user_hintunlock( 
-                Sqrl_Client_Transaction *transaction, 
-				char *hint, 
-				size_t length );
-bool        sqrl_user_is_hintlocked( Sqrl_User user );
-bool        sqrl_user_is_memlocked( Sqrl_User user );
-uint8_t*    sqrl_user_key( Sqrl_Client_Transaction *transaction, int key_type );
-bool        sqrl_user_try_load_password( Sqrl_Client_Transaction *transaction, bool retry );
-bool        sqrl_user_try_load_rescue( Sqrl_Client_Transaction *transaction, bool retry );
-void        sqrl_user_memlock( Sqrl_User user );
-void        sqrl_user_memunlock( Sqrl_User user );
-uint8_t*    sqrl_user_new_key( Sqrl_User u, int key_type );
-bool        sqrl_user_regen_keys( Sqrl_Client_Transaction *transaction );
-bool        sqrl_user_rekey( Sqrl_Client_Transaction *transaction );
-void        sqrl_user_remove_key( Sqrl_User user, int key_type );
-bool        sqrl_user_save( Sqrl_Client_Transaction *transaction );
-bool        sqrl_user_save_to_buffer( Sqrl_Client_Transaction *transaction );
-uint8_t*    sqrl_user_scratch( Sqrl_User user );
-bool        sqrl_user_set_password( 
-				Sqrl_User u, 
-				char *password, 
-				size_t password_len );
-bool        sqrl_user_update_storage( Sqrl_Client_Transaction *transaction );
-
-
-
-#define BIT_CHECK(v,b) ((v & b) == b)
-#define BIT_SET(v,b) v |= b
-#define BIT_UNSET(v,b) v &= ~(b)
-
-struct Sqrl_User_List {
-	struct Sqrl_User *user;
-	struct Sqrl_User_List *next;
+struct Sqrl_Transaction {
+	Sqrl_Transaction_Type type;
+	Sqrl_User user;
+	Sqrl_Uri *uri;
+	char *string;
+	size_t string_len;
+	Sqrl_Transaction_Status status;
+	char *altIdentity;
+	Sqrl_Export exportType;
+	Sqrl_Encoding encodingType;
+	void *data;
+	SqrlMutex mutex;
+	int referenceCount;
 };
 
-extern struct Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
-
-Sqrl_User sqrl_client_call_select_user( 
-	Sqrl_Client_Transaction *transaction );
-void sqrl_client_call_select_alternate_identity( 
-	Sqrl_Client_Transaction *transaction );
-bool sqrl_client_call_authentication_required( 
-	Sqrl_Client_Transaction *transaction, 
-	Sqrl_Credential_Type credentialType );
-void sqrl_client_call_ask(
-	Sqrl_Client_Transaction *transaction,
-	const char *message, size_t message_len,
-	const char *firstButton, size_t firstButton_len,
-	const char *secondButton, size_t secondButton_len );
-void sqrl_client_call_send(
-	Sqrl_Client_Transaction *transaction,
-	const char *url, size_t url_len,
-	const char *payload, size_t payload_len );
-int sqrl_client_call_progress(
-	Sqrl_Client_Transaction *transaction,
-	int progress );
-void sqrl_client_call_save_suggested(
-	Sqrl_User user);
-void sqrl_client_call_transaction_complete(
-	Sqrl_Client_Transaction *transaction );
-
-
-bool sqrl_client_require_password( Sqrl_Client_Transaction *transaction );
-bool sqrl_client_require_hint( Sqrl_Client_Transaction *transaction );
-bool sqrl_client_require_rescue_code( Sqrl_Client_Transaction *transaction );
-
-#define SITE_KEY_LOOKUP 0
-#define SITE_KEY_SEC 1
-#define SITE_KEY_PUB 2
-#define SITE_KEY_PSEC 3
-#define SITE_KEY_PPUB 4
-#define SITE_KEY_SUK 5
-#define SITE_KEY_VUK 6
-#define SITE_KEY_URSK 7
-#define SITE_KEY_URPK 8
-
-typedef struct Sqrl_Client_Site {
-	Sqrl_Client_Transaction *transaction;
+typedef struct Sqrl_Site {
+	Sqrl_Transaction *transaction;
 	uint16_t userOptFlags;
 	uint16_t flags;
 	char *serverFriendlyName;
@@ -278,17 +191,143 @@ typedef struct Sqrl_Client_Site {
 	int previous_identity;
 	double lastAction;
 	SqrlMutex mutex;
-} Sqrl_Client_Site;
+} Sqrl_Site;
+
+
+
+#define SQRL_CAST_TRANSACTION(a,b) struct Sqrl_Transaction *(a) = (struct Sqrl_Transaction*)(b)
+#define WITH_TRANSACTION(transaction,t) struct Sqrl_Transaction *transaction = (struct Sqrl_Transaction*)sqrl_transaction_hold( t )
+#define END_WITH_TRANSACTION(transaction) sqrl_transaction_release( transaction )
+
+#define SQRL_CAST_USER(a,b) struct Sqrl_User *(a) = (struct Sqrl_User*)(b)
+#define WITH_USER(user,u) \
+struct Sqrl_User *user = NULL; \
+bool wu_relock = false; \
+user = (struct Sqrl_User*)sqrl_user_hold(u); \
+if( user ) { \
+	sqrl_user_ensure_keys_allocated(user); \
+	wu_relock = sqrl_user_is_memlocked(user); \
+	if( wu_relock ) { \
+		sqrl_user_memunlock( user ); \
+	} \
+}
+
+#define END_WITH_USER(user) \
+if( user != NULL ) { \
+	if( wu_relock ) { \
+		sqrl_user_memlock( user ); \
+	} \
+	user = sqrl_user_release( (Sqrl_User)(user) ); \
+}
+
+
+void        sqrl_user_default_options( Sqrl_User_Options *options );
+Sqrl_User   sqrl_user_create();
+Sqrl_User   sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len );
+Sqrl_User   sqrl_user_create_from_file( const char *filename );
+int         sqrl_user_enscrypt_callback( int percent, void *data );
+void        sqrl_user_ensure_keys_allocated( Sqrl_User u );
+bool        sqrl_user_force_decrypt( Sqrl_Transaction transaction );
+bool        sqrl_user_force_rescue( Sqrl_Transaction transaction );
+bool        sqrl_user_has_key( Sqrl_User user, int key_type );
+void        sqrl_user_hintlock( Sqrl_User user );
+void        sqrl_user_hintunlock( 
+                Sqrl_Transaction transaction, 
+				char *hint, 
+				size_t length );
+bool        sqrl_user_is_hintlocked( Sqrl_User user );
+bool        sqrl_user_is_memlocked( Sqrl_User user );
+uint8_t*    sqrl_user_key( Sqrl_Transaction transaction, int key_type );
+bool        sqrl_user_try_load_password( Sqrl_Transaction transaction, bool retry );
+bool        sqrl_user_try_load_rescue( Sqrl_Transaction transaction, bool retry );
+void        sqrl_user_memlock( Sqrl_User user );
+void        sqrl_user_memunlock( Sqrl_User user );
+uint8_t*    sqrl_user_new_key( Sqrl_User u, int key_type );
+bool        sqrl_user_regen_keys( Sqrl_Transaction transaction );
+bool        sqrl_user_rekey( Sqrl_Transaction transaction );
+void        sqrl_user_remove_key( Sqrl_User user, int key_type );
+bool        sqrl_user_save( Sqrl_Transaction transaction );
+bool        sqrl_user_save_to_buffer( Sqrl_Transaction transaction );
+uint8_t*    sqrl_user_scratch( Sqrl_User user );
+bool        sqrl_user_set_password( 
+				Sqrl_User u, 
+				char *password, 
+				size_t password_len );
+bool        sqrl_user_update_storage( Sqrl_Transaction transaction );
+
+Sqrl_Transaction sqrl_transaction_create( Sqrl_Transaction_Type type );
+Sqrl_Transaction sqrl_transaction_hold( Sqrl_Transaction t );
+Sqrl_Transaction sqrl_transaction_release( Sqrl_Transaction t );
+void sqrl_transaction_set_user( Sqrl_Transaction t, Sqrl_User u );
+int sqrl_transaction_count();
+int sqrl_user_count();
+int sqrl_site_count();
+void sqrl_client_user_maintenance( bool forceLockAll );
+
+#define BIT_CHECK(v,b) ((v & b) == b)
+#define BIT_SET(v,b) v |= b
+#define BIT_UNSET(v,b) v &= ~(b)
+
+struct Sqrl_User_List {
+	struct Sqrl_User *user;
+	struct Sqrl_User_List *next;
+};
+
+struct Sqrl_Site_List {
+	struct Sqrl_Site *site;
+	struct Sqrl_Site_List *next;
+};
+
+struct Sqrl_Transaction_List {
+	struct Sqrl_Transaction *transaction;
+	struct Sqrl_Transaction_List *next;
+};
+
+extern struct Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
+
+Sqrl_User sqrl_client_call_select_user( 
+	Sqrl_Transaction transaction );
+void sqrl_client_call_select_alternate_identity( 
+	Sqrl_Transaction transaction );
+bool sqrl_client_call_authentication_required( 
+	Sqrl_Transaction transaction, 
+	Sqrl_Credential_Type credentialType );
+void sqrl_client_call_ask(
+	Sqrl_Transaction transaction,
+	const char *message, size_t message_len,
+	const char *firstButton, size_t firstButton_len,
+	const char *secondButton, size_t secondButton_len );
+void sqrl_client_call_send(
+	Sqrl_Transaction transaction,
+	const char *url, size_t url_len,
+	const char *payload, size_t payload_len );
+int sqrl_client_call_progress(
+	Sqrl_Transaction transaction,
+	int progress );
+void sqrl_client_call_save_suggested(
+	Sqrl_User user);
+void sqrl_client_call_transaction_complete(
+	Sqrl_Transaction transaction );
+
+
+bool sqrl_client_require_password( Sqrl_Transaction transaction );
+bool sqrl_client_require_hint( Sqrl_Transaction transaction );
+bool sqrl_client_require_rescue_code( Sqrl_Transaction transaction );
+
+#define SITE_KEY_LOOKUP 0
+#define SITE_KEY_SEC 1
+#define SITE_KEY_PUB 2
+#define SITE_KEY_PSEC 3
+#define SITE_KEY_PPUB 4
+#define SITE_KEY_SUK 5
+#define SITE_KEY_VUK 6
+#define SITE_KEY_URSK 7
+#define SITE_KEY_URPK 8
 
 // Site information saved for 5 minutes (600 seconds) past last action
 #define SQRL_CLIENT_SITE_TIMEOUT 600
 
-struct Sqrl_Site_List {
-	struct Sqrl_Client_Site *site;
-	struct Sqrl_Site_List *next;
-};
-
-Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Client_Transaction *transaction );
+Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, const char *response, size_t response_len );
 void sqrl_client_site_maintenance( bool forceDeleteAll );
 
 /* crypt.c */

@@ -62,6 +62,7 @@ UT_string*	sqrl_urlencode( UT_string *dest, const char *src );
 @{ */
 
 int 		sqrl_init();
+int         sqrl_stop();
 
 /**
 Get a string representing the version of SQRL lib in use

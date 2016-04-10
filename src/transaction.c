@@ -1,0 +1,173 @@
+/** @file transaction.c 
+
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+*/
+#include <stdlib.h>
+#include <stdio.h>
+#include "sqrl_internal.h"
+
+struct Sqrl_Transaction_List *SQRL_TRANSACTION_LIST = NULL;
+
+#if defined(DEBUG) && DEBUG_PRINT_REFERENCE_COUNT==1
+#define PRINT_TRANSACTION_COUNT(tag) \
+int _ptcI = 0;\
+struct Sqrl_Transaction_List *_ptcC = SQRL_TRANSACTION_LIST;\
+while( _ptcC ) {\
+    _ptcI++;\
+    _ptcC = _ptcC->next;\
+}\
+printf( "%10s: %d\n", tag, _ptcI )
+#else
+#define PRINT_TRANSACTION_COUNT(tag)
+#endif
+
+Sqrl_Transaction sqrl_transaction_create( Sqrl_Transaction_Type type )
+{
+    struct Sqrl_Transaction *transaction = calloc( 1, sizeof( struct Sqrl_Transaction ));
+    struct Sqrl_Transaction_List *list = calloc( 1, sizeof( struct Sqrl_Transaction_List ));
+    transaction->type = type;
+    transaction->referenceCount = 1;
+    transaction->mutex = sqrl_mutex_create();
+    list->transaction = transaction;
+    struct Sqrl_Transaction_List *l;
+    sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
+    if( SQRL_TRANSACTION_LIST ) {
+        l = SQRL_TRANSACTION_LIST;
+        while( l->next ) {
+            l = l->next;
+        }
+        l->next = list;
+    } else {
+        SQRL_TRANSACTION_LIST = list;
+    }
+    PRINT_TRANSACTION_COUNT( "trn_create" );
+    sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
+    return (Sqrl_Transaction)transaction;
+}
+
+int sqrl_transaction_count()
+{
+    sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
+    int i = 0;
+    struct Sqrl_Transaction_List *list = SQRL_TRANSACTION_LIST;
+    while( list ) {
+        i++;
+        list = list->next;
+    }
+    sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
+    return i;
+}
+
+Sqrl_Transaction sqrl_transaction_hold( Sqrl_Transaction t )
+{
+    SQRL_CAST_TRANSACTION(transaction,t);
+    if( !transaction ) return NULL;
+    struct Sqrl_Transaction_List *l;
+    sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
+    l = SQRL_TRANSACTION_LIST;
+    while( l ) {
+        if( l->transaction == transaction ) {
+            sqrl_mutex_enter( transaction->mutex );
+            transaction->referenceCount++;
+            sqrl_mutex_leave( transaction->mutex );
+            break;
+        }
+        l = l->next;
+    }
+    sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
+    return (Sqrl_Transaction)transaction;
+}
+
+Sqrl_Transaction sqrl_transaction_release( Sqrl_Transaction t )
+{
+    SQRL_CAST_TRANSACTION(transaction,t);
+    if( transaction == NULL ) return NULL;
+    struct Sqrl_Transaction *freeMe = NULL;
+    struct Sqrl_Transaction_List *l = NULL, *n = NULL;
+    sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
+    n = SQRL_TRANSACTION_LIST;
+    while( n ) {
+        if( n->transaction == transaction ) {
+            sqrl_mutex_enter( transaction->mutex );
+            transaction->referenceCount--;
+            if( transaction->referenceCount < 1 ) {
+                if( l ) l->next = n->next;
+                else SQRL_TRANSACTION_LIST = n->next;
+                free( n );
+                freeMe = transaction;
+            }
+            sqrl_mutex_leave( transaction->mutex );
+            break;
+        }
+        l = n;
+        n = l->next;
+    }
+    PRINT_TRANSACTION_COUNT( "trn_rel" );
+    sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
+    if( freeMe ) {
+        freeMe->user = sqrl_user_release( freeMe->user );
+        freeMe->uri = sqrl_uri_free( freeMe->uri );
+        if( freeMe->string ) free( freeMe->string );
+        if( freeMe->altIdentity ) free( freeMe->altIdentity );
+        // free ->data
+        sqrl_mutex_destroy( freeMe->mutex );
+        free( freeMe );
+    }
+    return NULL;
+}
+
+void sqrl_transaction_set_user( Sqrl_Transaction t, Sqrl_User u )
+{
+    if( !u ) return;
+    WITH_TRANSACTION(transaction,t);
+    if( !transaction ) return;
+    transaction->user = sqrl_user_release( transaction->user );
+    transaction->user = sqrl_user_hold( u );
+    END_WITH_TRANSACTION(transaction);
+}
+
+Sqrl_Transaction_Status sqrl_transaction_status( Sqrl_Transaction t )
+{
+    Sqrl_Transaction_Status status = SQRL_TRANSACTION_STATUS_FAILED;
+    SQRL_CAST_TRANSACTION(transaction,t);
+    if( transaction ) status = transaction->status;
+    return status;
+}
+
+Sqrl_Transaction_Type sqrl_transaction_type( Sqrl_Transaction t )
+{
+    Sqrl_Transaction_Type type = SQRL_TRANSACTION_UNKNOWN;
+    SQRL_CAST_TRANSACTION(transaction,t);
+    if( transaction ) type = transaction->type;
+    return type;
+}
+
+Sqrl_User sqrl_transaction_user( Sqrl_Transaction t )
+{
+    Sqrl_User user = NULL;
+    SQRL_CAST_TRANSACTION(transaction,t);
+    if( transaction ) user = transaction->user;
+    return user;
+}
+
+size_t sqrl_transaction_string( Sqrl_Transaction t, char *buf, size_t *len )
+{
+    WITH_TRANSACTION(transaction,t);
+    size_t retVal = transaction->string_len;
+    if( transaction->string ) {
+        if( buf && len && *len ) {
+            if( retVal < *len ) {
+                memcpy( buf, transaction->string, retVal );
+                buf[retVal] = 0;
+                *len = retVal;
+            } else {
+                memcpy( buf, transaction->string, *len );
+            }
+        }
+    }
+    END_WITH_TRANSACTION(transaction);
+    return retVal;
+}
