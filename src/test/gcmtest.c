@@ -404,7 +404,7 @@ int startTest(const char* vf)
 #ifndef OSTYPE_iOS
 int main( )
 {
-    const char *vf = "gcm_test_vectors.bin";
+    const char *vf = "vectors/gcm_test_vectors.bin";
     return startTest(vf);
 }
 #endif

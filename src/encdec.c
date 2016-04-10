@@ -6,10 +6,6 @@ This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
 
-#ifndef CONFIG_H_INCLUDED
-#include "config.h"
-#endif
-
 #include "sqrl_internal.h"
 
 static const char B64_ENC_TABLE[64] = {

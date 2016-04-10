@@ -11,7 +11,7 @@ For more details, see the LICENSE file included with this package.
 #include <stdio.h>
 #include <sodium.h>
 
-#include "config.h"
+#include <sqrl_config.h>
 #include "crypto/gcm.h"
 #include "sqrl_expert.h"
 

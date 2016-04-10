@@ -34,24 +34,37 @@ endif()
 
 CHECK_FOR_SSE()
 
-configure_file(${SRCDIR}/config.h.in ${SRCDIR}/config.h)
-configure_file(sqrl_depends.c.in sqrl_depends.c)
-configure_file(README.in README.md)
+configure_file(${SRCDIR}/config.h.in ${CMAKE_BINARY_DIR}/include/sqrl_config.h)
+include_directories( ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/src/libsodium/src/libsodium/crypto_pwhash/scryptsalsa208sha256)
+
+configure_file(${SRCDIR}/sqrl_depends.c.in sqrl_depends.c)
+file(COPY 
+	${CMAKE_SOURCE_DIR}/data/test1.sqrl
+	${CMAKE_SOURCE_DIR}/data/test2.sqrl
+	${CMAKE_SOURCE_DIR}/vectors 
+	DESTINATION ${CMAKE_BINARY_DIR})
+configure_file(README.in ${CMAKE_SOURCE_DIR}README.md)
+
+
+set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
+set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
 ######################### MAC BUILD #########################
 set(REQUIRED_LIBS_PRESENT TRUE)
 
 ExternalProject_Add(libsodium
-	PREFIX ${CMAKE_CURRENT_SOURCE_DIR}/libsodium
-	#BINARY_DIR ${CMAKE_CURRENT_SOURCE_DIR}/libsodium/src/sodium
+	PREFIX ${CMAKE_BINARY_DIR}
+#	BINARY_DIR ${CMAKE_BINARY_DIR}/libsodium
 	BUILD_IN_SOURCE 1
 	GIT_REPOSITORY https://github.com/jedisct1/libsodium.git
+	GIT_TAG stable
 	UPDATE_COMMAND ""
-	CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/sodium-conf.sh ${CMAKE_CURRENT_SOURCE_DIR}
+	CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/sodium-conf.sh ${CMAKE_BINARY_DIR}
 	BUILD_COMMAND make -s
 	INSTALL_COMMAND make -s install)
 add_library(sodium STATIC IMPORTED)
-SET_TARGET_PROPERTIES(sodium PROPERTIES IMPORTED_LOCATION ${CMAKE_SOURCE_DIR}/lib/libsodium.a)
+SET_TARGET_PROPERTIES(sodium PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/lib/libsodium.a)
+set(LIBS ${LIBS} sodium)
 
 find_library(RT_LIB NAMES rt)
 if(NOT ${RT_LIB} STREQUAL "RT_LIB-NOTFOUND")
@@ -63,10 +76,9 @@ if(NOT ${PTHREAD_LIB} STREQUAL "PTHREAD_LIB-NOTFOUND")
 	set(LIBS ${LIBS} ${PTHREAD_LIB})
 endif()
 
-message("LIBS: ${LIBS}")
-
-set(IMPORTED_LIBS sodium)
-
+file(MAKE_DIRECTORY build)
+file(MAKE_DIRECTORY test)
+file(MAKE_DIRECTORY cli)
 include_directories(include)
 
 set(SRC src/user.c src/user_storage.c src/entropy/entropy.c src/entropy/rdrand.c 
@@ -76,9 +88,9 @@ set(SRC src/user.c src/user_storage.c src/entropy/entropy.c src/entropy/rdrand.c
 
 add_library(tmpsqrl ${SRC})
 add_dependencies(tmpsqrl libsodium)
-target_link_libraries(tmpsqrl ${LIBS} ${IMPORTED_LIBS})
+target_link_libraries(tmpsqrl ${LIBS})
 
-set(SLIBS tmpsqrl ${IMPORTED_LIBS} ${LIBS})
+set(SLIBS tmpsqrl ${LIBS})
 
 MERGE_STATIC_LIBS(sqrl sqrl "${SLIBS}")
 
@@ -125,31 +137,36 @@ target_link_libraries(protocol_test sqrl)
 #documentation
 find_package(Doxygen QUIET)
 if(DOXYGEN_FOUND)
-	set(HEADERS src/sqrl_common.h src/sqrl_client.h src/sqrl_server.h src/sqrl_expert.h)
-	set(DOCSRC ${HEADERS} ${SRC} html/mainpage.dox)
+	set(HEADERS 
+		${CMAKE_SOURCE_DIR}/src/sqrl_common.h 
+		${CMAKE_SOURCE_DIR}/src/sqrl_client.h 
+		${CMAKE_SOURCE_DIR}/src/sqrl_server.h 
+		${CMAKE_SOURCE_DIR}/src/sqrl_expert.h)
+	set(DOCSRC ${HEADERS} ${SRC} ${CMAKE_SOURCE_DIR}/html/mainpage.dox)
 	string(REPLACE ";" " " DOCSRCSTR "${DOCSRC}")
-	configure_file(${CMAKE_SOURCE_DIR}/Doxyfile.in ${CMAKE_SOURCE_DIR}/Doxyfile)
-	configure_file(${CMAKE_SOURCE_DIR}/html/mainpage.dox.in ${CMAKE_SOURCE_DIR}/html/mainpage.dox)
+	file(COPY ${CMAKE_SOURCE_DIR}/html DESTINATION ${CMAKE_BINARY_DIR})
+	configure_file(${CMAKE_SOURCE_DIR}/Doxyfile.in ${CMAKE_BINARY_DIR}/Doxyfile)
+	configure_file(${CMAKE_SOURCE_DIR}/html/mainpage.dox.in ${CMAKE_BINARY_DIR}/html/mainpage.dox)
 
 	add_custom_target(doc
-		${DOXYGEN_EXECUTABLE} ${CMAKE_SOURCE_DIR}/Doxyfile
-		WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+		${DOXYGEN_EXECUTABLE} ${CMAKE_BINARY_DIR}/Doxyfile
+		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMENT "Generating API documentation with Doxygen" VERBATIM
 	)
 endif(DOXYGEN_FOUND)
 
 # Tests
 include(CTest)
-add_test(protocol_test protocol_test)
-add_test(client_test client_test)
-add_test(uri_test uri_test)
-add_test(user_test user_test)
-add_test(encdec_test encdec_test)
-add_test(gcm_test gcm_test)
-add_test(crypto_test crypto_test)
-add_test(storage_test storage_test)
+add_test(protocol_test ${EXECUTABLE_OUTPUT_PATH}/protocol_test)
+add_test(client_test ${EXECUTABLE_OUTPUT_PATH}/client_test)
+add_test(uri_test ${EXECUTABLE_OUTPUT_PATH}/uri_test)
+add_test(user_test ${EXECUTABLE_OUTPUT_PATH}/user_test)
+add_test(encdec_test ${EXECUTABLE_OUTPUT_PATH}/encdec_test)
+add_test(gcm_test ${EXECUTABLE_OUTPUT_PATH}/gcm_test)
+add_test(crypto_test ${EXECUTABLE_OUTPUT_PATH}/crypto_test)
+add_test(storage_test ${EXECUTABLE_OUTPUT_PATH}/storage_test)
 add_test(NAME sodium-test
-	WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/libsodium/src/libsodium
+	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/src/libsodium/src/libsodium
 	COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/makecheck.sh)
 
 add_custom_target(check ${CMAKE_CTEST_COMMAND})

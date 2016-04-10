@@ -1,4 +1,4 @@
-#include "src/sqrl_internal.h"
+#include "@CMAKE_SOURCE_DIR@/src/sqrl_internal.h"
 
 DLL_PUBLIC
 size_t Sqrl_Version( char *buffer, size_t buffer_len ) 

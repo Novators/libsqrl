@@ -13,7 +13,7 @@
  * 
  **/
 
-#include "config.h"
+#include <sqrl_config.h>
 
 #if defined(_WIN32)
 #include <Windows.h>
