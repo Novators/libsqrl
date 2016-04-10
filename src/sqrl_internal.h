@@ -384,5 +384,7 @@ void printhex( char *label, uint8_t *bin, size_t bin_len );
 void bin2rc( char *buf, uint8_t *bin );
 void utstring_zero( UT_string *str );
 
+void sqrl_sleep(int sleepMs);
+
 
 #endif // SQRL_INTERNAL_H_INCLUDED

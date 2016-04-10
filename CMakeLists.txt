@@ -100,7 +100,7 @@ include_directories(include)
 set(SRC src/user.c src/user_storage.c src/entropy/entropy.c src/entropy/rdrand.c 
 	src/crypto/aes.c src/crypto/gcm.c src/encdec.c src/crypto/crypt.c src/util.c 
 	src/storage.c src/block.c src/realtime.c src/uri.c src/client.c 
-	src/client_protocol.c src/transaction.c)
+	src/client_protocol.c src/transaction.c src/platform.c)
 
 add_library(tmpsqrl ${SRC})
 add_dependencies(tmpsqrl libsodium)

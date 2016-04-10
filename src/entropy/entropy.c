@@ -20,10 +20,14 @@ For more details, see the LICENSE file included with this package.
 // fast ~= 50 times per second
 // slow ~= 5 times per second
 // Depending on processor speed.
+/*
 #define SQRL_NIX_ENTROPY_REPEAT_FAST 9000000
 #define SQRL_NIX_ENTROPY_REPEAT_SLOW 190000000
 #define SQRL_WIN_ENTROPY_REPEAT_FAST 9
 #define SQRL_WIN_ENTROPY_REPEAT_SLOW 190
+*/
+#define SQRL_ENTROPY_REPEAT_FAST 9
+#define SQRL_ENTROPY_REPEAT_SLOW 190
 #define SQRL_ENTROPY_TARGET 512
 
 #include <sodium.h>
@@ -38,12 +42,11 @@ struct sqrl_entropy_pool
 	int entropy_target;
 	bool initialized;
 	bool stopping;
-#ifdef _WIN32
 	int sleeptime;
+#ifdef _WIN32
 	HANDLE threadHandle;
 	CRITICAL_SECTION criticalSection;
 #else
-	struct timespec sleeptime;
 	pthread_t thread;
 	pthread_mutex_t mutex;
 #endif
@@ -86,22 +89,9 @@ void *sqrl_entropy_thread( void *input )
 {
 	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)input;
 
-#ifndef _WIN32
-	struct timespec rtime;
-#endif
-
 	while( !pool->stopping ) {
 		sqrl_entropy_update();
-#ifdef _WIN32
-		Sleep( pool->sleeptime );
-#else
-		if( nanosleep( &pool->sleeptime, &rtime )) {
-			// sleep failed... exit so we don't peg processor
-			pthread_mutex_lock( &pool->mutex );
-			pool->stopping = true;
-			pthread_mutex_unlock( &pool->mutex );
-		}
-#endif
+		sqrl_sleep( pool->sleeptime );
 	}
 	SQRL_LOCK_MUTEX(pool);
 	pool->estimated_entropy = 0;
@@ -124,12 +114,7 @@ static struct sqrl_entropy_pool *sqrl_entropy_create()
 	pool->stopping = false;
 	pool->estimated_entropy = 0;
 	pool->entropy_target = SQRL_ENTROPY_TARGET;
-	#ifdef _WIN32
-	pool->sleeptime = SQRL_WIN_ENTROPY_REPEAT_FAST;
-	#else
-	pool->sleeptime.tv_sec = 0;
-	pool->sleeptime.tv_nsec = SQRL_NIX_ENTROPY_REPEAT_FAST;
-	#endif
+	pool->sleeptime = SQRL_ENTROPY_REPEAT_FAST;
 
 	crypto_hash_sha512_init( &pool->state );
 	sqrl_add_entropy_bracket( pool, NULL );
@@ -165,11 +150,7 @@ static struct sqrl_entropy_pool *sqrl_entropy_get_pool()
 static void sqrl_increment_entropy( struct sqrl_entropy_pool *pool, int amount ) {
 	pool->estimated_entropy += amount;
 	if( pool->estimated_entropy >= pool->entropy_target ) {
-		#ifdef _WIN32
-		pool->sleeptime = SQRL_WIN_ENTROPY_REPEAT_SLOW;
-		#else
-		pool->sleeptime.tv_nsec = SQRL_NIX_ENTROPY_REPEAT_SLOW;
-		#endif
+		pool->sleeptime = SQRL_ENTROPY_REPEAT_SLOW;
 	}
 }
 
@@ -215,22 +196,12 @@ int sqrl_entropy_get_blocking( uint8_t *buf, int desired_entropy )
 {
 	struct sqrl_entropy_pool *pool = sqrl_entropy_get_pool();
 
-#ifndef _WIN32
-	struct timespec rtime;
-	struct timespec sleeptime;
-	sleeptime.tv_sec = 0;
-	sleeptime.tv_nsec = SQRL_NIX_ENTROPY_REPEAT_SLOW;
-#endif
 	int received_entropy = 0;
 START:
 	if( !pool->initialized ) return 0;
 	pool->entropy_target = desired_entropy;
 	while( pool->estimated_entropy < desired_entropy ) {
-#ifdef _WIN32
-		Sleep( SQRL_WIN_ENTROPY_REPEAT_SLOW );
-#else
-		nanosleep( &sleeptime, &rtime );
-#endif
+		sqrl_sleep( SQRL_ENTROPY_REPEAT_SLOW );
 	}
 	if( pool->initialized &&
 		pool->estimated_entropy >= desired_entropy ) {
@@ -252,11 +223,7 @@ START:
 		goto START;
 	}
 	pool->entropy_target = SQRL_ENTROPY_TARGET;
-	#ifdef _WIN32
-	pool->sleeptime = SQRL_WIN_ENTROPY_REPEAT_FAST;
-	#else
-	pool->sleeptime.tv_nsec = SQRL_NIX_ENTROPY_REPEAT_FAST;
-	#endif
+	pool->sleeptime = SQRL_ENTROPY_REPEAT_FAST;
 	return received_entropy;
 }
 
@@ -313,11 +280,7 @@ int sqrl_entropy_get( uint8_t* buf, int desired_entropy )
 	if( pool->estimated_entropy < desired_entropy ) {
 		pool->entropy_target = desired_entropy;
 	}
-	#ifdef _WIN32
-	pool->sleeptime = SQRL_WIN_ENTROPY_REPEAT_FAST;
-	#else
-	pool->sleeptime.tv_nsec = SQRL_NIX_ENTROPY_REPEAT_FAST;
-	#endif
+	pool->sleeptime = SQRL_ENTROPY_REPEAT_FAST;
 	return received_entropy;
 }
 
