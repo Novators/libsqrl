@@ -55,7 +55,7 @@ configure_file(${SRCDIR}/sqrl_depends.c.in sqrl_depends.c)
 file(COPY 
 	${CMAKE_SOURCE_DIR}/data/test1.sqrl
 	${CMAKE_SOURCE_DIR}/data/test2.sqrl
-	${CMAKE_SOURCE_DIR}/vectors 
+	${CMAKE_SOURCE_DIR}/data/vectors 
 	DESTINATION ${CMAKE_BINARY_DIR})
 configure_file(README.in ${CMAKE_SOURCE_DIR}README.md)
 
