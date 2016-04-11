@@ -66,6 +66,7 @@ set(LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/lib)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin)
 
 ######################### MAC BUILD #########################
+set(CMAKE_MACOSX_RPATH 1)
 set(REQUIRED_LIBS_PRESENT TRUE)
 
 ExternalProject_Add(libsodium
@@ -92,7 +93,6 @@ if(NOT ${PTHREAD_LIB} STREQUAL "PTHREAD_LIB-NOTFOUND")
 	set(LIBS ${LIBS} ${PTHREAD_LIB})
 endif()
 
-file(MAKE_DIRECTORY build)
 file(MAKE_DIRECTORY test)
 file(MAKE_DIRECTORY cli)
 include_directories(include)
@@ -100,15 +100,19 @@ include_directories(include)
 set(SRC src/user.c src/user_storage.c src/entropy/entropy.c src/entropy/rdrand.c 
 	src/crypto/aes.c src/crypto/gcm.c src/encdec.c src/crypto/crypt.c src/util.c 
 	src/storage.c src/block.c src/realtime.c src/uri.c src/client.c 
-	src/client_protocol.c src/transaction.c src/platform.c)
+	src/client_protocol.c src/transaction.c src/platform.c 
+	${CMAKE_BINARY_DIR}/sqrl_depends.c)
 
-add_library(tmpsqrl ${SRC})
-add_dependencies(tmpsqrl libsodium)
-target_link_libraries(tmpsqrl ${LIBS})
+add_library(sqrl_static_tmp STATIC ${SRC})
+add_dependencies(sqrl_static_tmp libsodium)
+target_link_libraries(sqrl_static_tmp ${LIBS})
 
-set(SLIBS tmpsqrl ${LIBS})
+set(SLIBS sqrl_static_tmp ${LIBS})
 
-MERGE_STATIC_LIBS(sqrl sqrl "${SLIBS}")
+MERGE_STATIC_LIBS(sqrl_static sqrl "${SLIBS}")
+
+add_library(sqrl SHARED ${SRC})
+target_link_libraries(sqrl ${LIBS} "-Wl,-all_load")
 
 if(REQUIRED_LIBS_PRESENT)
 	add_executable(entropy src/cli/entropy_cli.c)
@@ -149,6 +153,36 @@ target_link_libraries(client_test sqrl)
 
 add_executable(protocol_test src/test/protocol.c)
 target_link_libraries(protocol_test sqrl)
+
+# SWIG
+find_package(SWIG QUIET)
+if(SWIG_FOUND)
+	include(${SWIG_USE_FILE})
+	include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
+	find_package(PythonLibs)
+	if(PYTHONLIBS_FOUND)
+		set(SWIG_MODULE_NAME "pysqrl")
+		set(SWIG_I_FILE ${CMAKE_BINARY_DIR}/src/pysqrl.i)
+		configure_file( ${CMAKE_SOURCE_DIR}/src/swig/sqrl.in ${SWIG_I_FILE})
+		include_directories(${PYTHON_INCLUDE_PATH})
+		set(CMAKE_SWIG_FLAGS "")
+		SET_SOURCE_FILES_PROPERTIES(${SWIG_I_FILE} PROPERTIES SWIG_FLAGS "-includeall")
+		SWIG_ADD_MODULE(pysqrl python ${SWIG_I_FILE})
+		SWIG_LINK_LIBRARIES(pysqrl ${PYTHON_LIBRARIES} sqrl)
+	endif(PYTHONLIBS_FOUND)
+
+	include(${CMAKE_SOURCE_DIR}/cmake/Findphp.cmake)
+	if(PHP_FOUND)
+		set(SWIG_MODULE_NAME "phpsqrl")
+		set(SWIG_I_FILE ${CMAKE_BINARY_DIR}/src/phpsqrl.i)
+		configure_file( ${CMAKE_SOURCE_DIR}/src/swig/sqrl.in ${SWIG_I_FILE})
+		include_directories(${PHP_INCLUDE_DIRS})
+		SWIG_ADD_MODULE(php_sqrl php5 ${SWIG_I_FILE})
+		SWIG_LINK_LIBRARIES(php_sqrl ${PHP_LIBS} sqrl)
+		target_link_libraries(php_sqrl "-undefined suppress" -flat_namespace)
+		SET_TARGET_PROPERTIES(php_sqrl PROPERTIES PREFIX "")
+	endif(PHP_FOUND)
+endif(SWIG_FOUND)
 
 #documentation
 find_package(Doxygen QUIET)
