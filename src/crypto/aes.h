@@ -24,7 +24,7 @@
 #define AES_HEADER
 
 /******************************************************************************/
-#define AES_DECRYPTION  0       // whether AES decryption is supported
+#define AES_DECRYPTION  1       // whether AES decryption is supported
 /******************************************************************************/
 
 #include <string.h>

@@ -73,25 +73,6 @@ _is_scheme_char(int c)
 	return (!isalpha(c) && '+' != c && '-' != c && '.' != c) ? 0 : 1;
 }
 
-/*
-static void _fix_divider( char *uri ) {
-	char *p = strstr( uri, "//" );
-	if( p ) {
-		p += 2;
-		p = strstr( p, "//" );
-	}
-	if( p ) {
-//		p[0] = '|';
-		p++;
-
-		while( *p ) {
-			p[0] = p[1];
-			p++;
-		}
-	}
-}
-*/
-
 /**
 Parses a SQRL URL and returns a \p Sqrl_Uri object
 

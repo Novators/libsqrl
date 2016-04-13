@@ -22,10 +22,6 @@ For more details, see the LICENSE file included with this package.
 #define SITE_FLAG_VALID_SERVER_STRING 4
 #define SITE_FLAG_VALID_CLIENT_STRING 8
 
-#define FLAG_SET(f,v) f |= v
-#define FLAG_CLEAR(f,v) f &= ~(v)
-#define FLAG_CHECK(f,v) (v == (f & v))
-
 static char kv_strings[SITE_KV_COUNT][SITE_KV_LENGTH+1] = { 
 	"ver", "tif", "qry", "ask", "suk", "nut"};
 
@@ -277,7 +273,6 @@ int parseKeyValue( struct Sqrl_Site *site, char *key, size_t key_len, char *valu
 
 void sqrl_site_parse_result( Sqrl_Site *site, const char *result, size_t result_len )
 {
-	printf( "Parsing...\n" );
 	if( !site || !result || result_len == 0 ) return;
 	int found_keys = 0;
 	int current_key = 0;
@@ -407,16 +402,24 @@ void sqrl_site_add_key_value( UT_string *str, char *key, char *value )
 
 void sqrl_site_generate_opts( struct Sqrl_Site *site, UT_string *qry ) {
 	if( !site || !qry ) return;
-	char sep[2] = "";
+	char sep = 0;
 	UT_string *val;
 	utstring_new( val );
 	if( site->userOptFlags & SQRL_OPTION_REQUEST_SQRL_ONLY ) {
-		utstring_printf( val, "%ssqrlonly", sep );
-		strcpy( sep, "~" );
+		if( sep ) {
+			utstring_printf( val, "%c%s", sep, SQRL_OPTION_TOKEN_SQRLONLY );
+		} else {
+			utstring_printf( val, "%s", SQRL_OPTION_TOKEN_SQRLONLY );
+		}
+		sep = SQRL_OPTION_TOKEN_SEPARATOR;
 	}
 	if( site->userOptFlags & SQRL_OPTION_REQUEST_ID_LOCK ) {
-		utstring_printf( val, "%shardlock", sep );
-		strcpy( sep, "~" );
+		if( sep ) {
+			utstring_printf( val, "%c%s", sep, SQRL_OPTION_TOKEN_HARDLOCK );
+		} else {
+			utstring_printf( val, "%s", SQRL_OPTION_TOKEN_HARDLOCK );
+		}
+		sep = SQRL_OPTION_TOKEN_SEPARATOR;
 	}
 	if( utstring_len( val ) > 0 ) {
 		sqrl_site_add_key_value( qry, "opt", utstring_body( val ));
@@ -707,7 +710,6 @@ void sqrl_client_site_maintenance( bool forceDeleteAll )
 
 Sqrl_Transaction_Status sqrl_client_do_loop( Sqrl_Site *site )
 {
-	printf( "loop\n" );
 	if( !site ) return SQRL_TRANSACTION_STATUS_FAILED;
 	if( sqrl_site_generate_client_body( site )) {
 		UT_string *bdy;

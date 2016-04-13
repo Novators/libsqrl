@@ -7,12 +7,15 @@ For more details, see the LICENSE file included with this package.
 **/
 
 #include "../sqrl_client.h"
+#include "../sqrl_server.h"
 #include <unistd.h>
 
 char password[32] = "the password";
 char rescue_code[25] = "894268272655451828340130";
 char uid[] = "Tne7wOsRjUo1A8xs7V4K2kDpdKqpHsmHZpN-6eyOcLc";
 Sqrl_User user = NULL;
+
+Sqrl_Server *server = NULL;
 
 #define PC(a,b) printf( "%10s: %s\n", (a) ? (a) : "", (b))
 
@@ -122,19 +125,9 @@ void onTransactionComplete( Sqrl_Transaction transaction )
 
 Sqrl_User onSelectUser( Sqrl_Transaction transaction )
 {
-    PC( "SELECT", uid );
+    //PC( "SELECT", uid );
     return user;
 }
-
-#define MAX_LOOPS 5
-int loop;
-char data[MAX_LOOPS][128] = {
-"ver=1\r\nnut=nutty0\r\ntif=0\r\nqry=/auth.php\r\n",
-"ver=1\r\nnut=nutty1\r\ntif=0\r\nqry=/auth.php\r\n",
-"ver=1\r\nnut=nutty2\r\ntif=0\r\nqry=/auth.php\r\n",
-"ver=1\r\nnut=nutty3\r\ntif=0\r\nqry=/auth.php\r\n",
-"ver=1\r\nnut=nutty4\r\ntif=1\r\nqry=/auth.php\r\n"
-};
 
 void onSend(
     Sqrl_Transaction transaction,
@@ -143,16 +136,15 @@ void onSend(
 {
     PC( "CLIENT", url );
     PC( NULL, payload );
-    if( loop++ < MAX_LOOPS ) {
-        sqrl_client_receive( transaction, data[loop-1], strlen( data[loop-1] ));
-    }
+    Sqrl_Server_Context *ctx = sqrl_server_context_create( server );
+    sqrl_server_parse_query( ctx, payload, payload_len );
+    ctx = sqrl_server_context_destroy( ctx );
 }
 
 
 int main() 
 {
     sqrl_init();
-    loop = 0;
     bool bError = false;
     char txtBuffer[4096] = {0};
     
@@ -165,6 +157,17 @@ int main()
     cbs.onSend = onSend;
     sqrl_client_set_callbacks( &cbs );
 
+    server = sqrl_server_create( 
+        "sqrl://sqrlid.com/auth.php?sfn=_LIBSQRL_SFN_&nut=_LIBSQRL_NUT_",
+        "SQRLid", 
+        "SQRLid passcode", 15, 
+        1 );
+
+    if( !server ) {
+        printf( "Failed to create server!\n" );
+        exit(1);
+    }
+
     if( SQRL_TRANSACTION_STATUS_SUCCESS != sqrl_client_begin_transaction( SQRL_TRANSACTION_IDENTITY_LOAD, NULL, "file://test1.sqrl", 17 )) {
         printf( "Failed to Load Identity!\n" );
         exit(1);
@@ -175,11 +178,13 @@ int main()
         PC( "EXPECTED", uid );
         exit(1);
     }
-    char *sqrlUrl = "sqrl://auth.sqrlid.com/auth.php?nut=blah&sfn=U1FSTGlk";
+    char *sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_SUCCESS != 
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, NULL, sqrlUrl, strlen( sqrlUrl ))) {
         PC( "INCOMPLETE", "AUTH_IDENT" );
     }
+    free( sqrlUrl );
+
     user = sqrl_user_release( user );
     return sqrl_stop();
 }

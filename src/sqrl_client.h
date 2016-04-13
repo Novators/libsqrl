@@ -89,41 +89,6 @@ bool       sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id );
 
 /** @} */ // endgroup user
 
-/**
-\defgroup URI SQRL URI Functions
-
-@{ */
-
-typedef enum {
-	SQRL_SCHEME_INVALID = 0,
-	SQRL_SCHEME_SQRL,
-	SQRL_SCHEME_FILE
-} Sqrl_Scheme;
-
-/**
-A structure to hold information about a parsed SQRL URI
-*/
-typedef struct Sqrl_Uri {
-	/** The entire SQRL URL */
-	char *challenge;
-	/** The domain + extension */
-	char *host;
-	/** Internal use */
-	char *prefix;
-	/** the https url */
-	char *url;
-	/** Internal use */
-	Sqrl_Scheme scheme;
-	/** Server Friendly Name */
-	char *sfn;
-} Sqrl_Uri;
-
-Sqrl_Uri*	sqrl_uri_create_copy( Sqrl_Uri *original );
-Sqrl_Uri*	sqrl_uri_parse(const char *);
-Sqrl_Uri*	sqrl_uri_free(struct Sqrl_Uri *);
-
-/** @} */ // endgroup URI
-
 
 /**
 \defgroup Client SQRL Client API

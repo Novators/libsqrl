@@ -20,6 +20,49 @@ For more details, see the LICENSE file included with this package.
 #define SQRL_KEY_SIZE 						    32
 #define SQRL_SIG_SIZE 						    64
 
+#define SQRL_OPTION_TOKEN_SQRLONLY      "sqrlonly"
+#define SQRL_OPTION_TOKEN_HARDLOCK      "hardlock"
+#define SQRL_OPTION_TOKEN_CPS                "cps"
+#define SQRL_OPTION_TOKEN_SUK                "suk"
+#define SQRL_OPTION_TOKEN_SEPARATOR            '~'
+
+/**
+\defgroup URI SQRL URI Functions
+
+@{ */
+
+typedef enum {
+	SQRL_SCHEME_INVALID = 0,
+	SQRL_SCHEME_SQRL,
+	SQRL_SCHEME_FILE
+} Sqrl_Scheme;
+
+/**
+A structure to hold information about a parsed SQRL URI
+*/
+typedef struct Sqrl_Uri {
+	/** The entire SQRL URL */
+	char *challenge;
+	/** The domain + extension */
+	char *host;
+	/** Internal use */
+	char *prefix;
+	/** the https url */
+	char *url;
+	/** Internal use */
+	Sqrl_Scheme scheme;
+	/** Server Friendly Name */
+	char *sfn;
+} Sqrl_Uri;
+
+Sqrl_Uri*	sqrl_uri_create_copy( Sqrl_Uri *original );
+Sqrl_Uri*	sqrl_uri_parse(const char *);
+Sqrl_Uri*	sqrl_uri_free(struct Sqrl_Uri *);
+
+/** @} */ // endgroup URI
+
+
+
 typedef enum {
 	SQRL_CMD_QUERY,
 	SQRL_CMD_IDENT,

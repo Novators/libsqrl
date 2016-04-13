@@ -32,7 +32,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/libutils.cmake)
 set(sqrl_version_major 1)
 # Minor version is build year
 set(sqrl_version_minor 2016)
-set(sqrl_build 23)
+set(sqrl_build 24)
 set(sqrl_version "${sqrl_version_major}.${sqrl_version_minor} build ${sqrl_build}")
 
 #set(CMAKE_BUILD_TYPE Release)
@@ -93,15 +93,13 @@ if(NOT ${PTHREAD_LIB} STREQUAL "PTHREAD_LIB-NOTFOUND")
 	set(LIBS ${LIBS} ${PTHREAD_LIB})
 endif()
 
-file(MAKE_DIRECTORY test)
-file(MAKE_DIRECTORY cli)
 include_directories(include)
 
 set(SRC src/user.c src/user_storage.c src/entropy/entropy.c src/entropy/rdrand.c 
 	src/crypto/aes.c src/crypto/gcm.c src/encdec.c src/crypto/crypt.c src/util.c 
 	src/storage.c src/block.c src/realtime.c src/uri.c src/client.c 
-	src/client_protocol.c src/transaction.c src/platform.c 
-	${CMAKE_BINARY_DIR}/sqrl_depends.c)
+	src/client_protocol.c src/transaction.c src/platform.c src/server.c
+	src/server_protocol.c ${CMAKE_BINARY_DIR}/sqrl_depends.c)
 
 add_library(sqrl_static_tmp STATIC ${SRC})
 add_dependencies(sqrl_static_tmp libsodium)
@@ -153,6 +151,9 @@ target_link_libraries(client_test sqrl)
 
 add_executable(protocol_test src/test/protocol.c)
 target_link_libraries(protocol_test sqrl)
+
+add_executable(server_test src/test/server_test.c)
+target_link_libraries(server_test sqrl)
 
 # SWIG
 find_package(SWIG QUIET)
@@ -207,14 +208,15 @@ endif(DOXYGEN_FOUND)
 
 # Tests
 include(CTest)
-add_test(protocol_test ${EXECUTABLE_OUTPUT_PATH}/protocol_test)
-add_test(client_test ${EXECUTABLE_OUTPUT_PATH}/client_test)
-add_test(uri_test ${EXECUTABLE_OUTPUT_PATH}/uri_test)
-add_test(user_test ${EXECUTABLE_OUTPUT_PATH}/user_test)
 add_test(encdec_test ${EXECUTABLE_OUTPUT_PATH}/encdec_test)
 add_test(gcm_test ${EXECUTABLE_OUTPUT_PATH}/gcm_test)
 add_test(crypto_test ${EXECUTABLE_OUTPUT_PATH}/crypto_test)
+add_test(uri_test ${EXECUTABLE_OUTPUT_PATH}/uri_test)
 add_test(storage_test ${EXECUTABLE_OUTPUT_PATH}/storage_test)
+add_test(user_test ${EXECUTABLE_OUTPUT_PATH}/user_test)
+add_test(client_test ${EXECUTABLE_OUTPUT_PATH}/client_test)
+add_test(server_test ${EXECUTABLE_OUTPUT_PATH}/server_test)
+add_test(protocol_test ${EXECUTABLE_OUTPUT_PATH}/protocol_test)
 add_test(NAME sodium-test
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/src/libsodium/src/libsodium
 	COMMAND make check)

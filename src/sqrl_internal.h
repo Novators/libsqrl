@@ -83,9 +83,14 @@ do{                                                   \
 #define SQRL_KNOWN_VERSIONS_COUNT 1
 #define SQRL_CLIENT_VERSIONS {1}
 
+#define FLAG_SET(f,v) f |= v
+#define FLAG_CLEAR(f,v) f &= ~(v)
+#define FLAG_CHECK(f,v) (v == (f & v))
+
 
 typedef int (*enscrypt_progress_fn)(int percent, void* data);
 double sqrl_get_real_time( );
+uint64_t sqrl_get_timestamp();
 
 typedef void* SqrlMutex;
 
