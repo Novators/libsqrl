@@ -18,6 +18,7 @@ void printuri( Sqrl_Uri *uri )
 	printf( "URL: %s\n", uri->url );
 	printf( "cha: %s\n", uri->challenge );
 	printf( "hst: %s\n", uri->host );
+	printf( "pfx: %s\n", uri->prefix );
 	printf( "scm: %s\n", uri->scheme == SQRL_SCHEME_SQRL ? "sqrl" : "file" );
 	printf( "sfn: %s\n\n", uri->sfn );
 }

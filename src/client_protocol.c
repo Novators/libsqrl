@@ -160,7 +160,6 @@ void parseVer( struct Sqrl_Site *site, char *str, size_t string_len )
 			if( b < a ) b = a;
 			if( b > SQRL_KNOWN_VERSIONS_COUNT ) b = SQRL_KNOWN_VERSIONS_COUNT;
 			for( n = a+1; n <= b; n++ ) {
-				//printf( "ver: %ld\n", n );
 				srv[n] = 1;
 			}
 		}
@@ -222,7 +221,6 @@ void parseSuk( struct Sqrl_Site *site, char *value, size_t value_len )
 
 	sqrl_b64u_decode( s, value, value_len );
 	if( utstring_len(s) != 32 ) {
-		//printf( "Invalid Key: %s\n", value );
 		utstring_free( s );
 		return;
 	}
@@ -541,13 +539,17 @@ bool sqrl_site_generate_client_body( Sqrl_Site *site )
 		sqrl_site_add_key_value( clientString, "cmd", "remove" );
 		break;
 	default:
+#if DEBUG_PRINT_CLIENT_PROTOCOL
 		printf( "Unknown SQRL command!\n" );
+#endif
 		goto ERROR;
 	}
 	sqrl_site_generate_opts( site, clientString );
 	sqrl_site_generate_keys( site, clientString );
 	utstring_bincpy( clientString, "\r\n", 2 );
+#if DEBUG_PRINT_CLIENT_PROTOCOL
 	printf( "%10s: %s\n", "client_str", utstring_body( clientString ));
+#endif
 	goto DONE;
 
 ERROR:
@@ -644,7 +646,9 @@ Sqrl_Site *sqrl_client_site_create( Sqrl_Transaction t )
 	if( transaction->uri ) {
 		utstring_new( site->serverString );
 		sqrl_b64u_encode( site->serverString, (uint8_t*)transaction->uri->challenge, strlen( transaction->uri->challenge ));
+#if DEBUG_PRINT_CLIENT_PROTOCOL
 		printf( "%10s: %s\n", "server_str", transaction->uri->challenge );
+#endif
 		FLAG_SET( site->flags, SITE_FLAG_VALID_SERVER_STRING );
 	}
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.site );
@@ -756,7 +760,9 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 	
 	if( !site ) return SQRL_TRANSACTION_STATUS_FAILED;
 	if( !FLAG_CHECK( site->flags, SITE_FLAG_VALID_SERVER_STRING )) {
+#if DEBUG_PRINT_CLIENT_PROTOCOL
 		printf( "!VALID_SERVER_STRING\n" );
+#endif
 		goto ERROR;
 	}
 	if( site->currentTransaction == SQRL_TRANSACTION_AUTH_QUERY ) {

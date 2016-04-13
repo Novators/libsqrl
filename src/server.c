@@ -149,23 +149,35 @@ bool sqrl_server_nut_decrypt(
     return true;
 }
 
-void sqrl_server_add_mac( Sqrl_Server *server, UT_string *str )
+void sqrl_server_add_mac( Sqrl_Server *server, UT_string *str, char sep )
 {
     if( !server || !str ) return;
     uint8_t mac[crypto_auth_BYTES];
     crypto_auth( mac, (unsigned char*)utstring_body( str ), utstring_len( str ), server->key );
-    utstring_printf( str, "&mac=" );
+    if( sep > 0 ) {
+        utstring_printf( str, "%cmac=", sep );
+    } else {
+        utstring_printf( str, "mac=" );
+    }
     sqrl_b64u_encode_append( str, mac, SQRL_SERVER_MAC_LENGTH );
 }
 
 bool sqrl_server_verify_mac( Sqrl_Server *server, UT_string *str ) 
 {
     if( !server || !str ) return false;
-    char *m = strstr( utstring_body( str ), "&mac=" );
     size_t len = 0;
+    char *m = strstr( utstring_body( str ), "&mac=" );
     if( m ) {
         len = m - utstring_body( str );
         m += 5;
+    } else {
+        m = strstr( utstring_body( str ), "mac=" );
+        if( m ) {
+            len = m - utstring_body( str );
+            m += 4;
+        }
+    }
+    if( m ) {
         uint8_t mac[crypto_auth_BYTES];
         crypto_auth( mac, (unsigned char*)utstring_body(str), len, server->key );
         UT_string *v;
@@ -194,7 +206,7 @@ char *sqrl_server_create_link( Sqrl_Server *server, uint32_t ip )
             sqrl_b64u_encode_append( str, (uint8_t*)&nut, sizeof( Sqrl_Nut ));
             pp = p + strlen( SQRL_SERVER_TOKEN_NUT );
             utstring_printf( str, "%s", pp );
-            sqrl_server_add_mac( server, str );
+            sqrl_server_add_mac( server, str, '&' );
             retVal = malloc( utstring_len( str ) + 1 );
             strcpy( retVal, utstring_body( str ));
             utstring_free( str );

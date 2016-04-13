@@ -42,11 +42,17 @@ For more details, see the LICENSE file included with this package.
 #define CLIENT_KV_SUK  6
 #define CLIENT_KV_VUK  7
 
-#define SERVER_KV_COUNT 3
+#define SERVER_KV_COUNT 9
 #define SERVER_KV_LENGTH 3
-#define SERVER_KV_NUT 0
-#define SERVER_KV_SFN 1
-#define SERVER_KV_MAC 2
+#define SERVER_KV_VER 0
+#define SERVER_KV_NUT 1
+#define SERVER_KV_TIF 2
+#define SERVER_KV_QRY 3
+#define SERVER_KV_SUK 4
+#define SERVER_KV_ASK 5
+#define SERVER_KV_URL 6
+#define SERVER_KV_SFN 7
+#define SERVER_KV_MAC 8
 
 
 typedef struct Sqrl_Server_User {
@@ -80,6 +86,7 @@ typedef struct Sqrl_Server_Context {
     uint16_t flags;
     char *context_strings[CONTEXT_KV_COUNT];
     char *client_strings[CLIENT_KV_COUNT];
+    char *server_strings[SERVER_KV_COUNT];
 } Sqrl_Server_Context;
 
 
@@ -109,7 +116,7 @@ bool sqrl_server_nut_decrypt(
 
 Sqrl_Server_Context *sqrl_server_context_create( Sqrl_Server *server );
 Sqrl_Server_Context *sqrl_server_context_destroy( Sqrl_Server_Context *context );
-void sqrl_server_add_mac( Sqrl_Server *server, UT_string *str );
+void sqrl_server_add_mac( Sqrl_Server *server, UT_string *str, char sep );
 bool sqrl_server_verify_mac( Sqrl_Server *server, UT_string *str ); 
 
 char *sqrl_server_create_link( Sqrl_Server *server, uint32_t ip );

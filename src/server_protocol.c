@@ -16,9 +16,8 @@ static char client_kv_strings[CLIENT_KV_COUNT][CLIENT_KV_LENGTH+1] = {
     "ver", "cmd", "opt", "btn", "idk", "pidk", "suk", "vuk"
 };
 
-
 static char server_kv_strings[SERVER_KV_COUNT][SERVER_KV_LENGTH+1] = {
-    "nut", "sfn", "mac" 
+    "ver", "nut", "tif", "qry", "suk", "ask", "url", "sfn", "mac"
 };
 
 bool sqrl_server_verify_server_string(
@@ -101,7 +100,9 @@ bool sqrl_server_parse_client(
                 context->client_strings[current_key] = malloc( val_len + 1 );
                 memcpy( context->client_strings[current_key], value, val_len );
                 context->client_strings[current_key][val_len] = 0;
+#if DEBUG_PRINT_SERVER_PROTOCOL
                 printf( "%10s: %s\n", client_kv_strings[current_key], context->client_strings[current_key] );
+#endif
                 found_keys |= (1<<current_key);
                 break;
             }
@@ -127,7 +128,9 @@ bool sqrl_server_verify_signatures(
         utstring_new( str );
         utstring_new( key );
         utstring_new( sig );
+#if DEBUG_PRINT_SERVER_PROTOCOL
         utstring_printf( str, "%s%s", context->context_strings[CONTEXT_KV_CLIENT], context->context_strings[CONTEXT_KV_SERVER] );
+#endif
         if( context->context_strings[CONTEXT_KV_IDS] ) {
             sqrl_b64u_decode( sig, context->context_strings[CONTEXT_KV_IDS], strlen( context->context_strings[CONTEXT_KV_IDS] ));
             sqrl_b64u_decode( key, context->client_strings[CLIENT_KV_IDK], strlen( context->client_strings[CLIENT_KV_IDK] ));
@@ -167,6 +170,44 @@ bool sqrl_server_verify_signatures(
         return true;
     }
     return false;
+}
+
+bool sqrl_server_build_reply( Sqrl_Server_Context *context, UT_string *reply )
+{
+    if( !context || !reply ) return false;
+    utstring_renew( reply );
+    utstring_printf( reply, "ver=%s\r\n", SQRL_VERSION_STRING );
+    uint32_t ip = context->nut.ip; // Reuse original IP address
+    sqrl_server_nut_generate( context->server, &context->nut, ip );
+    utstring_printf( reply, "nut=" );
+    sqrl_b64u_encode_append( reply, (unsigned char*)&context->nut, sizeof( Sqrl_Nut ));
+    utstring_printf( reply, "\r\n" );
+    utstring_printf( reply, "tif=%X\r\n", context->tif );
+    if( !context->server_strings[SERVER_KV_QRY] ) {
+        size_t len = strlen( context->server->uri->prefix );
+        char *p, *pp;
+        p = context->server->uri->challenge + len - 1;
+        pp = strstr( p, "?" );
+        if( pp ) {
+            len = pp - p;
+        } else {
+            len = strlen( p );
+        }
+        context->server_strings[SERVER_KV_QRY] = calloc( 1, len + 1 );
+        memcpy( context->server_strings[SERVER_KV_QRY], p, len );
+    }
+    utstring_printf( reply, "qry=%s\r\n", context->server_strings[SERVER_KV_QRY] );
+    if( context->server_strings[SERVER_KV_SUK] ) {
+        utstring_printf( reply, "suk=%s\r\n", context->server_strings[SERVER_KV_SUK] );
+    }
+    if( context->server_strings[SERVER_KV_ASK] ) {
+        utstring_printf( reply, "ask=%s\r\n", context->server_strings[SERVER_KV_ASK] );
+    }
+    if( context->server_strings[SERVER_KV_URL] ) {
+        utstring_printf( reply, "url=%s\r\n", context->server_strings[SERVER_KV_URL] );
+    }
+    sqrl_server_add_mac( context->server, reply, 0 );
+    return true;
 }
 
 void sqrl_server_parse_query( 
@@ -215,7 +256,9 @@ void sqrl_server_parse_query(
                 context->context_strings[current_key] = malloc( val_len + 1 );
                 memcpy( context->context_strings[current_key], value, val_len );
                 context->context_strings[current_key][val_len] = 0;
+#if DEBUG_PRINT_SERVER_PROTOCOL
                 printf( "%10s: %s\n", context_kv_strings[current_key], context->context_strings[current_key] );
+#endif                
                 found_keys |= (1<<current_key);
                 break;
             }
@@ -228,10 +271,14 @@ void sqrl_server_parse_query(
     if( required_keys == (found_keys & required_keys) ) {
         if( sqrl_server_verify_server_string( context )) {
             if( sqrl_server_verify_signatures( context )) {
+                UT_string *reply;
+                utstring_new( reply );
+                sqrl_server_build_reply( context, reply );
+                printf( "%10s: %s\n", "REPLY", utstring_body( reply ));
+                utstring_free( reply );
                 FLAG_SET( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_QUERY );
-                printf( "Query Validated\n" );
             }
         }
     }
-
 }
+
