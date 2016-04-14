@@ -359,7 +359,10 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	switch( type ) {
 	case SQRL_TRANSACTION_UNKNOWN:
 		goto ERROR;
+	case SQRL_TRANSACTION_AUTH_ENABLE:
+	case SQRL_TRANSACTION_AUTH_REMOVE:
 	case SQRL_TRANSACTION_AUTH_IDENT:
+	case SQRL_TRANSACTION_AUTH_DISABLE:
 		if( !transaction->uri || transaction->uri->scheme != SQRL_SCHEME_SQRL ) {
 			goto ERROR;
 		}
@@ -367,14 +370,14 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 			sqrl_client_call_select_user( transaction );
 			if( !transaction->user ) goto ERROR;
 		}
+		if( type == SQRL_TRANSACTION_AUTH_ENABLE || type == SQRL_TRANSACTION_AUTH_REMOVE ) {
+			if( !sqrl_user_force_rescue( transaction )) {
+				printf( "Failed to force rescue\n" );
+				goto ERROR;
+			}
+		}
 		retVal = sqrl_client_resume_transaction( transaction, NULL, 0 );
 		goto DONE;
-	case SQRL_TRANSACTION_AUTH_DISABLE:
-		goto NI;
-	case SQRL_TRANSACTION_AUTH_ENABLE:
-		goto NI;
-	case SQRL_TRANSACTION_AUTH_REMOVE:
-		goto NI;
 	case SQRL_TRANSACTION_IDENTITY_RESCUE:
 		if( !transaction->user ) goto ERROR;
 		if( sqrl_user_force_rescue( transaction )) {

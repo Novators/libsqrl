@@ -133,7 +133,7 @@ Sqrl_User onSelectUser( Sqrl_Transaction transaction )
 }
 
 Sqrl_Transaction current_transaction = NULL;
-#define MAX_LOOPS 20
+#define MAX_LOOPS 25
 int loops = 0;
 
 void onSend(
@@ -206,6 +206,7 @@ int main()
         PC( "EXPECTED", uid );
         exit(1);
     }
+
     char *sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_SUCCESS != 
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
@@ -234,6 +235,48 @@ int main()
     PC( "PASS", "Repeat Login" );
     free( sqrlUrl );
 
+    sqrlUrl = sqrl_server_create_link( server, 0 );
+    if( SQRL_TRANSACTION_STATUS_SUCCESS !=
+        sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_DISABLE, user, sqrlUrl, strlen( sqrlUrl ))) {
+        printf( "DISABLE Failed\n" );
+        exit(1);
+    }
+    if( loops != 9 ) {
+        PC( "FAIL", "Disable" );
+        printf( "9 != %d loops\n", loops );
+        exit(1);
+    }
+    PC( "PASS", "DISABLE" );
+    free( sqrlUrl );
+
+    sqrlUrl = sqrl_server_create_link( server, 0 );
+    if( SQRL_TRANSACTION_STATUS_FAILED !=
+        sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
+        printf( "Allowed login to disabled identity\n" );
+        exit(1);
+    }
+    if( loops != 10 ) {
+        PC( "FAIL", "Login Disabled" );
+        printf( "10 != %d loops\n", loops );
+        exit(1);
+    }
+    PC( "PASS", "Login Disabled" );
+    free( sqrlUrl );
+
+    sqrlUrl = sqrl_server_create_link( server, 0 );
+    if( SQRL_TRANSACTION_STATUS_SUCCESS !=
+        sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_ENABLE, user, sqrlUrl, strlen( sqrlUrl ))) {
+        printf( "Failed to enable SQRL\n" );
+        exit(1);
+    }
+    if( loops != 12 ) {
+        PC( "FAIL", "Enable" );
+        printf( "12 != %d loops\n", loops );
+        exit(1);
+    }
+    PC( "PASS", "Enable" );
+    free( sqrlUrl );
+
     if( SQRL_TRANSACTION_STATUS_SUCCESS != 
         sqrl_client_begin_transaction( SQRL_TRANSACTION_IDENTITY_REKEY, user, NULL, 0 )) {
         printf( "Rekey Failed\n" );
@@ -247,9 +290,9 @@ int main()
         printf( "IDENT(3) Failed\n" );
         exit(1);
     }
-    if( loops != 9 ) {
+    if( loops != 14 ) {
         PC( "FAIL", "Rekey Server" );
-        printf( "9 != %d loops\n", loops );
+        printf( "14 != %d loops\n", loops );
         exit(1);
     }
     PC( "PASS", "Rekey Server" );
@@ -261,12 +304,54 @@ int main()
         printf( "IDENT(4) Failed\n" );
         exit(1);
     }
-    if( loops != 11 ) {
+    if( loops != 16 ) {
         PC( "FAIL", "Repeat Login" );
-        printf( "11 != %d loops\n", loops );
+        printf( "16 != %d loops\n", loops );
         exit(1);
     }
     PC( "PASS", "Repeat Login" );
+    free( sqrlUrl );
+
+    sqrlUrl = sqrl_server_create_link( server, 0 );
+    if( SQRL_TRANSACTION_STATUS_SUCCESS !=
+        sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_DISABLE, user, sqrlUrl, strlen( sqrlUrl ))) {
+        printf( "DISABLE Failed\n" );
+        exit(1);
+    }
+    if( loops != 18 ) {
+        PC( "FAIL", "Disable" );
+        printf( "18 != %d loops\n", loops );
+        exit(1);
+    }
+    PC( "PASS", "DISABLE" );
+    free( sqrlUrl );
+
+    sqrlUrl = sqrl_server_create_link( server, 0 );
+    if( SQRL_TRANSACTION_STATUS_SUCCESS !=
+        sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_REMOVE, user, sqrlUrl, strlen( sqrlUrl ))) {
+        printf( "REMOVE Failed\n" );
+        exit(1);
+    }
+    if( loops != 20 ) {
+        PC( "FAIL", "REMOVE" );
+        printf( "20 != %d loops\n", loops );
+        exit(1);
+    }
+    PC( "PASS", "REMOVE" );
+    free( sqrlUrl );
+
+    sqrlUrl = sqrl_server_create_link( server, 0 );
+    if( SQRL_TRANSACTION_STATUS_SUCCESS !=
+        sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
+        PC( "FAIL", "Login after Remove" );
+        exit(1);
+    }
+    if( loops != 25 ) {
+        PC( "FAIL", "Login after Remove" );
+        printf( "25 != %d loops\n", loops );
+        exit(1);
+    }
+    PC( "PASS", "Login after Remove" );
     free( sqrlUrl );
 
 

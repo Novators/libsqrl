@@ -434,38 +434,35 @@ void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 			sqrl_b64u_encode_append( clientString, site->keys[SITE_KEY_VUK], SQRL_KEY_SIZE );
 		}
 	}
-	if( (site->currentTransaction == SQRL_TRANSACTION_AUTH_ENABLE ||
-			((site->currentTransaction == SQRL_TRANSACTION_AUTH_IDENT) &&
-			 (site->tif & SQRL_TIF_PREVIOUS_ID_MATCH)))) {
+	if( (site->currentTransaction == SQRL_TRANSACTION_AUTH_ENABLE ) ||
+		(site->currentTransaction == SQRL_TRANSACTION_AUTH_REMOVE ) ||
+		((site->currentTransaction == SQRL_TRANSACTION_AUTH_IDENT) &&
+			(site->tif & SQRL_TIF_PREVIOUS_ID_MATCH))) {
 		site->keys[SITE_KEY_LOOKUP][SITE_KEY_URSK] = 0;
 		site->keys[SITE_KEY_LOOKUP][SITE_KEY_URPK] = 0;
 		uint8_t *tiuk = NULL;
-		if( site->currentTransaction == SQRL_TRANSACTION_AUTH_IDENT ) {
+		if( FLAG_CHECK( site->tif, SQRL_TIF_PREVIOUS_ID_MATCH )) {
 			tiuk = sqrl_user_key( site->transaction, KEY_PIUK0 + site->previous_identity );
-		} else {
+		} else if( FLAG_CHECK( site->tif, SQRL_TIF_ID_MATCH )) {
 			tiuk = sqrl_user_key( site->transaction, KEY_IUK );
 		}
 		if( tiuk ) {
 			site->keys[SITE_KEY_LOOKUP][SITE_KEY_URSK] = 1;
-			UT_string *s;
-			utstring_new( s );
-			sqrl_b64u_encode( s, site->keys[SITE_KEY_SUK], SQRL_KEY_SIZE );
-			printf( "Using SUK: %s\n", utstring_body( s ));
-			utstring_free( s );
 			sqrl_gen_ursk( site->keys[SITE_KEY_URSK],
 				site->keys[SITE_KEY_SUK],
 				tiuk );
-		}
-		if( site->keys[SITE_KEY_LOOKUP][SITE_KEY_URSK] ) {
+
 			site->keys[SITE_KEY_LOOKUP][SITE_KEY_URPK] = 1;
 			sqrl_ed_public_key( 
 				site->keys[SITE_KEY_URPK],
 				site->keys[SITE_KEY_URSK] );
-			sqrl_site_create_unlock_keys( site );
-			sqrl_site_add_key_value( clientString, "suk", NULL );
-			sqrl_b64u_encode_append( clientString, site->keys[SITE_KEY_SUK], SQRL_KEY_SIZE );
-			sqrl_site_add_key_value( clientString, "vuk", NULL );
-			sqrl_b64u_encode_append( clientString, site->keys[SITE_KEY_VUK], SQRL_KEY_SIZE );
+			if( site->currentTransaction == SQRL_TRANSACTION_AUTH_IDENT ) {
+				sqrl_site_create_unlock_keys( site );
+				sqrl_site_add_key_value( clientString, "suk", NULL );
+				sqrl_b64u_encode_append( clientString, site->keys[SITE_KEY_SUK], SQRL_KEY_SIZE );
+				sqrl_site_add_key_value( clientString, "vuk", NULL );
+				sqrl_b64u_encode_append( clientString, site->keys[SITE_KEY_VUK], SQRL_KEY_SIZE );
+			}
 		}
 	}
 }
@@ -747,6 +744,12 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 		case SQRL_TRANSACTION_AUTH_QUERY:
 			if( (site->tif & SQRL_TIF_ID_MATCH) || (site->tif & SQRL_TIF_PREVIOUS_ID_MATCH) ) {
 				// Already found a match.
+				if( FLAG_CHECK( site->tif, SQRL_TIF_SQRL_DISABLED )) {
+					if( transaction->type != SQRL_TRANSACTION_AUTH_ENABLE &&
+						transaction->type != SQRL_TRANSACTION_AUTH_REMOVE ) {
+						goto ERROR;
+					}
+				}
 				site->currentTransaction = transaction->type;
 			} else {
 				// Identity not matched.
@@ -766,6 +769,28 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 			break;
 		case SQRL_TRANSACTION_AUTH_IDENT:
 			if( site->tif & SQRL_TIF_ID_MATCH ) {
+				transaction->status = SQRL_TRANSACTION_STATUS_SUCCESS;
+			} else {
+				transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
+			}
+			goto DONE;
+		case SQRL_TRANSACTION_AUTH_DISABLE:
+			if( FLAG_CHECK( site->tif, SQRL_TIF_SQRL_DISABLED )) {
+				transaction->status = SQRL_TRANSACTION_STATUS_SUCCESS;
+			} else {
+				transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
+			}
+			goto DONE;
+		case SQRL_TRANSACTION_AUTH_ENABLE:
+			if( !FLAG_CHECK( site->tif, SQRL_TIF_SQRL_DISABLED )) {
+				transaction->status = SQRL_TRANSACTION_STATUS_SUCCESS;
+			} else {
+				transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
+			}
+			goto DONE;
+		case SQRL_TRANSACTION_AUTH_REMOVE:
+			if( !FLAG_CHECK( site->tif, SQRL_TIF_ID_MATCH ) &&
+				!FLAG_CHECK( site->tif, SQRL_TIF_PREVIOUS_ID_MATCH )) {
 				transaction->status = SQRL_TRANSACTION_STATUS_SUCCESS;
 			} else {
 				transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
