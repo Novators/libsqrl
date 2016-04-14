@@ -100,15 +100,6 @@ void sqrl_lcstr( char *str )
 	}
 }
 
-void printhex( char *label, uint8_t *bin, size_t bin_len )
-{
-	size_t l = bin_len * 2 + 1;
-	char *txt = calloc( 1, l );
-	sodium_bin2hex( txt, l, bin, bin_len );
-	printf( "%s: %s\n", label, txt );
-	free( txt );
-}
-
 uint16_t readint_16( void *buf )
 {
 	uint8_t *b = (uint8_t*)buf;
