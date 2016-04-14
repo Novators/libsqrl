@@ -40,8 +40,8 @@ do {if(DEBUG_PRINT_VAR && t) printf(s); } while( 0 )
 #define DEBUG_PRINT_VAR 1
 #define DEBUG_PRINT_USER_COUNT 0
 #define DEBUG_PRINT_TRANSACTION_COUNT 0
-#define DEBUG_PRINT_CLIENT_PROTOCOL 1
-#define DEBUG_PRINT_SERVER_PROTOCOL 1
+#define DEBUG_PRINT_CLIENT_PROTOCOL 0
+#define DEBUG_PRINT_SERVER_PROTOCOL 0
 #define DEBUG_PRINTF(fmt, ...) printf( fmt, __VA_ARGS__)
 #define DEBUG_PRINT(s) printf( s );
 #else

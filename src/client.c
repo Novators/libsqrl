@@ -383,6 +383,7 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 		goto ERROR;
 	case SQRL_TRANSACTION_IDENTITY_REKEY:
 		if( !transaction->user ) goto ERROR;
+		if( !sqrl_user_force_rescue( transaction )) goto ERROR;
 		sqrl_user_rekey( transaction );
 		if( sqrl_client_require_password( transaction )) {
 			sqrl_client_call_save_suggested( transaction->user );

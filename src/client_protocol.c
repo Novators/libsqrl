@@ -401,13 +401,12 @@ void sqrl_site_create_unlock_keys( struct Sqrl_Site *site ) {
 
 	uint8_t *ilk = sqrl_user_key( site->transaction, KEY_ILK );
 	sodium_mlock( scratch, 64 );
-	sqrl_entropy_get( scratch, 1 );
-	memcpy( scratch+32, scratch, 32 );
-	sqrl_curve_private_key( scratch+32 );
-	sqrl_curve_public_key( site->keys[SITE_KEY_SUK], scratch+32);
-	sqrl_make_shared_secret( scratch, ilk, scratch+32 );
-	sqrl_curve_private_key( scratch );
-	sqrl_curve_public_key( site->keys[SITE_KEY_VUK], scratch );
+	uint8_t rlk[SQRL_KEY_SIZE];
+	sqrl_gen_rlk( rlk );
+	sqrl_curve_private_key( rlk );
+	sqrl_gen_suk( site->keys[SITE_KEY_SUK], rlk );
+	sqrl_gen_vuk( site->keys[SITE_KEY_VUK], ilk, rlk );
+
 	site->keys[SITE_KEY_LOOKUP][SITE_KEY_SUK] = 1;
 	site->keys[SITE_KEY_LOOKUP][SITE_KEY_VUK] = 1;
 	sodium_munlock( scratch, 64 );
@@ -442,14 +441,18 @@ void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 		site->keys[SITE_KEY_LOOKUP][SITE_KEY_URPK] = 0;
 		uint8_t *tiuk = NULL;
 		if( site->currentTransaction == SQRL_TRANSACTION_AUTH_IDENT ) {
-			tiuk = sqrl_user_key( site->transaction, KEY_PIUK0 );
+			tiuk = sqrl_user_key( site->transaction, KEY_PIUK0 + site->previous_identity );
 		} else {
 			tiuk = sqrl_user_key( site->transaction, KEY_IUK );
 		}
 		if( tiuk ) {
 			site->keys[SITE_KEY_LOOKUP][SITE_KEY_URSK] = 1;
-			sqrl_make_shared_secret( 
-				site->keys[SITE_KEY_URSK],
+			UT_string *s;
+			utstring_new( s );
+			sqrl_b64u_encode( s, site->keys[SITE_KEY_SUK], SQRL_KEY_SIZE );
+			printf( "Using SUK: %s\n", utstring_body( s ));
+			utstring_free( s );
+			sqrl_gen_ursk( site->keys[SITE_KEY_URSK],
 				site->keys[SITE_KEY_SUK],
 				tiuk );
 		}
@@ -458,6 +461,11 @@ void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 			sqrl_ed_public_key( 
 				site->keys[SITE_KEY_URPK],
 				site->keys[SITE_KEY_URSK] );
+			sqrl_site_create_unlock_keys( site );
+			sqrl_site_add_key_value( clientString, "suk", NULL );
+			sqrl_b64u_encode_append( clientString, site->keys[SITE_KEY_SUK], SQRL_KEY_SIZE );
+			sqrl_site_add_key_value( clientString, "vuk", NULL );
+			sqrl_b64u_encode_append( clientString, site->keys[SITE_KEY_VUK], SQRL_KEY_SIZE );
 		}
 	}
 }
@@ -732,7 +740,6 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 	}
 	if( response && response_len ) {
 		if( site->tif & SQRL_TIF_COMMAND_FAILURE ) {
-			printf( "TIF -- COMMAND FAILED\n" );
 			goto ERROR;
 		}
 
@@ -776,12 +783,6 @@ ERROR:
 	transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
 
 DONE:
-	if( transaction->status == SQRL_TRANSACTION_STATUS_FAILED ) {
-		printf( "Transaction Failed:\n" );
-		if( site->serverString ) printf( "SRV: %s\n", utstring_body( site->serverString ));
-		if( site->clientString ) printf( "CLI: %s\n", utstring_body( site->clientString ));
-		printf( "TIF: %x\n", site->tif );
-	}
 	END_WITH_TRANSACTION(transaction);
 	return transaction->status;
 }

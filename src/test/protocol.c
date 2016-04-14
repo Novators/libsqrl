@@ -14,6 +14,7 @@ char password[32] = "the password";
 char rescue_code[25] = "894268272655451828340130";
 char uid[] = "Tne7wOsRjUo1A8xs7V4K2kDpdKqpHsmHZpN-6eyOcLc";
 Sqrl_User user = NULL;
+bool DEBUG_PROTOCOL = false;
 
 Sqrl_Server *server = NULL;
 
@@ -44,6 +45,8 @@ bool onAuthenticationRequired(
         strcpy( cred, rescue_code );
         break;
     default:
+        printf( "Requested unknown credential\n" );
+        exit(1);
         return false;
     }
     sqrl_client_authenticate( transaction, credentialType, cred, strlen( cred ));
@@ -130,22 +133,23 @@ Sqrl_User onSelectUser( Sqrl_Transaction transaction )
 }
 
 Sqrl_Transaction current_transaction = NULL;
-#define MAX_LOOPS 10
-int loops = 1;
+#define MAX_LOOPS 20
+int loops = 0;
 
 void onSend(
     Sqrl_Transaction transaction,
     const char *url, size_t url_len,
     const char *payload, size_t payload_len )
 {
-    if( loops > MAX_LOOPS ) {
+    if( ++loops > MAX_LOOPS ) {
         printf( "MAX_LOOPS\n" );
         return;
     }
-    loops++;
-    PC( "CLIENT", url );
-    PC( NULL, payload );
-    printf( "\n" );
+    if( DEBUG_PROTOCOL ) {
+        PC( "CLIENT", url );
+        PC( NULL, payload );
+        printf( "\n" );
+    }
     current_transaction = transaction;
     Sqrl_Server_Context *ctx = sqrl_server_context_create( server );
     sqrl_server_handle_query( ctx, 0, payload, payload_len );
@@ -157,7 +161,9 @@ void onServerSend(
     char *reply,
     size_t reply_len )
 {
-    printf( "%10s:\n%s\n\n", "SERVER", reply );
+    if( DEBUG_PROTOCOL ) {
+        printf( "%10s:\n%s\n\n", "SERVER", reply );
+    }
     if( loops > MAX_LOOPS ) {
         return;
     }
@@ -206,6 +212,12 @@ int main()
         printf( "IDENT Failed\n" );
         exit(1);
     }
+    if( loops != 5 ) {
+        PC( "FAIL", "Initial Login" );
+        printf( "5 != %d loops\n", loops );
+        exit(1);
+    }
+    PC( "PASS", "Initial Login" );
     free( sqrlUrl );
 
     sqrlUrl = sqrl_server_create_link( server, 0 );
@@ -214,7 +226,51 @@ int main()
         printf( "IDENT(2) Failed\n" );
         exit(1);
     }
+    if( loops != 7 ) {
+        PC( "FAIL", "Repeat Login" );
+        printf( "7 != %d loops\n", loops );
+        exit(1);
+    }
+    PC( "PASS", "Repeat Login" );
     free( sqrlUrl );
+
+    if( SQRL_TRANSACTION_STATUS_SUCCESS != 
+        sqrl_client_begin_transaction( SQRL_TRANSACTION_IDENTITY_REKEY, user, NULL, 0 )) {
+        printf( "Rekey Failed\n" );
+        exit(1);
+    }
+    PC( "PASS", "Rekey Identity" );
+
+    sqrlUrl = sqrl_server_create_link( server, 0 );
+    if( SQRL_TRANSACTION_STATUS_SUCCESS !=
+        sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
+        printf( "IDENT(3) Failed\n" );
+        exit(1);
+    }
+    if( loops != 9 ) {
+        PC( "FAIL", "Rekey Server" );
+        printf( "9 != %d loops\n", loops );
+        exit(1);
+    }
+    PC( "PASS", "Rekey Server" );
+    free( sqrlUrl );
+
+    sqrlUrl = sqrl_server_create_link( server, 0 );
+    if( SQRL_TRANSACTION_STATUS_SUCCESS !=
+        sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
+        printf( "IDENT(4) Failed\n" );
+        exit(1);
+    }
+    if( loops != 11 ) {
+        PC( "FAIL", "Repeat Login" );
+        printf( "11 != %d loops\n", loops );
+        exit(1);
+    }
+    PC( "PASS", "Repeat Login" );
+    free( sqrlUrl );
+
+
+    printf( "%10s: %d\n", "Loops", loops );
 
     user = sqrl_user_release( user );
     return sqrl_stop();

@@ -141,6 +141,27 @@ bool sqrl_server_parse_client(
     return false;
 }
 
+bool sqrl_server_verify_urs( Sqrl_Server_Context *context )
+{
+    if( !context ) return false;
+    if( ! context->context_strings[CONTEXT_KV_URS] ) return false;
+    if( ! context->user ) return false;
+    bool retVal = false;
+    UT_string *str, *sig;
+    utstring_new( str );
+    utstring_new( sig );
+    utstring_printf( str, "%s%s", context->context_strings[CONTEXT_KV_CLIENT], context->context_strings[CONTEXT_KV_SERVER] );    
+    sqrl_b64u_decode( sig, context->context_strings[CONTEXT_KV_URS], strlen( context->context_strings[CONTEXT_KV_URS]));
+
+    if( sqrl_verify_sig( str, (uint8_t*)utstring_body( sig ), context->user->vuk )) {
+        FLAG_SET( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_URS );
+        retVal = true;
+    }
+    utstring_free( str );
+    utstring_free( sig );
+    return retVal;
+}
+
 bool sqrl_server_verify_signatures(
     Sqrl_Server_Context *context )
 {
@@ -150,9 +171,7 @@ bool sqrl_server_verify_signatures(
         utstring_new( str );
         utstring_new( key );
         utstring_new( sig );
-#if DEBUG_PRINT_SERVER_PROTOCOL
         utstring_printf( str, "%s%s", context->context_strings[CONTEXT_KV_CLIENT], context->context_strings[CONTEXT_KV_SERVER] );
-#endif
         if( context->context_strings[CONTEXT_KV_IDS] ) {
             sqrl_b64u_decode( sig, context->context_strings[CONTEXT_KV_IDS], strlen( context->context_strings[CONTEXT_KV_IDS] ));
             sqrl_b64u_decode( key, context->client_strings[CLIENT_KV_IDK], strlen( context->client_strings[CLIENT_KV_IDK] ));
@@ -178,19 +197,6 @@ bool sqrl_server_verify_signatures(
                 return false;
             }
             FLAG_SET( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_PIDS );
-        }
-        if( context->context_strings[CONTEXT_KV_URS] ) {
-            sqrl_b64u_decode( sig, context->context_strings[CONTEXT_KV_URS], strlen( context->context_strings[CONTEXT_KV_URS] ));
-            sqrl_b64u_decode( key, context->client_strings[CLIENT_KV_SUK], strlen( context->client_strings[CLIENT_KV_SUK] ));
-            if( !sqrl_verify_sig( str, (uint8_t*)utstring_body( sig ), (uint8_t*)utstring_body( key ))) {
-                utstring_free( str );
-                utstring_free( key );
-                utstring_free( sig );
-                printf( "URS FAILURE\n" );
-                FLAG_SET( context->tif, SQRL_TIF_COMMAND_FAILURE | SQRL_TIF_CLIENT_FAILURE );
-                return false;
-            }
-            FLAG_SET( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_URS );
         }
         utstring_free( str );
         utstring_free( key );
@@ -302,7 +308,7 @@ bool sqrl_server_get_user(
     if( (onUserOp)( 
         SQRL_SCB_USER_FIND,
         context->server->uri->host,
-        context->client_strings[CLIENT_KV_IDK],
+        idk,
         NULL,
         blob )) 
     {
@@ -354,10 +360,21 @@ void sqrl_server_handle_query(
     } else {
         if( context->client_strings[CLIENT_KV_PIDK] ) {
             if( sqrl_server_get_user( context, context->client_strings[CLIENT_KV_PIDK])) {
-                FLAG_SET( context->tif, SQRL_TIF_PREVIOUS_ID_MATCH );
-                sqrl_server_add_user_suk( context );
+                if( context->context_strings[CONTEXT_KV_URS] ) {
+                    if( ! sqrl_server_verify_urs( context )) {
+                        FLAG_CLEAR( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_QUERY );
+                        FLAG_SET( context->tif, SQRL_TIF_CLIENT_FAILURE );
+                    }
+                } else {
+                    FLAG_SET( context->tif, SQRL_TIF_PREVIOUS_ID_MATCH );
+                    sqrl_server_add_user_suk( context );
+                }
             }
         }
+    }
+    if( !FLAG_CHECK( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_QUERY )) {
+        FLAG_SET( context->tif, SQRL_TIF_COMMAND_FAILURE );
+        goto REPLY;
     }
     if( context->user ) {
         if( FLAG_CHECK( context->user->flags, SQRL_SERVER_USER_FLAG_DISABLED )) {
