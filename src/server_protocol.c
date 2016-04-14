@@ -17,7 +17,7 @@ static char client_kv_strings[CLIENT_KV_COUNT][CLIENT_KV_LENGTH+1] = {
 };
 
 static char server_kv_strings[SERVER_KV_COUNT][SERVER_KV_LENGTH+1] = {
-    "ver", "nut", "tif", "qry", "suk", "ask", "url", "sfn", "mac"
+    "ver", "nut", "tif", "qry", "suk", "ask", "url"
 };
 
 bool sqrl_server_verify_server_string(
@@ -67,8 +67,6 @@ bool sqrl_server_parse_client(
         (1<<CLIENT_KV_CMD) |
         (1<<CLIENT_KV_IDK);
 
-    char *end, *key, *value, *sep;
-    size_t key_len, val_len;
     UT_string *rStr;
 
     FLAG_CLEAR( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_QUERY );
@@ -76,29 +74,18 @@ bool sqrl_server_parse_client(
     utstring_new( rStr );
     sqrl_b64u_decode( rStr, context->context_strings[CONTEXT_KV_CLIENT], strlen( context->context_strings[CONTEXT_KV_CLIENT]));
 
-    key = utstring_body( rStr );
-    end = key + utstring_len( rStr );
+    size_t key_len, val_len;
+    char *str, *key, *val;
+    str = utstring_body( rStr );
 
-    while( key < end ) {
-        value = strchr( key, '=' );
-        sep = strstr( key, "\r\n" );
-        if( !sep ) sep = end;
-        if( value > sep ) value = NULL;
-        if( value ) {
-            key_len = value - key;
-            value++; // Skip '='
-            val_len = sep - value;
-        } else {
-            key_len = sep - key;
-            val_len = 0;
-        }
+    while( sqrl_parse_key_value( &str, &key, &val, &key_len, &val_len, "\r\n" )) {
         for( current_key = 0; current_key < CLIENT_KV_COUNT; current_key++ ) {
-            if( strncmp( key, client_kv_strings[current_key], strlen( client_kv_strings[current_key]) ) == 0 ) {
+            if( 0 == strncmp( key, client_kv_strings[current_key], key_len )) {
                 if( context->client_strings[current_key] ) {
                     free( context->context_strings[current_key] );
                 }
                 context->client_strings[current_key] = malloc( val_len + 1 );
-                memcpy( context->client_strings[current_key], value, val_len );
+                memcpy( context->client_strings[current_key], val, val_len );
                 context->client_strings[current_key][val_len] = 0;
 #if DEBUG_PRINT_SERVER_PROTOCOL
                 printf( "%10s: %s\n", client_kv_strings[current_key], context->client_strings[current_key] );
@@ -107,7 +94,6 @@ bool sqrl_server_parse_client(
                 break;
             }
         }
-        key = sep + 2;
     }
 
     utstring_free( rStr );
@@ -187,7 +173,7 @@ bool sqrl_server_build_reply( Sqrl_Server_Context *context, UT_string *reply )
         size_t len = strlen( context->server->uri->prefix );
         char *p, *pp;
         p = context->server->uri->challenge + len - 1;
-        pp = strstr( p, "?" );
+        pp = strchr( p, '?' );
         if( pp ) {
             len = pp - p;
         } else {
@@ -223,7 +209,7 @@ void sqrl_server_parse_query(
         (1<<CONTEXT_KV_CLIENT) |
         (1<<CONTEXT_KV_IDS); 
 
-    char *end, *key, *value, *sep;
+    char *str, *key, *val;
     size_t key_len, val_len;
     UT_string *rStr;
 
@@ -232,29 +218,16 @@ void sqrl_server_parse_query(
     utstring_new( rStr );
     utstring_bincpy( rStr, query, query_len );
 
-    key = utstring_body( rStr );
-    end = key + utstring_len( rStr );
+    str = utstring_body( rStr );
 
-    while( key < end ) {
-        value = strchr( key, '=' );
-        sep = strchr( key, '&' );
-        if( !sep ) sep = end;
-        if( value > sep ) value = NULL;
-        if( value ) {
-            key_len = value - key;
-            value++; // Skip '='
-            val_len = sep - value;
-        } else {
-            key_len = sep - key;
-            val_len = 0;
-        }
+    while( sqrl_parse_key_value( &str, &key, &val, &key_len, &val_len, "&" )) {
         for( current_key = 0; current_key < CONTEXT_KV_COUNT; current_key++ ) {
             if( strncmp( key, context_kv_strings[current_key], strlen( context_kv_strings[current_key]) ) == 0 ) {
                 if( context->context_strings[current_key] ) {
                     free( context->context_strings[current_key] );
                 }
                 context->context_strings[current_key] = malloc( val_len + 1 );
-                memcpy( context->context_strings[current_key], value, val_len );
+                memcpy( context->context_strings[current_key], val, val_len );
                 context->context_strings[current_key][val_len] = 0;
 #if DEBUG_PRINT_SERVER_PROTOCOL
                 printf( "%10s: %s\n", context_kv_strings[current_key], context->context_strings[current_key] );
@@ -263,7 +236,6 @@ void sqrl_server_parse_query(
                 break;
             }
         }
-        key = sep + 1;
     }
 
     utstring_free( rStr );

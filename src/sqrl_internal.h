@@ -418,6 +418,8 @@ void bin2rc( char *buf, uint8_t *bin );
 void utstring_zero( UT_string *str );
 
 void sqrl_sleep(int sleepMs);
+bool sqrl_parse_key_value( char **strPtr, char **keyPtr, char **valPtr,
+    size_t *key_len, size_t *val_len, char *sep );
 
 
 #endif // SQRL_INTERNAL_H_INCLUDED

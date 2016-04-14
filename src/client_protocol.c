@@ -280,37 +280,22 @@ void sqrl_site_parse_result( Sqrl_Site *site, const char *result, size_t result_
 		(1<<SITE_KV_QRY) |
 		(1<<SITE_KV_NUT);
 
-	char *end, *key, *value, *sep;
+	char *str, *key, *val;
 	size_t key_len, val_len;
 	UT_string *rStr;
 
 	FLAG_CLEAR(site->flags, SITE_FLAG_VALID_SERVER_STRING);
 
 	utstring_new( rStr );
-	//sqrl_b64u_decode( rStr, result, result_len );
 	utstring_bincpy( rStr, result, result_len );
 
-	key = utstring_body( rStr );
-	end = key + utstring_len( rStr );
+	str = utstring_body( rStr );
 
-	while( key < end ) {
-		value = strchr( key, '=' );
-		sep = strstr( key, "\r\n" );
-		if( !sep ) sep = end;
-		if( value > sep ) value = NULL;
-		if( value ) {
-			key_len = value - key;
-			value++; // Skip '='
-			val_len = sep - value;
-		} else {
-			key_len = sep - key;
-			val_len = 0;
-		}
-		current_key = parseKeyValue( site, key, key_len, value, val_len );
+    while( sqrl_parse_key_value( &str, &key, &val, &key_len, &val_len, "\r\n" )) {
+    	current_key = parseKeyValue( site, key, key_len, val, val_len );
 		if( current_key > -1 ) {
 			found_keys |= (1<<current_key);
 		}
-		key = sep + 2;
 	}
 
 	// Should return entire server response with next query...

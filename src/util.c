@@ -115,3 +115,28 @@ uint16_t readint_16( void *buf )
 	return (uint16_t)( b[0] | ( b[1] << 8 ));
 }
 
+bool sqrl_parse_key_value( char **strPtr, char **keyPtr, char **valPtr,
+    size_t *key_len, size_t *val_len, char *sep )
+{
+    if( !*strPtr ) return false;
+    char *p, *pp;
+    p = strchr( *strPtr, '=' );
+    if( p ) {
+        *keyPtr = *strPtr;
+        *key_len = p - *keyPtr;
+        *valPtr = p + 1;
+        pp = strstr( *valPtr, sep );
+        if( pp ) {
+            *val_len = pp - *valPtr;
+            *strPtr = pp + strlen( sep );
+        } else {
+            *val_len = strlen( *valPtr );
+            *strPtr = NULL;
+        }
+        return true;
+    }
+    *strPtr = NULL;
+    return false;
+}
+
+

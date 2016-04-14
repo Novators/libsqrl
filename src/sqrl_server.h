@@ -42,7 +42,7 @@ For more details, see the LICENSE file included with this package.
 #define CLIENT_KV_SUK  6
 #define CLIENT_KV_VUK  7
 
-#define SERVER_KV_COUNT 9
+#define SERVER_KV_COUNT 7
 #define SERVER_KV_LENGTH 3
 #define SERVER_KV_VER 0
 #define SERVER_KV_NUT 1
@@ -51,8 +51,6 @@ For more details, see the LICENSE file included with this package.
 #define SERVER_KV_SUK 4
 #define SERVER_KV_ASK 5
 #define SERVER_KV_URL 6
-#define SERVER_KV_SFN 7
-#define SERVER_KV_MAC 8
 
 
 typedef struct Sqrl_Server_User {
