@@ -25,23 +25,6 @@ For more details, see the LICENSE file included with this package.
 static char kv_strings[SITE_KV_COUNT][SITE_KV_LENGTH+1] = { 
 	"ver", "tif", "qry", "ask", "suk", "nut"};
 
-void sqrl_site_free( Sqrl_Site *site )
-{
-	if( !site ) return;
-	if( site->serverString ) {
-		utstring_free( site->serverString );
-		site->serverString = NULL;
-	}
-	if( site->clientString ) {
-		utstring_free( site->clientString );
-		site->clientString = NULL;
-	}
-	if( site->serverFriendlyName ) {
-		free( site->serverFriendlyName );
-		site->serverFriendlyName = NULL;
-	}
-}
-
 static int previousKeys[] = {KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3};
 static uint8_t emptyKey[SQRL_KEY_SIZE] = {0};
 
@@ -236,8 +219,10 @@ int parseKeyValue( struct Sqrl_Site *site, char *key, size_t key_len, char *valu
 	int i;
 	char theKey[SITE_KV_LENGTH+1];
 	char theValue[value_len + 1];
-	strncpy( theKey, key, key_len );
-	strncpy( theValue, value, value_len );
+	memcpy( theKey, key, key_len );
+	memcpy( theValue, value, value_len );
+	theKey[key_len] = 0;
+	theValue[value_len] = 0;
 	sqrl_lcstr( theKey );
 
 	for( i = 0; i < SITE_KV_COUNT; i++ ) {
@@ -285,7 +270,6 @@ void sqrl_site_parse_result( Sqrl_Site *site, const char *result, size_t result_
 	UT_string *rStr;
 
 	FLAG_CLEAR(site->flags, SITE_FLAG_VALID_SERVER_STRING);
-
 	utstring_new( rStr );
 	utstring_bincpy( rStr, result, result_len );
 
@@ -300,7 +284,8 @@ void sqrl_site_parse_result( Sqrl_Site *site, const char *result, size_t result_
 
 	// Should return entire server response with next query...
 	utstring_clear( rStr );
-	utstring_bincpy( rStr, result, result_len );
+	sqrl_b64u_encode( rStr, (uint8_t*)result, result_len );
+	//utstring_bincpy( rStr, result, result_len );
 
 	if( site->serverString ) {
 		utstring_free( site->serverString );
@@ -533,7 +518,7 @@ bool sqrl_site_generate_client_body( Sqrl_Site *site )
 	sqrl_site_generate_keys( site, clientString );
 	utstring_bincpy( clientString, "\r\n", 2 );
 #if DEBUG_PRINT_CLIENT_PROTOCOL
-	printf( "%10s: %s\n", "client_str", utstring_body( clientString ));
+	printf( "%10s: %s", "CLIENT_STR", utstring_body( clientString ));
 #endif
 	goto DONE;
 
@@ -631,9 +616,6 @@ Sqrl_Site *sqrl_client_site_create( Sqrl_Transaction t )
 	if( transaction->uri ) {
 		utstring_new( site->serverString );
 		sqrl_b64u_encode( site->serverString, (uint8_t*)transaction->uri->challenge, strlen( transaction->uri->challenge ));
-#if DEBUG_PRINT_CLIENT_PROTOCOL
-		printf( "%10s: %s\n", "server_str", transaction->uri->challenge );
-#endif
 		FLAG_SET( site->flags, SITE_FLAG_VALID_SERVER_STRING );
 	}
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.site );
@@ -665,7 +647,6 @@ static struct Sqrl_Site_List *_scsm( struct Sqrl_Site_List *cur, double now, boo
 		// Delete this one
 		struct Sqrl_Site_List *next = cur->next;
 
-		// TODO: release transaction
 		cur->site->transaction = sqrl_transaction_release( cur->site->transaction );
 		if( cur->site->serverFriendlyName ) {
 			free( cur->site->serverFriendlyName );
@@ -680,7 +661,7 @@ static struct Sqrl_Site_List *_scsm( struct Sqrl_Site_List *cur, double now, boo
 		sodium_memzero( cur->site->keys, sizeof( cur->site->keys ));
 		free( cur->site );
 
-		return next;
+		return _scsm( next, now, forceDeleteAll );
 	}
 	sqrl_mutex_leave( cur->site->mutex );
 
@@ -717,7 +698,6 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return SQRL_TRANSACTION_STATUS_FAILED;
 	Sqrl_Site *site = NULL;
-	Sqrl_Transaction_Status retVal = SQRL_TRANSACTION_STATUS_WORKING;
 
 	// Retrieve an existing Sqrl_Site (if available)
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.site );
@@ -743,41 +723,65 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 		site = sqrl_client_site_create( t );
 	}
 	
-	if( !site ) return SQRL_TRANSACTION_STATUS_FAILED;
+	if( !site ) goto ERROR;
 	if( !FLAG_CHECK( site->flags, SITE_FLAG_VALID_SERVER_STRING )) {
 #if DEBUG_PRINT_CLIENT_PROTOCOL
 		printf( "!VALID_SERVER_STRING\n" );
 #endif
 		goto ERROR;
 	}
-	if( site->currentTransaction == SQRL_TRANSACTION_AUTH_QUERY ) {
-		if( (site->tif & SQRL_TIF_ID_MATCH) || (site->tif & SQRL_TIF_PREVIOUS_ID_MATCH) ) {
-			// Already found a match.
-			site->currentTransaction = transaction->type;
-		} else {
-			// Identity not matched.
-			if( site->previous_identity < 3 ) {
-				// Try next most recent identity
-				site->previous_identity++;
-			} else {
-				// Tried all previous identities
-				site->previous_identity = 0;
+	if( response && response_len ) {
+		if( site->tif & SQRL_TIF_COMMAND_FAILURE ) {
+			printf( "TIF -- COMMAND FAILED\n" );
+			goto ERROR;
+		}
+
+		switch( site->currentTransaction ) {
+		case SQRL_TRANSACTION_AUTH_QUERY:
+			if( (site->tif & SQRL_TIF_ID_MATCH) || (site->tif & SQRL_TIF_PREVIOUS_ID_MATCH) ) {
+				// Already found a match.
 				site->currentTransaction = transaction->type;
-				if( transaction->type != SQRL_TRANSACTION_AUTH_IDENT ) {
-					goto ERROR;
+			} else {
+				// Identity not matched.
+				if( site->previous_identity < 3 ) {
+					// Try next most recent identity
+					site->previous_identity++;
+				} else {
+					// Tried all previous identities
+					site->previous_identity = 0;
+					site->currentTransaction = transaction->type;
+					if( transaction->type != SQRL_TRANSACTION_AUTH_IDENT ) {
+						goto ERROR;
+					}
+					// If it's an ident, we'll continue (create new account)
 				}
-				// If it's an ident, we'll continue (create new account)
 			}
+			break;
+		case SQRL_TRANSACTION_AUTH_IDENT:
+			if( site->tif & SQRL_TIF_ID_MATCH ) {
+				transaction->status = SQRL_TRANSACTION_STATUS_SUCCESS;
+			} else {
+				transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
+			}
+			goto DONE;
+		default:
+			break;
 		}
 	}
 	FLAG_CLEAR( site->flags, SITE_FLAG_VALID_CLIENT_STRING );
-	retVal = sqrl_client_do_loop( site );
+	sqrl_client_do_loop( site );
 	goto DONE;
 
 ERROR:
-	retVal = SQRL_TRANSACTION_STATUS_FAILED;
+	transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
 
 DONE:
+	if( transaction->status == SQRL_TRANSACTION_STATUS_FAILED ) {
+		printf( "Transaction Failed:\n" );
+		if( site->serverString ) printf( "SRV: %s\n", utstring_body( site->serverString ));
+		if( site->clientString ) printf( "CLI: %s\n", utstring_body( site->clientString ));
+		printf( "TIF: %x\n", site->tif );
+	}
 	END_WITH_TRANSACTION(transaction);
-	return retVal;
+	return transaction->status;
 }

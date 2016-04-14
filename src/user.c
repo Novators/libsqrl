@@ -133,6 +133,9 @@ Sqrl_User sqrl_user_hold( Sqrl_User u )
 		if( c->user == user ) {
 			sqrl_mutex_enter( user->referenceCountMutex );
 			user->referenceCount++;
+#if DEBUG_PRINT_USER_COUNT==1
+			printf( "sqrl_user_hold: %d\n", user->referenceCount );
+#endif
 			sqrl_mutex_leave( user->referenceCountMutex );
 			sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
 			return u;
@@ -182,6 +185,10 @@ Sqrl_User sqrl_user_release( Sqrl_User u )
 	}
 	sqrl_mutex_enter( user->referenceCountMutex );
 	user->referenceCount--;
+#if DEBUG_PRINT_USER_COUNT==1
+	printf( "sqrl_user_release: %d\n", user->referenceCount );
+#endif
+
 	if( user->referenceCount > 0 ) {
 		sqrl_mutex_leave( user->referenceCountMutex );
 		sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
@@ -360,6 +367,7 @@ void sqrl_user_hintlock( Sqrl_User u )
 	sodium_memzero( key, SQRL_KEY_SIZE );
 
 DONE:
+	transaction->user = NULL;
 	sqrl_transaction_release( transaction );
 	END_WITH_USER(user);
 }

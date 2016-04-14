@@ -22,7 +22,7 @@ int main()
         "sqrl://sqrlid.com/auth.php?sfn=_LIBSQRL_SFN_&nut=_LIBSQRL_NUT_",
         "SQRLid", 
         "I am SQRLid!", 12, 
-        1 );
+        NULL, NULL, 1 );
     if( !server ) {
         printf( "Failed to create server\n" );
         exit(1);

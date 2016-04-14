@@ -56,8 +56,8 @@ Sqrl_User sqrl_client_call_select_user( Sqrl_Transaction t )
 		Sqrl_User user = (SQRL_CLIENT_CALLBACKS->onSelectUser)( t );
 		if( user ) {
 			sqrl_transaction_set_user( t, user );
+    		return user;
 		}
-		return user;
 	}
 	return NULL;
 }
@@ -355,7 +355,7 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	if( string ) {
 		transaction->uri = sqrl_uri_parse( string );
 	}
-	sqrl_transaction_set_user( t, user );
+	if( user ) sqrl_transaction_set_user( t, user );
 	switch( type ) {
 	case SQRL_TRANSACTION_UNKNOWN:
 		goto ERROR;

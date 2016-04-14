@@ -54,15 +54,22 @@ DLL_PUBLIC
 int sqrl_stop()
 {
 	if( sqrl_is_initialized ) {
-		sqrl_client_site_maintenance( true );
-		sqrl_client_user_maintenance( true );
-		int transactionCount = sqrl_transaction_count();
-		int userCount = sqrl_user_count();
-		int siteCount = sqrl_site_count();
+        int transactionCount, userCount, siteCount;
 #ifdef DEBUG
+		transactionCount = sqrl_transaction_count();
+		userCount = sqrl_user_count();
+		siteCount = sqrl_site_count();
 		DEBUG_PRINTF( "%10s: %d open sites\n", "sqrl_stop", siteCount );
 		DEBUG_PRINTF( "%10s: %d open transactions\n", "sqrl_stop", transactionCount );
 		DEBUG_PRINTF( "%10s: %d open users\n", "sqrl_stop", userCount );
+#endif
+        sqrl_client_site_maintenance( true );
+        sqrl_client_user_maintenance( true );
+        transactionCount = sqrl_transaction_count();
+        userCount = sqrl_user_count();
+        siteCount = sqrl_site_count();
+#ifdef DEBUG
+        printf( "%10s: %d remain\n", "sqrl_stop", transactionCount + userCount + siteCount );
 #endif
 		return transactionCount + userCount + siteCount;
 	}

@@ -129,18 +129,40 @@ Sqrl_User onSelectUser( Sqrl_Transaction transaction )
     return user;
 }
 
+Sqrl_Transaction current_transaction = NULL;
+#define MAX_LOOPS 10
+int loops = 1;
+
 void onSend(
     Sqrl_Transaction transaction,
     const char *url, size_t url_len,
     const char *payload, size_t payload_len )
 {
+    if( loops > MAX_LOOPS ) {
+        printf( "MAX_LOOPS\n" );
+        return;
+    }
+    loops++;
     PC( "CLIENT", url );
     PC( NULL, payload );
+    printf( "\n" );
+    current_transaction = transaction;
     Sqrl_Server_Context *ctx = sqrl_server_context_create( server );
-    sqrl_server_parse_query( ctx, payload, payload_len );
+    sqrl_server_handle_query( ctx, 0, payload, payload_len );
     ctx = sqrl_server_context_destroy( ctx );
 }
 
+void onServerSend(
+    Sqrl_Server_Context *context,
+    char *reply,
+    size_t reply_len )
+{
+    printf( "%10s:\n%s\n\n", "SERVER", reply );
+    if( loops > MAX_LOOPS ) {
+        return;
+    }
+    sqrl_client_receive( current_transaction, reply, reply_len );
+}
 
 int main() 
 {
@@ -161,7 +183,7 @@ int main()
         "sqrl://sqrlid.com/auth.php?sfn=_LIBSQRL_SFN_&nut=_LIBSQRL_NUT_",
         "SQRLid", 
         "SQRLid passcode", 15, 
-        1 );
+        NULL, onServerSend, 60 );
 
     if( !server ) {
         printf( "Failed to create server!\n" );
@@ -180,8 +202,17 @@ int main()
     }
     char *sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_SUCCESS != 
-        sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, NULL, sqrlUrl, strlen( sqrlUrl ))) {
-        PC( "INCOMPLETE", "AUTH_IDENT" );
+        sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
+        printf( "IDENT Failed\n" );
+        exit(1);
+    }
+    free( sqrlUrl );
+
+    sqrlUrl = sqrl_server_create_link( server, 0 );
+    if( SQRL_TRANSACTION_STATUS_SUCCESS !=
+        sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
+        printf( "IDENT(2) Failed\n" );
+        exit(1);
     }
     free( sqrlUrl );
 

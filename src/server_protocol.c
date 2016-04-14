@@ -8,6 +8,12 @@ For more details, see the LICENSE file included with this package.
 
 #include "sqrl_internal.h"
 
+#define COMMAND_COUNT 5
+
+static char commands[COMMAND_COUNT][8] = {
+    "query", "ident", "disable", "enable", "remove"
+};
+
 static char context_kv_strings[CONTEXT_KV_COUNT][CONTEXT_KV_LENGTH+1] = { 
     "server", "client", "ids", "pids", "urs" 
 };
@@ -20,8 +26,26 @@ static char server_kv_strings[SERVER_KV_COUNT][SERVER_KV_LENGTH+1] = {
     "ver", "nut", "tif", "qry", "suk", "ask", "url"
 };
 
+bool sqrl_server_verify_nut(
+    Sqrl_Server_Context *context,
+    uint32_t client_ip )
+{
+    if( !context ) return false;
+    if( client_ip == context->nut.ip ) {
+        FLAG_SET( context->tif, SQRL_TIF_IP_MATCH );
+    }
+
+    int64_t diff = sqrl_get_timestamp() - context->nut.timestamp;
+    if( diff < 0 || diff > context->server->nut_expires ) {
+        FLAG_SET( context->tif, SQRL_TIF_TRANSIENT_ERROR );
+        return false;
+    }
+    return true;
+}
+
 bool sqrl_server_verify_server_string(
-    Sqrl_Server_Context *context )
+    Sqrl_Server_Context *context,
+    uint32_t client_ip )
 {
     if( !context ) return false;
     UT_string *srv;
@@ -45,12 +69,16 @@ bool sqrl_server_verify_server_string(
             memcpy( &context->nut, utstring_body( t ), sizeof( Sqrl_Nut ));
             utstring_free( t );
             if( sqrl_server_nut_decrypt( context->server, &context->nut )) {
-                utstring_free( srv );
-                FLAG_SET( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_SERVER_STRING );
-                return true;
+                if( sqrl_server_verify_nut( context, client_ip )) {
+                    utstring_free( srv );
+                    FLAG_SET( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_SERVER_STRING );
+                    return true;
+                }
             }
         }
     }
+    printf( "*** BAD SERVER STRING ***\n" );
+    FLAG_SET( context->tif, SQRL_TIF_COMMAND_FAILURE | SQRL_TIF_CLIENT_FAILURE );
     utstring_free( srv );
     return false;
 }
@@ -62,6 +90,7 @@ bool sqrl_server_parse_client(
 
     int found_keys = 0;
     int current_key = 0;
+    int i;
     uint16_t required_keys =
         (1<<CLIENT_KV_VER) |
         (1<<CLIENT_KV_CMD) |
@@ -88,7 +117,7 @@ bool sqrl_server_parse_client(
                 memcpy( context->client_strings[current_key], val, val_len );
                 context->client_strings[current_key][val_len] = 0;
 #if DEBUG_PRINT_SERVER_PROTOCOL
-                printf( "%10s: %s\n", client_kv_strings[current_key], context->client_strings[current_key] );
+                //printf( "%10s: %s\n", client_kv_strings[current_key], context->client_strings[current_key] );
 #endif
                 found_keys |= (1<<current_key);
                 break;
@@ -99,9 +128,16 @@ bool sqrl_server_parse_client(
     utstring_free( rStr );
 
     if( required_keys == (found_keys & required_keys) ) {
+        for( i = 0; i < COMMAND_COUNT; i++ ) {
+            if( 0 == strcmp( commands[i], context->client_strings[CLIENT_KV_CMD] )) {
+                context->command = i;
+                break;
+            }
+        }
         FLAG_SET( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_CLIENT_STRING );
         return true;
     }
+    FLAG_SET( context->tif, SQRL_TIF_COMMAND_FAILURE | SQRL_TIF_CLIENT_FAILURE );
     return false;
 }
 
@@ -124,6 +160,8 @@ bool sqrl_server_verify_signatures(
                 utstring_free( str );
                 utstring_free( key );
                 utstring_free( sig );
+                printf( "IDS FAILURE\n" );
+                FLAG_SET( context->tif, SQRL_TIF_COMMAND_FAILURE | SQRL_TIF_CLIENT_FAILURE );
                 return false;
             }
             FLAG_SET( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_IDS );
@@ -135,6 +173,8 @@ bool sqrl_server_verify_signatures(
                 utstring_free( str );
                 utstring_free( key );
                 utstring_free( sig );
+                printf( "PIDS FAILURE\n" );
+                FLAG_SET( context->tif, SQRL_TIF_COMMAND_FAILURE | SQRL_TIF_CLIENT_FAILURE );
                 return false;
             }
             FLAG_SET( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_PIDS );
@@ -146,6 +186,8 @@ bool sqrl_server_verify_signatures(
                 utstring_free( str );
                 utstring_free( key );
                 utstring_free( sig );
+                printf( "URS FAILURE\n" );
+                FLAG_SET( context->tif, SQRL_TIF_COMMAND_FAILURE | SQRL_TIF_CLIENT_FAILURE );
                 return false;
             }
             FLAG_SET( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_URS );
@@ -155,6 +197,7 @@ bool sqrl_server_verify_signatures(
         utstring_free( sig );
         return true;
     }
+    FLAG_SET( context->tif, SQRL_TIF_COMMAND_FAILURE | SQRL_TIF_CLIENT_FAILURE );
     return false;
 }
 
@@ -198,6 +241,7 @@ bool sqrl_server_build_reply( Sqrl_Server_Context *context, UT_string *reply )
 
 void sqrl_server_parse_query( 
     Sqrl_Server_Context *context, 
+    uint32_t client_ip,
     const char *query, 
     size_t query_len )
 {
@@ -230,7 +274,7 @@ void sqrl_server_parse_query(
                 memcpy( context->context_strings[current_key], val, val_len );
                 context->context_strings[current_key][val_len] = 0;
 #if DEBUG_PRINT_SERVER_PROTOCOL
-                printf( "%10s: %s\n", context_kv_strings[current_key], context->context_strings[current_key] );
+                //printf( "%10s: %s\n", context_kv_strings[current_key], context->context_strings[current_key] );
 #endif                
                 found_keys |= (1<<current_key);
                 break;
@@ -241,16 +285,152 @@ void sqrl_server_parse_query(
     utstring_free( rStr );
 
     if( required_keys == (found_keys & required_keys) ) {
-        if( sqrl_server_verify_server_string( context )) {
+        if( sqrl_server_verify_server_string( context, client_ip )) {
             if( sqrl_server_verify_signatures( context )) {
-                UT_string *reply;
-                utstring_new( reply );
-                sqrl_server_build_reply( context, reply );
-                printf( "%10s: %s\n", "REPLY", utstring_body( reply ));
-                utstring_free( reply );
                 FLAG_SET( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_QUERY );
             }
         }
     }
 }
+
+bool sqrl_server_get_user( 
+    Sqrl_Server_Context *context,
+    char *idk )
+{
+    char *blob = malloc( 512 );
+    sqrl_scb_user *onUserOp = (sqrl_scb_user*)context->server->onUserOp;
+    if( (onUserOp)( 
+        SQRL_SCB_USER_FIND,
+        context->server->uri->host,
+        context->client_strings[CLIENT_KV_IDK],
+        NULL,
+        blob )) 
+    {
+        UT_string *tmp;
+        utstring_new( tmp );
+        sqrl_b64u_decode( tmp, blob, strlen( blob ));
+        if( context->user ) free( context->user );
+        context->user = malloc( sizeof( Sqrl_Server_User ));
+        memcpy( context->user, utstring_body( tmp ), utstring_len( tmp ));
+        utstring_free( tmp );
+        free( blob );
+        return true;
+    }
+    free( blob );
+    return false;
+}
+
+void sqrl_server_add_user_suk( Sqrl_Server_Context *context )
+{
+    if( !context ) return;
+    if( !context->user ) return;
+    if( context->server_strings[ SERVER_KV_SUK ]) return;
+    UT_string *tmp;
+    utstring_new( tmp );
+    sqrl_b64u_encode( tmp, context->user->suk, SQRL_KEY_SIZE );
+    context->server_strings[SERVER_KV_SUK] = malloc( 1 + utstring_len( tmp ));
+    strcpy( context->server_strings[SERVER_KV_SUK], utstring_body( tmp ));
+    utstring_free( tmp );
+}
+
+void sqrl_server_handle_query(
+    Sqrl_Server_Context *context,
+    uint32_t client_ip,
+    const char *query,
+    size_t query_len )
+{
+    if( !context || !query ) return;
+    sqrl_scb_user *onUserOp = (sqrl_scb_user*)context->server->onUserOp;
+
+    UT_string *reply, *tmp;
+    utstring_new( reply );
+    sqrl_server_parse_query( context, client_ip, query, query_len );
+    if( !FLAG_CHECK( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_QUERY )) {
+        FLAG_SET( context->tif, SQRL_TIF_COMMAND_FAILURE );
+        goto REPLY;
+    }
+    if( sqrl_server_get_user( context, context->client_strings[CLIENT_KV_IDK])) {
+        FLAG_SET( context->tif, SQRL_TIF_ID_MATCH );
+    } else {
+        if( context->client_strings[CLIENT_KV_PIDK] ) {
+            if( sqrl_server_get_user( context, context->client_strings[CLIENT_KV_PIDK])) {
+                FLAG_SET( context->tif, SQRL_TIF_PREVIOUS_ID_MATCH );
+                sqrl_server_add_user_suk( context );
+            }
+        }
+    }
+    if( context->user ) {
+        if( FLAG_CHECK( context->user->flags, SQRL_SERVER_USER_FLAG_DISABLED )) {
+            FLAG_SET( context->tif, SQRL_TIF_SQRL_DISABLED );
+        }
+    }
+
+    switch( context->command ) {
+    case SQRL_CMD_QUERY:
+        goto REPLY;
+    case SQRL_CMD_IDENT:
+        if( FLAG_CHECK( context->tif, SQRL_TIF_ID_MATCH )) {
+            (onUserOp)(SQRL_SCB_USER_IDENTIFIED,
+                context->server->uri->host,
+                context->client_strings[CLIENT_KV_IDK],
+                NULL, NULL );
+        } else if( FLAG_CHECK( context->tif, SQRL_TIF_PREVIOUS_ID_MATCH )) {
+            utstring_new( tmp );
+            sqrl_b64u_encode( tmp, (uint8_t*)context->user, sizeof( Sqrl_Server_User ));
+            (onUserOp)(SQRL_SCB_USER_REKEYED,
+                context->server->uri->host,
+                context->client_strings[CLIENT_KV_IDK],
+                context->client_strings[CLIENT_KV_PIDK],
+                utstring_body( tmp ));
+            utstring_free( tmp );
+            (onUserOp)(SQRL_SCB_USER_IDENTIFIED,
+                context->server->uri->host,
+                context->client_strings[CLIENT_KV_IDK],
+                NULL, NULL );
+        } else {
+            if( context->client_strings[CLIENT_KV_IDK] &&
+                context->client_strings[CLIENT_KV_SUK] &&
+                context->client_strings[CLIENT_KV_VUK] ) {
+                // Create user
+                if( !context->user ) context->user = malloc( sizeof( Sqrl_Server_User ));
+                context->user->flags = 0; 
+                utstring_new( tmp );
+                sqrl_b64u_decode( tmp, context->client_strings[CLIENT_KV_IDK], strlen( context->client_strings[CLIENT_KV_IDK]));
+                memcpy( &context->user->idk, utstring_body( tmp ), SQRL_KEY_SIZE );
+                sqrl_b64u_decode( tmp, context->client_strings[CLIENT_KV_SUK], strlen( context->client_strings[CLIENT_KV_SUK]));
+                memcpy( &context->user->suk, utstring_body( tmp ), SQRL_KEY_SIZE );
+                sqrl_b64u_decode( tmp, context->client_strings[CLIENT_KV_VUK], strlen( context->client_strings[CLIENT_KV_VUK]));
+                memcpy( &context->user->vuk, utstring_body( tmp ), SQRL_KEY_SIZE );
+                sqrl_b64u_encode( tmp, (uint8_t*)context->user, sizeof( Sqrl_Server_User ));
+                if( (onUserOp)( SQRL_SCB_USER_CREATE,
+                    context->server->uri->host,
+                    context->client_strings[CLIENT_KV_IDK],
+                    NULL, utstring_body( tmp ))) {
+                    (onUserOp)(SQRL_SCB_USER_IDENTIFIED,
+                        context->server->uri->host,
+                        context->client_strings[CLIENT_KV_IDK],
+                        NULL, NULL );
+                    FLAG_SET( context->tif, SQRL_TIF_ID_MATCH );
+                    utstring_free( tmp );
+                    goto REPLY;
+                }
+                utstring_free( tmp );
+            }
+            FLAG_SET( context->tif, SQRL_TIF_COMMAND_FAILURE );
+        }
+        goto REPLY;
+    default:
+        FLAG_SET( context->tif, SQRL_TIF_FUNCTION_NOT_SUPPORTED );
+        goto REPLY;
+    }
+
+REPLY:
+    sqrl_server_build_reply( context, reply );
+    sqrl_scb_send *onSend = (sqrl_scb_send*)context->server->onSend;
+    (onSend)( context, utstring_body( reply ), utstring_len( reply ));
+
+DONE:
+    utstring_free( reply );
+}
+
 

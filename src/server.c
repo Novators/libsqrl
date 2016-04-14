@@ -15,10 +15,17 @@ bool sqrl_server_init(
     char *sfn,
     char *passcode,
     size_t passcode_len,
+    sqrl_scb_user *onUserOp,
+    sqrl_scb_send *onSend,
     int nut_life )
 {
     if( !server ) return false;
     memset( server, 0, sizeof( Sqrl_Server ));
+
+    if( !onUserOp ) onUserOp = sqrl_scb_user_default;
+    if( !onSend ) onSend = sqrl_scb_send_default;
+    server->onUserOp = onUserOp;
+    server->onSend = onSend;
 
     if( sfn ) {
         server->sfn = malloc( strlen( sfn ) + 1 );
@@ -78,10 +85,12 @@ Sqrl_Server *sqrl_server_create(
     char *sfn,
     char *passcode,
     size_t passcode_len,
+    sqrl_scb_user *onUserOp,
+    sqrl_scb_send *onSend,
     int nut_life )
 {
     Sqrl_Server *srv = malloc( sizeof( Sqrl_Server ));
-    if( ! sqrl_server_init( srv, uri, sfn, passcode, passcode_len, nut_life )) {
+    if( ! sqrl_server_init( srv, uri, sfn, passcode, passcode_len, onUserOp, onSend, nut_life )) {
         free( srv );
         srv = NULL;
     }
@@ -138,12 +147,6 @@ bool sqrl_server_nut_decrypt(
         return false;
     }
     sodium_memzero( &ctx, sizeof( aes_context ));
-
-    int64_t diff = sqrl_get_timestamp() - pt.timestamp;
-    if( diff < 0 || diff > server->nut_expires ) {
-        // Stale Nut
-        return false;
-    }
 
     memcpy( nut, &pt, sizeof( Sqrl_Nut ));
     return true;
@@ -236,6 +239,95 @@ Sqrl_Server_Context *sqrl_server_context_destroy( Sqrl_Server_Context *ctx )
         if( ctx->client_strings[i] )
             free( ctx->client_strings[i] );
     }
+    for( i = 0; i < SERVER_KV_COUNT; i++ ) {
+        if( ctx->server_strings[i] )
+            free( ctx->server_strings[i] );
+    }
+    if( ctx->reply ) free( ctx->reply );
     free( ctx );
     return NULL;
+}
+
+struct sqrl_default_user_list {
+    char *idk;
+    char *blob;
+    struct sqrl_default_user_list *next;
+};
+
+static struct sqrl_default_user_list *SDUL = NULL;
+
+bool sqrl_scb_user_default(
+    Sqrl_Server_User_Op op,
+    char *host,
+    char *idk,
+    char *pidk,
+    char *blob )
+{
+    if( !host || !idk ) return false;
+    struct sqrl_default_user_list *l, *lp = NULL;
+    char *cmpStr = idk;
+
+    if( op == SQRL_SCB_USER_CREATE ) {
+        l = calloc( 1, sizeof( struct sqrl_default_user_list ));
+        l->idk = malloc( 1 + strlen( idk ));
+        strcpy( l->idk, idk );
+        l->blob = malloc( 1 + strlen( blob ));
+        strcpy( l->blob, blob );
+        l->next = SDUL;
+        SDUL = l;
+        return true;
+    }
+    l = SDUL;
+    if( op == SQRL_SCB_USER_REKEYED ) {
+        cmpStr = pidk;
+    }
+    while( l ) {
+        if( 0 == strcmp( cmpStr, l->idk )) {
+            switch( op ) {
+            case SQRL_SCB_USER_FIND:
+                strcpy( blob, l->blob );
+                return true;
+            case SQRL_SCB_USER_UPDATE:
+                strcpy( l->blob, blob );
+                return true;
+            case SQRL_SCB_USER_DELETE:
+                if( lp ) {
+                    lp->next = l->next;
+                } else {
+                    SDUL = l->next;
+                }
+                free( l->idk );
+                free( l->blob );
+                free( l );
+                return true;
+            case SQRL_SCB_USER_REKEYED:
+                strcpy( l->idk, idk );
+                strcpy( l->blob, blob );
+                return true;
+            case SQRL_SCB_USER_IDENTIFIED:
+                printf( "%10s: %s\n", "SRV_IDENT", idk );
+                return true;
+            default:
+                return false;
+            }
+        }
+        lp = l;
+        l = lp->next;
+    }
+    return false;
+}
+
+void sqrl_scb_send_default(
+    Sqrl_Server_Context *context,
+    char *reply,
+    size_t reply_len )
+{
+    if( !context || !reply ) return;
+    if( context->reply ) free( context->reply );
+    context->reply = malloc( reply_len + 1 );
+    memcpy( context->reply, reply, reply_len );
+    context->reply[reply_len] = 0;
+#if DEBUG_PRINT_SERVER_PROTOCOL
+    printf( "%10s:\n%s\n\n", "SERVER", reply );
+#endif
 }

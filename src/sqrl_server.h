@@ -60,13 +60,6 @@ typedef struct Sqrl_Server_User {
     uint16_t flags;
 } Sqrl_Server_User;
 
-typedef struct Sqrl_Server {
-    Sqrl_Uri *uri;
-    char *sfn;
-    uint8_t key[32];
-    uint64_t nut_expires;
-} Sqrl_Server;
-
 #pragma pack(push,4)
 typedef struct Sqrl_Nut {
     uint32_t ip;
@@ -74,6 +67,24 @@ typedef struct Sqrl_Nut {
     uint64_t timestamp;
 } Sqrl_Nut;
 #pragma pack(pop)
+
+typedef enum {
+    SQRL_SCB_USER_FIND,
+    SQRL_SCB_USER_CREATE,
+    SQRL_SCB_USER_UPDATE,
+    SQRL_SCB_USER_DELETE,
+    SQRL_SCB_USER_REKEYED,
+    SQRL_SCB_USER_IDENTIFIED
+} Sqrl_Server_User_Op;
+
+typedef struct Sqrl_Server {
+    Sqrl_Uri *uri;
+    char *sfn;
+    uint8_t key[32];
+    uint64_t nut_expires;
+    void *onUserOp;
+    void *onSend;
+} Sqrl_Server;
 
 typedef struct Sqrl_Server_Context {
     Sqrl_Server *server;
@@ -85,8 +96,32 @@ typedef struct Sqrl_Server_Context {
     char *context_strings[CONTEXT_KV_COUNT];
     char *client_strings[CLIENT_KV_COUNT];
     char *server_strings[SERVER_KV_COUNT];
+    char *reply;
 } Sqrl_Server_Context;
 
+typedef bool (sqrl_scb_user)(
+    Sqrl_Server_User_Op op,
+    char *host,
+    char *idk,
+    char *pidk,
+    char *blob );
+typedef void (sqrl_scb_send)(
+    Sqrl_Server_Context *context,
+    char *reply,
+    size_t reply_len );
+
+
+void sqrl_scb_send_default(
+    Sqrl_Server_Context *context,
+    char *reply,
+    size_t reply_len );
+
+bool sqrl_scb_user_default(
+    Sqrl_Server_User_Op op,
+    char *host,
+    char *idk,
+    char *pidk,
+    char *blob );
 
 bool sqrl_server_init( 
     Sqrl_Server *server,
@@ -94,6 +129,8 @@ bool sqrl_server_init(
     char *sfn,
     char *passcode,
     size_t passcode_len,
+    sqrl_scb_user *onUserOp,
+    sqrl_scb_send *onSend,
     int nut_life );
 void sqrl_server_clear( Sqrl_Server *server );
 Sqrl_Server *sqrl_server_create(
@@ -101,6 +138,8 @@ Sqrl_Server *sqrl_server_create(
     char *sfn,
     char *passcode,
     size_t passcode_len,
+    sqrl_scb_user *onUserOp,
+    sqrl_scb_send *onSend,
     int nut_life );
 Sqrl_Server *sqrl_server_destroy( Sqrl_Server *server );
 
@@ -118,9 +157,10 @@ void sqrl_server_add_mac( Sqrl_Server *server, UT_string *str, char sep );
 bool sqrl_server_verify_mac( Sqrl_Server *server, UT_string *str ); 
 
 char *sqrl_server_create_link( Sqrl_Server *server, uint32_t ip );
-void sqrl_server_parse_query( 
-    Sqrl_Server_Context *context, 
-    const char *query, 
+void sqrl_server_handle_query(
+    Sqrl_Server_Context *context,
+    uint32_t client_ip,
+    const char *query,
     size_t query_len );
 
 

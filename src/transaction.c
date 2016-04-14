@@ -115,9 +115,7 @@ void sqrl_transaction_set_user( Sqrl_Transaction t, Sqrl_User u )
 {
     if( !u ) return;
     WITH_TRANSACTION(transaction,t);
-    if( !transaction ) return;
-    if( transaction->user == u ) {
-        END_WITH_TRANSACTION(transaction);
+    if( !transaction ) {
         return;
     }
     transaction->user = sqrl_user_release( transaction->user );
