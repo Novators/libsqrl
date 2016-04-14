@@ -201,82 +201,99 @@ int main()
         exit(1);
     }
     sqrl_user_unique_id( user, txtBuffer );
-    PC( "USER", txtBuffer );
     if( 0 != strcmp( txtBuffer, uid )) {
+        PC( "USER", txtBuffer );
         PC( "EXPECTED", uid );
         exit(1);
     }
 
+    char *testName = "Create Account";
+    PC( "TEST", testName );
     char *sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_SUCCESS != 
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
-        printf( "IDENT Failed\n" );
+        PC( "FAIL", testName );
         exit(1);
     }
     if( loops != 5 ) {
-        PC( "FAIL", "Initial Login" );
+        PC( "FAIL", testName );
         printf( "5 != %d loops\n", loops );
         exit(1);
     }
-    PC( "PASS", "Initial Login" );
+    PC( "PASS", testName );
+    printf( "\n" );
     free( sqrlUrl );
 
+    testName = "Account Login";
+    PC( "TEST", testName );
     sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_SUCCESS !=
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
-        printf( "IDENT(2) Failed\n" );
+        PC( "FAIL", testName );
         exit(1);
     }
     if( loops != 7 ) {
-        PC( "FAIL", "Repeat Login" );
+        PC( "FAIL", testName );
         printf( "7 != %d loops\n", loops );
         exit(1);
     }
-    PC( "PASS", "Repeat Login" );
+    PC( "PASS", testName );
+    printf( "\n" );
     free( sqrlUrl );
 
+    testName = "Disable Account";
+    PC( "TEST", testName );
     sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_SUCCESS !=
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_DISABLE, user, sqrlUrl, strlen( sqrlUrl ))) {
-        printf( "DISABLE Failed\n" );
+        PC( "FAIL", testName );
         exit(1);
     }
     if( loops != 9 ) {
-        PC( "FAIL", "Disable" );
+        PC( "FAIL", testName );
         printf( "9 != %d loops\n", loops );
         exit(1);
     }
-    PC( "PASS", "DISABLE" );
+    PC( "PASS", testName );
+    printf( "\n" );
     free( sqrlUrl );
 
+    testName = "Login to Disabled Account";
+    PC( "TEST", testName );
     sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_FAILED !=
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
-        printf( "Allowed login to disabled identity\n" );
+        PC( "FAIL", testName );
         exit(1);
     }
     if( loops != 10 ) {
-        PC( "FAIL", "Login Disabled" );
+        PC( "FAIL", testName );
         printf( "10 != %d loops\n", loops );
         exit(1);
     }
-    PC( "PASS", "Login Disabled" );
+    PC( "PASS", testName );
+    printf( "\n" );
     free( sqrlUrl );
 
+    testName = "Enable Account";
+    PC( "TEST", testName );
     sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_SUCCESS !=
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_ENABLE, user, sqrlUrl, strlen( sqrlUrl ))) {
-        printf( "Failed to enable SQRL\n" );
+        PC( "FAIL", testName );
         exit(1);
     }
     if( loops != 12 ) {
-        PC( "FAIL", "Enable" );
+        PC( "FAIL", testName );
         printf( "12 != %d loops\n", loops );
         exit(1);
     }
-    PC( "PASS", "Enable" );
+    PC( "PASS", testName );
+    printf( "\n" );
     free( sqrlUrl );
 
+    testName = "ReKey local user";
+    PC( "TEST", testName );
     if( SQRL_TRANSACTION_STATUS_SUCCESS != 
         sqrl_client_begin_transaction( SQRL_TRANSACTION_IDENTITY_REKEY, user, NULL, 0 )) {
         printf( "Rekey Failed\n" );
@@ -284,74 +301,89 @@ int main()
     }
     PC( "PASS", "Rekey Identity" );
 
+    testName = "Rekey Server";
+    PC( "TEST", testName );
     sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_SUCCESS !=
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
-        printf( "IDENT(3) Failed\n" );
+        PC( "FAIL", testName );
         exit(1);
     }
     if( loops != 14 ) {
-        PC( "FAIL", "Rekey Server" );
+        PC( "FAIL", testName );
         printf( "14 != %d loops\n", loops );
         exit(1);
     }
-    PC( "PASS", "Rekey Server" );
+    PC( "PASS", testName );
+    printf( "\n" );
     free( sqrlUrl );
 
+    testName = "Login to rekeyed server";
+    PC( "TEST", testName );
     sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_SUCCESS !=
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
-        printf( "IDENT(4) Failed\n" );
+        PC( "FAIL", testName );
         exit(1);
     }
     if( loops != 16 ) {
-        PC( "FAIL", "Repeat Login" );
+        PC( "FAIL", testName );
         printf( "16 != %d loops\n", loops );
         exit(1);
     }
-    PC( "PASS", "Repeat Login" );
+    PC( "PASS", testName );
+    printf( "\n" );
     free( sqrlUrl );
 
+    testName = "Disable Account";
+    PC( "TEST", testName );
     sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_SUCCESS !=
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_DISABLE, user, sqrlUrl, strlen( sqrlUrl ))) {
-        printf( "DISABLE Failed\n" );
+        PC( "FAIL", testName );
         exit(1);
     }
     if( loops != 18 ) {
-        PC( "FAIL", "Disable" );
+        PC( "FAIL", testName );
         printf( "18 != %d loops\n", loops );
         exit(1);
     }
-    PC( "PASS", "DISABLE" );
+    PC( "PASS", testName );
+    printf( "\n" );
     free( sqrlUrl );
 
+    testName = "Remove Account";
+    PC( "TEST", testName );
     sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_SUCCESS !=
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_REMOVE, user, sqrlUrl, strlen( sqrlUrl ))) {
-        printf( "REMOVE Failed\n" );
+        PC( "FAIL", testName );
         exit(1);
     }
     if( loops != 20 ) {
-        PC( "FAIL", "REMOVE" );
+        PC( "FAIL", testName );
         printf( "20 != %d loops\n", loops );
         exit(1);
     }
-    PC( "PASS", "REMOVE" );
+    PC( "PASS", testName );
+    printf( "\n" );
     free( sqrlUrl );
 
+    testName = "Create Account Again";
+    PC( "TEST", testName );
     sqrlUrl = sqrl_server_create_link( server, 0 );
     if( SQRL_TRANSACTION_STATUS_SUCCESS !=
         sqrl_client_begin_transaction( SQRL_TRANSACTION_AUTH_IDENT, user, sqrlUrl, strlen( sqrlUrl ))) {
-        PC( "FAIL", "Login after Remove" );
+        PC( "FAIL", testName );
         exit(1);
     }
     if( loops != 25 ) {
-        PC( "FAIL", "Login after Remove" );
+        PC( "FAIL", testName );
         printf( "25 != %d loops\n", loops );
         exit(1);
     }
-    PC( "PASS", "Login after Remove" );
+    PC( "PASS", testName );
+    printf( "\n" );
     free( sqrlUrl );
 
 

@@ -305,7 +305,7 @@ bool sqrl_scb_user_default(
                 strcpy( l->blob, blob );
                 return true;
             case SQRL_SCB_USER_IDENTIFIED:
-                printf( "%10s: %s\n", "SRV_IDENT", idk );
+                printf( "%10s: %s\n", "SRV_ID", idk );
                 return true;
             default:
                 return false;

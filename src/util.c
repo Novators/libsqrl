@@ -62,6 +62,7 @@ int sqrl_stop()
 		DEBUG_PRINTF( "%10s: %d open sites\n", "sqrl_stop", siteCount );
 		DEBUG_PRINTF( "%10s: %d open transactions\n", "sqrl_stop", transactionCount );
 		DEBUG_PRINTF( "%10s: %d open users\n", "sqrl_stop", userCount );
+        DEBUG_PRINTF( "%10s: Cleaning Up...\n", "sqrl_stop" );
 #endif
         sqrl_client_site_maintenance( true );
         sqrl_client_user_maintenance( true );
