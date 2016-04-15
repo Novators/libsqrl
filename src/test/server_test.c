@@ -60,5 +60,5 @@ int main()
     free( lnk );
 
     sqrl_server_destroy( server );
-    exit(0);
+    exit( sqrl_stop() );
 }

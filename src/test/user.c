@@ -237,5 +237,5 @@ DONE:
 		printf( "\nFAILED test %d\n", assertions_passed + 1 );
 		exit(1);
 	}
-	exit(0);
+	exit( sqrl_stop() );
 }

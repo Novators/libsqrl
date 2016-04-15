@@ -161,5 +161,5 @@ int main()
 	enscrypt_test();
 	idlock_test();
 	enhash_test();
-	exit(0);
+	exit( sqrl_stop() );
 }
