@@ -43,6 +43,7 @@ int main (int argc, char **argv)
 	utstring_new(s);
 
 	for( i = 0; i < NT; i++ ) {
+		printf( "%s\n", dvector[i] );
 		sqrl_b64u_encode( s, (uint8_t*)evector[i], esize[i] );
 		if( utstring_len(s) != strlen( dvector[i] ) ||
 			strcmp( utstring_body(s), dvector[i] )) {

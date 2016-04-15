@@ -141,9 +141,6 @@ target_link_libraries(crypto_test sqrl)
 add_executable(user_test src/test/user.c)
 target_link_libraries(user_test sqrl)
 
-add_executable(peek src/cli/peek.c)
-target_link_libraries(peek sqrl)
-
 add_executable(uri_test src/test/uri_test.c)
 target_link_libraries(uri_test sqrl)
 
