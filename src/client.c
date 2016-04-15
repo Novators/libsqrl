@@ -325,7 +325,7 @@ DONE:
 	transaction->status = status;
 	sqrl_client_call_transaction_complete( transaction );
 
-	transaction = sqrl_transaction_release( transaction );
+	sqrl_transaction_release( transaction );
 	return status;
 }
 
@@ -412,7 +412,7 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 		if( transaction->user ) goto ERROR;
 		tmpUser = sqrl_user_create();
 		sqrl_transaction_set_user( t, tmpUser );
-		tmpUser = sqrl_user_release( tmpUser );
+		sqrl_user_release( tmpUser );
 		if( sqrl_user_rekey( t ) && sqrl_client_require_password( t )) {
 			sqrl_client_call_save_suggested( transaction->user );
 			goto SUCCESS;
@@ -451,7 +451,7 @@ DONE:
 	transaction->status = retVal;
 	sqrl_client_call_transaction_complete( t );
 
-	t = sqrl_transaction_release( t );
+	sqrl_transaction_release( t );
 	return retVal;
 }
 

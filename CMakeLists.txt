@@ -32,7 +32,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/libutils.cmake)
 set(sqrl_version_major 1)
 # Minor version is build year
 set(sqrl_version_minor 2016)
-set(sqrl_build 25)
+set(sqrl_build 26)
 set(sqrl_version "${sqrl_version_major}.${sqrl_version_minor} build ${sqrl_build}")
 
 #set(CMAKE_BUILD_TYPE Release)
@@ -110,6 +110,7 @@ set(SLIBS sqrl_static_tmp ${LIBS})
 MERGE_STATIC_LIBS(sqrl_static sqrl "${SLIBS}")
 
 add_library(sqrl SHARED ${SRC})
+add_dependencies(sqrl libsodium)
 target_link_libraries(sqrl ${LIBS} "-Wl,-all_load")
 
 if(REQUIRED_LIBS_PRESENT)

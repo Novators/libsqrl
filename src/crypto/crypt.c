@@ -402,12 +402,6 @@ uint32_t sqrl_crypt_enscrypt( Sqrl_Crypt_Context *sctx, uint8_t *key, const char
 
 bool sqrl_crypt_gcm( Sqrl_Crypt_Context *sctx, uint8_t *key ) 
 {
-	size_t tag_len = 0;
-	size_t iv_len = 0;
-
-	if( sctx->tag ) tag_len = 16;
-	if( sctx->iv ) iv_len = 12;
-
 	if( sctx->flags & SQRL_ENCRYPT ) {
 		sqrl_gcm_encrypt( sctx->cipher_text,
 			key, sctx->iv, sctx->add, sctx->add_len,

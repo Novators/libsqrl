@@ -110,7 +110,7 @@ bool sus_block_2( struct Sqrl_Transaction *transaction, Sqrl_Storage storage, Sq
 
 	uint8_t *key = user->keys->scratch + sctx.text_len;
 	char *rc = (char*)sqrl_user_key( transaction, KEY_RESCUE_CODE );
-	uint32_t iterations = sqrl_crypt_enscrypt( &sctx, key, rc, SQRL_RESCUE_CODE_LENGTH, sqrl_user_enscrypt_callback, &cbdata );
+	sqrl_crypt_enscrypt( &sctx, key, rc, SQRL_RESCUE_CODE_LENGTH, sqrl_user_enscrypt_callback, &cbdata );
 	sqrl_block_seek( block, 21 );
 	sqrl_block_write_int32( block, sctx.count );
 
@@ -357,7 +357,7 @@ bool sus_block_1( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 	uint8_t *key = sctx.plain_text + sctx.text_len;
 	sctx.flags = SQRL_ENCRYPT | SQRL_MILLIS;
 	sctx.count = user->options.enscryptSeconds * SQRL_MILLIS_PER_SECOND;
-	uint32_t iterations = sqrl_crypt_enscrypt( &sctx, key, user->keys->password, user->keys->password_len, sqrl_user_enscrypt_callback, &cbdata );
+	sqrl_crypt_enscrypt( &sctx, key, user->keys->password, user->keys->password_len, sqrl_user_enscrypt_callback, &cbdata );
 	sqrl_block_seek( block, 35 );
 	sqrl_block_write_int32( block, sctx.count );
 
@@ -492,7 +492,7 @@ Sqrl_User sqrl_user_create_from_file( const char *filename )
 	return u;
 
 ERROR:
-	if( user ) {
+	if( u ) {
 		END_WITH_USER(user);
 		sqrl_user_release(u);
 	}
@@ -516,7 +516,7 @@ Sqrl_User sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len )
 		_suc_load_unique_id( user );
 		END_WITH_USER(user);
 	} else {
-		storage = sqrl_storage_destroy( storage );
+		sqrl_storage_destroy( storage );
 	}
 	utstring_free( buf );
 	return u;

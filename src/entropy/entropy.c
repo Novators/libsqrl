@@ -196,7 +196,6 @@ START:
 DLL_PUBLIC
 int sqrl_entropy_bytes( uint8_t* buf, int nBytes )
 {
-	struct sqrl_entropy_pool *pool = sqrl_entropy_get_pool();
 	if( !buf || (nBytes <= 0) ) return 0;
 
 	int desired_entropy = (nBytes > 64) ? (8*64) : (8*nBytes);

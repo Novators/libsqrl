@@ -133,7 +133,6 @@ static void gcm_mult( gcm_context *ctx,     // pointer to established context
     uint64_t zh, zl;
 
     lo = (uchar)( x[15] & 0x0f );
-    hi = (uchar)( x[15] >> 4 );
     zh = ctx->HH[lo];
     zl = ctx->HL[lo];
 

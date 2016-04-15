@@ -163,7 +163,7 @@ int main()
 	sqrl_transaction_set_user( transaction, user );
 	sqrl_user_update_storage( transaction );
 	sqrl_storage_save_to_buffer( u->storage, ubuf, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
-	transaction = sqrl_transaction_release( transaction );
+	sqrl_transaction_release( transaction );
 	END_WITH_USER(u);
 	buf = malloc( utstring_len( ubuf ) + 1 );
 	strcpy( buf, utstring_body( ubuf ));
@@ -171,7 +171,7 @@ int main()
 	ubuf = NULL;
 	ASSERT( "export_len", strlen( buf ) == 470 )
 
-	user = sqrl_user_release( user );
+	sqrl_user_release( user );
 	user = sqrl_user_create_from_buffer( buf, strlen(buf) );
 	sqrl_transaction_set_user( genericTransaction, user );
 
@@ -185,7 +185,7 @@ int main()
 	sqrl_transaction_set_user( trans, user );
 	sqrl_user_hintunlock( trans, NULL, 0 );
 	ASSERT( "hintlock_3", !sqrl_user_is_hintlocked( user ) )
-	trans = sqrl_transaction_release( trans );
+	sqrl_transaction_release( trans );
 
 	key = sqrl_user_key( genericTransaction, KEY_ILK );
 	ASSERT( "load_ilk", 0 == sodium_memcmp( key, saved + (SQRL_KEY_SIZE * 5), SQRL_KEY_SIZE ));
@@ -198,13 +198,12 @@ int main()
 	key = sqrl_user_key( genericTransaction, KEY_PIUK3 );
 	ASSERT( "load_piuk4", 0 == sodium_memcmp( key, saved, SQRL_KEY_SIZE ));
 
-	user = sqrl_user_release( user );
+	sqrl_user_release( user );
 	user = sqrl_user_create_from_buffer( buf, strlen( buf ));
 	sqrl_transaction_set_user( genericTransaction, user );
 
 	sPointer = loaded;
 	int keys[] = { KEY_PIUK3, KEY_PIUK2, KEY_PIUK1, KEY_PIUK0, KEY_IUK, KEY_ILK, KEY_MK };
-	char names[][6] = { "PIUK4", "PIUK3", "PIUK2", "PIUK1", "  IUK", "  ILK", "   MK" };
 	for( i = 0; i < 7; i++ ) {
 		key = sqrl_user_key( genericTransaction, keys[i] );
 		memcpy( sPointer, key, SQRL_KEY_SIZE );
@@ -231,9 +230,8 @@ ERROR:
 	bError = true;
 
 DONE:
-	//pool = sqrl_entropy_destroy( pool );
-	user = sqrl_user_release( user );
-	genericTransaction = sqrl_transaction_release( genericTransaction );
+	sqrl_user_release( user );
+	sqrl_transaction_release( genericTransaction );
 	printf( "\nPASSED %d tests.\n", assertions_passed );
 	if( bError ) {
 		printf( "\nFAILED test %d\n", assertions_passed + 1 );

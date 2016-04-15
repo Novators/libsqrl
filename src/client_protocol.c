@@ -374,11 +374,7 @@ void sqrl_site_generate_opts( struct Sqrl_Site *site, UT_string *qry ) {
 	UT_string *val;
 	utstring_new( val );
 	if( site->userOptFlags & SQRL_OPTION_REQUEST_SQRL_ONLY ) {
-		if( sep ) {
-			utstring_printf( val, "%c%s", sep, SQRL_OPTION_TOKEN_SQRLONLY );
-		} else {
-			utstring_printf( val, "%s", SQRL_OPTION_TOKEN_SQRLONLY );
-		}
+		utstring_printf( val, "%s", SQRL_OPTION_TOKEN_SQRLONLY );
 		sep = SQRL_OPTION_TOKEN_SEPARATOR;
 	}
 	if( site->userOptFlags & SQRL_OPTION_REQUEST_ID_LOCK ) {
@@ -387,11 +383,11 @@ void sqrl_site_generate_opts( struct Sqrl_Site *site, UT_string *qry ) {
 		} else {
 			utstring_printf( val, "%s", SQRL_OPTION_TOKEN_HARDLOCK );
 		}
-		sep = SQRL_OPTION_TOKEN_SEPARATOR;
 	}
 	if( utstring_len( val ) > 0 ) {
 		sqrl_site_add_key_value( qry, "opt", utstring_body( val ));
 	}
+	utstring_free( val );
 	// TODO: Handle CPS and SUK options
 }
 
@@ -478,9 +474,9 @@ DLL_PUBLIC
 bool sqrl_site_generate_client_body( Sqrl_Site *site )
 {
 	if( !site ) return false;
+	UT_string *clientString = NULL;
 	bool success = sqrl_site_set_user_keys( site );
 	if( !success ) goto ERROR;
-	UT_string *clientString;
 	utstring_new( clientString );
 
 	FLAG_SET( site->flags, SITE_FLAG_VALID_CLIENT_STRING );

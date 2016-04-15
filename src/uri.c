@@ -300,7 +300,6 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 		
 		(void)strncpy(fragment, curstr, len);
 		fragment[len] = '\0';
-	curstr = tmpstr;
 	}
 	
 	/* SQRL Specific... */
@@ -387,6 +386,7 @@ END:
 	if( fragment ) free( fragment );
 	if( username ) free( username );
 	if( password ) free( password );
+	if( path ) free( path );
 	if( prefix ) utstring_free( prefix );
 	if( uri ) free( uri );
 	return puri;

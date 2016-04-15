@@ -127,14 +127,12 @@ int main()
 	Sqrl_Transaction transaction = sqrl_transaction_create( SQRL_TRANSACTION_IDENTITY_SAVE );
 	sqrl_transaction_set_user( transaction, user );
 	sqrl_user_update_storage( transaction );
-	transaction = sqrl_transaction_release( transaction );
+	sqrl_transaction_release( transaction );
 	sqrl_storage_save_to_buffer( u->storage, buf, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
 	END_WITH_USER(u);
-	user = sqrl_user_release( user );
-	user = NULL; // Make sure...
+	sqrl_user_release( user );
 	user = sqrl_user_create_from_buffer( utstring_body( buf ), utstring_len(buf));
 	utstring_free( buf );
-	buf = NULL;
 	sqrl_transaction_set_user( t, user );
 
 	key = sqrl_user_key( t, KEY_MK );
@@ -149,10 +147,10 @@ ERROR:
 
 DONE:
 	if( storage ) {
-		storage = sqrl_storage_destroy( storage );
+		sqrl_storage_destroy( storage );
 	}
-	user = sqrl_user_release( user );
-	t = sqrl_transaction_release( t );
+	sqrl_user_release( user );
+	sqrl_transaction_release( t );
 	if( bError ) {
 		printf( "FAIL\n" );
 		exit(1);

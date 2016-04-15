@@ -479,6 +479,6 @@ int main( int argc, char *argv[] )
 	} else {
 		printf( "%s", help );
 	}
-	u = sqrl_user_release( u );
+	sqrl_user_release( u );
 	exit(0);
 }

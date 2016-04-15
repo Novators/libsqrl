@@ -36,15 +36,15 @@ bool sqrl_server_init(
             server->sfn = malloc( strlen( tmpUri->host ) + 1 );
             strcpy( server->sfn, tmpUri->host );
         }
-        tmpUri = sqrl_uri_free( tmpUri );
+        sqrl_uri_free( tmpUri );
     }
 
     if( uri ) {
-        UT_string *str;
-        utstring_new( str );
         char *p, *pp;
         p = strstr( uri, SQRL_SERVER_TOKEN_SFN );
         if( p ) {
+            UT_string *str;
+            utstring_new( str );
             utstring_bincpy( str, uri, p - uri );
             sqrl_b64u_encode_append( str, (uint8_t*)server->sfn, strlen( server->sfn ));
             pp = p + strlen( SQRL_SERVER_TOKEN_SFN );

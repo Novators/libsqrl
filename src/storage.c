@@ -353,13 +353,10 @@ DLL_PUBLIC
 bool sqrl_storage_load_from_file( Sqrl_Storage storage, const char *filename )
 {
 	uint8_t tmp[256];
-	size_t filesize, bytesRead;
+	size_t bytesRead;
 	bool retVal;
 	FILE *fp = fopen( filename, "rb" );
 	if( !fp ) return false;
-	fseek( fp, 0L, SEEK_END );
-	filesize = ftell( fp );
-	fseek( fp, 0L, SEEK_SET );
 
 	UT_string *buf;
 	utstring_new( buf );

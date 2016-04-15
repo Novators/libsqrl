@@ -131,7 +131,6 @@ UT_string *sqrl_urldecode( UT_string *dest, const char *src )
 		if( p[0] == '+' ) {
 			utstring_bincpy( dest, " ", 1 );
 		} else if( p[0] == '%' && strlen(p) > 2 ) {
-			dc = 0;
 			for( i = 1; i <= 2; i++ ) {
 				dc = p[i];
 				if( dc >= '0' && dc <= '9' ) {

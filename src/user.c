@@ -609,7 +609,7 @@ uint8_t *sqrl_user_key( Sqrl_Transaction t, int key_type )
 		END_WITH_TRANSACTION(transaction);
 		return NULL;
 	}
-	int offset, empty, i;
+	int offset, i;
 	int loop = -1;
 	uint8_t *key;
 LOOP:
@@ -618,14 +618,10 @@ LOOP:
 		goto DONE;
 	}
 	offset = -1;
-	empty = -1;
 	for( i = 0; i < USER_MAX_KEYS; i++ ) {
 		if( user->lookup[i] == key_type ) {
 			offset = i;
 			break;
-		}
-		if( user->lookup[i] == 0 ) {
-			empty = i;
 		}
 	}
 	if( offset > -1 ) {

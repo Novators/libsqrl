@@ -111,7 +111,7 @@ bool sqrl_server_parse_client(
         for( current_key = 0; current_key < CLIENT_KV_COUNT; current_key++ ) {
             if( 0 == strncmp( key, client_kv_strings[current_key], key_len )) {
                 if( context->client_strings[current_key] ) {
-                    free( context->context_strings[current_key] );
+                    free( context->client_strings[current_key] );
                 }
                 context->client_strings[current_key] = malloc( val_len + 1 );
                 memcpy( context->client_strings[current_key], val, val_len );

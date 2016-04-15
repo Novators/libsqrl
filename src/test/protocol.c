@@ -153,7 +153,7 @@ void onSend(
     current_transaction = transaction;
     Sqrl_Server_Context *ctx = sqrl_server_context_create( server );
     sqrl_server_handle_query( ctx, 0, payload, payload_len );
-    ctx = sqrl_server_context_destroy( ctx );
+    sqrl_server_context_destroy( ctx );
 }
 
 void onServerSend(
