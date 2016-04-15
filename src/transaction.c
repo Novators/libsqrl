@@ -129,6 +129,7 @@ Gets the current \p Sqrl_Transaction_Status of a \p Sqrl_Transaction
 @param transaction the \p Sqrl_Transaction
 @return \p Sqrl_Transaction_Status
 */
+DLL_PUBLIC
 Sqrl_Transaction_Status sqrl_transaction_status( Sqrl_Transaction t )
 {
     Sqrl_Transaction_Status status = SQRL_TRANSACTION_STATUS_FAILED;
@@ -143,6 +144,7 @@ Gets the \p Sqrl_Transaction_Type of a \p Sqrl_Transaction
 @param transaction the \p Sqrl_Transaction
 @return \p Sqrl_Transaction_Type
 */
+DLL_PUBLIC
 Sqrl_Transaction_Type sqrl_transaction_type( Sqrl_Transaction t )
 {
     Sqrl_Transaction_Type type = SQRL_TRANSACTION_UNKNOWN;
@@ -158,6 +160,7 @@ Gets the \p Sqrl_User associated with a \p Sqrl_Transaction
 @return \p Sqrl_User the associated user
 @return NULL A \p Sqrl_User is not associated with this transaction
 */
+DLL_PUBLIC
 Sqrl_User sqrl_transaction_user( Sqrl_Transaction t )
 {
     Sqrl_User user = NULL;
@@ -176,6 +179,7 @@ the result of a \p sqrl_client_export_user() during the
 @param len Pointer to \p size_t containing the length of \p buf.  If buf is not NULL, modified to contain length of string.
 @return \p size_t Length of the \p Sqrl_Transaction's string
 */
+DLL_PUBLIC
 size_t sqrl_transaction_string( Sqrl_Transaction t, char *buf, size_t *len )
 {
     WITH_TRANSACTION(transaction,t);
