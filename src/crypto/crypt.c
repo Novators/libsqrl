@@ -29,8 +29,8 @@ int sqrl_enscrypt(
 	if( !buf ) return -1;
 	uint64_t N = (1<<nFactor);
 	uint8_t t[2][32] = {{0},{0}};
-	double i = 1, startTime, endTime;
-	int p = 0, lp = -1;
+	double startTime, endTime;
+	int i = 1, p = 0, lp = -1;
 	
 	escrypt_kdf_t   escrypt_kdf;
     escrypt_local_t local;
@@ -50,7 +50,7 @@ int sqrl_enscrypt(
 	memcpy( buf, t[1], 32 );
 	while( i < iterations ) {
 		if( cb_ptr ) {
-			if( lp != (p= (int)(i / iterations * 100))) {
+			if( lp != (p= (int)((double)i / iterations * 100))) {
 				if( 0 == (*cb_ptr)( p, cb_data )) {
 					retVal = -1;
 					break;
@@ -58,7 +58,7 @@ int sqrl_enscrypt(
 				lp = p;
 			}
 		}
-		if( 0 != ( ((int)i) & 1) ) {
+		if( i & 1 ) {
 			retVal = escrypt_kdf( &local, (uint8_t*)password, password_len, t[1], 32, N, ENSCRYPT_R, ENSCRYPT_P, t[0], 32 );
 			((uint64_t*)buf)[0] ^= ((uint64_t*)t[0])[0];
 			((uint64_t*)buf)[1] ^= ((uint64_t*)t[0])[1];

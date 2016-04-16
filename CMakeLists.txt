@@ -189,4 +189,4 @@ add_test(NAME sodium-test
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/src/libsodium/src/libsodium
 	COMMAND make check)
 
-add_custom_target(check ${CMAKE_CTEST_COMMAND})
+add_custom_target(check ${CMAKE_CTEST_COMMAND} -D Experimental)
