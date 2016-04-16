@@ -7,7 +7,7 @@ fi
 
 if [ -e "configure" ]
 then
-	./configure --prefix=$1
+	./configure --prefix=$1 --disable-pie
 else
-	./autogen.sh && ./configure --prefix=$1
+	./autogen.sh && ./configure --prefix=$1 --disable-pie
 fi

@@ -9,6 +9,7 @@ For more details, see the LICENSE file included with this package.
 #include "sqrl_internal.h"
 #include "crypto/aes.h"
 
+DLL_PUBLIC
 bool sqrl_server_init( 
     Sqrl_Server *server,
     char *uri,
@@ -80,6 +81,7 @@ void sqrl_server_clear( Sqrl_Server *server )
     sodium_memzero( server, sizeof( Sqrl_Server ));
 }
 
+DLL_PUBLIC
 Sqrl_Server *sqrl_server_create(
     char *uri,
     char *sfn,
@@ -97,6 +99,7 @@ Sqrl_Server *sqrl_server_create(
     return srv;
 }
 
+DLL_PUBLIC
 Sqrl_Server *sqrl_server_destroy( Sqrl_Server *server )
 {
     if( !server ) return NULL;
@@ -105,6 +108,7 @@ Sqrl_Server *sqrl_server_destroy( Sqrl_Server *server )
     return NULL;
 }
 
+DLL_PUBLIC
 bool sqrl_server_nut_generate( 
     Sqrl_Server *server,
     Sqrl_Nut *nut, 
@@ -129,6 +133,7 @@ bool sqrl_server_nut_generate(
     return true;
 }
 
+DLL_PUBLIC
 bool sqrl_server_nut_decrypt(
     Sqrl_Server *server,
     Sqrl_Nut *nut )
@@ -194,6 +199,7 @@ bool sqrl_server_verify_mac( Sqrl_Server *server, UT_string *str )
     return false;
 }
 
+DLL_PUBLIC
 char *sqrl_server_create_link( Sqrl_Server *server, uint32_t ip )
 {
     if( !server ) return false;
@@ -218,6 +224,7 @@ char *sqrl_server_create_link( Sqrl_Server *server, uint32_t ip )
     return retVal;
 }
 
+DLL_PUBLIC
 Sqrl_Server_Context *sqrl_server_context_create( Sqrl_Server *server )
 {
     if( !server ) return NULL;
@@ -226,6 +233,7 @@ Sqrl_Server_Context *sqrl_server_context_create( Sqrl_Server *server )
     return ctx;
 }
 
+DLL_PUBLIC
 Sqrl_Server_Context *sqrl_server_context_destroy( Sqrl_Server_Context *ctx )
 {
     if( !ctx ) return NULL;

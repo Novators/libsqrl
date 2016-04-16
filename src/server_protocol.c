@@ -342,6 +342,7 @@ void sqrl_server_add_user_suk( Sqrl_Server_Context *context )
     utstring_free( tmp );
 }
 
+DLL_PUBLIC
 void sqrl_server_handle_query(
     Sqrl_Server_Context *context,
     uint32_t client_ip,

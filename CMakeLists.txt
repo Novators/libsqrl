@@ -45,7 +45,7 @@ enable_testing()
 set(SRCDIR ${CMAKE_SOURCE_DIR}/src)
 
 if(CMAKE_COMPILER_IS_GNUCC)
-	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden")
+	set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fvisibility=hidden -fPIC")
 endif()
 
 CHECK_FOR_SSE()
@@ -111,23 +111,23 @@ MERGE_STATIC_LIBS(sqrl_static sqrl "${SLIBS}")
 
 add_library(sqrl SHARED ${SRC})
 add_dependencies(sqrl libsodium)
-target_link_libraries(sqrl ${LIBS} "-Wl,-all_load")
+target_link_libraries(sqrl ${LIBS})
 
 if(REQUIRED_LIBS_PRESENT)
 	add_executable(entropy src/cli/entropy_cli.c)
-	target_link_libraries(entropy sqrl)
+	target_link_libraries(entropy sqrl_static)
 endif(REQUIRED_LIBS_PRESENT)
 
 add_executable(enscrypt src/cli/enscrypt_bin.c)
-target_link_libraries(enscrypt sqrl)
+target_link_libraries(enscrypt sqrl_static)
 
 add_executable(makevectors src/cli/makevectors.c)
-target_link_libraries(makevectors sqrl)
+target_link_libraries(makevectors sqrl_static)
 
 add_executable(gcm_test src/crypto/gcm.c src/crypto/aes.c src/test/gcmtest.c)
 
 add_executable(storage_test src/test/storage_test.c)
-target_link_libraries(storage_test sqrl)
+target_link_libraries(storage_test sqrl_static)
 
 add_executable(encdec_test src/test/encdec_test.c)
 target_link_libraries(encdec_test sqrl)
@@ -136,10 +136,10 @@ add_executable(genrandom src/cli/genrandom.c)
 target_link_libraries(genrandom sqrl)
 
 add_executable(crypto_test src/test/crypto_test.c)
-target_link_libraries(crypto_test sqrl)
+target_link_libraries(crypto_test sqrl_static)
 
 add_executable(user_test src/test/user.c)
-target_link_libraries(user_test sqrl)
+target_link_libraries(user_test sqrl_static)
 
 add_executable(uri_test src/test/uri_test.c)
 target_link_libraries(uri_test sqrl)
@@ -178,7 +178,7 @@ if(SWIG_FOUND)
 		include_directories(${PHP_INCLUDE_DIRS})
 		SWIG_ADD_MODULE(php_sqrl php5 ${SWIG_I_FILE})
 		SWIG_LINK_LIBRARIES(php_sqrl ${PHP_LIBS} sqrl)
-		target_link_libraries(php_sqrl "-undefined suppress" -flat_namespace)
+		target_link_libraries(php_sqrl)
 		SET_TARGET_PROPERTIES(php_sqrl PROPERTIES PREFIX "")
 	endif(PHP_FOUND)
 endif(SWIG_FOUND)
