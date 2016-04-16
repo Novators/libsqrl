@@ -13,7 +13,7 @@
  * 
  **/
 
-#include <sqrl_config.h>
+#include "sqrl_internal.h"
 
 #if defined(_WIN32)
 #include <Windows.h>
