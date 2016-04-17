@@ -346,7 +346,6 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	size_t string_len )
 {
 	Sqrl_Transaction_Status retVal = SQRL_TRANSACTION_STATUS_WORKING;
-	uint8_t *key;
 	Sqrl_User tmpUser;
 	Sqrl_Transaction t = sqrl_transaction_create( type );
 	SQRL_CAST_TRANSACTION(transaction,t);
@@ -431,16 +430,8 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	}
 	goto DONE;
 
-NI:
-	printf( "Transaction Type %d not implemented.\n", type );
-	goto ERROR;
-
 SUCCESS:
 	retVal = SQRL_TRANSACTION_STATUS_SUCCESS;
-	goto DONE;
-
-CANCEL:
-	retVal =  SQRL_TRANSACTION_STATUS_CANCELLED;
 	goto DONE;
 
 ERROR:

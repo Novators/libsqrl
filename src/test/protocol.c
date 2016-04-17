@@ -195,7 +195,6 @@ void runTest( char *testName, Sqrl_Transaction_Type type, int expectedLoops, boo
 int main() 
 {
     sqrl_init();
-    bool bError = false;
     char txtBuffer[4096] = {0};
     
     Sqrl_Client_Callbacks cbs;

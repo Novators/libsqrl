@@ -22,10 +22,6 @@ static char client_kv_strings[CLIENT_KV_COUNT][CLIENT_KV_LENGTH+1] = {
     "ver", "cmd", "opt", "btn", "idk", "pidk", "suk", "vuk"
 };
 
-static char server_kv_strings[SERVER_KV_COUNT][SERVER_KV_LENGTH+1] = {
-    "ver", "nut", "tif", "qry", "suk", "ask", "url"
-};
-
 bool sqrl_server_verify_nut(
     Sqrl_Server_Context *context,
     uint32_t client_ip )
@@ -539,7 +535,6 @@ REPLY:
     sqrl_scb_send *onSend = (sqrl_scb_send*)context->server->onSend;
     (onSend)( context, utstring_body( reply ), utstring_len( reply ));
 
-DONE:
     utstring_free( reply );
 }
 
