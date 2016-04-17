@@ -28,6 +28,7 @@ int main()
 	int i;
 	FILE *fp = fopen( "vectors/enhash-vectors.txt", "wb" );
 	if( !fp ) {
+        printf( "Failed to open file: vectors/enhash-vectors.txt\n" );
 		return -1;
 	}
 	uint8_t key[SQRL_KEY_SIZE];

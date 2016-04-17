@@ -17,6 +17,7 @@ bool su_init_t2(
 {
 	SQRL_CAST_USER( user, transaction->user );
 	sctx->plain_text = user->keys->scratch;
+    sctx->text_len = SQRL_KEY_SIZE;
 	if( forSaving ) {
 		if( !sqrl_block_init( block, 2, 73 )) {
 			return false;
@@ -44,7 +45,6 @@ bool su_init_t2(
 	sctx->add_len = 25;
 	sctx->iv = NULL;
 	sctx->salt = block->data + 4;
-	sctx->text_len = SQRL_KEY_SIZE;
 	sctx->cipher_text = block->data + sctx->add_len;
 	sctx->tag = sctx->cipher_text + sctx->text_len;
 	return true;
@@ -232,6 +232,7 @@ bool sul_block_1( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 	if( !user ) return false;
 	bool retVal = true;
 	Sqrl_Crypt_Context sctx;
+    sctx.text_len = SQRL_KEY_SIZE * 2;
 
 	if( sqrl_block_read_int16( block ) != 125 ) {
 		goto ERROR;
@@ -261,7 +262,6 @@ bool sul_block_1( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 	user->options.enscryptSeconds = sqrl_block_read_int8( block );
 	user->options.timeoutMinutes = sqrl_block_read_int16( block );
 	// Cipher Text
-	sctx.text_len = SQRL_KEY_SIZE * 2;
 	sctx.cipher_text = block->data + block->cur;
 	// Verification Tag
 	sctx.tag = sctx.cipher_text + sctx.text_len;
