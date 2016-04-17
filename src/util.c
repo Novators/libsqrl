@@ -87,7 +87,7 @@ void utstring_zero( UT_string *str )
 void bin2rc( char *buf, uint8_t *bin ) 
 {
 	// bin must be 512+ bits of entropy!
-	int i, j, k, a, b;
+	int i, j, k;
 	uint64_t *tmp = (uint64_t*)bin;
 	for( i = 0, j = 0; i < 3; i++ ) {
 		for( k = 0; k < 8; k++ ) {

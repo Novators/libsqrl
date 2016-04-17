@@ -19,15 +19,27 @@ With minimal work, this implementation should run on iOS, Windows, and Android a
 - View the <a href="https://github.com/Novators/libsqrl">source code</a>
 
 Installation and Testing:
+First, get the source code and make your build directory:
 
 @code
 git clone https://github.com/Novators/libsqrl.git
 cd libsqrl
 mkdir build
 cd build
+@endcode
+
+To generate an Xcode project:
+
+@code
+cmake -G Xcode ..
+@endcode
+
+Or, to use Unix makefiles:
+
+@code
 cmake ..
 make
-make check
+make test
 @endcode
 
 @section license License

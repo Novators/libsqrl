@@ -55,7 +55,6 @@ bool sul_block_2( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 	SQRL_CAST_USER(user,transaction->user);
 	bool retVal = false;
 	Sqrl_Crypt_Context sctx;
-	bool relock;
 	if( ! sqrl_user_has_key( transaction->user, KEY_RESCUE_CODE )) {
 		return false;
 	}
@@ -98,7 +97,6 @@ bool sus_block_2( struct Sqrl_Transaction *transaction, Sqrl_Storage storage, Sq
 	SQRL_CAST_USER(user,transaction->user);
 	bool retVal = true;
 	Sqrl_Crypt_Context sctx;
-	bool relock;
 	if( ! sqrl_user_has_key( transaction->user, KEY_IUK )
 		|| ! sqrl_user_has_key( transaction->user, KEY_RESCUE_CODE )) {
 		return false;
@@ -234,7 +232,6 @@ bool sul_block_1( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 	if( !user ) return false;
 	bool retVal = true;
 	Sqrl_Crypt_Context sctx;
-	uint8_t *keyPointer;
 
 	if( sqrl_block_read_int16( block ) != 125 ) {
 		goto ERROR;
@@ -424,7 +421,6 @@ bool sqrl_user_update_storage( Sqrl_Transaction t )
 
 	Sqrl_Block block;
 	sqrl_block_clear( &block );
-	Sqrl_Crypt_Context sctx;
 	bool retVal = true;
 
 	if( (user->flags & USER_FLAG_T1_CHANGED) == USER_FLAG_T1_CHANGED ||
@@ -461,7 +457,6 @@ bool sqrl_user_update_storage( Sqrl_Transaction t )
 		sqrl_block_free( &block );
 	}
 
-DONE:
 	END_WITH_USER(user);
 	END_WITH_TRANSACTION(transaction);
 	return retVal;
