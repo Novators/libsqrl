@@ -406,7 +406,7 @@ void sqrl_server_handle_query(
         FLAG_SET( context->tif, SQRL_TIF_COMMAND_FAILURE );
         break;
     case SQRL_CMD_ENABLE:
-        if( FLAG_CHECK( context->tif, SQRL_TIF_ID_MATCH )) {
+        if( context->user && FLAG_CHECK( context->tif, SQRL_TIF_ID_MATCH )) {
             FLAG_CLEAR( context->user->flags, SQRL_SERVER_USER_FLAG_DISABLED );
             utstring_new( tmp );
             sqrl_b64u_encode( tmp, (uint8_t*)context->user, sizeof( Sqrl_Server_User ));
@@ -420,7 +420,7 @@ void sqrl_server_handle_query(
                 goto REPLY;
             }
             utstring_free( tmp );
-        } else if( FLAG_CHECK( context->tif, SQRL_TIF_PREVIOUS_ID_MATCH )) {
+        } else if( context->user && FLAG_CHECK( context->tif, SQRL_TIF_PREVIOUS_ID_MATCH )) {
             FLAG_CLEAR( context->user->flags, SQRL_SERVER_USER_FLAG_DISABLED );
 
             utstring_new( tmp );
@@ -441,7 +441,7 @@ void sqrl_server_handle_query(
         FLAG_SET( context->tif, SQRL_TIF_COMMAND_FAILURE );
         break;
     case SQRL_CMD_DISABLE:
-        if( FLAG_CHECK( context->tif, SQRL_TIF_ID_MATCH )) {
+        if( context->user && FLAG_CHECK( context->tif, SQRL_TIF_ID_MATCH )) {
             FLAG_SET( context->user->flags, SQRL_SERVER_USER_FLAG_DISABLED );
             utstring_new( tmp );
             sqrl_b64u_encode( tmp, (uint8_t*)context->user, sizeof( Sqrl_Server_User ));

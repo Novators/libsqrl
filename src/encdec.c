@@ -258,7 +258,7 @@ void sqrl_b64u_decode_append( UT_string *dest, const char *src, size_t src_len )
 {
 	int i = 0;
 	int charCount = 0;
-	uint32_t tmp, val;
+	uint32_t tmp = 0, val;
 	char str[3];
 #if SQRL_BASE64_PAD_CHAR == 0x00
 	size_t input_length = src_len;
