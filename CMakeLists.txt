@@ -23,6 +23,8 @@ if(CMAKE_MAJOR_VERSION EQUAL 3)
 endif(CMAKE_MAJOR_VERSION EQUAL 3)
 # End Hack.
 
+set_property(GLOBAL PROPERTY USE_FOLDERS ON)
+
 include(ExternalProject)
 include(${CMAKE_SOURCE_DIR}/cmake/find_sse.cmake)
 #include(${CMAKE_SOURCE_DIR}/cmake/mergestaticlibs.cmake)
@@ -32,7 +34,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/libutils.cmake)
 set(sqrl_version_major 1)
 # Minor version is build year
 set(sqrl_version_minor 2016)
-set(sqrl_build 27)
+set(sqrl_build 28)
 set(sqrl_version "${sqrl_version_major}.${sqrl_version_minor} build ${sqrl_build}")
 
 #set(CMAKE_BUILD_TYPE Release)
@@ -81,6 +83,7 @@ ExternalProject_Add(libsodium
 	INSTALL_COMMAND make -s install)
 add_library(sodium STATIC IMPORTED)
 SET_TARGET_PROPERTIES(sodium PROPERTIES IMPORTED_LOCATION ${CMAKE_BINARY_DIR}/lib/libsodium.a)
+set_target_properties(libsodium PROPERTIES FOLDER meta_build)
 set(LIBS ${LIBS} sodium)
 
 find_library(RT_LIB NAMES rt)
@@ -95,63 +98,79 @@ endif()
 
 include_directories(include)
 
-set(SRC src/user.c src/user_storage.c src/entropy/entropy.c src/entropy/rdrand.c 
-	src/crypto/aes.c src/crypto/gcm.c src/encdec.c src/crypto/crypt.c src/util.c 
-	src/storage.c src/block.c src/realtime.c src/uri.c src/client.c 
-	src/client_protocol.c src/transaction.c src/platform.c src/server.c
-	src/server_protocol.c ${CMAKE_BINARY_DIR}/sqrl_depends.c)
+set(SG_CLIENT src/client.c src/client_protocol.c src/transaction.c)
+source_group(Client FILES ${SG_CLIENT})
+set(SG_CLIENT_USER src/user.c src/user_storage.c src/storage.c src/block.c)
+source_group(Client\\User FILES ${SG_CLIENT_USER})
+set(SG_SERVER src/server.c src/server_protocol.c)
+source_group(Server FILES ${SG_SERVER})
+set(SG_CRYPTO src/crypto/aes.c src/crypto/gcm.c src/crypto/crypt.c src/crypto/aes.h src/crypto/gcm.h)
+source_group(Crypto FILES ${SG_CRYPTO})
+set(SG_UTIL src/util.c src/encdec.c src/realtime.c src/uri.c src/platform.c ${CMAKE_BINARY_DIR}/sqrl_depends.c)
+source_group(Utility FILES ${SG_UTIL})
+set(SG_ENTROPY src/entropy/entropy.c src/entropy/rdrand.c src/entropy/entropy.h src/entropy/entropy_linux.h src/entropy/entropy_mac.h src/entropy/entropy_win.h src/entropy/rdrand.h)
+source_group(Entropy FILES ${SG_ENTROPY})
 
-add_library(sqrl_static_tmp STATIC ${SRC})
-add_dependencies(sqrl_static_tmp libsodium)
-target_link_libraries(sqrl_static_tmp ${LIBS})
+set(SG_HEADERS src/sqrl_internal.h src/sqrl_expert.h src/sqrl_client.h src/sqrl_server.h src/sqrl_common.h src/detect_platform.h src/utstring.h)
+source_group(Headers FILES ${SG_HEADERS})
 
-set(SLIBS sqrl_static_tmp ${LIBS})
+set(SRC ${SG_CLIENT_USER} ${SG_CLIENT} ${SG_SERVER} ${SG_CRYPTO} ${SG_UTIL} ${SG_ENTROPY})
 
-MERGE_STATIC_LIBS(sqrl_static sqrl "${SLIBS}")
-
-add_library(sqrl SHARED ${SRC})
+add_library(sqrl SHARED ${SRC} ${SG_HEADERS})
 add_dependencies(sqrl libsodium)
 target_link_libraries(sqrl ${LIBS})
 
-if(REQUIRED_LIBS_PRESENT)
-	add_executable(entropy src/cli/entropy_cli.c)
-	target_link_libraries(entropy sqrl_static)
-endif(REQUIRED_LIBS_PRESENT)
+add_executable(entropy src/cli/entropy_cli.c)
+target_link_libraries(entropy sqrl)
+set_target_properties(entropy PROPERTIES FOLDER CLI)
 
 add_executable(enscrypt src/cli/enscrypt_bin.c)
-target_link_libraries(enscrypt sqrl_static)
+target_link_libraries(enscrypt sqrl)
+set_target_properties(enscrypt PROPERTIES FOLDER CLI)
 
 add_executable(makevectors src/cli/makevectors.c)
-target_link_libraries(makevectors sqrl_static)
-
-add_executable(gcm_test src/crypto/gcm.c src/crypto/aes.c src/test/gcmtest.c)
-
-add_executable(storage_test src/test/storage_test.c)
-target_link_libraries(storage_test sqrl_static)
-
-add_executable(encdec_test src/test/encdec_test.c)
-target_link_libraries(encdec_test sqrl)
+target_link_libraries(makevectors sqrl)
+set_target_properties(makevectors PROPERTIES FOLDER CLI)
 
 add_executable(genrandom src/cli/genrandom.c)
 target_link_libraries(genrandom sqrl)
+set_target_properties(genrandom PROPERTIES FOLDER CLI)
+
+add_executable(gcm_test src/crypto/gcm.c src/crypto/aes.c src/test/gcmtest.c)
+add_dependencies(gcm_test libsodium)
+set_target_properties(gcm_test PROPERTIES FOLDER Tests)
+
+add_executable(storage_test src/test/storage_test.c)
+target_link_libraries(storage_test sqrl)
+set_target_properties(storage_test PROPERTIES FOLDER Tests)
+
+add_executable(encdec_test src/test/encdec_test.c)
+target_link_libraries(encdec_test sqrl)
+set_target_properties(encdec_test PROPERTIES FOLDER Tests)
 
 add_executable(crypto_test src/test/crypto_test.c)
-target_link_libraries(crypto_test sqrl_static)
+target_link_libraries(crypto_test sqrl)
+set_target_properties(crypto_test PROPERTIES FOLDER Tests)
 
 add_executable(user_test src/test/user.c)
-target_link_libraries(user_test sqrl_static)
+target_link_libraries(user_test sqrl)
+set_target_properties(user_test PROPERTIES FOLDER Tests)
 
 add_executable(uri_test src/test/uri_test.c)
 target_link_libraries(uri_test sqrl)
+set_target_properties(uri_test PROPERTIES FOLDER Tests)
 
 add_executable(client_test src/test/client.c)
 target_link_libraries(client_test sqrl)
+set_target_properties(client_test PROPERTIES FOLDER Tests)
 
 add_executable(protocol_test src/test/protocol.c)
 target_link_libraries(protocol_test sqrl)
+set_target_properties(protocol_test PROPERTIES FOLDER Tests)
 
 add_executable(server_test src/test/server_test.c)
 target_link_libraries(server_test sqrl)
+set_target_properties(server_test PROPERTIES FOLDER Tests)
 
 #documentation
 find_package(Doxygen QUIET)
@@ -172,6 +191,7 @@ if(DOXYGEN_FOUND)
 		WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
 		COMMENT "Generating API documentation with Doxygen" VERBATIM
 	)
+    set_target_properties(doc PROPERTIES FOLDER meta_build)
 endif(DOXYGEN_FOUND)
 
 # Tests
@@ -190,3 +210,4 @@ add_test(NAME sodium-test
 	COMMAND make check)
 
 add_custom_target(check ${CMAKE_CTEST_COMMAND} -D Experimental)
+set_target_properties(check PROPERTIES FOLDER meta_build)

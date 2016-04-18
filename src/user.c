@@ -432,7 +432,6 @@ void sqrl_user_hintunlock( Sqrl_Transaction t,
 	sodium_memzero( key, SQRL_KEY_SIZE );
 	sodium_memzero( user->keys->scratch, KEY_SCRATCH_SIZE );
 
-DONE:
 	END_WITH_USER(user);
 	END_WITH_TRANSACTION(transaction);
 }

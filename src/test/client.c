@@ -176,7 +176,6 @@ void onSaveSuggested( Sqrl_User user )
 int main() 
 {
     sqrl_init();
-    bool bError = false;
     char txtBuffer[1024] = {0};
     
     Sqrl_Client_Callbacks cbs;

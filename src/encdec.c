@@ -233,7 +233,7 @@ static int sqrl_b64u_decode_next_value(uint32_t *nextValue, const char *src) {
 			*nextValue = B64_DEC_TABLE[(int)src[i]];
 			return i+1;
 		}
-		if( B64_DEC_TABLE[src[i]] != 0 ) { // Legitimate character
+		if( B64_DEC_TABLE[(uint8_t)src[i]] != 0 ) { // Legitimate character
 			*nextValue = B64_DEC_TABLE[(int)src[i]];
 			//printf( "Selecting: %c (%x)\n", src[i], *nextValue );
 			return i+1;
