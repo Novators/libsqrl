@@ -34,7 +34,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/libutils.cmake)
 set(sqrl_version_major 1)
 # Minor version is build year
 set(sqrl_version_minor 2016)
-set(sqrl_build 29)
+set(sqrl_build 30)
 set(sqrl_version "${sqrl_version_major}.${sqrl_version_minor} build ${sqrl_build}")
 
 #set(CMAKE_BUILD_TYPE Release)
@@ -171,6 +171,11 @@ set_target_properties(protocol_test PROPERTIES FOLDER Tests)
 add_executable(server_test src/test/server_test.c)
 target_link_libraries(server_test sqrl)
 set_target_properties(server_test PROPERTIES FOLDER Tests)
+
+install(FILES src/utstring.h src/sqrl_expert.h src/sqrl_client.h src/sqrl_server.h src/sqrl_common.h
+	DESTINATION include)
+
+install(TARGETS sqrl LIBRARY DESTINATION lib)
 
 #documentation
 find_package(Doxygen QUIET)
