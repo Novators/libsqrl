@@ -117,8 +117,8 @@ source_group(Headers FILES ${SG_HEADERS})
 set(SRC ${SG_CLIENT_USER} ${SG_CLIENT} ${SG_SERVER} ${SG_CRYPTO} ${SG_UTIL} ${SG_ENTROPY})
 
 add_library(sqrl_obj OBJECT ${SRC})
+add_dependencies(sqrl_obj libsodium)
 add_library(sqrl SHARED ${SG_HEADERS} $<TARGET_OBJECTS:sqrl_obj>)
-add_dependencies(sqrl libsodium)
 target_link_libraries(sqrl ${LIBS})
 
 add_executable(entropy src/cli/entropy_cli.c $<TARGET_OBJECTS:sqrl_obj>)
