@@ -29,7 +29,7 @@
 #endif
 
 #else
-#error "Unable to define getRealTime( ) for an unknown OS."
+#ERR "Unable to define getRealTime( ) for an unknown OS."
 #endif
 
 

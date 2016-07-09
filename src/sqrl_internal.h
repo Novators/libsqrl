@@ -8,7 +8,7 @@ For more details, see the LICENSE file included with this package.
 #ifndef SQRL_INTERNAL_H_INCLUDED
 #define SQRL_INTERNAL_H_INCLUDED
 
-#include <sqrl_config.h>
+#include "config.h"
 
 #ifdef UNIX
 #include <unistd.h>
@@ -23,7 +23,7 @@ For more details, see the LICENSE file included with this package.
 #include "crypto/gcm.h"
 #include "sqrl_expert.h"
 
-#define DEBUG_ERROR 1
+#define DEBUG_ERR 1
 #define DEBUG_INFO 1
 #define DEBUG_CRYPTO 0
 #define DEBUG_IDENTITY 0
@@ -93,8 +93,8 @@ do{                                                   \
 
 
 typedef int (*enscrypt_progress_fn)(int percent, void* data);
-double sqrl_get_real_time( );
-uint64_t sqrl_get_timestamp();
+DLL_PUBLIC double sqrl_get_real_time( );
+DLL_PUBLIC uint64_t sqrl_get_timestamp();
 
 typedef void* SqrlMutex;
 
@@ -120,7 +120,7 @@ typedef pthread_t SqrlThread;
 
 #ifdef WIN32
 typedef HANDLE SqrlThread;
-#define SQRL_THREAD_FUNCTION_RETURN_TYPE DWORD WINAPI 
+#define SQRL_THREAD_FUNCTION_RETURN_TYPE DWORD 
 #define SQRL_THREAD_FUNCTION_INPUT_TYPE LPVOID
 #define SQRL_THREAD_LEAVE ExitThread(0)
 #endif
@@ -256,7 +256,7 @@ if( user != NULL ) { \
 }
 
 
-void        sqrl_user_default_options( Sqrl_User_Options *options );
+DLL_PUBLIC void        sqrl_user_default_options( Sqrl_User_Options *options );
 Sqrl_User   sqrl_user_create();
 Sqrl_User   sqrl_user_create_from_buffer( const char *buffer, size_t buffer_len );
 Sqrl_User   sqrl_user_create_from_file( const char *filename );
@@ -265,12 +265,12 @@ void        sqrl_user_ensure_keys_allocated( Sqrl_User u );
 bool        sqrl_user_force_decrypt( Sqrl_Transaction transaction );
 bool        sqrl_user_force_rescue( Sqrl_Transaction transaction );
 bool        sqrl_user_has_key( Sqrl_User user, int key_type );
-void        sqrl_user_hintlock( Sqrl_User user );
-void        sqrl_user_hintunlock( 
+DLL_PUBLIC void        sqrl_user_hintlock( Sqrl_User user );
+DLL_PUBLIC void        sqrl_user_hintunlock(
                 Sqrl_Transaction transaction, 
 				char *hint, 
 				size_t length );
-bool        sqrl_user_is_hintlocked( Sqrl_User user );
+DLL_PUBLIC bool        sqrl_user_is_hintlocked( Sqrl_User user );
 bool        sqrl_user_is_memlocked( Sqrl_User user );
 uint8_t*    sqrl_user_key( Sqrl_Transaction transaction, int key_type );
 bool        sqrl_user_try_load_password( Sqrl_Transaction transaction, bool retry );
@@ -284,7 +284,7 @@ void        sqrl_user_remove_key( Sqrl_User user, int key_type );
 bool        sqrl_user_save( Sqrl_Transaction transaction );
 bool        sqrl_user_save_to_buffer( Sqrl_Transaction transaction );
 uint8_t*    sqrl_user_scratch( Sqrl_User user );
-bool        sqrl_user_set_password( 
+DLL_PUBLIC bool        sqrl_user_set_password(
 				Sqrl_User u, 
 				char *password, 
 				size_t password_len );
@@ -366,11 +366,11 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 void sqrl_client_site_maintenance( bool forceDeleteAll );
 
 /* crypt.c */
-void 		sqrl_sign( const UT_string *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] );
-bool 		sqrl_verify_sig( const UT_string *, const uint8_t *, const uint8_t * );
-int 		sqrl_make_shared_secret( uint8_t *, const uint8_t *, const uint8_t * );
+DLL_PUBLIC void 		sqrl_sign( const UT_string *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] );
+DLL_PUBLIC bool 		sqrl_verify_sig( const UT_string *, const uint8_t *, const uint8_t * );
+DLL_PUBLIC int 		sqrl_make_shared_secret( uint8_t *, const uint8_t *, const uint8_t * );
 //int 		sqrl_make_dh_keys( uint8_t *, uint8_t * );
-void 		sqrl_ed_public_key( uint8_t *puk, const uint8_t *prk );
+DLL_PUBLIC void 		sqrl_ed_public_key( uint8_t *puk, const uint8_t *prk );
 bool 		sqrl_crypt( Sqrl_Crypt_Context *sctx, const char *password, size_t password_len, enscrypt_progress_fn callback, void * callback_data );
 bool 		sqrl_crypt_gcm( Sqrl_Crypt_Context *sctx, uint8_t *key );
 uint32_t 	sqrl_crypt_enscrypt( Sqrl_Crypt_Context *sctx, uint8_t *key, const char *password, size_t password_len, enscrypt_progress_fn callback, void * callback_data );
@@ -408,13 +408,13 @@ int sqrl_enscrypt_ms(
 	enscrypt_progress_fn cb_ptr, 
 	void *cb_data );
 
-void sqrl_curve_private_key( uint8_t *key );
-void sqrl_curve_public_key( uint8_t *puk, const uint8_t *prk );
+DLL_PUBLIC void sqrl_curve_private_key( uint8_t *key );
+DLL_PUBLIC void sqrl_curve_public_key( uint8_t *puk, const uint8_t *prk );
 
 void sqrl_lcstr( char * );
 
 void bin2rc( char *buf, uint8_t *bin );
-void utstring_zero( UT_string *str );
+DLL_PUBLIC void utstring_zero( UT_string *str );
 
 void sqrl_sleep(int sleepMs);
 bool sqrl_parse_key_value( char **strPtr, char **keyPtr, char **valPtr,

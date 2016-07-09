@@ -7,7 +7,7 @@ For more details, see the LICENSE file included with this package.
 **/
 
 #include <math.h>
-#include <crypto_scrypt.h>
+#include "crypto_scrypt.h"
 
 #include "../sqrl_internal.h"
 
@@ -27,7 +27,7 @@ int sqrl_enscrypt(
 	void *cb_data )
 {
 	if( !buf ) return -1;
-	uint64_t N = (1<<nFactor);
+	uint64_t N = (((uint64_t)1)<<nFactor);
 	uint8_t t[2][32] = {{0},{0}};
 	double startTime, endTime;
 	int i = 1, p = 0, lp = -1;
@@ -100,7 +100,7 @@ int sqrl_enscrypt_ms(
 	void *cb_data )
 {
 	if( !buf ) return -1;
-	uint64_t N = (1<<nFactor);
+	uint64_t N = (((uint64_t)1)<<nFactor);
 	uint8_t t[2][32] = {{0},{0}};
 	int i = 1;
 	int p = 0, lp = -1;

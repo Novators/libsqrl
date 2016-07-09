@@ -30,7 +30,7 @@ static int aes_tables_inited = 0;   // run-once flag for performing key
  *  and once built are read-only and thread safe. The "gcm_initialize" function
  *  must be called once during system initialization to populate these arrays
  *  for subsequent use by the AES key scheduler. If they have not been built
- *  before attempted use, an error will be returned to the caller.
+ *  before attempted use, an ERR will be returned to the caller.
  *
  *  NOTE: GCM Encryption/Decryption does NOT REQUIRE AES decryption. Since
  *  GCM uses AES in counter-mode, where the AES cipher output is XORed with

@@ -31,13 +31,13 @@
  *  This code was developed for use within SQRL's fixed environmnent. Thus, it
  *  is somewhat less "general purpose" than it would be if it were designed as
  *  a general purpose AES-GCM library. Specifically, it bothers with almost NO
- *  error checking on parameter limits, buffer bounds, etc. It assumes that it
+ *  ERR checking on parameter limits, buffer bounds, etc. It assumes that it
  *  is being invoked by its author or by someone who understands the values it
  *  expects to receive. Its behavior will be undefined otherwise.
  *
  *  All functions that might fail are defined to return 'ints' to indicate a
- *  problem. Most do not do so now. But this allows for error propagation out
- *  of internal functions if robust error checking should ever be desired.
+ *  problem. Most do not do so now. But this allows for ERR propagation out
+ *  of internal functions if robust ERR checking should ever be desired.
  *
  ******************************************************************************/
 
@@ -250,7 +250,7 @@ int gcm_start( gcm_context *ctx,    // pointer to user-provided GCM context
                const uchar *add,    // ptr to additional AEAD data (NULL if none)
                size_t add_len )     // length of additional AEAD data (bytes)
 {
-    int ret;            // our error return if the AES encrypt fails
+    int ret;            // our ERR return if the AES encrypt fails
     uchar work_buf[16]; // XOR source built from provided IV if len != 16
     const uchar *p;     // general purpose array pointer
     size_t use_len;     // byte count to process, up to 16 bytes
@@ -317,7 +317,7 @@ int gcm_update( gcm_context *ctx,       // pointer to user-provided GCM context
                 const uchar *input,     // pointer to source data
                 uchar *output )         // pointer to destination data
 {
-    int ret;            // our error return if the AES encrypt fails
+    int ret;            // our ERR return if the AES encrypt fails
     uchar ectr[16];     // counter-mode cipher output for XORing
     size_t use_len;     // byte count to process, up to 16 bytes
     size_t i;           // local loop iterator
@@ -455,7 +455,7 @@ int gcm_auth_decrypt(
         size_t tag_len )        // byte length of the tag <= 16
 {
     uchar check_tag[16];        // the tag generated and returned by decryption
-    int diff;                   // an ORed flag to detect authentication errors
+    int diff;                   // an ORed flag to detect authentication ERRs
     size_t i;                   // our local iterator
     /*
        we use GCM_DECRYPT_AND_TAG (above) to perform our decryption

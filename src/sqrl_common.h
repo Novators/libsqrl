@@ -55,9 +55,9 @@ typedef struct Sqrl_Uri {
 	char *sfn;
 } Sqrl_Uri;
 
-Sqrl_Uri*	sqrl_uri_create_copy( Sqrl_Uri *original );
-Sqrl_Uri*	sqrl_uri_parse(const char *);
-Sqrl_Uri*	sqrl_uri_free(struct Sqrl_Uri *);
+DLL_PUBLIC Sqrl_Uri*	sqrl_uri_create_copy( Sqrl_Uri *original );
+DLL_PUBLIC Sqrl_Uri*	sqrl_uri_parse(const char *);
+DLL_PUBLIC Sqrl_Uri*	sqrl_uri_free(struct Sqrl_Uri *);
 
 /** @} */ // endgroup URI
 
@@ -77,7 +77,7 @@ typedef enum {
 	SQRL_TIF_IP_MATCH 					 = 0x0004,
 	SQRL_TIF_SQRL_DISABLED 				 = 0x0008,
 	SQRL_TIF_FUNCTION_NOT_SUPPORTED 	 = 0x0010,
-	SQRL_TIF_TRANSIENT_ERROR 			 = 0x0020,
+	SQRL_TIF_TRANSIENT_ERR 			 = 0x0020,
 	SQRL_TIF_COMMAND_FAILURE 			 = 0x0040,
 	SQRL_TIF_CLIENT_FAILURE 			 = 0x0080
 } Sqrl_Tif;
@@ -91,21 +91,21 @@ for easy string handling.  There are functions for URL-encoding (aka %-encoding)
 slightly modified base64url encoding.
 
 @{ */
-UT_string*	sqrl_b64u_decode( UT_string * dest, const char *src, size_t src_len );
-void 		sqrl_b64u_decode_append( UT_string *dest, const char *src, size_t src_len );
-UT_string*	sqrl_b64u_encode( UT_string *dest, const uint8_t *src, size_t src_len );
-void 		sqrl_b64u_encode_append( UT_string *dest, const uint8_t *src, size_t src_len );
-uint32_t	sqrl_hex2uint( const char *hex );
-UT_string*	sqrl_urldecode( UT_string *dest, const char *src );
-UT_string*	sqrl_urlencode( UT_string *dest, const char *src );
+DLL_PUBLIC UT_string*	sqrl_b64u_decode( UT_string * dest, const char *src, size_t src_len );
+DLL_PUBLIC void 		sqrl_b64u_decode_append( UT_string *dest, const char *src, size_t src_len );
+DLL_PUBLIC UT_string*	sqrl_b64u_encode( UT_string *dest, const uint8_t *src, size_t src_len );
+DLL_PUBLIC void 		sqrl_b64u_encode_append( UT_string *dest, const uint8_t *src, size_t src_len );
+DLL_PUBLIC uint32_t	sqrl_hex2uint( const char *hex );
+DLL_PUBLIC UT_string*	sqrl_urldecode( UT_string *dest, const char *src );
+DLL_PUBLIC UT_string*	sqrl_urlencode( UT_string *dest, const char *src );
 /** @} */ // endgroup encdec
 
 /** \defgroup util Utility Functions
 
 @{ */
 
-int 		sqrl_init();
-int         sqrl_stop();
+DLL_PUBLIC int 		sqrl_init();
+DLL_PUBLIC int         sqrl_stop();
 
 /**
 Get a string representing the version of SQRL lib in use

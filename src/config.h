@@ -8,20 +8,13 @@ For more details, see the LICENSE file included with this package.
 #ifndef CONFIG_H_INCLUDED
 #define CONFIG_H_INCLUDED
 
-#cmakedefine UNIX
-#cmakedefine WIN32
-#cmakedefine CYGWIN
-#cmakedefine CMAKE_COMPILER_IS_GNUCC
-#cmakedefine MSVC
-#cmakedefine APPLE
-
 #define SCRYPT_SALSA
 #define SCRYPT_SHA256
 
-#define SQRL_LIB_VERSION "@sqrl_version@"
-#define SQRL_LIB_VERSION_MAJOR @sqrl_version_major@
-#define SQRL_LIB_VERSION_MINOR @sqrl_version_minor@
-#define SQRL_LIB_VERSION_BUILD @sqrl_build@
+#define SQRL_LIB_VERSION "1.2016.31"
+#define SQRL_LIB_VERSION_MAJOR 1
+#define SQRL_LIB_VERSION_MINOR 2016
+#define SQRL_LIB_VERSION_BUILD 31
 
 #if defined WIN32 || defined CYGWIN
   #ifdef CMAKE_COMPILER_IS_GNUCC

@@ -3,3 +3,6 @@ reset.sh
 DartConfiguration.tcl
 upload_docs.sh
 build
+/libsqrl/Debug
+/libsqrl/libsqrl/Debug
+/libsqrl/.vs/libsqrl/v14

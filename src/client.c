@@ -225,13 +225,13 @@ bool sqrl_client_require_new_password( Sqrl_Transaction t )
 	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return false;
 	SQRL_CAST_USER(user,transaction->user);
-	if( !user ) goto ERROR;
+	if( !user ) goto ERR;
 	if( sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_NEW_PASSWORD ) &&
 		user->keys->password_len > 0 ) {
 		goto DONE;
 	}
 
-ERROR:
+ERR:
 	retVal = false;
 
 DONE:
@@ -243,9 +243,9 @@ bool sqrl_client_require_password( Sqrl_Transaction t )
 {
 	bool retVal = true;
 	WITH_TRANSACTION(transaction,t);
-	if( !transaction ) goto ERROR;
+	if( !transaction ) goto ERR;
 	SQRL_CAST_USER(user,transaction->user);
-	if( !user ) goto ERROR;
+	if( !user ) goto ERR;
 	if( user->keys->password_len > 0 ) {
 		goto DONE;
 	}
@@ -254,7 +254,7 @@ bool sqrl_client_require_password( Sqrl_Transaction t )
 		goto DONE;
 	}
 
-ERROR:
+ERR:
 	retVal = false;
 
 DONE:
@@ -266,8 +266,8 @@ bool sqrl_client_require_rescue_code( Sqrl_Transaction t )
 {
 	bool retVal = true;
 	WITH_TRANSACTION(transaction,t);
-	if( !transaction ) goto ERROR;
-	if( !transaction->user ) goto ERROR;
+	if( !transaction ) goto ERR;
+	if( !transaction->user ) goto ERR;
 	if( sqrl_user_has_key( transaction->user, KEY_RESCUE_CODE ) ) {
 		goto DONE;
 	}
@@ -276,7 +276,7 @@ bool sqrl_client_require_rescue_code( Sqrl_Transaction t )
 		goto DONE;
 	}
 
-ERROR:
+ERR:
 	retVal = false;
 
 DONE:
@@ -309,16 +309,16 @@ Sqrl_Transaction_Status sqrl_client_export_user(
 	transaction->encodingType = encodingType;
 	if( uri ) {
 		transaction->uri = sqrl_uri_parse( uri );
-		if( !transaction->uri ) goto ERROR;
-		if( transaction->uri->scheme != SQRL_SCHEME_FILE ) goto ERROR;
-		if( !sqrl_user_save( t )) goto ERROR;
+		if( !transaction->uri ) goto ERR;
+		if( transaction->uri->scheme != SQRL_SCHEME_FILE ) goto ERR;
+		if( !sqrl_user_save( t )) goto ERR;
 	} else {
-		if( !sqrl_user_save_to_buffer( t )) goto ERROR;
+		if( !sqrl_user_save_to_buffer( t )) goto ERR;
 	}
 	status = SQRL_TRANSACTION_STATUS_SUCCESS;
 	goto DONE;
 
-ERROR:
+ERR:
 	status = SQRL_TRANSACTION_STATUS_FAILED;
 
 DONE:
@@ -357,45 +357,45 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	if( user ) sqrl_transaction_set_user( t, user );
 	switch( type ) {
 	case SQRL_TRANSACTION_UNKNOWN:
-		goto ERROR;
+		goto ERR;
 	case SQRL_TRANSACTION_AUTH_ENABLE:
 	case SQRL_TRANSACTION_AUTH_REMOVE:
 	case SQRL_TRANSACTION_AUTH_IDENT:
 	case SQRL_TRANSACTION_AUTH_DISABLE:
 		if( !transaction->uri || transaction->uri->scheme != SQRL_SCHEME_SQRL ) {
-			goto ERROR;
+			goto ERR;
 		}
 		if( !transaction->user ) {
 			sqrl_client_call_select_user( transaction );
-			if( !transaction->user ) goto ERROR;
+			if( !transaction->user ) goto ERR;
 		}
 		if( type == SQRL_TRANSACTION_AUTH_ENABLE || type == SQRL_TRANSACTION_AUTH_REMOVE ) {
 			if( !sqrl_user_force_rescue( transaction )) {
 				printf( "Failed to force rescue\n" );
-				goto ERROR;
+				goto ERR;
 			}
 		}
 		retVal = sqrl_client_resume_transaction( transaction, NULL, 0 );
 		goto DONE;
 	case SQRL_TRANSACTION_IDENTITY_RESCUE:
-		if( !transaction->user ) goto ERROR;
+		if( !transaction->user ) goto ERR;
 		if( sqrl_user_force_rescue( transaction )) {
 			goto SUCCESS;
 		}
-		goto ERROR;
+		goto ERR;
 	case SQRL_TRANSACTION_IDENTITY_REKEY:
-		if( !transaction->user ) goto ERROR;
-		if( !sqrl_user_force_rescue( transaction )) goto ERROR;
+		if( !transaction->user ) goto ERR;
+		if( !sqrl_user_force_rescue( transaction )) goto ERR;
 		sqrl_user_rekey( transaction );
 		if( sqrl_client_require_password( transaction )) {
 			sqrl_client_call_save_suggested( transaction->user );
 			goto SUCCESS;
 		}
-		goto ERROR;
+		goto ERR;
 	case SQRL_TRANSACTION_IDENTITY_LOAD:
-		if( transaction->user ) goto ERROR;
+		if( transaction->user ) goto ERR;
 		if( transaction->uri ) {
-			if( transaction->uri->scheme != SQRL_SCHEME_FILE ) goto ERROR;
+			if( transaction->uri->scheme != SQRL_SCHEME_FILE ) goto ERR;
 			transaction->user = sqrl_user_create_from_file( transaction->uri->challenge );
 			if( transaction->user ) {
 				goto SUCCESS;
@@ -406,9 +406,9 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 				goto SUCCESS;
 			}
 		}
-		goto ERROR;
+		goto ERR;
 	case SQRL_TRANSACTION_IDENTITY_GENERATE:
-		if( transaction->user ) goto ERROR;
+		if( transaction->user ) goto ERR;
 		tmpUser = sqrl_user_create();
 		sqrl_transaction_set_user( t, tmpUser );
 		sqrl_user_release( tmpUser );
@@ -416,17 +416,17 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 			sqrl_client_call_save_suggested( transaction->user );
 			goto SUCCESS;
 		}
-		goto ERROR;
+		goto ERR;
 	case SQRL_TRANSACTION_IDENTITY_CHANGE_PASSWORD:
-		if( !transaction->user ) goto ERROR;
+		if( !transaction->user ) goto ERR;
 		if( sqrl_user_force_decrypt( transaction )) {
 			if( sqrl_client_require_new_password( transaction )) {
 				goto SUCCESS;
 			}
 		}
-		goto ERROR;
+		goto ERR;
 	default:
-		goto ERROR;
+		goto ERR;
 	}
 	goto DONE;
 
@@ -434,7 +434,7 @@ SUCCESS:
 	retVal = SQRL_TRANSACTION_STATUS_SUCCESS;
 	goto DONE;
 
-ERROR:
+ERR:
 	retVal = SQRL_TRANSACTION_STATUS_FAILED;
 	goto DONE;
 

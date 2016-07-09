@@ -42,7 +42,7 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 	utstring_new( host );
 
 	mk = sqrl_user_key( transaction, KEY_MK );
-	if( !mk ) goto ERROR;
+	if( !mk ) goto ERR;
 
 	if( !transaction->altIdentity ) {
 		sqrl_client_call_select_alternate_identity( site->transaction );
@@ -61,7 +61,7 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 		(unsigned char*)(utstring_body( host )),
 		utstring_len( host ),
 		mk )) {
-		goto ERROR;
+		goto ERR;
 	}
 	site->keys[SITE_KEY_LOOKUP][SITE_KEY_SEC] = 1;
 
@@ -96,7 +96,7 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 			(unsigned char*)(utstring_body( host )),
 			utstring_len( host ),
 			tmp )) {
-			goto ERROR;
+			goto ERR;
 		}
 		site->keys[SITE_KEY_LOOKUP][SITE_KEY_PSEC] = 1;
 		sqrl_ed_public_key( 
@@ -108,7 +108,7 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 
 	goto DONE;
 
-ERROR:
+ERR:
 	retVal = false;
 
 
@@ -218,7 +218,7 @@ int parseKeyValue( struct Sqrl_Site *site, char *key, size_t key_len, char *valu
 	int key_type = -1;
 	int i;
 	char theKey[SITE_KV_LENGTH+1];
-	char theValue[value_len + 1];
+	char *theValue = malloc(value_len + 1);
 	memcpy( theKey, key, key_len );
 	memcpy( theValue, value, value_len );
 	theKey[key_len] = 0;
@@ -251,6 +251,7 @@ int parseKeyValue( struct Sqrl_Site *site, char *key, size_t key_len, char *valu
 	default:
 		break;
 	}
+	free(theValue);
 	return key_type;
 }
 
@@ -476,17 +477,17 @@ bool sqrl_site_generate_client_body( Sqrl_Site *site )
 	if( !site ) return false;
 	UT_string *clientString = NULL;
 	bool success = sqrl_site_set_user_keys( site );
-	if( !success ) goto ERROR;
+	if( !success ) goto ERR;
 	utstring_new( clientString );
 
 	FLAG_SET( site->flags, SITE_FLAG_VALID_CLIENT_STRING );
 
-	if( !clientString ) goto ERROR;
+	if( !clientString ) goto ERR;
 
 	// There MUST have been a previous valid response from server,
 	// Except for the initial QUERY command.
 	if( site->currentTransaction != SQRL_TRANSACTION_AUTH_QUERY && ! FLAG_CHECK( site->flags, SITE_FLAG_VALID_SERVER_STRING )) {
-		goto ERROR;
+		goto ERR;
 	}
 
 	sqrl_site_add_key_value( clientString, "ver", SQRL_VERSION_STRING );
@@ -498,22 +499,22 @@ bool sqrl_site_generate_client_body( Sqrl_Site *site )
 		sqrl_site_add_key_value( clientString, "cmd", "ident" );
 		break;
 	case SQRL_TRANSACTION_AUTH_DISABLE:
-		if( site->tif & SQRL_TIF_SQRL_DISABLED ) goto ERROR;
+		if( site->tif & SQRL_TIF_SQRL_DISABLED ) goto ERR;
 		sqrl_site_add_key_value( clientString, "cmd", "disable" );
 		break;
 	case SQRL_TRANSACTION_AUTH_ENABLE:
-		if( (site->tif & SQRL_TIF_SQRL_DISABLED) == 0 ) goto ERROR;
+		if( (site->tif & SQRL_TIF_SQRL_DISABLED) == 0 ) goto ERR;
 		sqrl_site_add_key_value( clientString, "cmd", "enable" );
 		break;
 	case SQRL_TRANSACTION_AUTH_REMOVE:
-		if( (site->tif & SQRL_TIF_SQRL_DISABLED) == 0 ) goto ERROR;
+		if( (site->tif & SQRL_TIF_SQRL_DISABLED) == 0 ) goto ERR;
 		sqrl_site_add_key_value( clientString, "cmd", "remove" );
 		break;
 	default:
 #if DEBUG_PRINT_CLIENT_PROTOCOL
 		printf( "Unknown SQRL command!\n" );
 #endif
-		goto ERROR;
+		goto ERR;
 	}
 	sqrl_site_generate_opts( site, clientString );
 	sqrl_site_generate_keys( site, clientString );
@@ -523,7 +524,7 @@ bool sqrl_site_generate_client_body( Sqrl_Site *site )
 #endif
 	goto DONE;
 
-ERROR:
+ERR:
 	FLAG_CLEAR( site->flags, SITE_FLAG_VALID_CLIENT_STRING );
 	success = false;
 
@@ -724,16 +725,16 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 		site = sqrl_client_site_create( t );
 	}
 	
-	if( !site ) goto ERROR;
+	if( !site ) goto ERR;
 	if( !FLAG_CHECK( site->flags, SITE_FLAG_VALID_SERVER_STRING )) {
 #if DEBUG_PRINT_CLIENT_PROTOCOL
 		printf( "!VALID_SERVER_STRING\n" );
 #endif
-		goto ERROR;
+		goto ERR;
 	}
 	if( response && response_len ) {
 		if( site->tif & SQRL_TIF_COMMAND_FAILURE ) {
-			goto ERROR;
+			goto ERR;
 		}
 
 		switch( site->currentTransaction ) {
@@ -743,7 +744,7 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 				if( FLAG_CHECK( site->tif, SQRL_TIF_SQRL_DISABLED )) {
 					if( transaction->type != SQRL_TRANSACTION_AUTH_ENABLE &&
 						transaction->type != SQRL_TRANSACTION_AUTH_REMOVE ) {
-						goto ERROR;
+						goto ERR;
 					}
 				}
 				site->currentTransaction = transaction->type;
@@ -757,7 +758,7 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 					site->previous_identity = 0;
 					site->currentTransaction = transaction->type;
 					if( transaction->type != SQRL_TRANSACTION_AUTH_IDENT ) {
-						goto ERROR;
+						goto ERR;
 					}
 					// If it's an ident, we'll continue (create new account)
 				}
@@ -800,7 +801,7 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 	sqrl_client_do_loop( site );
 	goto DONE;
 
-ERROR:
+ERR:
 	transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
 
 DONE:

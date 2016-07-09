@@ -33,7 +33,7 @@ bool sqrl_server_verify_nut(
 
     int64_t diff = sqrl_get_timestamp() - context->nut.timestamp;
     if( diff < 0 || diff > context->server->nut_expires ) {
-        FLAG_SET( context->tif, SQRL_TIF_TRANSIENT_ERROR );
+        FLAG_SET( context->tif, SQRL_TIF_TRANSIENT_ERR );
         return false;
     }
     return true;

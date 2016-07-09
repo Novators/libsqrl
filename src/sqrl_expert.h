@@ -42,11 +42,11 @@ or want to add your own sources, you can do so with the \p sqrl_entropy_add func
 @{ */
 
 /** The Entropy Pool Object */
-void sqrl_entropy_add( uint8_t*, size_t );
-int  sqrl_entropy_estimate();
-int  sqrl_entropy_get( uint8_t*, int );
-int  sqrl_entropy_get_blocking( uint8_t*, int );
-int  sqrl_entropy_bytes( uint8_t*, int );
+DLL_PUBLIC void sqrl_entropy_add( uint8_t*, size_t );
+DLL_PUBLIC int  sqrl_entropy_estimate();
+DLL_PUBLIC int  sqrl_entropy_get( uint8_t*, int );
+DLL_PUBLIC int  sqrl_entropy_get_blocking( uint8_t*, int );
+DLL_PUBLIC int  sqrl_entropy_bytes( uint8_t*, int );
 /** @} */ // endgroup entropy
 
 /** \defgroup block Secure Storage Blocks
@@ -72,21 +72,21 @@ typedef struct Sqrl_Block {
     uint8_t *data;
 } Sqrl_Block;
 
-void        sqrl_block_clear( Sqrl_Block *block );
-Sqrl_Block* sqrl_block_create();
-Sqrl_Block* sqrl_block_destroy( Sqrl_Block *block );
-void        sqrl_block_free( Sqrl_Block *block );
-bool        sqrl_block_init( Sqrl_Block *block, uint16_t blockType, uint16_t blockLength );
-int         sqrl_block_read( Sqrl_Block *block, uint8_t *data, size_t data_len );
-uint16_t    sqrl_block_read_int16( Sqrl_Block *block );
-uint32_t    sqrl_block_read_int32( Sqrl_Block *block );
-uint8_t     sqrl_block_read_int8( Sqrl_Block *block );
-bool        sqrl_block_resize( Sqrl_Block *block, size_t new_size );
-uint16_t    sqrl_block_seek( Sqrl_Block *block, uint16_t dest );
-int         sqrl_block_write( Sqrl_Block *block, uint8_t *data, size_t data_len );
-bool        sqrl_block_write_int16( Sqrl_Block *block, uint16_t value );
-bool        sqrl_block_write_int32( Sqrl_Block *block, uint32_t value );
-bool        sqrl_block_write_int8( Sqrl_Block *block, uint8_t value );
+DLL_PUBLIC void        sqrl_block_clear( Sqrl_Block *block );
+DLL_PUBLIC Sqrl_Block* sqrl_block_create();
+DLL_PUBLIC Sqrl_Block* sqrl_block_destroy( Sqrl_Block *block );
+DLL_PUBLIC void        sqrl_block_free( Sqrl_Block *block );
+DLL_PUBLIC bool        sqrl_block_init( Sqrl_Block *block, uint16_t blockType, uint16_t blockLength );
+DLL_PUBLIC int         sqrl_block_read( Sqrl_Block *block, uint8_t *data, size_t data_len );
+DLL_PUBLIC uint16_t    sqrl_block_read_int16( Sqrl_Block *block );
+DLL_PUBLIC uint32_t    sqrl_block_read_int32( Sqrl_Block *block );
+DLL_PUBLIC uint8_t     sqrl_block_read_int8( Sqrl_Block *block );
+DLL_PUBLIC bool        sqrl_block_resize( Sqrl_Block *block, size_t new_size );
+DLL_PUBLIC uint16_t    sqrl_block_seek( Sqrl_Block *block, uint16_t dest );
+DLL_PUBLIC int         sqrl_block_write( Sqrl_Block *block, uint8_t *data, size_t data_len );
+DLL_PUBLIC bool        sqrl_block_write_int16( Sqrl_Block *block, uint16_t value );
+DLL_PUBLIC bool        sqrl_block_write_int32( Sqrl_Block *block, uint32_t value );
+DLL_PUBLIC bool        sqrl_block_write_int8( Sqrl_Block *block, uint8_t value );
 /** @} */ // endgroup block
 
 
@@ -116,22 +116,22 @@ prevents the growth of the storage file, and reduces the chance of getting the w
 /** The S4 Storage object */
 typedef void* Sqrl_Storage;
 
-bool        sqrl_storage_block_exists( Sqrl_Storage storage, uint16_t blockType );
-bool        sqrl_storage_block_get( Sqrl_Storage storage, Sqrl_Block *block, uint16_t blockType );
-bool        sqrl_storage_block_put( Sqrl_Storage storage, Sqrl_Block *block );
-bool        sqrl_storage_block_remove( Sqrl_Storage storage, uint16_t blockType );
-Sqrl_Storage
+DLL_PUBLIC bool        sqrl_storage_block_exists( Sqrl_Storage storage, uint16_t blockType );
+DLL_PUBLIC bool        sqrl_storage_block_get( Sqrl_Storage storage, Sqrl_Block *block, uint16_t blockType );
+DLL_PUBLIC bool        sqrl_storage_block_put( Sqrl_Storage storage, Sqrl_Block *block );
+DLL_PUBLIC bool        sqrl_storage_block_remove( Sqrl_Storage storage, uint16_t blockType );
+DLL_PUBLIC Sqrl_Storage
             sqrl_storage_create(void);
-Sqrl_Storage
+DLL_PUBLIC Sqrl_Storage
             sqrl_storage_destroy( Sqrl_Storage storage );
-bool        sqrl_storage_load_from_buffer( Sqrl_Storage storage, UT_string *buffer );
-bool        sqrl_storage_load_from_file( Sqrl_Storage storage, const char *filename );
-bool        sqrl_storage_save_to_buffer( 
+DLL_PUBLIC bool        sqrl_storage_load_from_buffer( Sqrl_Storage storage, UT_string *buffer );
+DLL_PUBLIC bool        sqrl_storage_load_from_file( Sqrl_Storage storage, const char *filename );
+DLL_PUBLIC bool        sqrl_storage_save_to_buffer(
                 Sqrl_Storage storage, 
                 UT_string *buf, 
                 Sqrl_Export etype, 
                 Sqrl_Encoding encoding );
-int         sqrl_storage_save_to_file( 
+DLL_PUBLIC int         sqrl_storage_save_to_file(
                 Sqrl_Storage storage, 
                 const char *filename, 
                 Sqrl_Export etype,

@@ -319,18 +319,18 @@ bool sqrl_storage_load_from_buffer( Sqrl_Storage storage, UT_string *buffer )
 		//printf( "Found block %u of length %u.\n", block.blockType, block.blockLength );
 		if( cur + block.blockLength > end ) {
 			printf( "Invalid block Length\n" );
-			goto ERROR;
+			goto ERR;
 		}
 		block.data = cur;
 		if( sqrl_storage_block_put( storage, &block )) {
 			cur += block.blockLength;
 			continue;
 		}
-		goto ERROR;
+		goto ERR;
 	}
 	goto DONE;
 
-ERROR:
+ERR:
 	retVal = false;
 
 DONE:
@@ -467,7 +467,7 @@ void sqrl_storage_unique_id( Sqrl_Storage storage, char *unique_id )
 	if( !unique_id ) return;
 	Sqrl_Block block;
 	memset( &block, 0, sizeof( Sqrl_Block ));
-	if( !storage ) goto ERROR;
+	if( !storage ) goto ERR;
 	if( sqrl_storage_block_exists( storage, SQRL_BLOCK_RESCUE &&
 		sqrl_storage_block_get( storage, &block, SQRL_BLOCK_RESCUE )))
 	{
@@ -481,7 +481,7 @@ void sqrl_storage_unique_id( Sqrl_Storage storage, char *unique_id )
 		}
 	}
 
-ERROR:
+ERR:
 	memset( unique_id, 0, SQRL_UNIQUE_ID_LENGTH + 1 );
 DONE:
 	sqrl_block_free( &block );

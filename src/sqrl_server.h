@@ -123,7 +123,7 @@ bool sqrl_scb_user_default(
     char *pidk,
     char *blob );
 
-bool sqrl_server_init( 
+DLL_PUBLIC bool sqrl_server_init(
     Sqrl_Server *server,
     char *uri,
     char *sfn,
@@ -133,7 +133,7 @@ bool sqrl_server_init(
     sqrl_scb_send *onSend,
     int nut_life );
 void sqrl_server_clear( Sqrl_Server *server );
-Sqrl_Server *sqrl_server_create(
+DLL_PUBLIC Sqrl_Server *sqrl_server_create(
     char *uri,
     char *sfn,
     char *passcode,
@@ -141,23 +141,23 @@ Sqrl_Server *sqrl_server_create(
     sqrl_scb_user *onUserOp,
     sqrl_scb_send *onSend,
     int nut_life );
-Sqrl_Server *sqrl_server_destroy( Sqrl_Server *server );
+DLL_PUBLIC Sqrl_Server *sqrl_server_destroy( Sqrl_Server *server );
 
-bool sqrl_server_nut_generate( 
+DLL_PUBLIC bool sqrl_server_nut_generate(
     Sqrl_Server *server,
     Sqrl_Nut *nut, 
     uint32_t ip );
-bool sqrl_server_nut_decrypt(
+DLL_PUBLIC bool sqrl_server_nut_decrypt(
     Sqrl_Server *server,
     Sqrl_Nut *nut );
 
-Sqrl_Server_Context *sqrl_server_context_create( Sqrl_Server *server );
-Sqrl_Server_Context *sqrl_server_context_destroy( Sqrl_Server_Context *context );
+DLL_PUBLIC Sqrl_Server_Context *sqrl_server_context_create( Sqrl_Server *server );
+DLL_PUBLIC Sqrl_Server_Context *sqrl_server_context_destroy( Sqrl_Server_Context *context );
 void sqrl_server_add_mac( Sqrl_Server *server, UT_string *str, char sep );
 bool sqrl_server_verify_mac( Sqrl_Server *server, UT_string *str ); 
 
-char *sqrl_server_create_link( Sqrl_Server *server, uint32_t ip );
-void sqrl_server_handle_query(
+DLL_PUBLIC char *sqrl_server_create_link( Sqrl_Server *server, uint32_t ip );
+DLL_PUBLIC void sqrl_server_handle_query(
     Sqrl_Server_Context *context,
     uint32_t client_ip,
     const char *query,

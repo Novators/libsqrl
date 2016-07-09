@@ -60,7 +60,7 @@ bool sul_block_2( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 	}
 	
 	if( !su_init_t2( transaction, &sctx, block, false )) {
-		goto ERROR;
+		goto ERR;
 	}
 
 	uint8_t *key = user->keys->scratch + sctx.text_len;
@@ -83,7 +83,7 @@ bool sul_block_2( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 		}
 	}
 
-ERROR:
+ERR:
 	retVal = false;
 
 DONE:
@@ -103,7 +103,7 @@ bool sus_block_2( struct Sqrl_Transaction *transaction, Sqrl_Storage storage, Sq
 	}
 	
 	if( !su_init_t2( transaction, &sctx, block, true )) {
-		goto ERROR;
+		goto ERR;
 	}
 
 	uint8_t *key = user->keys->scratch + sctx.text_len;
@@ -117,7 +117,7 @@ bool sus_block_2( struct Sqrl_Transaction *transaction, Sqrl_Storage storage, Sq
 	uint8_t *iuk = sqrl_user_key( transaction, KEY_IUK );
 	memcpy( sctx.plain_text, iuk, sctx.text_len );
 	if( !sqrl_crypt_gcm( &sctx, key )) {
-		goto ERROR;
+		goto ERR;
 	}
 	// Save unique id
 	UT_string *str;
@@ -128,7 +128,7 @@ bool sus_block_2( struct Sqrl_Transaction *transaction, Sqrl_Storage storage, Sq
 
 	goto DONE;
 
-ERROR:
+ERR:
 	retVal = false;
 
 DONE:
@@ -159,7 +159,7 @@ bool sul_block_3( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 	keyPointer = sqrl_user_key( transaction, KEY_MK );
 	sctx.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
 	if( !sqrl_crypt_gcm( &sctx, keyPointer )) {
-		goto ERROR;
+		goto ERR;
 	}
 
 	int pt_offset = 0;
@@ -171,7 +171,7 @@ bool sul_block_3( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 	}
 	goto DONE;
 
-ERROR:
+ERR:
 	retVal = false;
 
 DONE:
@@ -214,11 +214,11 @@ bool sus_block_3( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 	sctx.count = 100;
 	sctx.flags = SQRL_ENCRYPT | SQRL_MILLIS;
 	if( !sqrl_crypt_gcm( &sctx, keyPointer )) {
-		goto ERROR;
+		goto ERR;
 	}
 	goto DONE;
 
-ERROR:
+ERR:
 	retVal = false;
 
 DONE:
@@ -235,7 +235,7 @@ bool sul_block_1( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
     sctx.text_len = SQRL_KEY_SIZE * 2;
 
 	if( sqrl_block_read_int16( block ) != 125 ) {
-		goto ERROR;
+		goto ERR;
 	}
 	
 	block->cur = 0;
@@ -245,7 +245,7 @@ bool sul_block_1( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 	sqrl_block_seek( block, 4 );
 	sctx.add_len = sqrl_block_read_int16( block );
 	if( sctx.add_len != 45 ) {
-		goto ERROR;
+		goto ERR;
 	}
 	// IV and Salt
 	sctx.iv = block->data + block->cur;
@@ -287,7 +287,7 @@ bool sul_block_1( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 		}
 	}
 
-ERROR:
+ERR:
 	retVal = false;
 
 DONE:
@@ -361,11 +361,11 @@ bool sus_block_1( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 	// Cipher Text
 	sctx.flags = SQRL_ENCRYPT | SQRL_ITERATIONS;
 	if( !sqrl_crypt_gcm( &sctx, key )) {
-		goto ERROR;
+		goto ERR;
 	}
 	goto DONE;
 
-ERROR:
+ERR:
 	retVal = false;
 
 DONE:
@@ -474,19 +474,20 @@ Sqrl_User sqrl_user_create_from_file( const char *filename )
 	Sqrl_User u = NULL;
 	Sqrl_Storage storage = sqrl_storage_create();
 	if( !sqrl_storage_load_from_file( storage, filename )) {
-		goto ERROR;
+		sqrl_storage_destroy(storage);
+		return NULL;
 	}
 	u = sqrl_user_create();
 	WITH_USER(user,u);
 	if( user == NULL ) {
-		goto ERROR;
+		goto ERR;
 	}
 	user->storage = storage;
 	_suc_load_unique_id( user );
 	END_WITH_USER(user);
 	return u;
 
-ERROR:
+ERR:
 	if( u ) {
 		END_WITH_USER(user);
 		sqrl_user_release(u);
@@ -572,7 +573,7 @@ bool sqrl_user_save_to_buffer( Sqrl_Transaction t )
 		if( sqrl_storage_save_to_buffer( user->storage, buf, exportType, encoding )) {
 			if( transaction->string ) free( transaction->string );
 			transaction->string = malloc( utstring_len(buf) + 1 );
-			if( !transaction->string ) goto ERROR;
+			if( !transaction->string ) goto ERR;
 			memcpy( transaction->string, utstring_body(buf), utstring_len(buf));
 			transaction->string[utstring_len(buf)] = 0x00;
 			transaction->string_len = utstring_len( buf );
@@ -580,7 +581,7 @@ bool sqrl_user_save_to_buffer( Sqrl_Transaction t )
 		}
 	}
 
-ERROR:
+ERR:
 	if( transaction->string ) {
 		free( transaction->string );
 		transaction->string = NULL;

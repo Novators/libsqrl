@@ -545,19 +545,19 @@ bool sqrl_user_rekey( Sqrl_Transaction t )
 		key = sqrl_user_new_key( transaction->user, KEY_IUK );
 	}
 	if( ! _su_keygen( t, KEY_IUK, key )) {
-		goto ERROR;
+		goto ERR;
 	}
 	key = sqrl_user_new_key( transaction->user, KEY_RESCUE_CODE );
 	if( ! _su_keygen( transaction, KEY_RESCUE_CODE, key )) {
-		goto ERROR;
+		goto ERR;
 	}
 	if( ! sqrl_user_regen_keys( t )) {
-		goto ERROR;
+		goto ERR;
 	}
 	user->flags |= (USER_FLAG_T1_CHANGED | USER_FLAG_T2_CHANGED);
 	goto DONE;
 
-ERROR:
+ERR:
 	retVal = false;
 
 DONE:
