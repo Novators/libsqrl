@@ -9,7 +9,7 @@ For more details, see the LICENSE file included with this package.
 #include "sqrl_internal.h"
 #include "crypto/aes.h"
 
-DLL_PUBLIC
+
 bool sqrl_server_init( 
     Sqrl_Server *server,
     char *uri,
@@ -29,15 +29,14 @@ bool sqrl_server_init(
     server->onSend = onSend;
 
     if( sfn ) {
-        server->sfn = malloc( strlen( sfn ) + 1 );
+        server->sfn = (char*)malloc( strlen( sfn ) + 1 );
         strcpy( server->sfn, sfn );
     } else {
-        Sqrl_Uri *tmpUri = sqrl_uri_parse( uri );
+        SqrlUri *tmpUri = new SqrlUri( uri );
         if( tmpUri ) {
-            server->sfn = malloc( strlen( tmpUri->host ) + 1 );
-            strcpy( server->sfn, tmpUri->host );
+			server->sfn = tmpUri->getHost();
         }
-        sqrl_uri_free( tmpUri );
+		delete(tmpUri);
     }
 
     if( uri ) {
@@ -50,10 +49,10 @@ bool sqrl_server_init(
             sqrl_b64u_encode_append( str, (uint8_t*)server->sfn, strlen( server->sfn ));
             pp = p + strlen( SQRL_SERVER_TOKEN_SFN );
             utstring_printf( str, "%s", pp );
-            server->uri = sqrl_uri_parse( utstring_body( str ));
+            server->uri = new SqrlUri( utstring_body( str ));
             utstring_free( str );
         } else {
-            server->uri = sqrl_uri_parse( uri );
+            server->uri = new SqrlUri( uri );
         }
         if( ! server->uri ) {
             sqrl_server_clear( server );
@@ -76,12 +75,15 @@ bool sqrl_server_init(
 void sqrl_server_clear( Sqrl_Server *server )
 {
     if( !server ) return;
-    if( server->uri ) server->uri = sqrl_uri_free( server->uri );
+	if (server->uri) {
+		delete(server->uri);
+		server->uri = NULL;
+	}
     if( server->sfn ) free( server->sfn );
     sodium_memzero( server, sizeof( Sqrl_Server ));
 }
 
-DLL_PUBLIC
+
 Sqrl_Server *sqrl_server_create(
     char *uri,
     char *sfn,
@@ -91,7 +93,7 @@ Sqrl_Server *sqrl_server_create(
     sqrl_scb_send *onSend,
     int nut_life )
 {
-    Sqrl_Server *srv = malloc( sizeof( Sqrl_Server ));
+    Sqrl_Server *srv = (Sqrl_Server*)malloc( sizeof( Sqrl_Server ));
     if( ! sqrl_server_init( srv, uri, sfn, passcode, passcode_len, onUserOp, onSend, nut_life )) {
         free( srv );
         srv = NULL;
@@ -99,7 +101,7 @@ Sqrl_Server *sqrl_server_create(
     return srv;
 }
 
-DLL_PUBLIC
+
 Sqrl_Server *sqrl_server_destroy( Sqrl_Server *server )
 {
     if( !server ) return NULL;
@@ -108,7 +110,7 @@ Sqrl_Server *sqrl_server_destroy( Sqrl_Server *server )
     return NULL;
 }
 
-DLL_PUBLIC
+
 bool sqrl_server_nut_generate( 
     Sqrl_Server *server,
     Sqrl_Nut *nut, 
@@ -133,7 +135,7 @@ bool sqrl_server_nut_generate(
     return true;
 }
 
-DLL_PUBLIC
+
 bool sqrl_server_nut_decrypt(
     Sqrl_Server *server,
     Sqrl_Nut *nut )
@@ -199,41 +201,43 @@ bool sqrl_server_verify_mac( Sqrl_Server *server, UT_string *str )
     return false;
 }
 
-DLL_PUBLIC
+
 char *sqrl_server_create_link( Sqrl_Server *server, uint32_t ip )
 {
     if( !server ) return false;
     char *retVal = NULL;
     Sqrl_Nut nut;
     if( sqrl_server_nut_generate( server, &nut, ip )) {
+		char *challenge = server->uri->getChallenge();
         char *p, *pp;
-        p = strstr( server->uri->challenge, SQRL_SERVER_TOKEN_NUT );
+        p = strstr( challenge, SQRL_SERVER_TOKEN_NUT );
         if( p ) {
             UT_string *str;
             utstring_new( str );
-            utstring_bincpy( str, server->uri->challenge, p - server->uri->challenge );
+            utstring_bincpy( str, challenge, p - challenge );
             sqrl_b64u_encode_append( str, (uint8_t*)&nut, sizeof( Sqrl_Nut ));
             pp = p + strlen( SQRL_SERVER_TOKEN_NUT );
             utstring_printf( str, "%s", pp );
             sqrl_server_add_mac( server, str, '&' );
-            retVal = malloc( utstring_len( str ) + 1 );
+            retVal = (char*)malloc( utstring_len( str ) + 1 );
             strcpy( retVal, utstring_body( str ));
             utstring_free( str );
         }
+		free(challenge);
     }
     return retVal;
 }
 
-DLL_PUBLIC
+
 Sqrl_Server_Context *sqrl_server_context_create( Sqrl_Server *server )
 {
     if( !server ) return NULL;
-    Sqrl_Server_Context *ctx = calloc( 1, sizeof( Sqrl_Server_Context ));
+    Sqrl_Server_Context *ctx = (Sqrl_Server_Context*)calloc( 1, sizeof( Sqrl_Server_Context ));
     ctx->server = server;
     return ctx;
 }
 
-DLL_PUBLIC
+
 Sqrl_Server_Context *sqrl_server_context_destroy( Sqrl_Server_Context *ctx )
 {
     if( !ctx ) return NULL;
@@ -276,10 +280,10 @@ bool sqrl_scb_user_default(
     char *cmpStr = idk;
 
     if( op == SQRL_SCB_USER_CREATE ) {
-        l = calloc( 1, sizeof( struct sqrl_default_user_list ));
-        l->idk = malloc( 1 + strlen( idk ));
+        l = (sqrl_default_user_list*)calloc( 1, sizeof( struct sqrl_default_user_list ));
+        l->idk = (char*)malloc( 1 + strlen( idk ));
         strcpy( l->idk, idk );
-        l->blob = malloc( 1 + strlen( blob ));
+        l->blob = (char*)malloc( 1 + strlen( blob ));
         strcpy( l->blob, blob );
         l->next = SDUL;
         SDUL = l;
@@ -332,7 +336,7 @@ void sqrl_scb_send_default(
 {
     if( !context || !reply ) return;
     if( context->reply ) free( context->reply );
-    context->reply = malloc( reply_len + 1 );
+    context->reply = (char*)malloc( reply_len + 1 );
     memcpy( context->reply, reply, reply_len );
     context->reply[reply_len] = 0;
 #if DEBUG_PRINT_SERVER_PROTOCOL

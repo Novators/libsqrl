@@ -7,7 +7,9 @@ For more details, see the LICENSE file included with this package.
 **/
 
 #include <math.h>
+extern "C" {
 #include "crypto_scrypt.h"
+}
 
 #include "../sqrl_internal.h"
 
@@ -211,19 +213,19 @@ void sqrl_gen_ursk( uint8_t ursk[SQRL_KEY_SIZE], const uint8_t suk[SQRL_KEY_SIZE
 	sodium_munlock( tmp, SQRL_KEY_SIZE );
 }
 
-DLL_PUBLIC
+
 bool sqrl_user_encrypt( Sqrl_User u, UT_string *text ) 
 {
 	return false;
 }
 
-DLL_PUBLIC
+
 bool sqrl_user_decrypt( Sqrl_User u, UT_string *text )
 {
 	return false;
 }
 
-DLL_PUBLIC
+
 void sqrl_ed_public_key( uint8_t *puk, const uint8_t *prk )
 {
 	uint8_t sk[crypto_sign_SECRETKEYBYTES];
@@ -233,7 +235,7 @@ void sqrl_ed_public_key( uint8_t *puk, const uint8_t *prk )
 //	ed25519_publickey( prk, puk );
 }
 
-DLL_PUBLIC
+
 void sqrl_sign( const UT_string *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] )
 {
 	uint8_t secret[crypto_sign_SECRETKEYBYTES];
@@ -252,7 +254,7 @@ void sqrl_sign( const UT_string *msg, const uint8_t sk[32], const uint8_t pk[32]
 
 }
 
-DLL_PUBLIC
+
 bool sqrl_verify_sig( const UT_string *msg, const uint8_t *sig, const uint8_t *pub )
 {
 	if( crypto_sign_verify_detached( sig, (unsigned char *)(utstring_body(msg)), utstring_len(msg), pub ) == 0 ) {
@@ -266,7 +268,7 @@ bool sqrl_verify_sig( const UT_string *msg, const uint8_t *sig, const uint8_t *p
 	return false;
 }
 
-DLL_PUBLIC
+
 void sqrl_curve_private_key( uint8_t *key )
 {
 //	key[0]  &= 248;
@@ -279,7 +281,7 @@ void sqrl_curve_private_key( uint8_t *key )
 	sodium_munlock( tmp, SQRL_KEY_SIZE );
 }
 
-DLL_PUBLIC
+
 void sqrl_curve_public_key( uint8_t *puk, const uint8_t *prk )
 {
 	crypto_scalarmult_base( puk, prk );
@@ -296,7 +298,7 @@ void sqrl_curve_public_key( uint8_t *puk, const uint8_t *prk )
 }
 
 
-DLL_PUBLIC
+
 int sqrl_make_shared_secret( uint8_t *shared, const uint8_t *puk, const uint8_t *prk )
 {
 	return crypto_scalarmult( shared, prk, puk );
@@ -388,13 +390,13 @@ uint32_t sqrl_crypt_enscrypt( Sqrl_Crypt_Context *sctx, uint8_t *key, const char
 	size_t salt_len = sctx->salt ? 16 : 0;
 	uint32_t newCount;
 	if( (sctx->flags & SQRL_MILLIS) == SQRL_MILLIS ) {
-		newCount = sqrl_enscrypt_ms( key, password, password_len, sctx->salt, salt_len, sctx->nFactor, sctx->count, callback, callback_data );
+		newCount = sqrl_enscrypt_ms( key, password, password_len, sctx->salt, (uint8_t)salt_len, sctx->nFactor, sctx->count, callback, callback_data );
 		if( newCount == -1 ) return 0;
 		sctx->count = newCount;
 		sctx->flags &= ~SQRL_MILLIS;
 		sctx->flags |= SQRL_ITERATIONS;
 	} else {
-		newCount = sqrl_enscrypt( key, password, password_len, sctx->salt, salt_len, sctx->nFactor, sctx->count, callback, callback_data );
+		newCount = sqrl_enscrypt( key, password, password_len, sctx->salt, (uint8_t)salt_len, sctx->nFactor, sctx->count, callback, callback_data );
 		if( newCount == -1 ) return 0;
 	}
 	return sctx->count;

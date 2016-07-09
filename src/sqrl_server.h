@@ -78,7 +78,7 @@ typedef enum {
 } Sqrl_Server_User_Op;
 
 typedef struct Sqrl_Server {
-    Sqrl_Uri *uri;
+    SqrlUri *uri;
     char *sfn;
     uint8_t key[32];
     uint64_t nut_expires;

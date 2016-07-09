@@ -15,61 +15,61 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\crypto\aes.c">
+    <ClCompile Include="..\..\src\util.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\crypto\crypt.c">
+    <ClCompile Include="..\..\src\user_storage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\crypto\gcm.c">
+    <ClCompile Include="..\..\src\user.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\entropy\entropy.c">
+    <ClCompile Include="..\..\src\uri.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\entropy\rdrand.c">
+    <ClCompile Include="..\..\src\transaction.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\block.c">
+    <ClCompile Include="..\..\src\storage.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\client.c">
+    <ClCompile Include="..\..\src\server_protocol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\client_protocol.c">
+    <ClCompile Include="..\..\src\server.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\encdec.c">
+    <ClCompile Include="..\..\src\realtime.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\platform.c">
+    <ClCompile Include="..\..\src\entropy\rdrand.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\realtime.c">
+    <ClCompile Include="..\..\src\platform.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\server.c">
+    <ClCompile Include="..\..\src\crypto\gcm.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\server_protocol.c">
+    <ClCompile Include="..\..\src\entropy\entropy.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\storage.c">
+    <ClCompile Include="..\..\src\encdec.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transaction.c">
+    <ClCompile Include="..\..\src\crypto\crypt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\uri.c">
+    <ClCompile Include="..\..\src\client_protocol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\user.c">
+    <ClCompile Include="..\..\src\client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\user_storage.c">
+    <ClCompile Include="..\..\src\block.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\util.c">
+    <ClCompile Include="..\..\src\crypto\aes.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

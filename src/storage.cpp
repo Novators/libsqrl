@@ -48,10 +48,10 @@ Allocates and Initializes a new \p Sqrl_Storage object.
 
 @return The new \p Sqrl_Storage object.
 */
-DLL_PUBLIC
+
 Sqrl_Storage sqrl_storage_create()
 {
-	struct S4Page *page = sodium_malloc( sizeof( struct S4Page ));
+	struct S4Page *page = (struct S4Page*)sodium_malloc( sizeof( struct S4Page ));
 	if( !page ) return NULL;
 	page->nextPage = NULL;
 	memset( page->index, 0, sizeof( struct S4Table ) * BLOCKS_PER_PAGE );	
@@ -65,7 +65,7 @@ Securely erase and free a \p Sqrl_Storage object.
 @param storage The \p Sqrl_Storage object to destroy
 @return NULL pointer
 */
-DLL_PUBLIC
+
 Sqrl_Storage sqrl_storage_destroy( Sqrl_Storage storage )
 {
 	SQRL_CAST_PAGE(page,storage);
@@ -169,7 +169,7 @@ Removes a block from storage.
 @param blockType The type of block to remove
 @return TRUE on success, FALSE if not found
 */
-DLL_PUBLIC
+
 bool sqrl_storage_block_remove( Sqrl_Storage storage, uint16_t blockType )
 {
 	if( !storage ) return false;
@@ -193,7 +193,7 @@ Adds a block to storage.
 @param block Pointer to a \p Sqrl_Block containing the data to add to \p storage
 @return TRUE on success, FALSE on failure
 */
-DLL_PUBLIC
+
 bool sqrl_storage_block_put( Sqrl_Storage storage, Sqrl_Block *block )
 {
 	if( !storage || !block ) return false;
@@ -236,7 +236,7 @@ Checks to see if a block exists in storage.
 @param blockType The type of block to check for
 @return TRUE is \p storage contains a block of type \p blockType; FALSE if not
 */
-DLL_PUBLIC
+
 bool sqrl_storage_block_exists( Sqrl_Storage storage, uint16_t blockType )
 {
 	if( !storage ) return false;
@@ -255,7 +255,7 @@ Retrieves the contents of a block from storage.
 @param blockType The type of block to retrieve
 @return TRUE on success; FALSE on failure
 */
-DLL_PUBLIC
+
 bool sqrl_storage_block_get( Sqrl_Storage storage, Sqrl_Block *block, uint16_t blockType )
 {
 	if( !storage || !block ) return false;
@@ -284,7 +284,7 @@ Loads data from a buffer into storage
 @param buffer A UT_string buffer
 @return TRUE on success; FALSE on failure
 */
-DLL_PUBLIC
+
 bool sqrl_storage_load_from_buffer( Sqrl_Storage storage, UT_string *buffer )
 {
 	uint8_t *cur, *end;
@@ -349,7 +349,7 @@ Loads data from a file into storage
 @param filename The path of the file to load
 @return TRUE on success; FALSE on failure
 */
-DLL_PUBLIC
+
 bool sqrl_storage_load_from_file( Sqrl_Storage storage, const char *filename )
 {
 	uint8_t tmp[256];
@@ -383,7 +383,7 @@ Saves data from storage into a buffer
 @param encoding the type of encoding to use
 @return TRUE on success; FALSE on failure
 */
-DLL_PUBLIC
+
 bool sqrl_storage_save_to_buffer( 
 	Sqrl_Storage storage, 
 	UT_string *buf, 
@@ -442,7 +442,7 @@ Saves data from storage to a file
 @param encoding the type of encoding to use
 @return Number of bytes written.  -1 indicates failure.
 */
-DLL_PUBLIC
+
 int sqrl_storage_save_to_file( Sqrl_Storage storage, const char *filename, Sqrl_Export etype, Sqrl_Encoding encoding )
 {
 	int retVal;

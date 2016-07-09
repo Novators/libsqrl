@@ -21,7 +21,7 @@ void sqrl_sleep(int sleepMs)
 SqrlMutex sqrl_mutex_create()
 {
     #ifdef _WIN32
-    CRITICAL_SECTION *cs = calloc( 1, sizeof( CRITICAL_SECTION ));
+    CRITICAL_SECTION *cs = (CRITICAL_SECTION*)calloc( 1, sizeof( CRITICAL_SECTION ));
     InitializeCriticalSection( cs );
     return (SqrlMutex*)cs;
     #else

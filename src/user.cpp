@@ -9,11 +9,11 @@ For more details, see the LICENSE file included with this package.
 #include <stdio.h>
 #include "sqrl_internal.h"
 
-struct Sqrl_User_List *SQRL_USER_LIST;
+struct Sqrl_User_s_List *SQRL_USER_LIST;
 
 int sqrl_user_enscrypt_callback( int percent, void *data )
 {
-	struct sqrl_user_callback_data *cbdata = (struct sqrl_user_callback_data*)data;
+	struct Sqrl_User_s_callback_data *cbdata = (struct Sqrl_User_s_callback_data*)data;
 	if( cbdata ) {
 		int progress = cbdata->adder + (percent * cbdata->multiplier);
 		if( progress > 100 ) progress = 100;
@@ -30,7 +30,7 @@ void sqrl_user_ensure_keys_allocated( Sqrl_User u )
 	SQRL_CAST_USER(user,u);
 	if( user == NULL ) return;
 	if( user->keys == NULL ) {
-		user->keys = sodium_malloc( sizeof( struct Sqrl_Keys ));
+		user->keys = (Sqrl_Keys*)sodium_malloc( sizeof( struct Sqrl_Keys ));
 		memset( user->keys, 0, sizeof( struct Sqrl_Keys ));
 		BIT_UNSET( user->flags, USER_FLAG_MEMLOCKED );
 	}
@@ -39,7 +39,7 @@ void sqrl_user_ensure_keys_allocated( Sqrl_User u )
 #if defined(DEBUG) && DEBUG_PRINT_USER_COUNT==1
 #define PRINT_USER_COUNT(tag) \
 int _pucI = 0;\
-struct Sqrl_User_List *_pucC = SQRL_USER_LIST;\
+struct Sqrl_User_s_List *_pucC = SQRL_USER_LIST;\
 while( _pucC ) {\
 	_pucI++;\
 	_pucC = _pucC->next;\
@@ -56,11 +56,11 @@ with \p sqrl_user_release when you are finished with the \p Sqrl_User.
 @param unique_id A string of length \p SQRL_UNIQUE_ID_LENGTH identifying the \p Sqrl_User.
 @return Sqrl_User A \p Sqrl_User object, or NULL if not available.
 */
-DLL_PUBLIC
+
 Sqrl_User sqrl_user_find( const char *unique_id )
 {
 	Sqrl_User user = NULL;
-	struct Sqrl_User_List *l;
+	struct Sqrl_User_s_List *l;
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
 	l = SQRL_USER_LIST;
 	while( l ) {
@@ -84,11 +84,11 @@ Creates an empty \p Sqrl_User, ready to generate or load identity data.
 */
 Sqrl_User sqrl_user_create()
 {
-	struct Sqrl_User *user = calloc( 1, sizeof( struct Sqrl_User ));
+	struct Sqrl_User_s *user = (struct Sqrl_User_s*)calloc( 1, sizeof( struct Sqrl_User_s ));
 	sqrl_user_default_options( &user->options );
 	user->referenceCount = 1;
 	user->referenceCountMutex = sqrl_mutex_create();
-	struct Sqrl_User_List *l = calloc( 1, sizeof( struct Sqrl_User_List ));
+	struct Sqrl_User_s_List *l = (struct Sqrl_User_s_List*)calloc( 1, sizeof( struct Sqrl_User_s_List ));
 	l->user = user;
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
 	l->next = SQRL_USER_LIST;
@@ -105,7 +105,7 @@ int sqrl_user_count()
 {
     sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
     int i = 0;
-    struct Sqrl_User_List *list = SQRL_USER_LIST;
+    struct Sqrl_User_s_List *list = SQRL_USER_LIST;
     while( list ) {
         i++;
         list = list->next;
@@ -121,14 +121,14 @@ freed from memory until all references have been released with \p sqrl_user_rele
 @param user The \p Sqrl_User
 @return Reference to \p user, or NULL
 */
-DLL_PUBLIC
+
 Sqrl_User sqrl_user_hold( Sqrl_User u )
 {
 	SQRL_CAST_USER(user,u);
 	if( user == NULL ) return NULL;
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
 	// Make sure the user is still in active memory...
-	struct Sqrl_User_List *c = SQRL_USER_LIST;
+	struct Sqrl_User_s_List *c = SQRL_USER_LIST;
 	while( c ) {
 		if( c->user == user ) {
 			sqrl_mutex_enter( user->referenceCountMutex );
@@ -153,19 +153,19 @@ securely erases and frees the memory used by the \p Sqrl_User object.
 @param u A \p Sqrl_User
 @return NULL
 */
-DLL_PUBLIC
+
 Sqrl_User sqrl_user_release( Sqrl_User u )
 {
 	SQRL_CAST_USER(user,u);
 	if( user == NULL ) return NULL;
 
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
-	struct Sqrl_User_List *list = SQRL_USER_LIST;
+	struct Sqrl_User_s_List *list = SQRL_USER_LIST;
 	if( list == NULL ) {
 		sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
 		return NULL;
 	}
-	struct Sqrl_User_List *prev;
+	struct Sqrl_User_s_List *prev;
 	if( list->user == user ) {
 		prev = NULL;
 	} else {
@@ -218,7 +218,7 @@ void sqrl_client_user_maintenance( bool forceLockAll )
 	// TODO: Get User Idle Time
 	double idleTime = 600;
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
-	struct Sqrl_User_List *list = SQRL_USER_LIST;
+	struct Sqrl_User_s_List *list = SQRL_USER_LIST;
 	while( list ) {
 		if( forceLockAll || idleTime >= sqrl_user_get_timeout_minutes( list->user )) {
 			sqrl_user_hintlock( list->user );
@@ -238,12 +238,12 @@ Finds a \p Sqrl_User in memory, and returns a new reference to it.
 @param unique_id A unique id to match
 @return Sqrl_User the matched user, or NULL if not found
 */
-DLL_PUBLIC
+
 Sqrl_User sqrl_get_user( const char *unique_id )
 {
 	Sqrl_User retVal = NULL;
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
-	struct Sqrl_User_List *list = SQRL_USER_LIST;
+	struct Sqrl_User_s_List *list = SQRL_USER_LIST;
 	while( list ) {
 		if( sqrl_user_unique_id_match( list->user, unique_id )) {
 			retVal = list->user;
@@ -291,7 +291,7 @@ Checks to see if a \p Sqrl_User has been encrypted with a hint
 @param u A \p Sqrl_User
 @return true if user is Hint Locked
 */
-DLL_PUBLIC
+
 bool sqrl_user_is_hintlocked( Sqrl_User u )
 {
 	SQRL_CAST_USER(user,u);
@@ -309,7 +309,7 @@ through the \p sqrl_ccb_progress callback.
 
 @param u A \p Sqrl_User
 */
-DLL_PUBLIC
+
 void sqrl_user_hintlock( Sqrl_User u )
 {
 	if( sqrl_user_is_hintlocked( u )) return;
@@ -322,7 +322,7 @@ void sqrl_user_hintlock( Sqrl_User u )
 	Sqrl_Transaction t = sqrl_transaction_create( SQRL_TRANSACTION_IDENTITY_LOCK );
 	SQRL_CAST_TRANSACTION(transaction,t);
 	transaction->user = u;
-	struct sqrl_user_callback_data cbdata;
+	struct Sqrl_User_s_callback_data cbdata;
 	cbdata.transaction = transaction;
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
@@ -382,7 +382,7 @@ through the \p sqrl_ccb_progress callback.
 @param hint The password hint
 @param length Length of \p hint
 */
-DLL_PUBLIC
+
 void sqrl_user_hintunlock( Sqrl_Transaction t, 
 				char *hint, 
 				size_t length )
@@ -404,7 +404,7 @@ void sqrl_user_hintunlock( Sqrl_Transaction t,
 		return;
 	}
 
-	struct sqrl_user_callback_data cbdata;
+	struct Sqrl_User_s_callback_data cbdata;
 	cbdata.transaction = t;
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
@@ -489,7 +489,7 @@ bool _su_keygen( Sqrl_Transaction t, int key_type, uint8_t *key )
 		}
 		break;
 	case KEY_RESCUE_CODE:
-		temp[0] = malloc( 512 );
+		temp[0] = (uint8_t*)malloc( 512 );
 		if( temp[0] ) {
 			memset( key, 0, SQRL_KEY_SIZE );
 			sodium_mlock( temp[0], 512 );
@@ -698,7 +698,7 @@ Gets the Rescue Code for a \p Sqrl_User.  This is only available after rekeying 
 @return Pointer to 24 character string
 @return NULL if Rescue Code is not available
 */
-DLL_PUBLIC
+
 char *sqrl_user_get_rescue_code( Sqrl_Transaction t )
 {
 	WITH_TRANSACTION(transaction,t);
@@ -720,7 +720,7 @@ Sets the Rescue Code for a \p Sqrl_User.  This should only be used when recoveri
 @param rc A 24 character null terminated string.  All characters must be digits (0-9)
 @return true on success
 */
-DLL_PUBLIC
+
 bool sqrl_user_set_rescue_code( Sqrl_User u, char *rc )
 {
 	WITH_USER(user,u);
@@ -764,7 +764,7 @@ Sets the password for a \p User. Passwords longer than 512 characters are trunca
 @param password_len Length of \p password
 @return true on success
 */
-DLL_PUBLIC
+
 bool sqrl_user_set_password( Sqrl_User u, char *password, size_t password_len )
 {
 	if( sqrl_user_is_hintlocked( u )) return false;
@@ -804,7 +804,7 @@ Gets \p Sqrl_User_Options for a \p Sqrl_User
 @param u A \p Sqrl_User
 @return Number of characters to use as a password hint
 */
-DLL_PUBLIC
+
 uint8_t sqrl_user_get_hint_length( Sqrl_User u )
 {
 	uint8_t retVal = 0;
@@ -821,7 +821,7 @@ Gets \p Sqrl_User_Options for a \p Sqrl_User
 @param u A \p Sqrl_User
 @return Seconds to run EnScrypt when encrypting the identity
 */
-DLL_PUBLIC
+
 uint8_t sqrl_user_get_enscrypt_seconds( Sqrl_User u )
 {
 	uint8_t retVal = 0;
@@ -838,7 +838,7 @@ Gets \p Sqrl_User_Options for a \p Sqrl_User
 @param u A \p Sqrl_User
 @return Minutes to retain hint data when computer is idle
 */
-DLL_PUBLIC
+
 uint16_t sqrl_user_get_timeout_minutes( Sqrl_User u )
 {
 	uint16_t retVal = 0;
@@ -855,7 +855,7 @@ Sets \p Sqrl_User_Options for a \p Sqrl_User
 @param u A \p Sqrl_User
 @param length The number of characters to use as a password hint
 */
-DLL_PUBLIC
+
 void sqrl_user_set_hint_length( Sqrl_User u, uint8_t length )
 {
 	WITH_USER(user,u);
@@ -871,7 +871,7 @@ Sets \p Sqrl_User_Options for a \p Sqrl_User
 @param u A \p Sqrl_User
 @param seconds The number of seconds to run EnScrypt when encrypting the Identity
 */
-DLL_PUBLIC
+
 void sqrl_user_set_enscrypt_seconds( Sqrl_User u, uint8_t seconds )
 {
 	WITH_USER(user,u);
@@ -887,7 +887,7 @@ Sets \p Sqrl_User_Options for a \p Sqrl_User
 @param u A \p Sqrl_User
 @param minutes Clear hint data after \p minutes
 */
-DLL_PUBLIC
+
 void sqrl_user_set_timeout_minutes( Sqrl_User u, uint16_t minutes )
 {
 	WITH_USER(user,u);
@@ -897,7 +897,7 @@ void sqrl_user_set_timeout_minutes( Sqrl_User u, uint16_t minutes )
 	END_WITH_USER(user);
 }
 
-DLL_PUBLIC
+
 uint16_t sqrl_user_get_flags( Sqrl_User u )
 {
 	uint16_t retVal = 0;
@@ -914,7 +914,7 @@ Helper to check a user's options flags
 @param flags The Option flags to check
 @return uint16_t containing the user's option values for the flags selected.
 */
-DLL_PUBLIC
+
 uint16_t sqrl_user_check_flags( Sqrl_User u, uint16_t flags )
 {
 	uint16_t retVal = 0;
@@ -931,7 +931,7 @@ Helper to set a user's option flags
 @param u A \p Sqrl_User
 @param flags The Option flags to set
 */
-DLL_PUBLIC
+
 void sqrl_user_set_flags( Sqrl_User u, uint16_t flags )
 {
 	WITH_USER(user,u);
@@ -949,7 +949,7 @@ Helper to clear a user's option flags
 @param u A \p Sqrl_User
 @param flags The Option flags to clear
 */
-DLL_PUBLIC
+
 void sqrl_user_clear_flags( Sqrl_User u, uint16_t flags )
 {
 	WITH_USER(user,u);
@@ -966,7 +966,7 @@ Populates a \p Sqrl_User_Options struct with the default options.
 
 @param options Pointer to a \p Sqrl_User_Options struct
 */
-DLL_PUBLIC
+
 void sqrl_user_default_options( Sqrl_User_Options *options ) {
 	options->flags = SQRL_DEFAULT_FLAGS;
 	options->hintLength = SQRL_DEFAULT_HINT_LENGTH;
@@ -985,7 +985,7 @@ available, \p buffer will be an empty string.
 or more to receive the unique id
 @return bool true on success, false on invalid parameters
 */
-DLL_PUBLIC
+
 bool sqrl_user_unique_id( Sqrl_User u, char *buffer )
 {
 	if( !buffer ) return false;
@@ -1003,7 +1003,7 @@ Compares a \p Sqrl_User's unique identifier to the provided string
 @param unique_id a NULL-terminated string to compare
 @return bool true if identifiers match
 */
-DLL_PUBLIC
+
 bool sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id )
 {
 	bool retVal = false;

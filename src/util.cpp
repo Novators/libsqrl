@@ -77,7 +77,7 @@ int sqrl_stop()
 	return -1;
 }
 
-DLL_PUBLIC
+
 void utstring_zero( UT_string *str )
 {
 	if( !str ) return;

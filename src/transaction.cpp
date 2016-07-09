@@ -9,12 +9,12 @@ For more details, see the LICENSE file included with this package.
 #include <stdio.h>
 #include "sqrl_internal.h"
 
-struct Sqrl_Transaction_List *SQRL_TRANSACTION_LIST = NULL;
+struct Sqrl_Transaction_s_List *SQRL_TRANSACTION_LIST = NULL;
 
 #if defined(DEBUG) && DEBUG_PRINT_TRANSACTION_COUNT==1
 #define PRINT_TRANSACTION_COUNT(tag) \
 int _ptcI = 0;\
-struct Sqrl_Transaction_List *_ptcC = SQRL_TRANSACTION_LIST;\
+struct Sqrl_Transaction_s_List *_ptcC = SQRL_TRANSACTION_LIST;\
 while( _ptcC ) {\
     _ptcI++;\
     _ptcC = _ptcC->next;\
@@ -26,8 +26,8 @@ printf( "%10s: %d\n", tag, _ptcI )
 
 Sqrl_Transaction sqrl_transaction_create( Sqrl_Transaction_Type type )
 {
-    struct Sqrl_Transaction *transaction = calloc( 1, sizeof( struct Sqrl_Transaction ));
-    struct Sqrl_Transaction_List *list = calloc( 1, sizeof( struct Sqrl_Transaction_List ));
+    struct Sqrl_Transaction_s *transaction = (struct Sqrl_Transaction_s*)calloc( 1, sizeof( struct Sqrl_Transaction_s ));
+    struct Sqrl_Transaction_s_List *list = (struct Sqrl_Transaction_s_List*)calloc( 1, sizeof( struct Sqrl_Transaction_s_List ));
     transaction->type = type;
     transaction->referenceCount = 1;
     transaction->mutex = sqrl_mutex_create();
@@ -44,7 +44,7 @@ int sqrl_transaction_count()
 {
     sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
     int i = 0;
-    struct Sqrl_Transaction_List *list = SQRL_TRANSACTION_LIST;
+    struct Sqrl_Transaction_s_List *list = SQRL_TRANSACTION_LIST;
     while( list ) {
         i++;
         list = list->next;
@@ -57,7 +57,7 @@ Sqrl_Transaction sqrl_transaction_hold( Sqrl_Transaction t )
 {
     SQRL_CAST_TRANSACTION(transaction,t);
     if( !transaction ) return NULL;
-    struct Sqrl_Transaction_List *l;
+    struct Sqrl_Transaction_s_List *l;
     sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
     l = SQRL_TRANSACTION_LIST;
     while( l ) {
@@ -77,8 +77,8 @@ Sqrl_Transaction sqrl_transaction_release( Sqrl_Transaction t )
 {
     SQRL_CAST_TRANSACTION(transaction,t);
     if( transaction == NULL ) return NULL;
-    struct Sqrl_Transaction *freeMe = NULL;
-    struct Sqrl_Transaction_List *l = NULL, *n = NULL;
+    struct Sqrl_Transaction_s *freeMe = NULL;
+    struct Sqrl_Transaction_s_List *l = NULL, *n = NULL;
     sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
     n = SQRL_TRANSACTION_LIST;
     while( n ) {
@@ -100,8 +100,8 @@ Sqrl_Transaction sqrl_transaction_release( Sqrl_Transaction t )
     PRINT_TRANSACTION_COUNT( "trn_rel" );
     sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
     if( freeMe ) {
-        freeMe->user = sqrl_user_release( freeMe->user );
-        freeMe->uri = sqrl_uri_free( freeMe->uri );
+		if (freeMe->user) sqrl_user_release(freeMe->user);
+		if (freeMe->uri) delete(freeMe->uri);
         if( freeMe->string ) free( freeMe->string );
         if( freeMe->altIdentity ) free( freeMe->altIdentity );
         // free ->data
@@ -129,7 +129,7 @@ Gets the current \p Sqrl_Transaction_Status of a \p Sqrl_Transaction
 @param transaction the \p Sqrl_Transaction
 @return \p Sqrl_Transaction_Status
 */
-DLL_PUBLIC
+
 Sqrl_Transaction_Status sqrl_transaction_status( Sqrl_Transaction t )
 {
     Sqrl_Transaction_Status status = SQRL_TRANSACTION_STATUS_FAILED;
@@ -144,7 +144,7 @@ Gets the \p Sqrl_Transaction_Type of a \p Sqrl_Transaction
 @param transaction the \p Sqrl_Transaction
 @return \p Sqrl_Transaction_Type
 */
-DLL_PUBLIC
+
 Sqrl_Transaction_Type sqrl_transaction_type( Sqrl_Transaction t )
 {
     Sqrl_Transaction_Type type = SQRL_TRANSACTION_UNKNOWN;
@@ -160,7 +160,7 @@ Gets the \p Sqrl_User associated with a \p Sqrl_Transaction
 @return \p Sqrl_User the associated user
 @return NULL A \p Sqrl_User is not associated with this transaction
 */
-DLL_PUBLIC
+
 Sqrl_User sqrl_transaction_user( Sqrl_Transaction t )
 {
     Sqrl_User user = NULL;
@@ -179,7 +179,7 @@ the result of a \p sqrl_client_export_user() during the
 @param len Pointer to \p size_t containing the length of \p buf.  If buf is not NULL, modified to contain length of string.
 @return \p size_t Length of the \p Sqrl_Transaction's string
 */
-DLL_PUBLIC
+
 size_t sqrl_transaction_string( Sqrl_Transaction t, char *buf, size_t *len )
 {
     WITH_TRANSACTION(transaction,t);

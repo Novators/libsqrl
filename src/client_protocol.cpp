@@ -49,11 +49,13 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 	}
 
 	// Create host string...
+	char *str = transaction->uri->getHost();
 	if( transaction->altIdentity ) {
-		utstring_printf( host, "%s+%s", transaction->uri->host, transaction->altIdentity );
+		utstring_printf( host, "%s+%s", str, transaction->altIdentity );
 	} else {
-		utstring_printf( host, "%s", transaction->uri->host );
+		utstring_printf( host, "%s", str );
 	}
+	free(str);
 
 	// Generate site private key
 	if( 0 != crypto_auth_hmacsha256( 
@@ -165,26 +167,23 @@ void parseQry( struct Sqrl_Site *site, const char *url, size_t url_len )
 	UT_string *srvStr;
 	UT_string *newUrl;
 	SQRL_CAST_TRANSACTION(transaction,site->transaction);
-	Sqrl_Uri *suri = transaction->uri;
+	SqrlUri *suri = transaction->uri;
+	char *str;
 
 	utstring_new( chal );
 	utstring_new( srvStr );
 	utstring_new( newUrl );
 
-	utstring_printf( chal, "sqrl://%s", suri->host );
-	utstring_printf( newUrl, "%s", suri->prefix );
+	str = suri->getHost();
+	utstring_printf( chal, "sqrl://%s", str );
+	free(str);
+	str = suri->getPrefix();
+	utstring_printf( newUrl, "%s", str );
+	free(str);
 	utstring_bincpy( chal, url, url_len );
 	utstring_bincpy( newUrl, url, url_len );
-	if( suri->challenge ) {
-		free( suri->challenge );
-	}
-	if( suri->url ) {
-		free( suri->url );
-	}
-	suri->challenge = calloc( utstring_len( chal ) + 1, 1 );
-	suri->url = calloc( utstring_len( newUrl ) + 1, 1 );
-	strcpy( suri->challenge, utstring_body( chal ));
-	strcpy( suri->url, utstring_body( newUrl ));
+	suri->setChallenge(utstring_body(chal));
+	suri->setUrl(utstring_body(newUrl));
 
 	if( site->serverString ) {
 		utstring_free( site->serverString );
@@ -218,7 +217,7 @@ int parseKeyValue( struct Sqrl_Site *site, char *key, size_t key_len, char *valu
 	int key_type = -1;
 	int i;
 	char theKey[SITE_KV_LENGTH+1];
-	char *theValue = malloc(value_len + 1);
+	char *theValue = (char*)malloc(value_len + 1);
 	memcpy( theKey, key, key_len );
 	memcpy( theValue, value, value_len );
 	theKey[key_len] = 0;
@@ -331,11 +330,14 @@ UT_string *sqrl_site_domain( Sqrl_Site *site )
 {
 	if( !site ) return NULL;
 	UT_string *ret = NULL;
+	char *tmpString;
 
 	SQRL_CAST_TRANSACTION(transaction,site->transaction);
-	if( transaction->uri && transaction->uri->host ) {
+	if( transaction->uri && transaction->uri->getHostLength() ) {
 		utstring_new( ret );
-		utstring_bincpy( ret, transaction->uri->host, strlen( transaction->uri->host ));
+		tmpString = transaction->uri->getHost();
+		utstring_bincpy( ret, tmpString, strlen(tmpString));
+		free(tmpString);
 	}
 
 	return ret;
@@ -471,7 +473,7 @@ Creates the client's body text for sending to the SQRL server
 @param cmd One of: \p SQRL_TRANSACTION_AUTH_QUERY SQRL_TRANSACTION_AUTH_IDENT SQRL_TRANSACTION_AUTH_DISABLE SQRL_TRANSACTION_AUTH_ENABLE
 @return true on success, false on failure
 */
-DLL_PUBLIC 
+ 
 bool sqrl_site_generate_client_body( Sqrl_Site *site )
 {
 	if( !site ) return false;
@@ -548,7 +550,7 @@ successful \p sqrl_site_generate_client_body()
 @param site the \p Sqrl_Site
 @return pointer to a new UT_string object containing the client's body text
 */
-DLL_PUBLIC 
+ 
 UT_string *sqrl_site_client_body( Sqrl_Site *site ) 
 {
 	if( !site ) return NULL;
@@ -609,7 +611,8 @@ Sqrl_Site *sqrl_client_site_create( Sqrl_Transaction t )
 {
 	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return NULL;
-	Sqrl_Site *site = calloc( 1, sizeof( Sqrl_Site ));
+	Sqrl_Site *site = (Sqrl_Site*)calloc( 1, sizeof( Sqrl_Site ));
+	char *tmpString;
 	site->transaction = sqrl_transaction_hold(t);
 	site->currentTransaction = SQRL_TRANSACTION_AUTH_QUERY;
 	site->previous_identity = -1;
@@ -617,11 +620,13 @@ Sqrl_Site *sqrl_client_site_create( Sqrl_Transaction t )
 
 	if( transaction->uri ) {
 		utstring_new( site->serverString );
-		sqrl_b64u_encode( site->serverString, (uint8_t*)transaction->uri->challenge, strlen( transaction->uri->challenge ));
+		tmpString = transaction->uri->getChallenge();
+		sqrl_b64u_encode( site->serverString, (uint8_t*)tmpString, strlen( tmpString ));
+		free(tmpString);
 		FLAG_SET( site->flags, SITE_FLAG_VALID_SERVER_STRING );
 	}
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.site );
-	struct Sqrl_Site_List *item = calloc( 1, sizeof( struct Sqrl_Site_List ));
+	struct Sqrl_Site_List *item = (Sqrl_Site_List*)calloc( 1, sizeof( struct Sqrl_Site_List ));
 	struct Sqrl_Site_List *list = SQRL_SITE_LIST;
 	item->site = site;
 	if( ! SQRL_SITE_LIST ) {
@@ -649,7 +654,7 @@ static struct Sqrl_Site_List *_scsm( struct Sqrl_Site_List *cur, double now, boo
 		// Delete this one
 		struct Sqrl_Site_List *next = cur->next;
 
-		cur->site->transaction = sqrl_transaction_release( cur->site->transaction );
+		cur->site->transaction = (Sqrl_Transaction*)sqrl_transaction_release( cur->site->transaction );
 		if( cur->site->serverFriendlyName ) {
 			free( cur->site->serverFriendlyName );
 		}
@@ -687,9 +692,11 @@ Sqrl_Transaction_Status sqrl_client_do_loop( Sqrl_Site *site )
 		UT_string *bdy;
 		bdy = sqrl_site_client_body( site );
 		SQRL_CAST_TRANSACTION(transaction,site->transaction);
+		char *tmpString = transaction->uri->getUrl();
 		sqrl_client_call_send(
-			site->transaction, transaction->uri->url, strlen( transaction->uri->url ),
+			site->transaction, tmpString, strlen( tmpString ),
 			utstring_body( bdy ), utstring_len( bdy ));
+		free(tmpString);
 		utstring_free( bdy );
 	}
 	return SQRL_TRANSACTION_STATUS_WORKING;

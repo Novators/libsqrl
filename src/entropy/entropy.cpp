@@ -85,7 +85,7 @@ sqrl_entropy_thread( SQRL_THREAD_FUNCTION_INPUT_TYPE input )
 
 static struct sqrl_entropy_pool *sqrl_entropy_create()
 {
-	struct sqrl_entropy_pool *pool = malloc( sizeof( struct sqrl_entropy_pool ));
+	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)malloc( sizeof( struct sqrl_entropy_pool ));
 	if( !pool ) {
 		return NULL;
 	}
@@ -128,7 +128,7 @@ static void sqrl_increment_entropy( struct sqrl_entropy_pool *pool, int amount )
  * @param msg A chunk of data to be added to the pool
  * @param msg_len The length of \p msg (in bytes)
  */
-DLL_PUBLIC
+
 void sqrl_entropy_add( uint8_t* msg, size_t msg_len )
 {
 	struct sqrl_entropy_pool *pool = sqrl_entropy_get_pool();
@@ -137,7 +137,7 @@ void sqrl_entropy_add( uint8_t* msg, size_t msg_len )
 		if( pool->initialized ) {
 			struct sqrl_fast_flux_entropy ffe;
 			sqrl_store_fast_flux_entropy( &ffe );
-			uint8_t *buf = malloc( msg_len + sizeof( struct sqrl_fast_flux_entropy ));
+			uint8_t *buf = (uint8_t*)malloc( msg_len + sizeof( struct sqrl_fast_flux_entropy ));
 			if( buf ) {
 				memcpy( buf, msg, msg_len );
 				memcpy( buf+msg_len, &ffe, sizeof( struct sqrl_fast_flux_entropy ));
@@ -157,7 +157,7 @@ void sqrl_entropy_add( uint8_t* msg, size_t msg_len )
  * @param desired_entropy The minimum amount of estimated entropy required.
  * @return The actual amount of estimated entropy.
  */
-DLL_PUBLIC
+
 int sqrl_entropy_get_blocking( uint8_t *buf, int desired_entropy ) 
 {
 	struct sqrl_entropy_pool *pool = sqrl_entropy_get_pool();
@@ -193,7 +193,7 @@ START:
 	return received_entropy;
 }
 
-DLL_PUBLIC
+
 int sqrl_entropy_bytes( uint8_t* buf, int nBytes )
 {
 	if( !buf || (nBytes <= 0) ) return 0;
@@ -223,7 +223,7 @@ int sqrl_entropy_bytes( uint8_t* buf, int nBytes )
  * @param desired_entropy The minimum amount of estimated entropy required.
  * @return The actual amount of estimated entropy.  If \p desired_entropy is not available, returns 0.
  */
-DLL_PUBLIC
+
 int sqrl_entropy_get( uint8_t* buf, int desired_entropy )
 {
 	struct sqrl_entropy_pool *pool = sqrl_entropy_get_pool();
@@ -256,7 +256,7 @@ int sqrl_entropy_get( uint8_t* buf, int desired_entropy )
  * 
  * @return The estimated entropy (bits) available
  */
-DLL_PUBLIC
+
 int sqrl_entropy_estimate()
 {
 	struct sqrl_entropy_pool *pool = sqrl_entropy_get_pool();

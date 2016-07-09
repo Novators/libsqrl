@@ -6,3 +6,5 @@ build
 /libsqrl/Debug
 /libsqrl/libsqrl/Debug
 /libsqrl/.vs/libsqrl/v14
+/libsqrl/libsqrl/Release
+/libsqrl/libsqrl-test/Debug

@@ -15,12 +15,12 @@ Makes a copy of the \p Sqrl_Client_Callbacks that libsqrl is currently using.
 
 @param callbacks An allocated \p Sqrl_Client_Callbacks structure
 */
-DLL_PUBLIC
+
 void sqrl_client_get_callbacks( Sqrl_Client_Callbacks *callbacks )
 {
 	if( !callbacks ) return;
 	if( !SQRL_CLIENT_CALLBACKS ) {
-		SQRL_CLIENT_CALLBACKS = calloc( 1, sizeof( Sqrl_Client_Callbacks ));
+		SQRL_CLIENT_CALLBACKS = (Sqrl_Client_Callbacks*)calloc( 1, sizeof( Sqrl_Client_Callbacks ));
 	}
 	memcpy( callbacks, SQRL_CLIENT_CALLBACKS, sizeof( Sqrl_Client_Callbacks ));
 }
@@ -31,7 +31,7 @@ to use internally.
 
 @param callbacks The updated callbacks to use
 */
-DLL_PUBLIC
+
 void sqrl_client_set_callbacks( Sqrl_Client_Callbacks *callbacks )
 {
 	if( !callbacks ) {
@@ -42,7 +42,7 @@ void sqrl_client_set_callbacks( Sqrl_Client_Callbacks *callbacks )
 		return;
 	} else {
 		if( !SQRL_CLIENT_CALLBACKS ) {
-			SQRL_CLIENT_CALLBACKS = malloc( sizeof( Sqrl_Client_Callbacks ));
+			SQRL_CLIENT_CALLBACKS = (Sqrl_Client_Callbacks*)malloc( sizeof( Sqrl_Client_Callbacks ));
 		}
 		if( SQRL_CLIENT_CALLBACKS ) {
 			memcpy( SQRL_CLIENT_CALLBACKS, callbacks, sizeof( Sqrl_Client_Callbacks ));
@@ -62,7 +62,7 @@ Sqrl_User sqrl_client_call_select_user( Sqrl_Transaction t )
 	return NULL;
 }
 
-DLL_PUBLIC
+
 void sqrl_client_transaction_set_alternate_identity(
 	Sqrl_Transaction t,
 	const char *altIdentity )
@@ -75,7 +75,7 @@ void sqrl_client_transaction_set_alternate_identity(
 		}
 		size_t len = strlen( altIdentity );
 		if( len > 0 ) {
-			transaction->altIdentity = malloc( len + 1 );
+			transaction->altIdentity = (char*)malloc( len + 1 );
 			strcpy( transaction->altIdentity, altIdentity );
 		}
 		END_WITH_TRANSACTION(transaction);
@@ -166,7 +166,7 @@ a \p sqrl_ccb_authentication_required request.
 @param credential String containing user's password, rescue code, etc.
 @param credentialLength Length of \p credential
 */
-DLL_PUBLIC
+
 void sqrl_client_authenticate(
 	Sqrl_Transaction t,
 	Sqrl_Credential_Type credentialType,
@@ -288,12 +288,12 @@ DONE:
 Exports a \p Sqrl_User to GRC's S4 format
 
 @param user The \p Sqrl_User
-@param uri A \p Sqrl_Uri specifying the file path to save to.  If not specified, export will be returned to the \p sqrl_ccb_transaction_complete callback as a string.
+@param uri A \p SqrlUri specifying the file path to save to.  If not specified, export will be returned to the \p sqrl_ccb_transaction_complete callback as a string.
 @param exportType \p Sqrl_Export
 @param encodingType \p Sqrl_Encoding
 @return SQRL_TRANSACION_STATUS_SUCCESS | SQRL_TRANSACTION_STATUS_FAILED
 */
-DLL_PUBLIC
+
 Sqrl_Transaction_Status sqrl_client_export_user(
 	Sqrl_User user,
 	const char *uri,
@@ -308,9 +308,9 @@ Sqrl_Transaction_Status sqrl_client_export_user(
 	transaction->exportType = exportType;
 	transaction->encodingType = encodingType;
 	if( uri ) {
-		transaction->uri = sqrl_uri_parse( uri );
+		transaction->uri = new SqrlUri( uri );
 		if( !transaction->uri ) goto ERR;
-		if( transaction->uri->scheme != SQRL_SCHEME_FILE ) goto ERR;
+		if( transaction->uri->getScheme() != SQRL_SCHEME_FILE ) goto ERR;
 		if( !sqrl_user_save( t )) goto ERR;
 	} else {
 		if( !sqrl_user_save_to_buffer( t )) goto ERR;
@@ -338,7 +338,7 @@ Starts a new \p Sqrl_Transaction
 @param string_len Length of \p string
 @return \p Sqrl_Transaction_Status
 */
-DLL_PUBLIC
+
 Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	Sqrl_Transaction_Type type,
 	Sqrl_User user,
@@ -350,9 +350,10 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	Sqrl_Transaction t = sqrl_transaction_create( type );
 	SQRL_CAST_TRANSACTION(transaction,t);
 	transaction->status = retVal;
+	char *tmpString;
 
 	if( string ) {
-		transaction->uri = sqrl_uri_parse( string );
+		transaction->uri = new SqrlUri( string );
 	}
 	if( user ) sqrl_transaction_set_user( t, user );
 	switch( type ) {
@@ -362,7 +363,7 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	case SQRL_TRANSACTION_AUTH_REMOVE:
 	case SQRL_TRANSACTION_AUTH_IDENT:
 	case SQRL_TRANSACTION_AUTH_DISABLE:
-		if( !transaction->uri || transaction->uri->scheme != SQRL_SCHEME_SQRL ) {
+		if( !transaction->uri || transaction->uri->getScheme() != SQRL_SCHEME_SQRL ) {
 			goto ERR;
 		}
 		if( !transaction->user ) {
@@ -395,8 +396,10 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	case SQRL_TRANSACTION_IDENTITY_LOAD:
 		if( transaction->user ) goto ERR;
 		if( transaction->uri ) {
-			if( transaction->uri->scheme != SQRL_SCHEME_FILE ) goto ERR;
-			transaction->user = sqrl_user_create_from_file( transaction->uri->challenge );
+			if( transaction->uri->getScheme() != SQRL_SCHEME_FILE ) goto ERR;
+			tmpString = transaction->uri->getChallenge();
+			transaction->user = sqrl_user_create_from_file( tmpString );
+			free(tmpString);
 			if( transaction->user ) {
 				goto SUCCESS;
 			}
@@ -453,7 +456,7 @@ Call \p sqrl_client_receive with the server's response to a \p sqrl_ccb_send cal
 @param payload The entire body of the server's response.
 @param payload_len Length of \p payload 
 */
-DLL_PUBLIC
+
 void sqrl_client_receive( 
 	Sqrl_Transaction transaction,
 	const char *payload, size_t payload_len )

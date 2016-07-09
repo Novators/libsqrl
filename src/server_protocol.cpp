@@ -32,7 +32,7 @@ bool sqrl_server_verify_nut(
     }
 
     int64_t diff = sqrl_get_timestamp() - context->nut.timestamp;
-    if( diff < 0 || diff > context->server->nut_expires ) {
+    if( diff < 0 || diff > (int64_t)context->server->nut_expires ) {
         FLAG_SET( context->tif, SQRL_TIF_TRANSIENT_ERR );
         return false;
     }
@@ -109,7 +109,7 @@ bool sqrl_server_parse_client(
                 if( context->client_strings[current_key] ) {
                     free( context->client_strings[current_key] );
                 }
-                context->client_strings[current_key] = malloc( val_len + 1 );
+                context->client_strings[current_key] = (char*)malloc( val_len + 1 );
                 memcpy( context->client_strings[current_key], val, val_len );
                 context->client_strings[current_key][val_len] = 0;
 #if DEBUG_PRINT_SERVER_PROTOCOL
@@ -126,7 +126,7 @@ bool sqrl_server_parse_client(
     if( required_keys == (found_keys & required_keys) ) {
         for( i = 0; i < COMMAND_COUNT; i++ ) {
             if( 0 == strcmp( commands[i], context->client_strings[CLIENT_KV_CMD] )) {
-                context->command = i;
+                context->command = (Sqrl_Cmd)i;
                 break;
             }
         }
@@ -206,6 +206,8 @@ bool sqrl_server_verify_signatures(
 bool sqrl_server_build_reply( Sqrl_Server_Context *context, UT_string *reply )
 {
     if( !context || !reply ) return false;
+	char *prefix = context->server->uri->getPrefix();
+	char *challenge = context->server->uri->getChallenge();
     utstring_renew( reply );
     utstring_printf( reply, "ver=%s\r\n", SQRL_VERSION_STRING );
     uint32_t ip = context->nut.ip; // Reuse original IP address
@@ -215,16 +217,16 @@ bool sqrl_server_build_reply( Sqrl_Server_Context *context, UT_string *reply )
     utstring_printf( reply, "\r\n" );
     utstring_printf( reply, "tif=%X\r\n", context->tif );
     if( !context->server_strings[SERVER_KV_QRY] ) {
-        size_t len = strlen( context->server->uri->prefix );
+        size_t len = strlen( prefix );
         char *p, *pp;
-        p = context->server->uri->challenge + len - 1;
+        p = challenge + len - 1;
         pp = strchr( p, '?' );
         if( pp ) {
             len = pp - p;
         } else {
             len = strlen( p );
         }
-        context->server_strings[SERVER_KV_QRY] = calloc( 1, len + 1 );
+        context->server_strings[SERVER_KV_QRY] = (char*)calloc( 1, len + 1 );
         memcpy( context->server_strings[SERVER_KV_QRY], p, len );
     }
     utstring_printf( reply, "qry=%s\r\n", context->server_strings[SERVER_KV_QRY] );
@@ -238,6 +240,8 @@ bool sqrl_server_build_reply( Sqrl_Server_Context *context, UT_string *reply )
         utstring_printf( reply, "url=%s\r\n", context->server_strings[SERVER_KV_URL] );
     }
     sqrl_server_add_mac( context->server, reply, 0 );
+	free(prefix);
+	free(challenge);
     return true;
 }
 
@@ -272,7 +276,7 @@ void sqrl_server_parse_query(
                 if( context->context_strings[current_key] ) {
                     free( context->context_strings[current_key] );
                 }
-                context->context_strings[current_key] = malloc( val_len + 1 );
+                context->context_strings[current_key] = (char*)malloc( val_len + 1 );
                 memcpy( context->context_strings[current_key], val, val_len );
                 context->context_strings[current_key][val_len] = 0;
 #if DEBUG_PRINT_SERVER_PROTOCOL
@@ -299,11 +303,12 @@ bool sqrl_server_get_user(
     Sqrl_Server_Context *context,
     char *idk )
 {
-    char *blob = malloc( 512 );
+    char *blob = (char*)malloc( 512 );
+	char *host = context->server->uri->getHost();
     sqrl_scb_user *onUserOp = (sqrl_scb_user*)context->server->onUserOp;
     if( (onUserOp)( 
         SQRL_SCB_USER_FIND,
-        context->server->uri->host,
+        host,
         idk,
         NULL,
         blob )) 
@@ -312,15 +317,17 @@ bool sqrl_server_get_user(
         utstring_new( tmp );
         sqrl_b64u_decode( tmp, blob, strlen( blob ));
         if( context->user ) free( context->user );
-        context->user = malloc( sizeof( Sqrl_Server_User ));
+        context->user = (Sqrl_Server_User*)malloc( sizeof( Sqrl_Server_User ));
         memcpy( context->user, utstring_body( tmp ), utstring_len( tmp ));
         utstring_free( tmp );
+		free(host);
         free( blob );
         if( FLAG_CHECK( context->user->flags, SQRL_SERVER_USER_FLAG_DISABLED )) {
             FLAG_SET( context->tif, SQRL_TIF_SQRL_DISABLED );
         }
         return true;
     }
+	free(host);
     free( blob );
     return false;
 }
@@ -333,12 +340,12 @@ void sqrl_server_add_user_suk( Sqrl_Server_Context *context )
     UT_string *tmp;
     utstring_new( tmp );
     sqrl_b64u_encode( tmp, context->user->suk, SQRL_KEY_SIZE );
-    context->server_strings[SERVER_KV_SUK] = malloc( 1 + utstring_len( tmp ));
+    context->server_strings[SERVER_KV_SUK] = (char*)malloc( 1 + utstring_len( tmp ));
     strcpy( context->server_strings[SERVER_KV_SUK], utstring_body( tmp ));
     utstring_free( tmp );
 }
 
-DLL_PUBLIC
+
 void sqrl_server_handle_query(
     Sqrl_Server_Context *context,
     uint32_t client_ip,
@@ -349,6 +356,7 @@ void sqrl_server_handle_query(
     sqrl_scb_user *onUserOp = (sqrl_scb_user*)context->server->onUserOp;
 
     UT_string *reply, *tmp;
+	char *host = context->server->uri->getHost();
     utstring_new( reply );
     sqrl_server_parse_query( context, client_ip, query, query_len );
     if( !FLAG_CHECK( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_QUERY )) {
@@ -396,7 +404,7 @@ void sqrl_server_handle_query(
         goto REPLY;
     case SQRL_CMD_REMOVE:
         if( (onUserOp)(SQRL_SCB_USER_DELETE,
-            context->server->uri->host,
+            host,
             context->client_strings[CLIENT_KV_IDK],
             NULL, NULL )) {
             FLAG_CLEAR( context->tif, SQRL_TIF_ID_MATCH );
@@ -412,7 +420,7 @@ void sqrl_server_handle_query(
             sqrl_b64u_encode( tmp, (uint8_t*)context->user, sizeof( Sqrl_Server_User ));
 
             if( (onUserOp)(SQRL_SCB_USER_UPDATE,
-                context->server->uri->host,
+                host,
                 context->client_strings[CLIENT_KV_IDK],
                 NULL, utstring_body( tmp ))) {
                 FLAG_CLEAR( context->tif, SQRL_TIF_SQRL_DISABLED );
@@ -426,7 +434,7 @@ void sqrl_server_handle_query(
             utstring_new( tmp );
             sqrl_b64u_encode( tmp, (uint8_t*)context->user, sizeof( Sqrl_Server_User ));
             if( (onUserOp)(SQRL_SCB_USER_REKEYED,
-                context->server->uri->host,
+                host,
                 context->client_strings[CLIENT_KV_IDK],
                 context->client_strings[CLIENT_KV_PIDK],
                 utstring_body( tmp ))) {
@@ -447,7 +455,7 @@ void sqrl_server_handle_query(
             sqrl_b64u_encode( tmp, (uint8_t*)context->user, sizeof( Sqrl_Server_User ));
 
             if( (onUserOp)(SQRL_SCB_USER_UPDATE,
-                context->server->uri->host,
+                host,
                 context->client_strings[CLIENT_KV_IDK],
                 NULL, utstring_body( tmp ))) {
                 FLAG_SET( context->tif, SQRL_TIF_SQRL_DISABLED );
@@ -465,7 +473,7 @@ void sqrl_server_handle_query(
                 break;
             }
             (onUserOp)(SQRL_SCB_USER_IDENTIFIED,
-                context->server->uri->host,
+                host,
                 context->client_strings[CLIENT_KV_IDK],
                 NULL, NULL );
         } else if( FLAG_CHECK( context->tif, SQRL_TIF_PREVIOUS_ID_MATCH )) {
@@ -482,7 +490,7 @@ void sqrl_server_handle_query(
             memcpy( context->user->idk, utstring_body( tmp ), SQRL_KEY_SIZE);
             sqrl_b64u_encode( tmp, (uint8_t*)context->user, sizeof( Sqrl_Server_User ));
             (onUserOp)(SQRL_SCB_USER_REKEYED,
-                context->server->uri->host,
+                host,
                 context->client_strings[CLIENT_KV_IDK],
                 context->client_strings[CLIENT_KV_PIDK],
                 utstring_body( tmp ));
@@ -490,7 +498,7 @@ void sqrl_server_handle_query(
             FLAG_CLEAR( context->tif, SQRL_TIF_PREVIOUS_ID_MATCH );
             FLAG_SET( context->tif, SQRL_TIF_ID_MATCH );
             (onUserOp)(SQRL_SCB_USER_IDENTIFIED,
-                context->server->uri->host,
+                host,
                 context->client_strings[CLIENT_KV_IDK],
                 NULL, NULL );
         } else {
@@ -498,7 +506,7 @@ void sqrl_server_handle_query(
                 context->client_strings[CLIENT_KV_SUK] &&
                 context->client_strings[CLIENT_KV_VUK] ) {
                 // Create user
-                if( !context->user ) context->user = malloc( sizeof( Sqrl_Server_User ));
+                if( !context->user ) context->user = (Sqrl_Server_User*)malloc( sizeof( Sqrl_Server_User ));
                 context->user->flags = 0; 
                 utstring_new( tmp );
                 sqrl_b64u_decode( tmp, context->client_strings[CLIENT_KV_IDK], strlen( context->client_strings[CLIENT_KV_IDK]));
@@ -509,11 +517,11 @@ void sqrl_server_handle_query(
                 memcpy( &context->user->vuk, utstring_body( tmp ), SQRL_KEY_SIZE );
                 sqrl_b64u_encode( tmp, (uint8_t*)context->user, sizeof( Sqrl_Server_User ));
                 if( (onUserOp)( SQRL_SCB_USER_CREATE,
-                    context->server->uri->host,
+                    host,
                     context->client_strings[CLIENT_KV_IDK],
                     NULL, utstring_body( tmp ))) {
                     (onUserOp)(SQRL_SCB_USER_IDENTIFIED,
-                        context->server->uri->host,
+                        host,
                         context->client_strings[CLIENT_KV_IDK],
                         NULL, NULL );
                     FLAG_SET( context->tif, SQRL_TIF_ID_MATCH );
@@ -534,7 +542,7 @@ REPLY:
     sqrl_server_build_reply( context, reply );
     sqrl_scb_send *onSend = (sqrl_scb_send*)context->server->onSend;
     (onSend)( context, utstring_body( reply ), utstring_len( reply ));
-
+	free(host);
     utstring_free( reply );
 }
 

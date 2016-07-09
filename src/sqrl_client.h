@@ -40,6 +40,9 @@ For more details, see the LICENSE file included with this package.
 #endif
 
 
+/** Reference to a transaction */
+typedef void *Sqrl_Transaction;
+
 
 /**
 \p Sqrl_Encoding specifies the type of encoding to use when exporting / saving.
@@ -69,6 +72,18 @@ These functions facilitate creating and maintaining user identities.
 
 typedef void* Sqrl_User;
 
+typedef struct Sqrl_User_Options {
+	/** 16 bit Flags, defined at [grc sqrl storage](https://www.grc.com/sqrl/storage.htm) */
+	uint16_t flags;
+	/** The number of characters to use for password hints (0 to disable) */
+	uint8_t hintLength;
+	/** The number of seconds to enscrypt */
+	uint8_t enscryptSeconds;
+	/** Minutes to hold a hint when system is idle */
+	uint16_t timeoutMinutes;
+} Sqrl_User_Options;
+
+
 DLL_PUBLIC uint16_t   sqrl_user_check_flags( Sqrl_User u, uint16_t flags );
 DLL_PUBLIC void       sqrl_user_clear_flags( Sqrl_User u, uint16_t flags );
 DLL_PUBLIC Sqrl_User  sqrl_user_find( const char *unique_id );
@@ -86,6 +101,16 @@ DLL_PUBLIC bool       sqrl_user_set_rescue_code( Sqrl_User u, char *rc );
 DLL_PUBLIC void       sqrl_user_set_timeout_minutes( Sqrl_User u, uint16_t minutes );
 DLL_PUBLIC bool       sqrl_user_unique_id( Sqrl_User u, char *buffer );
 DLL_PUBLIC bool       sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id );
+DLL_PUBLIC void        sqrl_user_default_options(Sqrl_User_Options *options);
+DLL_PUBLIC Sqrl_User   sqrl_user_create();
+DLL_PUBLIC Sqrl_User   sqrl_user_create_from_buffer(const char *buffer, size_t buffer_len);
+DLL_PUBLIC Sqrl_User   sqrl_user_create_from_file(const char *filename);
+DLL_PUBLIC bool        sqrl_user_set_password(
+	Sqrl_User u,
+	char *password,
+	size_t password_len);
+DLL_PUBLIC bool        sqrl_user_save(Sqrl_Transaction transaction);
+DLL_PUBLIC bool        sqrl_user_save_to_buffer(Sqrl_Transaction transaction);
 
 /** @} */ // endgroup user
 
@@ -144,9 +169,6 @@ typedef enum {
 	SQRL_TRANSACTION_STATUS_CANCELLED,
 	SQRL_TRANSACTION_STATUS_WORKING
 } Sqrl_Transaction_Status;
-
-/** Reference to a transaction */
-typedef void *Sqrl_Transaction;
 
 /** Called when libsqrl needs a user identity to complete a \p Sqrl_Transaction */
 typedef Sqrl_User (sqrl_ccb_select_user)(

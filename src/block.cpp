@@ -15,10 +15,10 @@ Creates a new, empty \p Sqrl_Block
 
 @return the new \p Sqrl_Block
 */
-DLL_PUBLIC
+
 Sqrl_Block *sqrl_block_create()
 {
-	Sqrl_Block *b = malloc( sizeof( Sqrl_Block ) );
+	Sqrl_Block *b = (Sqrl_Block*)malloc( sizeof( Sqrl_Block ) );
 	memset( b, 0, sizeof( Sqrl_Block ));
 	return b;
 }
@@ -32,7 +32,7 @@ to free memory that has not been allocated!
 @param block The \p Sqrl_Block to destroy
 @return NULL pointer
 */
-DLL_PUBLIC
+
 Sqrl_Block *sqrl_block_destroy( Sqrl_Block *block )
 {
 	sqrl_block_free( block );
@@ -50,7 +50,7 @@ in a memory leak!
 
 @param block The \p Sqrl_Block to clear
 */
-DLL_PUBLIC
+
 void sqrl_block_clear( Sqrl_Block *block )
 {
 	memset( block, 0, sizeof( Sqrl_Block ));
@@ -72,11 +72,11 @@ it is reallocated.
 @param blockLength The length of the block
 @return TRUE on success; FALSE on failure
 */
-DLL_PUBLIC
+
 bool sqrl_block_init( Sqrl_Block *block, uint16_t blockType, uint16_t blockLength )
 {
 	sqrl_block_free( block );
-	block->data = malloc( blockLength );
+	block->data = (uint8_t*)malloc( blockLength );
 	if( block->data ) {
 		block->blockType = blockType;
 		block->blockLength = blockLength;
@@ -92,7 +92,7 @@ Frees memory allocated to a \p Sqrl_Block
 
 @param block The \p Sqrl_Block to free
 */
-DLL_PUBLIC
+
 void sqrl_block_free( Sqrl_Block *block )
 {
 	if( block->data ) {
@@ -111,13 +111,13 @@ Resizes a \p Sqrl_Block
 @param new_size The size (in bytes) that the block should be
 @return TRUE on success; FALSE on failure
 */
-DLL_PUBLIC
+
 bool sqrl_block_resize( Sqrl_Block *block, size_t new_size )
 {
 	if( new_size == 0 ) return false;
 	if( new_size == block->blockLength ) return true;
 
-	uint8_t *buf = malloc( new_size );
+	uint8_t *buf = (uint8_t*)malloc( new_size );
 	if( !buf ) return false;
 
 	if( new_size < block->blockLength ) {
@@ -129,9 +129,9 @@ bool sqrl_block_resize( Sqrl_Block *block, size_t new_size )
 	
 	sodium_munlock( block->data, block->blockLength );
 	free( block->data );
-	block->data = malloc( new_size );
+	block->data = (uint8_t*)malloc( new_size );
 	sodium_mlock( block->data, new_size );
-	block->blockLength = new_size;
+	block->blockLength = (uint16_t)new_size;
 	if( block->cur >= block->blockLength ) {
 		block->cur = block->blockLength - 1;
 	}
@@ -148,7 +148,7 @@ Moves the read/write cursor with a \p Sqrl_Block
 @param dest The offset where the cursor should point
 @return The current position of the cursor.  If this != \p dest, something went wrong
 */
-DLL_PUBLIC
+
 uint16_t sqrl_block_seek( Sqrl_Block *block, uint16_t dest )
 {
 	if( dest < block->blockLength ) {
@@ -165,12 +165,12 @@ Writes data to a \p Sqrl_Block at the current cursor position.
 @param data_len Length (in bytes) of data to write
 @return Number of bytes written; -1 on failure
 */
-DLL_PUBLIC
+
 int sqrl_block_write( Sqrl_Block *block, uint8_t *data, size_t data_len )
 {
 	if( block->cur + data_len > block->blockLength ) return -1;
 	memcpy( &block->data[block->cur], data, data_len );
-	block->cur += data_len;
+	block->cur += (uint16_t)data_len;
 	return data_len;
 }
 
@@ -182,12 +182,12 @@ Read bytes from a \p Sqrl_Block
 @param data_len Number of bytes to read
 @return Number of bytes read; -1 on failure
 */
-DLL_PUBLIC
+
 int sqrl_block_read( Sqrl_Block *block, uint8_t *data, size_t data_len )
 {
 	if( block->cur + data_len > block->blockLength ) return -1;
 	memcpy( data, &block->data[block->cur], data_len );
-	block->cur += data_len;
+	block->cur += (uint16_t)data_len;
 	return data_len;
 }
 
@@ -199,7 +199,7 @@ Moves the cursor forward by 2.
 @param block The \p Sqrl_Block
 @return The value read from the block
 */
-DLL_PUBLIC
+
 uint16_t sqrl_block_read_int16( Sqrl_Block *block )
 {
 	if( block->cur + 2 > block->blockLength ) return 0;
@@ -218,7 +218,7 @@ Moves the cursor forward by 2.
 @param value The value to write
 @return TRUE on success; FALSE on failure
 */
-DLL_PUBLIC
+
 bool sqrl_block_write_int16( Sqrl_Block *block, uint16_t value )
 {
 	if( block->cur + 2 > block->blockLength ) return false;
@@ -235,7 +235,7 @@ Moves the cursor forward by 4.
 @param block The \p Sqrl_Block
 @return The value read from the block
 */
-DLL_PUBLIC
+
 uint32_t sqrl_block_read_int32( Sqrl_Block *block )
 {
 	if( block->cur + 4 > block->blockLength ) return 0;
@@ -255,7 +255,7 @@ Moves the cursor forward by 4.
 @param value The value to write
 @return TRUE on success; FALSE on failure
 */
-DLL_PUBLIC
+
 bool sqrl_block_write_int32( Sqrl_Block *block, uint32_t value )
 {
 	if( block->cur + 4 > block->blockLength ) return false;
@@ -274,7 +274,7 @@ Moves the cursor forward by 1.
 @param block The \p Sqrl_Block
 @return The value read from the block
 */
-DLL_PUBLIC
+
 uint8_t sqrl_block_read_int8( Sqrl_Block *block )
 {
 	if( block->cur + 1 > block->blockLength ) return 0;
@@ -290,7 +290,7 @@ Moves the cursor forward by 1.
 @param value The value to write
 @return TRUE on success; FALSE on failure
 */
-DLL_PUBLIC
+
 bool sqrl_block_write_int8( Sqrl_Block *block, uint8_t value )
 {
 	if( block->cur + 1 > block->blockLength ) return false;

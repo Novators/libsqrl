@@ -66,7 +66,7 @@ static const char hex[] = "0123456789ABCDEF";
  * @param hex_len Length of string.
  * @return Decoded unsigned integer.
  */
-DLL_PUBLIC
+
 uint32_t sqrl_hex2uint( const char *hex )
 {
 	return (uint32_t) strtol( hex, NULL, 16 );	
@@ -83,7 +83,7 @@ uint32_t sqrl_hex2uint( const char *hex )
  * @param src Pointer to a NULL terminated string containing the source.
  * @return Pointer to the URL-Encoded \p UT_string.
  */
-DLL_PUBLIC
+
 UT_string *sqrl_urlencode( UT_string *dest, const char *src ) 
 {
 	const char *p;
@@ -119,7 +119,7 @@ UT_string *sqrl_urlencode( UT_string *dest, const char *src )
  * @param src Pointer to a NULL terminated string containing the source.
  * @return Pointer to the decoded \p UT_string.
  */
-DLL_PUBLIC
+
 UT_string *sqrl_urldecode( UT_string *dest, const char *src )
 {
 	const char *p;
@@ -140,7 +140,7 @@ UT_string *sqrl_urldecode( UT_string *dest, const char *src )
 				} else if( dc >= 'A' && dc <= 'F' ) {
 					dc -= 55;
 				} else {
-					dc = 255;
+					dc = (char)255;
 				}
 				if( dc < 16 ) {
 					if( i == 1 ) {
@@ -166,10 +166,10 @@ UT_string *sqrl_urldecode( UT_string *dest, const char *src )
  * @param src Pointer to a string of bytes to be encoded.
  * @param src_len The length (in bytes) of \p src.
  */
-DLL_PUBLIC
+
 void sqrl_b64u_encode_append( UT_string *dest, const uint8_t *src, size_t src_len )
 {
-	int i = 0;
+	size_t i = 0;
 	uint32_t tmp;
 	char str[4];
 	while( i < src_len ) {
@@ -205,7 +205,7 @@ void sqrl_b64u_encode_append( UT_string *dest, const uint8_t *src, size_t src_le
  * @param src_len The length (in bytes) of \p src.
  * @return Pointer to the result \p UT_string.
  */
-DLL_PUBLIC
+
 UT_string *sqrl_b64u_encode( UT_string *dest, const uint8_t *src, size_t src_len )
 {
 	utstring_renew( dest );
@@ -253,10 +253,10 @@ static int sqrl_b64u_decode_next_value(uint32_t *nextValue, const char *src) {
  * @param src Pointer to a string to be decoded.
  * @param src_len The length (in bytes) of \p src.
  */
-DLL_PUBLIC
+
 void sqrl_b64u_decode_append( UT_string *dest, const char *src, size_t src_len )
 {
-	int i = 0;
+	size_t i = 0;
 	int charCount = 0;
 	uint32_t tmp = 0, val;
 	char str[3];
@@ -318,7 +318,7 @@ void sqrl_b64u_decode_append( UT_string *dest, const char *src, size_t src_len )
  * @param src_len The length (in bytes) of \p src.
  * @return Pointer to the result \p UT_string.
  */
-DLL_PUBLIC
+
 UT_string *sqrl_b64u_decode( UT_string * dest, const char *src, size_t src_len )
 {
 	utstring_renew( dest );

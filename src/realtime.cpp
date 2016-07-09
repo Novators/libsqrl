@@ -34,7 +34,7 @@
 
 
 
-DLL_PUBLIC
+
 uint64_t sqrl_get_timestamp()
 {
 #if defined(_WIN32)
@@ -106,7 +106,7 @@ uint64_t sqrl_get_timestamp()
 
 }
 
-DLL_PUBLIC
+
 double sqrl_get_real_time( )
 {
 #if defined(_WIN32)

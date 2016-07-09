@@ -12,6 +12,10 @@ For more details, see the LICENSE file included with this package.
 #include <stdbool.h>
 #include "utstring.h"
 
+#ifndef DLL_PUBLIC
+#define DLL_PUBLIC _declspec(dllimport)
+#endif
+
 // SQRL_BASE64_PAD_CHAR = 0x3D for = padding.
 // SQRL_BASE64_PAD_CHAR = 0x00 for no padding.
 #define SQRL_BASE64_PAD_CHAR 				  0x00
@@ -40,24 +44,35 @@ typedef enum {
 /**
 A structure to hold information about a parsed SQRL URI
 */
-typedef struct Sqrl_Uri {
-	/** The entire SQRL URL */
+class DLL_PUBLIC SqrlUri
+{
+private:
 	char *challenge;
-	/** The domain + extension */
 	char *host;
-	/** Internal use */
 	char *prefix;
-	/** the https url */
 	char *url;
-	/** Internal use */
 	Sqrl_Scheme scheme;
-	/** Server Friendly Name */
 	char *sfn;
-} Sqrl_Uri;
 
-DLL_PUBLIC Sqrl_Uri*	sqrl_uri_create_copy( Sqrl_Uri *original );
-DLL_PUBLIC Sqrl_Uri*	sqrl_uri_parse(const char *);
-DLL_PUBLIC Sqrl_Uri*	sqrl_uri_free(struct Sqrl_Uri *);
+public:
+	SqrlUri(const char *source);
+	~SqrlUri();
+	char *getChallenge();
+	void setChallenge(const char *val);
+	char *getHost();
+	char *getPrefix();
+	char *getUrl();
+	void setUrl(const char *val);
+	char* getSFN();
+	Sqrl_Scheme getScheme();
+	size_t getChallengeLength();
+	size_t getHostLength();
+	size_t getPrefixLength();
+	size_t getUrlLength();
+	size_t getSFNLength();
+
+	SqrlUri* copy();
+};
 
 /** @} */ // endgroup URI
 
@@ -71,16 +86,16 @@ typedef enum {
 	SQRL_CMD_REMOVE
 } Sqrl_Cmd;
 
-typedef enum {
-	SQRL_TIF_ID_MATCH 					 = 0x0001,
-	SQRL_TIF_PREVIOUS_ID_MATCH 			 = 0x0002,
-	SQRL_TIF_IP_MATCH 					 = 0x0004,
-	SQRL_TIF_SQRL_DISABLED 				 = 0x0008,
-	SQRL_TIF_FUNCTION_NOT_SUPPORTED 	 = 0x0010,
-	SQRL_TIF_TRANSIENT_ERR 			 = 0x0020,
-	SQRL_TIF_COMMAND_FAILURE 			 = 0x0040,
-	SQRL_TIF_CLIENT_FAILURE 			 = 0x0080
-} Sqrl_Tif;
+typedef unsigned int Sqrl_Tif;
+
+#define SQRL_TIF_ID_MATCH 					 0x0001
+#define SQRL_TIF_PREVIOUS_ID_MATCH 			 0x0002
+#define SQRL_TIF_IP_MATCH 					 0x0004
+#define SQRL_TIF_SQRL_DISABLED 				 0x0008
+#define SQRL_TIF_FUNCTION_NOT_SUPPORTED 	 0x0010
+#define SQRL_TIF_TRANSIENT_ERR 				 0x0020
+#define SQRL_TIF_COMMAND_FAILURE 			 0x0040
+#define SQRL_TIF_CLIENT_FAILURE 			 0x0080
 
 /**
 \defgroup encdec Encoding Functions
