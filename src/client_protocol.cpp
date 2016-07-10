@@ -41,7 +41,7 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 	utstring_new( uid );
 	utstring_new( host );
 
-	mk = sqrl_user_key( transaction, KEY_MK );
+	mk = transaction->user->key( transaction, KEY_MK );
 	if( !mk ) goto ERR;
 
 	if( !transaction->altIdentity ) {
@@ -74,10 +74,10 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 	site->keys[SITE_KEY_LOOKUP][SITE_KEY_PUB] = 1;
 
 	// Copy User Option Flags
-	site->userOptFlags = sqrl_user_get_flags( transaction->user );
+	site->userOptFlags = transaction->user->getFlags();
 
 	// Generate previous keys
-	piuk = sqrl_user_key( site->transaction, previousKeys[ site->previous_identity ]);
+	piuk = transaction->user->key( site->transaction, previousKeys[ site->previous_identity ]);
 	while( piuk && (0 == sodium_memcmp( piuk, emptyKey, SQRL_KEY_SIZE ))) {
 		site->previous_identity++;
 		if( site->previous_identity > 3 ) {
@@ -85,7 +85,7 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 			piuk = NULL;
 			break;
 		}
-		piuk = sqrl_user_key( site->transaction, previousKeys[ site->previous_identity ]);
+		piuk = transaction->user->key( site->transaction, previousKeys[ site->previous_identity ]);
 	}
 
 	if( piuk ) {
@@ -398,7 +398,8 @@ void sqrl_site_create_unlock_keys( struct Sqrl_Site *site ) {
 	if( !site ) return;
 	uint8_t scratch[64];
 
-	uint8_t *ilk = sqrl_user_key( site->transaction, KEY_ILK );
+	SQRL_CAST_TRANSACTION(transaction, site->transaction);
+	uint8_t *ilk = transaction->user->key( site->transaction, KEY_ILK );
 	sodium_mlock( scratch, 64 );
 	uint8_t rlk[SQRL_KEY_SIZE];
 	sqrl_gen_rlk( rlk );
@@ -414,6 +415,7 @@ void sqrl_site_create_unlock_keys( struct Sqrl_Site *site ) {
 void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 {
 	if( !site || !clientString ) return;
+	SQRL_CAST_TRANSACTION(transaction, site->transaction);
 	sqrl_site_add_key_value( clientString, "idk", NULL );
 	sqrl_b64u_encode_append( clientString, site->keys[SITE_KEY_PUB], SQRL_KEY_SIZE );
 
@@ -441,9 +443,9 @@ void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 		site->keys[SITE_KEY_LOOKUP][SITE_KEY_URPK] = 0;
 		uint8_t *tiuk = NULL;
 		if( FLAG_CHECK( site->tif, SQRL_TIF_PREVIOUS_ID_MATCH )) {
-			tiuk = sqrl_user_key( site->transaction, KEY_PIUK0 + site->previous_identity );
+			tiuk = transaction->user->key( site->transaction, KEY_PIUK0 + site->previous_identity );
 		} else if( FLAG_CHECK( site->tif, SQRL_TIF_ID_MATCH )) {
-			tiuk = sqrl_user_key( site->transaction, KEY_IUK );
+			tiuk = transaction->user->key( site->transaction, KEY_IUK );
 		}
 		if( tiuk ) {
 			site->keys[SITE_KEY_LOOKUP][SITE_KEY_URSK] = 1;

@@ -6,8 +6,8 @@
 #endif
 
 #include <stdint.h>
-#include "sqrl_expert.h"
 #include "uri.h"
+#include "block.h"
 
 
 /**

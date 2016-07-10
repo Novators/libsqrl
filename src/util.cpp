@@ -67,7 +67,7 @@ int sqrl_stop()
         sqrl_client_site_maintenance( true );
         sqrl_client_user_maintenance( true );
         transactionCount = sqrl_transaction_count();
-        userCount = sqrl_user_count();
+		userCount = SqrlUser::countUsers();
         siteCount = sqrl_site_count();
 #ifdef DEBUG
         printf( "%10s: %d remain\n", "sqrl_stop", transactionCount + userCount + siteCount );

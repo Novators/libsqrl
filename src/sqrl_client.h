@@ -8,6 +8,10 @@ For more details, see the LICENSE file included with this package.
 #ifndef SQRL_CLIENT_H_INCLUDED
 #define SQRL_CLIENT_H_INCLUDED
 
+#ifndef DLL_PUBLIC
+#define DLL_PUBLIC _declspec(dllimport)
+#endif
+
 #include "sqrl_common.h"
 
 #define SQRL_UNIQUE_ID_LENGTH 				    43
@@ -65,55 +69,7 @@ typedef enum {
 } Sqrl_Export;
 
 
-/** \defgroup user User Identities
-
-These functions facilitate creating and maintaining user identities.  
-@{ */
-
-typedef void* Sqrl_User;
-
-typedef struct Sqrl_User_Options {
-	/** 16 bit Flags, defined at [grc sqrl storage](https://www.grc.com/sqrl/storage.htm) */
-	uint16_t flags;
-	/** The number of characters to use for password hints (0 to disable) */
-	uint8_t hintLength;
-	/** The number of seconds to enscrypt */
-	uint8_t enscryptSeconds;
-	/** Minutes to hold a hint when system is idle */
-	uint16_t timeoutMinutes;
-} Sqrl_User_Options;
-
-
-DLL_PUBLIC uint16_t   sqrl_user_check_flags( Sqrl_User u, uint16_t flags );
-DLL_PUBLIC void       sqrl_user_clear_flags( Sqrl_User u, uint16_t flags );
-DLL_PUBLIC Sqrl_User  sqrl_user_find( const char *unique_id );
-DLL_PUBLIC Sqrl_User  sqrl_user_release( Sqrl_User user );
-DLL_PUBLIC Sqrl_User  sqrl_user_hold( Sqrl_User user );
-DLL_PUBLIC uint8_t    sqrl_user_get_enscrypt_seconds( Sqrl_User u );
-DLL_PUBLIC uint16_t   sqrl_user_get_flags( Sqrl_User u );
-DLL_PUBLIC uint8_t    sqrl_user_get_hint_length( Sqrl_User u );
-DLL_PUBLIC char*      sqrl_user_get_rescue_code( Sqrl_User u );
-DLL_PUBLIC uint16_t   sqrl_user_get_timeout_minutes( Sqrl_User u );
-DLL_PUBLIC void       sqrl_user_set_enscrypt_seconds( Sqrl_User u, uint8_t seconds );
-DLL_PUBLIC void       sqrl_user_set_flags( Sqrl_User u, uint16_t flags );
-DLL_PUBLIC void       sqrl_user_set_hint_length( Sqrl_User u, uint8_t length );
-DLL_PUBLIC bool       sqrl_user_set_rescue_code( Sqrl_User u, char *rc );
-DLL_PUBLIC void       sqrl_user_set_timeout_minutes( Sqrl_User u, uint16_t minutes );
-DLL_PUBLIC bool       sqrl_user_unique_id( Sqrl_User u, char *buffer );
-DLL_PUBLIC bool       sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id );
-DLL_PUBLIC void        sqrl_user_default_options(Sqrl_User_Options *options);
-DLL_PUBLIC Sqrl_User   sqrl_user_create();
-DLL_PUBLIC Sqrl_User   sqrl_user_create_from_buffer(const char *buffer, size_t buffer_len);
-DLL_PUBLIC Sqrl_User   sqrl_user_create_from_file(const char *filename);
-DLL_PUBLIC bool        sqrl_user_set_password(
-	Sqrl_User u,
-	char *password,
-	size_t password_len);
-DLL_PUBLIC bool        sqrl_user_save(Sqrl_Transaction transaction);
-DLL_PUBLIC bool        sqrl_user_save_to_buffer(Sqrl_Transaction transaction);
-
-/** @} */ // endgroup user
-
+#include "user.h"
 
 /**
 \defgroup Client SQRL Client API
@@ -171,7 +127,7 @@ typedef enum {
 } Sqrl_Transaction_Status;
 
 /** Called when libsqrl needs a user identity to complete a \p Sqrl_Transaction */
-typedef Sqrl_User (sqrl_ccb_select_user)(
+typedef SqrlUser* (sqrl_ccb_select_user)(
 	Sqrl_Transaction transaction);
 
 /** Called to give the user an option of authenticating with an alternate identity */
@@ -233,7 +189,7 @@ function to give the user / client implementer the option.  If you choose to
 save, call \p sqrl_client_export_user.
 */
 typedef void (sqrl_ccb_save_suggested)(
-	Sqrl_User user);
+	SqrlUser *user);
 
 /** Called when a \p Sqrl_Transaction has completed. */
 typedef void (sqrl_ccb_transaction_complete)(
@@ -259,11 +215,11 @@ DLL_PUBLIC void sqrl_client_authenticate(
 	char *credential, size_t credentialLength );
 DLL_PUBLIC Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	Sqrl_Transaction_Type type,
-	Sqrl_User user,
+	SqrlUser *user,
 	const char *string,
 	size_t string_len );
 DLL_PUBLIC Sqrl_Transaction_Status sqrl_client_export_user(
-	Sqrl_User user,
+	SqrlUser *user,
 	const char *uri,
 	Sqrl_Export exportType,
 	Sqrl_Encoding encodingType );
@@ -283,10 +239,9 @@ DLL_PUBLIC void sqrl_client_transaction_set_alternate_identity(
 	Sqrl_Transaction transaction,
 	const char *altIdentity );
 DLL_PUBLIC Sqrl_Transaction_Type sqrl_transaction_type( Sqrl_Transaction t );
-DLL_PUBLIC Sqrl_User sqrl_transaction_user( Sqrl_Transaction t );
+DLL_PUBLIC SqrlUser *sqrl_transaction_user( Sqrl_Transaction t );
 DLL_PUBLIC Sqrl_Transaction_Status sqrl_transaction_status( Sqrl_Transaction t );
 DLL_PUBLIC size_t sqrl_transaction_string( Sqrl_Transaction t, char *buf, size_t *len );
-DLL_PUBLIC Sqrl_User sqrl_get_user( const char *unique_id );
 /** @} */ // endgroup Client
 
 #endif // SQRL_CLIENT_H_INCLUDED

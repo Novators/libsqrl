@@ -214,13 +214,13 @@ void sqrl_gen_ursk( uint8_t ursk[SQRL_KEY_SIZE], const uint8_t suk[SQRL_KEY_SIZE
 }
 
 
-bool sqrl_user_encrypt( Sqrl_User u, UT_string *text ) 
+bool sqrl_user_encrypt( SqrlUser *u, UT_string *text ) 
 {
 	return false;
 }
 
 
-bool sqrl_user_decrypt( Sqrl_User u, UT_string *text )
+bool sqrl_user_decrypt( SqrlUser *u, UT_string *text )
 {
 	return false;
 }

@@ -9,9 +9,14 @@ For more details, see the LICENSE file included with this package.
 #include <stdio.h>
 #include "sqrl_internal.h"
 
-struct Sqrl_User_s_List *SQRL_USER_LIST;
+struct SqrlUserList {
+	SqrlUser *user;
+	struct SqrlUserList *next;
+};
 
-int sqrl_user_enscrypt_callback( int percent, void *data )
+struct SqrlUserList *SQRL_USER_LIST;
+
+int SqrlUser::enscryptCallback( int percent, void *data )
 {
 	struct Sqrl_User_s_callback_data *cbdata = (struct Sqrl_User_s_callback_data*)data;
 	if( cbdata ) {
@@ -25,21 +30,19 @@ int sqrl_user_enscrypt_callback( int percent, void *data )
 	}
 }
 
-void sqrl_user_ensure_keys_allocated( Sqrl_User u )
+void SqrlUser::ensureKeysAllocated()
 {
-	SQRL_CAST_USER(user,u);
-	if( user == NULL ) return;
-	if( user->keys == NULL ) {
-		user->keys = (Sqrl_Keys*)sodium_malloc( sizeof( struct Sqrl_Keys ));
-		memset( user->keys, 0, sizeof( struct Sqrl_Keys ));
-		BIT_UNSET( user->flags, USER_FLAG_MEMLOCKED );
+	if( this->keys == NULL ) {
+		this->keys = (Sqrl_Keys*)sodium_malloc( sizeof( struct Sqrl_Keys ));
+		memset( this->keys, 0, sizeof( struct Sqrl_Keys ));
+		BIT_UNSET( this->flags, USER_FLAG_MEMLOCKED );
 	}
 }
 
 #if defined(DEBUG) && DEBUG_PRINT_USER_COUNT==1
 #define PRINT_USER_COUNT(tag) \
 int _pucI = 0;\
-struct Sqrl_User_s_List *_pucC = SQRL_USER_LIST;\
+struct SqrlUserList *_pucC = SQRL_USER_LIST;\
 while( _pucC ) {\
 	_pucI++;\
 	_pucC = _pucC->next;\
@@ -49,24 +52,16 @@ printf( "%10s: %d\n", tag, _pucI )
 #define PRINT_USER_COUNT(tag)
 #endif
 
-/**
-Finds a previously allocated \p Sqrl_User.  Be sure to release your reference
-with \p sqrl_user_release when you are finished with the \p Sqrl_User.
-
-@param unique_id A string of length \p SQRL_UNIQUE_ID_LENGTH identifying the \p Sqrl_User.
-@return Sqrl_User A \p Sqrl_User object, or NULL if not available.
-*/
-
-Sqrl_User sqrl_user_find( const char *unique_id )
+SqrlUser* SqrlUser::find( const char *unique_id )
 {
-	Sqrl_User user = NULL;
-	struct Sqrl_User_s_List *l;
+	SqrlUser *user = NULL;
+	struct SqrlUserList *l;
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
 	l = SQRL_USER_LIST;
 	while( l ) {
-		if( l->user && sqrl_user_unique_id_match( l->user, unique_id )) {
+		if( l->user && l->user->uniqueIdMatches( unique_id )) {
 			user = l->user;
-			sqrl_user_hold( user );
+			user->hold();
 			break;
 		}
 		l = l->next;
@@ -75,37 +70,29 @@ Sqrl_User sqrl_user_find( const char *unique_id )
 	return user;
 }
 
-/**
-Creates an empty \p Sqrl_User, ready to generate or load identity data.
-
-\note Call \p sqrl_user_release() when finished with the returned reference.
-
-@return Pointer to new \p Sqrl_User
-*/
-Sqrl_User sqrl_user_create()
+void SqrlUser::initialize()
 {
-	struct Sqrl_User_s *user = (struct Sqrl_User_s*)calloc( 1, sizeof( struct Sqrl_User_s ));
-	sqrl_user_default_options( &user->options );
-	user->referenceCount = 1;
-	user->referenceCountMutex = sqrl_mutex_create();
-	struct Sqrl_User_s_List *l = (struct Sqrl_User_s_List*)calloc( 1, sizeof( struct Sqrl_User_s_List ));
-	l->user = user;
-	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
+	SqrlUser::defaultOptions(&this->options);
+	this->referenceCount = 1;
+	this->referenceCountMutex = sqrl_mutex_create();
+	struct SqrlUserList *l = (struct SqrlUserList*)calloc(1, sizeof(struct SqrlUserList));
+	l->user = this;
+	sqrl_mutex_enter(SQRL_GLOBAL_MUTICES.user);
 	l->next = SQRL_USER_LIST;
 	SQRL_USER_LIST = l;
-	PRINT_USER_COUNT("usr_create");
-	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
-	return (Sqrl_User)user;
+	sqrl_mutex_leave(SQRL_GLOBAL_MUTICES.user);
 }
 
-/**
-Counts the number of \p Sqrl_Users currently in memory
-*/
-int sqrl_user_count()
+SqrlUser::SqrlUser()
+{
+	this->initialize();
+}
+
+int SqrlUser::countUsers()
 {
     sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
     int i = 0;
-    struct Sqrl_User_s_List *list = SQRL_USER_LIST;
+    struct SqrlUserList *list = SQRL_USER_LIST;
     while( list ) {
         i++;
         list = list->next;
@@ -114,65 +101,42 @@ int sqrl_user_count()
     return i;
 }
 
-/** 
-Creates a reference to a \p Sqrl_User.  The \p Sqrl_User will not be 
-freed from memory until all references have been released with \p sqrl_user_release().
-
-@param user The \p Sqrl_User
-@return Reference to \p user, or NULL
-*/
-
-Sqrl_User sqrl_user_hold( Sqrl_User u )
+void SqrlUser::hold()
 {
-	SQRL_CAST_USER(user,u);
-	if( user == NULL ) return NULL;
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
 	// Make sure the user is still in active memory...
-	struct Sqrl_User_s_List *c = SQRL_USER_LIST;
+	struct SqrlUserList *c = SQRL_USER_LIST;
 	while( c ) {
-		if( c->user == user ) {
-			sqrl_mutex_enter( user->referenceCountMutex );
-			user->referenceCount++;
-#if DEBUG_PRINT_USER_COUNT==1
-			printf( "sqrl_user_hold: %d\n", user->referenceCount );
-#endif
-			sqrl_mutex_leave( user->referenceCountMutex );
-			sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
-			return u;
+		if( c->user == this ) {
+			sqrl_mutex_enter( this->referenceCountMutex );
+			this->referenceCount++;
+			sqrl_mutex_leave( this->referenceCountMutex );
+			break;
 		}
 		c = c->next;
 	}
 	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
-	return NULL;
 }
 
-/**
-Releases a reference to a \p Sqrl_User.  When all references have been released,
-securely erases and frees the memory used by the \p Sqrl_User object.
-
-@param u A \p Sqrl_User
-@return NULL
-*/
-
-Sqrl_User sqrl_user_release( Sqrl_User u )
+void SqrlUser::release()
 {
-	SQRL_CAST_USER(user,u);
-	if( user == NULL ) return NULL;
-
+	bool shouldFreeThis = false;
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
-	struct Sqrl_User_s_List *list = SQRL_USER_LIST;
+	struct SqrlUserList *list = SQRL_USER_LIST;
 	if( list == NULL ) {
+		// Not saved in memory... Go ahead and release it.
 		sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
-		return NULL;
+		shouldFreeThis = true;
+		goto END;
 	}
-	struct Sqrl_User_s_List *prev;
-	if( list->user == user ) {
+	struct SqrlUserList *prev;
+	if( list->user == this ) {
 		prev = NULL;
 	} else {
 		prev = list;
 		list = NULL;
 		while( prev ) {
-			if( prev->next && prev->next->user == user ) {
+			if( prev->next && prev->next->user == this ) {
 				list = prev->next;
 				break;
 			}
@@ -180,26 +144,23 @@ Sqrl_User sqrl_user_release( Sqrl_User u )
 		}
 	}
 	if( list == NULL ) {
+		// Not saved in memory... Go ahead and release it.
 		sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
-		return NULL;
+		shouldFreeThis = true;
+		goto END;
 	}
-	sqrl_mutex_enter( user->referenceCountMutex );
-	user->referenceCount--;
-#if DEBUG_PRINT_USER_COUNT==1
-	printf( "sqrl_user_release: %d\n", user->referenceCount );
-#endif
+	// Release this reference
+	sqrl_mutex_enter( this->referenceCountMutex );
+	this->referenceCount--;
 
-	if( user->referenceCount > 0 ) {
-		sqrl_mutex_leave( user->referenceCountMutex );
+	if( this->referenceCount > 0 ) {
+		// There are other references... Do not delete.
+		sqrl_mutex_leave( this->referenceCountMutex );
 		sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
-		return NULL;
+		goto END;
 	}
-	if( user->keys != NULL ) {
-		sodium_mprotect_readwrite( user->keys );
-		sodium_free( user->keys );
-	}
-	sqrl_mutex_destroy( user->referenceCountMutex );
-	sodium_memzero( user, sizeof( Sqrl_User ));
+	// There were no other references... We can delete this.
+	shouldFreeThis = true;
 
 	if( prev == NULL ) {
 		SQRL_USER_LIST = list->next;
@@ -207,10 +168,21 @@ Sqrl_User sqrl_user_release( Sqrl_User u )
 		prev->next = list->next;
 	}
 	free( list );
-	PRINT_USER_COUNT( "usr_rel" );
 	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
-	free( user );
-	return NULL;
+
+END:
+	if (shouldFreeThis) {
+		delete(this);
+	}
+}
+
+SqrlUser::~SqrlUser() 
+{
+	if (this->keys != NULL) {
+		sodium_mprotect_readwrite(this->keys);
+		sodium_free(this->keys);
+	}
+	sqrl_mutex_destroy(this->referenceCountMutex);
 }
 
 void sqrl_client_user_maintenance( bool forceLockAll )
@@ -218,110 +190,55 @@ void sqrl_client_user_maintenance( bool forceLockAll )
 	// TODO: Get User Idle Time
 	double idleTime = 600;
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
-	struct Sqrl_User_s_List *list = SQRL_USER_LIST;
+	struct SqrlUserList *list = SQRL_USER_LIST;
 	while( list ) {
-		if( forceLockAll || idleTime >= sqrl_user_get_timeout_minutes( list->user )) {
-			sqrl_user_hintlock( list->user );
+		if( forceLockAll || idleTime >= list->user->getTimeoutMinutes()) {
+			list->user->hintLock();
 		}
 		list = list->next;
 	}
 	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
 }
 
-
-
-/**
-Finds a \p Sqrl_User in memory, and returns a new reference to it.
-
-\warning \p sqrl_user_release the \p Sqrl_User when finished!
-
-@param unique_id A unique id to match
-@return Sqrl_User the matched user, or NULL if not found
-*/
-
-Sqrl_User sqrl_get_user( const char *unique_id )
+bool SqrlUser::isMemLocked() 
 {
-	Sqrl_User retVal = NULL;
-	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
-	struct Sqrl_User_s_List *list = SQRL_USER_LIST;
-	while( list ) {
-		if( sqrl_user_unique_id_match( list->user, unique_id )) {
-			retVal = list->user;
-			break;
-		}
-	}
-	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
-	if( sqrl_user_hold( retVal )) {
-		return retVal;
-	}
-	return NULL;
-}
-
-bool sqrl_user_is_memlocked( Sqrl_User u ) {
-	SQRL_CAST_USER(user,u);
-	if( user == NULL ) return false;
-	if( BIT_CHECK( user->flags, USER_FLAG_MEMLOCKED )) {
+	if( BIT_CHECK( this->flags, USER_FLAG_MEMLOCKED )) {
 		return true;
 	}
 	return false;
 }
 
-void sqrl_user_memlock( Sqrl_User u ) {
-	SQRL_CAST_USER(user,u);
-	if( user == NULL ) return;
-	if( user->keys != NULL ) {
-		sodium_mprotect_noaccess( user->keys );
+void SqrlUser::memLock()
+{
+	if( this->keys != NULL ) {
+		sodium_mprotect_noaccess( this->keys );
 	}
-	BIT_SET( user->flags, USER_FLAG_MEMLOCKED );
+	BIT_SET( this->flags, USER_FLAG_MEMLOCKED );
 }
 
-void sqrl_user_memunlock( Sqrl_User u )
+void SqrlUser::memUnlock()
 {
-	SQRL_CAST_USER(user,u);
-	if( user == NULL ) return;
-	if( user->keys != NULL ) {
-		sodium_mprotect_readwrite( user->keys );
+	if( this->keys != NULL ) {
+		sodium_mprotect_readwrite( this->keys );
 	}
-	BIT_UNSET( user->flags, USER_FLAG_MEMLOCKED );
+	BIT_UNSET( this->flags, USER_FLAG_MEMLOCKED );
 }
 
-/**
-Checks to see if a \p Sqrl_User has been encrypted with a hint
-
-@param u A \p Sqrl_User
-@return true if user is Hint Locked
-*/
-
-bool sqrl_user_is_hintlocked( Sqrl_User u )
+bool SqrlUser::isHintLocked()
 {
-	SQRL_CAST_USER(user,u);
-	if( user == NULL ) return false;
-	if( user->hint_iterations == 0 ) return false;
+	if( this->hint_iterations == 0 ) return false;
 	return true;
 }
 
-/**
-Encrypts the memory of a \p Sqrl_User using a hint (truncated password).
-The length of the hint is specified in the user's \p Sqrl_User_Options.
-
-\note This will start a new \p Sqrl_Transaction.  Status can be monitored 
-through the \p sqrl_ccb_progress callback.
-
-@param u A \p Sqrl_User
-*/
-
-void sqrl_user_hintlock( Sqrl_User u )
+void SqrlUser::hintLock()
 {
-	if( sqrl_user_is_hintlocked( u )) return;
-	WITH_USER(user,u);
-	if( user == NULL ) return;
-	if( user->keys->password_len == 0 ) {
-		END_WITH_USER(user);
+	if (this->isHintLocked()) return;
+	if( this->keys->password_len == 0 ) {
 		return;
 	}
 	Sqrl_Transaction t = sqrl_transaction_create( SQRL_TRANSACTION_IDENTITY_LOCK );
 	SQRL_CAST_TRANSACTION(transaction,t);
-	transaction->user = u;
+	transaction->user = this;
 	struct Sqrl_User_s_callback_data cbdata;
 	cbdata.transaction = transaction;
 	cbdata.adder = 0;
@@ -329,37 +246,37 @@ void sqrl_user_hintlock( Sqrl_User u )
 
 	Sqrl_Crypt_Context sctx;
 	uint8_t iv[12] = {0};
-	sctx.plain_text = user->keys->keys[0];
+	sctx.plain_text = this->keys->keys[0];
 	sctx.text_len = sizeof( struct Sqrl_Keys ) - KEY_SCRATCH_SIZE;
-	sctx.salt = user->keys->scratch;
+	sctx.salt = this->keys->scratch;
 	sctx.iv = iv;
-	sctx.tag = user->keys->scratch + 16;
-	sctx.cipher_text = user->keys->scratch + 64;
+	sctx.tag = this->keys->scratch + 16;
+	sctx.cipher_text = this->keys->scratch + 64;
 	sctx.add = NULL;
 	sctx.add_len = 0;
 	sctx.nFactor = SQRL_DEFAULT_N_FACTOR;
-	sctx.count = user->options.enscryptSeconds * SQRL_MILLIS_PER_SECOND;
+	sctx.count = this->options.enscryptSeconds * SQRL_MILLIS_PER_SECOND;
 	sctx.flags = SQRL_ENCRYPT | SQRL_MILLIS;
 
 	randombytes_buf( sctx.salt, 16 );
-	uint8_t *key = user->keys->scratch + 32;
-	size_t password_len = user->options.hintLength;
-	if( password_len == 0 || user->keys->password_len < password_len ) {
-		password_len = user->keys->password_len;
+	uint8_t *key = this->keys->scratch + 32;
+	size_t password_len = this->options.hintLength;
+	if( password_len == 0 || this->keys->password_len < password_len ) {
+		password_len = this->keys->password_len;
 	}
 
-	user->hint_iterations = sqrl_crypt_enscrypt( 
+	this->hint_iterations = sqrl_crypt_enscrypt( 
 		&sctx, 
 		key, 
-		user->keys->password, 
+		this->keys->password, 
 		password_len,
-		sqrl_user_enscrypt_callback,
+		SqrlUser::enscryptCallback,
 		&cbdata );
-	if( user->hint_iterations <= 0 ||
+	if( this->hint_iterations <= 0 ||
 		!sqrl_crypt_gcm( &sctx, key )) {
 		// Encryption failed!
-		user->hint_iterations = 0;
-		sodium_memzero( user->keys->scratch, KEY_SCRATCH_SIZE );
+		this->hint_iterations = 0;
+		sodium_memzero( this->keys->scratch, KEY_SCRATCH_SIZE );
 		goto DONE;
 	}
 
@@ -369,21 +286,9 @@ void sqrl_user_hintlock( Sqrl_User u )
 DONE:
 	transaction->user = NULL;
 	sqrl_transaction_release( transaction );
-	END_WITH_USER(user);
 }
 
-/**
-Decrypts the memory of a \p Sqrl_User using a hint (truncated password)
-
-\note This will start a new \p Sqrl_Transaction.  Status can be monitored 
-through the \p sqrl_ccb_progress callback.
-
-@param transaction The \p Sqrl_Transaction that is requesting unlock
-@param hint The password hint
-@param length Length of \p hint
-*/
-
-void sqrl_user_hintunlock( Sqrl_Transaction t, 
+void SqrlUser::hintUnlock( Sqrl_Transaction t, 
 				char *hint, 
 				size_t length )
 {
@@ -393,17 +298,10 @@ void sqrl_user_hintunlock( Sqrl_Transaction t,
 	}
 	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return;
-	Sqrl_User u = transaction->user;
-	if( !u || !sqrl_user_is_hintlocked( u )) {
+	if (transaction->user != this || ! this->isHintLocked()) {
 		END_WITH_TRANSACTION(transaction);
 		return;
 	}
-	WITH_USER(user,u);
-	if( user == NULL ) {
-		END_WITH_TRANSACTION(transaction);
-		return;
-	}
-
 	struct Sqrl_User_s_callback_data cbdata;
 	cbdata.transaction = t;
 	cbdata.adder = 0;
@@ -411,37 +309,35 @@ void sqrl_user_hintunlock( Sqrl_Transaction t,
 
 	Sqrl_Crypt_Context sctx;
 	uint8_t iv[12] = {0};
-	sctx.plain_text = user->keys->keys[0];
+	sctx.plain_text = this->keys->keys[0];
 	sctx.text_len = sizeof( struct Sqrl_Keys ) - KEY_SCRATCH_SIZE;
-	sctx.salt = user->keys->scratch;
+	sctx.salt = this->keys->scratch;
 	sctx.iv = iv;
-	sctx.tag = user->keys->scratch + 16;
-	sctx.cipher_text = user->keys->scratch + 64;
+	sctx.tag = this->keys->scratch + 16;
+	sctx.cipher_text = this->keys->scratch + 64;
 	sctx.add = NULL;
 	sctx.add_len = 0;
 	sctx.nFactor = SQRL_DEFAULT_N_FACTOR;
-	sctx.count = user->hint_iterations;
+	sctx.count = this->hint_iterations;
 	sctx.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
 
-	uint8_t *key = user->keys->scratch + 32;
-	sqrl_crypt_enscrypt( &sctx, key, hint, length, sqrl_user_enscrypt_callback, &cbdata );
+	uint8_t *key = this->keys->scratch + 32;
+	sqrl_crypt_enscrypt( &sctx, key, hint, length, SqrlUser::enscryptCallback, &cbdata );
 	if( !sqrl_crypt_gcm( &sctx, key )) {
 		sodium_memzero( sctx.plain_text, sctx.text_len );
 	}
-	user->hint_iterations = 0;
+	this->hint_iterations = 0;
 	sodium_memzero( key, SQRL_KEY_SIZE );
-	sodium_memzero( user->keys->scratch, KEY_SCRATCH_SIZE );
+	sodium_memzero( this->keys->scratch, KEY_SCRATCH_SIZE );
 
-	END_WITH_USER(user);
 	END_WITH_TRANSACTION(transaction);
 }
 
-bool _su_keygen( Sqrl_Transaction t, int key_type, uint8_t *key )
+bool SqrlUser::_keyGen( Sqrl_Transaction t, int key_type, uint8_t *key )
 {
 	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return false;
-	WITH_USER(user,transaction->user);
-	if( !user ) {
+	if( transaction->user != this ) {
 		END_WITH_TRANSACTION(transaction);
 		return false;
 	}
@@ -452,10 +348,10 @@ bool _su_keygen( Sqrl_Transaction t, int key_type, uint8_t *key )
 	switch( key_type ) {
 	case KEY_IUK:
 		for( i = 0; i < 4; i++ ) {
-			if( sqrl_user_has_key( transaction->user, keys[i] )) {
-				temp[i] = sqrl_user_key( t, keys[i] );
+			if( this->hasKey( keys[i] )) {
+				temp[i] = this->key( t, keys[i] );
 			} else {
-				temp[i] = sqrl_user_new_key( transaction->user, keys[i] );
+				temp[i] = this->newKey( keys[i] );
 			}
 		}
 		memcpy( temp[3], temp[2], SQRL_KEY_SIZE );
@@ -466,8 +362,8 @@ bool _su_keygen( Sqrl_Transaction t, int key_type, uint8_t *key )
 		retVal = true;
 		break;
 	case KEY_MK:
-		if( sqrl_user_has_key( transaction->user, KEY_IUK )) {
-			temp[0] = sqrl_user_key( t, KEY_IUK );
+		if( this->hasKey( KEY_IUK )) {
+			temp[0] = this->key( t, KEY_IUK );
 			if( temp[0] ) {
 				sqrl_gen_mk( key, temp[0] );
 				retVal = true;
@@ -475,14 +371,14 @@ bool _su_keygen( Sqrl_Transaction t, int key_type, uint8_t *key )
 		}
 		break;
 	case KEY_ILK:
-		temp[0] = sqrl_user_key( t, KEY_IUK );
+		temp[0] = this->key( t, KEY_IUK );
 		if( temp[0] ) {
 			sqrl_gen_ilk( key, temp[0] );
 			retVal = true;
 		}
 		break;
 	case KEY_LOCAL:
-		temp[0] = sqrl_user_key( t, KEY_MK );
+		temp[0] = this->key( t, KEY_MK );
 		if( temp[0] ) {
 			sqrl_gen_local( key, temp[0] );
 			retVal = true;
@@ -502,17 +398,15 @@ bool _su_keygen( Sqrl_Transaction t, int key_type, uint8_t *key )
 		}
 		break;
 	}
-	END_WITH_USER(user);
 	END_WITH_TRANSACTION(transaction);
 	return retVal;
 }
 
-bool sqrl_user_regen_keys( Sqrl_Transaction t )
+bool SqrlUser::regenKeys( Sqrl_Transaction t )
 {
 	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return false;
-	WITH_USER(user,transaction->user);
-	if( user == NULL ) {
+	if( transaction->user != this ) {
 		END_WITH_TRANSACTION(transaction);
 		return false;
 	}
@@ -520,64 +414,59 @@ bool sqrl_user_regen_keys( Sqrl_Transaction t )
 	int keys[] = { KEY_MK, KEY_ILK, KEY_LOCAL };
 	int i;
 	for( i = 0; i < 3; i++ ) {
-		key = sqrl_user_new_key( transaction->user, keys[i] );
-		_su_keygen( t, keys[i], key );
+		key = this->newKey( keys[i] );
+		this->_keyGen( t, keys[i], key );
 	}
-	END_WITH_USER(user);
 	END_WITH_TRANSACTION(transaction);
 	return true;
 }
 
-bool sqrl_user_rekey( Sqrl_Transaction t )
+bool SqrlUser::rekey( Sqrl_Transaction t )
 {
 	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return false;
-	WITH_USER(user,transaction->user);
-	if( !user ) {
+	if( transaction->user != this ) {
 		END_WITH_TRANSACTION(transaction);
 		return false;
 	}
 	bool retVal = true;
 	uint8_t *key;
-	if( sqrl_user_has_key( transaction->user, KEY_IUK )) {
-		key = sqrl_user_key( t, KEY_IUK );
+	if( this->hasKey( KEY_IUK )) {
+		key = this->key( t, KEY_IUK );
 	} else {
-		key = sqrl_user_new_key( transaction->user, KEY_IUK );
+		key = this->newKey( KEY_IUK );
 	}
-	if( ! _su_keygen( t, KEY_IUK, key )) {
+	if( ! this->_keyGen( t, KEY_IUK, key )) {
 		goto ERR;
 	}
-	key = sqrl_user_new_key( transaction->user, KEY_RESCUE_CODE );
-	if( ! _su_keygen( transaction, KEY_RESCUE_CODE, key )) {
+	key = this->newKey( KEY_RESCUE_CODE );
+	if( ! this->_keyGen( transaction, KEY_RESCUE_CODE, key )) {
 		goto ERR;
 	}
-	if( ! sqrl_user_regen_keys( t )) {
+	if( ! this->regenKeys( t )) {
 		goto ERR;
 	}
-	user->flags |= (USER_FLAG_T1_CHANGED | USER_FLAG_T2_CHANGED);
+	this->flags |= (USER_FLAG_T1_CHANGED | USER_FLAG_T2_CHANGED);
 	goto DONE;
 
 ERR:
 	retVal = false;
 
 DONE:
-	END_WITH_USER(user);
 	END_WITH_TRANSACTION(transaction);
 	return retVal;
 }
 
-uint8_t *sqrl_user_new_key( Sqrl_User u, int key_type )
+uint8_t *SqrlUser::newKey( int key_type )
 {
-	WITH_USER(user,u);
-	if( user == NULL ) return NULL;
 	int offset = -1;
 	int empty = -1;
 	int i = 0;
 	for( i = 0; i < USER_MAX_KEYS; i++ ) {
-		if( user->lookup[i] == key_type ) {
+		if( this->lookup[i] == key_type ) {
 			offset = i;
 		}
-		if( user->lookup[i] == 0 ) {
+		if( this->lookup[i] == 0 ) {
 			empty = i;
 		}
 	}
@@ -585,26 +474,23 @@ uint8_t *sqrl_user_new_key( Sqrl_User u, int key_type )
 		// Not Found
 		if( empty > -1 ) {
 			// Create new slot
-			user->lookup[empty] = key_type;
+			this->lookup[empty] = key_type;
 			offset = empty;
 		}
 	}
 	if( offset ) {
-		uint8_t *key = user->keys->keys[offset];
+		uint8_t *key = this->keys->keys[offset];
 		sodium_memzero( key, SQRL_KEY_SIZE );
-		END_WITH_USER(user);
 		return key;
 	}
-	END_WITH_USER(user);
 	return NULL;
 }
 
-uint8_t *sqrl_user_key( Sqrl_Transaction t, int key_type )
+uint8_t *SqrlUser::key( Sqrl_Transaction t, int key_type )
 {
 	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return NULL;
-	WITH_USER(user,transaction->user);
-	if( user == NULL ) {
+	if( transaction->user != this ) {
 		END_WITH_TRANSACTION(transaction);
 		return NULL;
 	}
@@ -618,14 +504,13 @@ LOOP:
 	}
 	offset = -1;
 	for( i = 0; i < USER_MAX_KEYS; i++ ) {
-		if( user->lookup[i] == key_type ) {
+		if( this->lookup[i] == key_type ) {
 			offset = i;
 			break;
 		}
 	}
 	if( offset > -1 ) {
-		key = user->keys->keys[offset];
-		END_WITH_USER(user);
+		key = this->keys->keys[offset];
 		END_WITH_TRANSACTION(transaction);
 		return key;
 	} else {
@@ -633,11 +518,10 @@ LOOP:
 		switch( key_type ) {
 		case KEY_RESCUE_CODE:
 			// We cannot regenerate this key!
-			END_WITH_USER(user);
 			END_WITH_TRANSACTION(transaction);
 			return NULL;
 		case KEY_IUK:
-			sqrl_user_try_load_rescue( t, true );
+			this->tryLoadRescue(t, true);
 			goto LOOP;
 			break;
 		case KEY_MK:
@@ -646,85 +530,59 @@ LOOP:
 		case KEY_PIUK1:
 		case KEY_PIUK2:
 		case KEY_PIUK3:
-			sqrl_user_try_load_password( t, true );
+			this->tryLoadPassword(t, true);
 			goto LOOP;
 			break;
 		}
 	}
 
 DONE:
-	END_WITH_USER(user);
 	END_WITH_TRANSACTION(transaction);
 	return NULL;
 }
 
-bool sqrl_user_has_key( Sqrl_User u, int key_type )
+bool SqrlUser::hasKey( int key_type )
 {
-	WITH_USER(user,u);
-	if( user == NULL ) return false;
 	int i;
 	for( i = 0; i < USER_MAX_KEYS; i++ ) {
-		if( user->lookup[i] == key_type ) {
-			END_WITH_USER(user);
+		if( this->lookup[i] == key_type ) {
 			return true;
 		}
 	}
-	END_WITH_USER(user);
 	return false;
 }
 
-void sqrl_user_remove_key( Sqrl_User u, int key_type )
+void SqrlUser::removeKey( int key_type )
 {
-	WITH_USER(user,u);
-	if( user == NULL ) return;
 	int offset = -1;
 	int i;
 	for( i = 0; i < USER_MAX_KEYS; i++ ) {
-		if( user->lookup[i] == key_type ) {
+		if( this->lookup[i] == key_type ) {
 			offset = i;
 		}
 	}
 	if( offset > -1 ) {
-		sodium_memzero( user->keys->keys[offset], SQRL_KEY_SIZE );
-		user->lookup[offset] = 0;
+		sodium_memzero( this->keys->keys[offset], SQRL_KEY_SIZE );
+		this->lookup[offset] = 0;
 	}
-	END_WITH_USER(user);
 }
 
-/**
-Gets the Rescue Code for a \p Sqrl_User.  This is only available after rekeying an identity.
-
-@param transaction the \p Sqrl_Transaction
-@return Pointer to 24 character string
-@return NULL if Rescue Code is not available
-*/
-
-char *sqrl_user_get_rescue_code( Sqrl_Transaction t )
+char *SqrlUser::getRescueCode( Sqrl_Transaction t )
 {
 	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return NULL;
-	if( !transaction->user || !sqrl_user_has_key( transaction->user, KEY_RESCUE_CODE )) {
+	if( transaction->user != this || !this->hasKey( KEY_RESCUE_CODE )) {
 		printf( "No key!\n" );
 		END_WITH_TRANSACTION(transaction);
 		return NULL;
 	}
-	char *retVal = (char*)(sqrl_user_key( t, KEY_RESCUE_CODE ));
+	char *retVal = (char*)(this->key( t, KEY_RESCUE_CODE ));
 	END_WITH_TRANSACTION(transaction);
 	return retVal;
 }
 
-/**
-Sets the Rescue Code for a \p Sqrl_User.  This should only be used when recovering an identity.
-
-@param u A \p Sqrl_User
-@param rc A 24 character null terminated string.  All characters must be digits (0-9)
-@return true on success
-*/
-
-bool sqrl_user_set_rescue_code( Sqrl_User u, char *rc )
+bool SqrlUser::setRescueCode( char *rc )
 {
-	WITH_USER(user,u);
-	if( user == NULL ) return false;
 	if( strlen( rc ) != 24 ) return false;
 	int i;
 	for( i = 0; i < SQRL_RESCUE_CODE_LENGTH; i++ ) {
@@ -732,48 +590,35 @@ bool sqrl_user_set_rescue_code( Sqrl_User u, char *rc )
 			return false;
 		}
 	}
-	uint8_t *key = sqrl_user_new_key( u, KEY_RESCUE_CODE );
+	uint8_t *key = this->newKey( KEY_RESCUE_CODE );
 	memcpy( key, rc, SQRL_RESCUE_CODE_LENGTH );
-	END_WITH_USER(user);
 	return true;
 }
 
-bool sqrl_user_force_decrypt( Sqrl_Transaction t )
+bool SqrlUser::forceDecrypt( Sqrl_Transaction t )
 {
 	if( !t ) return false;
-	if( sqrl_user_key( t, KEY_MK )) {
+	if( this->key( t, KEY_MK )) {
 		return true;
 	}
 	return false;
 }
 
-bool sqrl_user_force_rescue( Sqrl_Transaction t )
+bool SqrlUser::forceRescue( Sqrl_Transaction t )
 {
 	if( !t ) return false;
-	if( sqrl_user_key( t, KEY_IUK )) {
+	if( this->key( t, KEY_IUK )) {
 		return true;
 	}
 	return false;
 }
 
-/**
-Sets the password for a \p User. Passwords longer than 512 characters are truncated.
-
-@param u A \p Sqrl_User
-@param password A new password
-@param password_len Length of \p password
-@return true on success
-*/
-
-bool sqrl_user_set_password( Sqrl_User u, char *password, size_t password_len )
+bool SqrlUser::setPassword( char *password, size_t password_len )
 {
-	if( sqrl_user_is_hintlocked( u )) return false;
-	WITH_USER(user,u);
-	if( user == NULL ) return false;
-	char *p = user->keys->password;
-	size_t *l = &user->keys->password_len;
+	if( this->isHintLocked() ) return false;
+	char *p = this->keys->password;
+	size_t *l = &this->keys->password_len;
 	if( !p || !l ) {
-		END_WITH_USER(user);
 		return false;
 	}
 	sodium_memzero( p, KEY_PASSWORD_MAX_LEN );
@@ -781,244 +626,111 @@ bool sqrl_user_set_password( Sqrl_User u, char *password, size_t password_len )
 	memcpy( p, password, password_len );
 	if( *l > 0 ) {
 		// 	Changing password
-		BIT_SET(user->flags, USER_FLAG_T1_CHANGED);
+		BIT_SET(this->flags, USER_FLAG_T1_CHANGED);
 	}
 	*l = password_len;
-	END_WITH_USER(user);
 	return true;
 }
 
-uint8_t *sqrl_user_scratch( Sqrl_User u )
+uint8_t *SqrlUser::scratch()
 {
-	uint8_t *retVal = NULL;
-	WITH_USER(user,u);
-	if( user == NULL ) return NULL;
-	retVal = user->keys->scratch;
-	END_WITH_USER(user);
-	return retVal;
+	this->ensureKeysAllocated();
+	return this->keys->scratch;
 }
 
-/**
-Gets \p Sqrl_User_Options for a \p Sqrl_User
-
-@param u A \p Sqrl_User
-@return Number of characters to use as a password hint
-*/
-
-uint8_t sqrl_user_get_hint_length( Sqrl_User u )
+uint8_t SqrlUser::getHintLength()
 {
 	uint8_t retVal = 0;
-	WITH_USER(user,u);
-	if( user == NULL ) return 0;
-	retVal = user->options.hintLength;
-	END_WITH_USER(user);
+	retVal = this->options.hintLength;
 	return retVal;
 }
 
-/**
-Gets \p Sqrl_User_Options for a \p Sqrl_User
-
-@param u A \p Sqrl_User
-@return Seconds to run EnScrypt when encrypting the identity
-*/
-
-uint8_t sqrl_user_get_enscrypt_seconds( Sqrl_User u )
+uint8_t SqrlUser::getEnscryptSeconds()
 {
 	uint8_t retVal = 0;
-	WITH_USER(user,u);
-	if( user == NULL ) return 0;
-	retVal = user->options.enscryptSeconds;
-	END_WITH_USER(user);
+	retVal = this->options.enscryptSeconds;
 	return retVal;
 }
 
-/**
-Gets \p Sqrl_User_Options for a \p Sqrl_User
-
-@param u A \p Sqrl_User
-@return Minutes to retain hint data when computer is idle
-*/
-
-uint16_t sqrl_user_get_timeout_minutes( Sqrl_User u )
+uint16_t SqrlUser::getTimeoutMinutes()
 {
 	uint16_t retVal = 0;
-	WITH_USER(user,u);
-	if( user == NULL ) return 0;
-	retVal = user->options.timeoutMinutes;
-	END_WITH_USER(user);
+	retVal = this->options.timeoutMinutes;
 	return retVal;
 }
 
-/**
-Sets \p Sqrl_User_Options for a \p Sqrl_User
-
-@param u A \p Sqrl_User
-@param length The number of characters to use as a password hint
-*/
-
-void sqrl_user_set_hint_length( Sqrl_User u, uint8_t length )
+void SqrlUser::setHintLength( uint8_t length )
 {
-	WITH_USER(user,u);
-	if( user == NULL ) return;
-	user->options.hintLength = length;
-	BIT_SET( user->flags, USER_FLAG_T1_CHANGED );
-	END_WITH_USER(user);
+	this->options.hintLength = length;
+	BIT_SET( this->flags, USER_FLAG_T1_CHANGED );
 }
 
-/**
-Sets \p Sqrl_User_Options for a \p Sqrl_User
-
-@param u A \p Sqrl_User
-@param seconds The number of seconds to run EnScrypt when encrypting the Identity
-*/
-
-void sqrl_user_set_enscrypt_seconds( Sqrl_User u, uint8_t seconds )
+void SqrlUser::setEnscryptSeconds( uint8_t seconds )
 {
-	WITH_USER(user,u);
-	if( user == NULL ) return;
-	user->options.enscryptSeconds = seconds;
-	BIT_SET( user->flags, USER_FLAG_T1_CHANGED );
-	END_WITH_USER(user);
+	this->options.enscryptSeconds = seconds;
+	BIT_SET( this->flags, USER_FLAG_T1_CHANGED );
 }
 
-/**
-Sets \p Sqrl_User_Options for a \p Sqrl_User
-
-@param u A \p Sqrl_User
-@param minutes Clear hint data after \p minutes
-*/
-
-void sqrl_user_set_timeout_minutes( Sqrl_User u, uint16_t minutes )
+void SqrlUser::setTimeoutMinutes( uint16_t minutes )
 {
-	WITH_USER(user,u);
-	if( user == NULL ) return;
-	user->options.timeoutMinutes = minutes;
-	BIT_SET( user->flags, USER_FLAG_T1_CHANGED );
-	END_WITH_USER(user);
+	this->options.timeoutMinutes = minutes;
+	BIT_SET( this->flags, USER_FLAG_T1_CHANGED );
 }
 
+uint16_t SqrlUser::getFlags()
+{
+	return this->options.flags;
+}
 
-uint16_t sqrl_user_get_flags( Sqrl_User u )
+uint16_t SqrlUser::checkFlags( uint16_t flags )
 {
 	uint16_t retVal = 0;
-	WITH_USER(user,u);
-	retVal = user->options.flags;
-	END_WITH_USER(user);
+	retVal = this->options.flags & flags;
 	return retVal;
 }
 
-/**
-Helper to check a user's options flags
-
-@param u A \p Sqrl_User
-@param flags The Option flags to check
-@return uint16_t containing the user's option values for the flags selected.
-*/
-
-uint16_t sqrl_user_check_flags( Sqrl_User u, uint16_t flags )
+void SqrlUser::setFlags( uint16_t flags )
 {
-	uint16_t retVal = 0;
-	WITH_USER(user,u);
-	if( user == NULL ) return 0;
-	retVal = user->options.flags & flags;
-	END_WITH_USER(user);
-	return retVal;
-}
-
-/**
-Helper to set a user's option flags
-
-@param u A \p Sqrl_User
-@param flags The Option flags to set
-*/
-
-void sqrl_user_set_flags( Sqrl_User u, uint16_t flags )
-{
-	WITH_USER(user,u);
-	if( user == NULL ) return;
-	if( (user->options.flags & flags) != flags ) {
-		user->options.flags |= flags;
-		BIT_SET( user->flags, USER_FLAG_T1_CHANGED );
+	if( (this->options.flags & flags) != flags ) {
+		this->options.flags |= flags;
+		BIT_SET( this->flags, USER_FLAG_T1_CHANGED );
 	}
-	END_WITH_USER(user);
 }
 
-/**
-Helper to clear a user's option flags
-
-@param u A \p Sqrl_User
-@param flags The Option flags to clear
-*/
-
-void sqrl_user_clear_flags( Sqrl_User u, uint16_t flags )
+void SqrlUser::clearFlags( uint16_t flags )
 {
-	WITH_USER(user,u);
-	if( user == NULL ) return;
-	if( (user->flags & flags) != 0 ) {
-		user->options.flags &= ~flags;
-		BIT_SET( user->flags, USER_FLAG_T1_CHANGED );
+	if( (this->flags & flags) != 0 ) {
+		this->options.flags &= ~flags;
+		BIT_SET( this->flags, USER_FLAG_T1_CHANGED );
 	}
-	END_WITH_USER(user);
 }
 
-/**
-Populates a \p Sqrl_User_Options struct with the default options.
-
-@param options Pointer to a \p Sqrl_User_Options struct
-*/
-
-void sqrl_user_default_options( Sqrl_User_Options *options ) {
+void SqrlUser::defaultOptions( Sqrl_User_Options *options ) {
 	options->flags = SQRL_DEFAULT_FLAGS;
 	options->hintLength = SQRL_DEFAULT_HINT_LENGTH;
 	options->enscryptSeconds = SQRL_DEFAULT_ENSCRYPT_SECONDS;
 	options->timeoutMinutes = SQRL_DEFAULT_TIMEOUT_MINUTES;
 }
 
-/**
-Retrieves a unique identifier for a \p Sqrl_User.  The unique identifier is
-simply an encoded version of the encrypted IUK (from the Rescue Code Block).
-Note that the ID will change when a user rekeys.  If a type 2 block is not
-available, \p buffer will be an empty string.
-
-@param u A \p Sqrl_User
-@param buffer An allocated block of at length (\p SQRL_UNIQUE_ID_LENGTH + 1)
-or more to receive the unique id
-@return bool true on success, false on invalid parameters
-*/
-
-bool sqrl_user_unique_id( Sqrl_User u, char *buffer )
+bool SqrlUser::getUniqueId( char *buffer )
 {
 	if( !buffer ) return false;
-	WITH_USER(user,u);
-	if( user == NULL ) return false;
-	strncpy( buffer, user->unique_id, SQRL_UNIQUE_ID_LENGTH );
-	END_WITH_USER(user);
+	strncpy( buffer, this->uniqueId, SQRL_UNIQUE_ID_LENGTH );
 	return true;
 }
 
-/**
-Compares a \p Sqrl_User's unique identifier to the provided string
-
-@param u A \p Sqrl_User
-@param unique_id a NULL-terminated string to compare
-@return bool true if identifiers match
-*/
-
-bool sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id )
+bool SqrlUser::uniqueIdMatches( const char *unique_id )
 {
 	bool retVal = false;
-	WITH_USER(user,u);
-	if( user == NULL ) return false;
 	if( unique_id == NULL ) {
-		if( user->unique_id[0] == 0 ) {
+		if( this->uniqueId[0] == 0 ) {
 			retVal = true;
 		}
 	} else {
-		if( 0 == strcmp( unique_id, user->unique_id )) {
+		if( 0 == strcmp( unique_id, this->uniqueId )) {
 			retVal = true;
 		}
 	}
-	END_WITH_USER(user);
 	return retVal;
 }
 

@@ -20,8 +20,6 @@ namespace libsqrltest
 		{
 			bool bError = false;
 			SqrlStorage storage = SqrlStorage();
-			Sqrl_User user = NULL;
-			uint8_t *key = NULL;
 
 			SqrlUri fn = SqrlUri("file://test1.sqrl");
 			storage.load(&fn);

@@ -8,13 +8,13 @@ For more details, see the LICENSE file included with this package.
 #ifndef SQRL_COMMON_H_INCLUDED
 #define SQRL_COMMON_H_INCLUDED
 
-#include <stdint.h>
-#include <stdbool.h>
-#include "utstring.h"
-
 #ifndef DLL_PUBLIC
 #define DLL_PUBLIC _declspec(dllimport)
 #endif
+
+#include <stdint.h>
+#include <stdbool.h>
+#include "utstring.h"
 
 // SQRL_BASE64_PAD_CHAR = 0x3D for = padding.
 // SQRL_BASE64_PAD_CHAR = 0x00 for no padding.
@@ -30,6 +30,8 @@ For more details, see the LICENSE file included with this package.
 #define SQRL_OPTION_TOKEN_SUK                "suk"
 #define SQRL_OPTION_TOKEN_SEPARATOR            '~'
 
+typedef void* SqrlMutex;
+
 /**
 \defgroup URI SQRL URI Functions
 
@@ -40,8 +42,6 @@ typedef enum {
 	SQRL_SCHEME_SQRL,
 	SQRL_SCHEME_FILE
 } Sqrl_Scheme;
-
-#include "uri.h"
 
 typedef enum {
 	SQRL_CMD_QUERY,
@@ -61,6 +61,21 @@ typedef unsigned int Sqrl_Tif;
 #define SQRL_TIF_TRANSIENT_ERR 				 0x0020
 #define SQRL_TIF_COMMAND_FAILURE 			 0x0040
 #define SQRL_TIF_CLIENT_FAILURE 			 0x0080
+
+typedef struct Sqrl_Crypt_Context
+{
+	uint8_t *plain_text;
+	uint8_t *cipher_text;
+	uint16_t text_len;
+	uint8_t *add;
+	uint16_t add_len;
+	uint8_t *tag;
+	uint8_t *salt;
+	uint8_t *iv;
+	uint32_t count;
+	uint8_t nFactor;
+	uint8_t flags;
+} Sqrl_Crypt_Context;
 
 /**
 \defgroup encdec Encoding Functions

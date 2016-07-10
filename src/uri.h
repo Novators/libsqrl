@@ -5,6 +5,8 @@
 #define DLL_PUBLIC _declspec(dllimport)
 #endif
 
+#include "sqrl_common.h"
+
 /** 
  * Parses a URL and stores the parts that libsqrl needs.
  */

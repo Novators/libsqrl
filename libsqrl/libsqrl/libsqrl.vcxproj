@@ -199,6 +199,7 @@
     </ClInclude>
     <ClInclude Include="..\..\src\storage.h" />
     <ClInclude Include="..\..\src\uri.h" />
+    <ClInclude Include="..\..\src\user.h" />
     <ClInclude Include="..\..\src\utstring.h" />
   </ItemGroup>
   <ItemGroup>

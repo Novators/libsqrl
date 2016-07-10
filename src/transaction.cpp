@@ -100,7 +100,7 @@ Sqrl_Transaction sqrl_transaction_release( Sqrl_Transaction t )
     PRINT_TRANSACTION_COUNT( "trn_rel" );
     sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
     if( freeMe ) {
-		if (freeMe->user) sqrl_user_release(freeMe->user);
+		if (freeMe->user) freeMe->user->release();
 		if (freeMe->uri) delete(freeMe->uri);
         if( freeMe->string ) free( freeMe->string );
         if( freeMe->altIdentity ) free( freeMe->altIdentity );
@@ -111,15 +111,18 @@ Sqrl_Transaction sqrl_transaction_release( Sqrl_Transaction t )
     return NULL;
 }
 
-void sqrl_transaction_set_user( Sqrl_Transaction t, Sqrl_User u )
+void sqrl_transaction_set_user( Sqrl_Transaction t, SqrlUser *u )
 {
     if( !u ) return;
     WITH_TRANSACTION(transaction,t);
     if( !transaction ) {
         return;
     }
-    transaction->user = sqrl_user_release( transaction->user );
-    transaction->user = sqrl_user_hold( u );
+	if (transaction->user) {
+		transaction->user->release();
+	}
+	transaction->user = u;
+	u->hold();
     END_WITH_TRANSACTION(transaction);
 }
 
@@ -161,9 +164,9 @@ Gets the \p Sqrl_User associated with a \p Sqrl_Transaction
 @return NULL A \p Sqrl_User is not associated with this transaction
 */
 
-Sqrl_User sqrl_transaction_user( Sqrl_Transaction t )
+SqrlUser *sqrl_transaction_user( Sqrl_Transaction t )
 {
-    Sqrl_User user = NULL;
+    SqrlUser *user = NULL;
     SQRL_CAST_TRANSACTION(transaction,t);
     if( transaction ) user = transaction->user;
     return user;

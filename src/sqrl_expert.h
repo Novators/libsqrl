@@ -8,6 +8,9 @@ For more details, see the LICENSE file included with this package.
 #ifndef SQRL_EXPERT_H_INCLUDED
 #define SQRL_EXPERT_H_INCLUDED
 
+#ifndef DLL_PUBLIC
+#define DLL_PUBLIC _declspec(dllimport)
+#endif
 
 #include "sqrl_client.h"
 #include "sqrl_server.h"
@@ -49,7 +52,5 @@ DLL_PUBLIC int  sqrl_entropy_get_blocking( uint8_t*, int );
 DLL_PUBLIC int  sqrl_entropy_bytes( uint8_t*, int );
 /** @} */ // endgroup entropy
 
-#include "block.h"
-#include "storage.h"
 
 #endif // SQRL_EXPERT_H_INCLUDED

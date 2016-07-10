@@ -8,6 +8,10 @@ For more details, see the LICENSE file included with this package.
 #ifndef SQRL_SERVER_H_INCLUDED
 #define SQRL_SERVER_H_INCLUDED
 
+#ifndef DLL_PUBLIC
+#define DLL_PUBLIC _declspec(dllimport)
+#endif
+
 #include "sqrl_common.h"
 
 #define SQRL_SERVER_MAC_LENGTH 16
