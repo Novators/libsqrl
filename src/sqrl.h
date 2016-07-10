@@ -4,6 +4,11 @@
 #define DLL_PUBLIC __declspec( dllimport )
 #endif
 
+#define SQRL_LIB_VERSION "1.2016.32"
+#define SQRL_LIB_VERSION_MAJOR 1
+#define SQRL_LIB_VERSION_MINOR 2016
+#define SQRL_LIB_VERSION_BUILD 32
+
 #include <stdint.h>
 #include "utstring.h"
 #include "block.fwd.h"

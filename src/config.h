@@ -10,11 +10,6 @@ For more details, see the LICENSE file included with this package.
 #define SCRYPT_SALSA
 #define SCRYPT_SHA256
 
-#define SQRL_LIB_VERSION "1.2016.31"
-#define SQRL_LIB_VERSION_MAJOR 1
-#define SQRL_LIB_VERSION_MINOR 2016
-#define SQRL_LIB_VERSION_BUILD 31
-
 #if defined WIN32 || defined CYGWIN
   #ifdef CMAKE_COMPILER_IS_GNUCC
     #define DLL_PUBLIC __attribute__ ((dllexport))
