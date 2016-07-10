@@ -172,7 +172,7 @@ struct Sqrl_User_s
 	Sqrl_User_Options options;
 	SqrlMutex referenceCountMutex;
 	int referenceCount;
-	Sqrl_Storage storage;
+	SqrlStorage *storage;
 	char unique_id[SQRL_UNIQUE_ID_LENGTH+1];
 	struct Sqrl_Keys *keys;
 };

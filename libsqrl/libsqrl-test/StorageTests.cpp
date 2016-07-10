@@ -78,20 +78,15 @@ namespace libsqrltest
 		{
 			strcpy(StorageTests_myPassword, "the password");
 			bool bError = false;
-			Sqrl_Storage storage = NULL;
+			SqrlStorage storage = SqrlStorage();
 			Sqrl_User user = NULL;
 			uint8_t *key = NULL;
 
-			storage = sqrl_storage_create();
-			sqrl_storage_load_from_file(storage, "test1.sqrl");
-			if (!sqrl_storage_block_exists(storage, SQRL_BLOCK_USER)
-				|| !sqrl_storage_block_exists(storage, SQRL_BLOCK_RESCUE))
-			{
-				printf("Bad Blocks\n");
-				exit(1);
-			}
-			storage = sqrl_storage_destroy(storage);
-
+			SqrlUri fn = SqrlUri("file://test1.sqrl");
+			storage.load(&fn);
+			Assert::IsTrue(storage.hasBlock( SQRL_BLOCK_USER));
+			Assert::IsTrue(storage.hasBlock( SQRL_BLOCK_RESCUE));
+			Assert::IsFalse(storage.hasBlock( 5));
 		}
 
 		TEST_CLASS_CLEANUP(StopSqrl)

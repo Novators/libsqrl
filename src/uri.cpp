@@ -6,15 +6,6 @@ This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
 
-/**
-Creates a copy of a \p SqrlUri object.
-
-\warning Allocates memory for a new \p SqrlUri object!  Free it with \p SqrlUri_free() when done!
-
-@param original The \p SqrlUri object to copy.
-@return An identical copy of \p original.
-*/
-
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -93,6 +84,8 @@ size_t SqrlUri::getSFNLength() {
 
 SqrlUri* SqrlUri::copy() {
 	SqrlUri *nuri = new SqrlUri(this->challenge);
+	nuri->setChallenge(this->challenge);
+	nuri->setUrl(this->url);
 	return nuri;
 }
 

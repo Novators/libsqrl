@@ -15,67 +15,43 @@ namespace libsqrltest
 			sqrl_init();
 		}
 		
+		void testString(char *a, const char *b) {
+			Assert::AreEqual(a, b);
+			if(a) free(a);
+		}
+
 		TEST_METHOD(Uri1)
 		{
 			SqrlUri uri = SqrlUri("sqrl://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
 			Assert::IsTrue(uri.getScheme() == SQRL_SCHEME_SQRL);
-			char *tmp = uri.getHost();
-			Assert::AreEqual(tmp, "sqrlid.com/login");
-			free(tmp);
-			tmp = uri.getChallenge();
-			Assert::AreEqual(tmp, "sqrl://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
-			free(tmp);
-			tmp = uri.getUrl();
-			Assert::AreEqual(tmp, "https://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
-			free(tmp);
-			tmp = uri.getPrefix();
-			Assert::AreEqual(tmp, "https://sqrlid.com");
-			free(tmp);
-			tmp = uri.getSFN();
-			Assert::AreEqual(tmp, "SQRLid");
-			free(tmp);
+			this->testString(uri.getHost(), "sqrlid.com/login");
+			char *tmp = uri.getChallenge();
+			this->testString(uri.getChallenge(), "sqrl://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
+			this->testString(uri.getUrl(), "https://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
+			this->testString(uri.getPrefix(), "https://sqrlid.com");
+			this->testString(uri.getSFN(), "SQRLid");
 		}
 		
 		TEST_METHOD(Uri2)
 		{
 			SqrlUri uri = SqrlUri("sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
 			Assert::IsTrue(uri.getScheme() == SQRL_SCHEME_SQRL);
-			char *tmp = uri.getHost();
-			Assert::AreEqual(tmp, "sqrlid.com");
-			free(tmp);
-			tmp = uri.getChallenge();
-			Assert::AreEqual(tmp, "sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
-			free(tmp);
-			tmp = uri.getUrl();
-			Assert::AreEqual(tmp, "https://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
-			free(tmp);
-			tmp = uri.getPrefix();
-			Assert::AreEqual(tmp, "https://sqrlid.com");
-			free(tmp);
-			tmp = uri.getSFN();
-			Assert::AreEqual(tmp, "SQRLid");
-			free(tmp);
+			this->testString(uri.getHost(), "sqrlid.com");
+			this->testString(uri.getChallenge(), "sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
+			this->testString(uri.getUrl(), "https://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
+			this->testString(uri.getPrefix(), "https://sqrlid.com");
+			this->testString(uri.getSFN(), "SQRLid");
 		}
 		
 		TEST_METHOD(Uri3)
 		{
 			SqrlUri uri = SqrlUri("sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
 			Assert::IsTrue(uri.getScheme() == SQRL_SCHEME_SQRL);
-			char *tmp = uri.getHost();
-			Assert::AreEqual(tmp, "sqrlid.com");
-			free(tmp);
-			tmp = uri.getChallenge();
-			Assert::AreEqual(tmp, "sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
-			free(tmp);
-			tmp = uri.getUrl();
-			Assert::AreEqual(tmp, "https://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
-			free(tmp);
-			tmp = uri.getPrefix();
-			Assert::AreEqual(tmp, "https://sqrlid.com:8080");
-			free(tmp);
-			tmp = uri.getSFN();
-			Assert::AreEqual(tmp, "SQRLid");
-			free(tmp);
+			this->testString(uri.getHost(), "sqrlid.com");
+			this->testString(uri.getChallenge(), "sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
+			this->testString(uri.getUrl(), "https://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
+			this->testString(uri.getPrefix(), "https://sqrlid.com:8080");
+			this->testString(uri.getSFN(), "SQRLid");
 		}
 		
 		TEST_METHOD(FileUri)
@@ -83,18 +59,10 @@ namespace libsqrltest
 			SqrlUri uri = SqrlUri("file://test1.sqrl");
 			Assert::IsTrue(uri.getScheme() == SQRL_SCHEME_FILE);
 			Assert::IsTrue(uri.getHostLength() == 0);
-			char *tmp = uri.getUrl();
-			Assert::AreEqual(tmp, "file://test1.sqrl");
-			free(tmp);
-			tmp = uri.getChallenge();
-			Assert::AreEqual(tmp, "test1.sqrl");
-			free(tmp);
-			tmp = uri.getPrefix();
-			Assert::IsTrue(tmp == NULL);
-			free(tmp);
-			tmp = uri.getSFN();
-			Assert::IsTrue(tmp == NULL);
-			free(tmp);
+			this->testString(uri.getUrl(), "file://test1.sqrl");
+			this->testString(uri.getChallenge(), "test1.sqrl");
+			this->testString(uri.getPrefix(), NULL);
+			this->testString(uri.getSFN(), NULL);
 		}
 		
 		TEST_METHOD(SQRLUriWithoutSFN)

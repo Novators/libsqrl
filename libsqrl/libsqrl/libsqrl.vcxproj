@@ -196,6 +196,8 @@
     <ClInclude Include="..\..\src\sqrl_server.h">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
     </ClInclude>
+    <ClInclude Include="..\..\src\storage.h" />
+    <ClInclude Include="..\..\src\uri.h" />
     <ClInclude Include="..\..\src\utstring.h" />
   </ItemGroup>
   <ItemGroup>

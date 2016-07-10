@@ -89,56 +89,6 @@ DLL_PUBLIC bool        sqrl_block_write_int32( Sqrl_Block *block, uint32_t value
 DLL_PUBLIC bool        sqrl_block_write_int8( Sqrl_Block *block, uint8_t value );
 /** @} */ // endgroup block
 
-
-/** \defgroup storage Secure Storage System (S4)
-
-A simple and secure implementation of the S4 storage format.  When loaded in memory, all 
-storage data is guarded against unauthorized access and against swapping to disk (to the 
-extent possible).  Storage can be loaded and saved directly to file or from a memory buffer.
-We support both binary and base64 storage.
-
-Storage Structure
------------------
-Each storage object consists of a number of blocks.  Block types are defined at 
-[GRC's SQRL page](https://www.grc.com/sqrl/storage.htm).  These functions do not care about
-the contents of a block, this is just a generic framework for accessing them.
-
-We allocate memory in 4k pages, and use 128 bytes of each page as an index, so a block is
-limited to 3968 bytes in this implementation.  At this time, the largest defined block is 
-only 157 bytes, so we do not expect this to be a problem.  Keep it in mind, though, if
-you are adding your own custom block types.
-
-Block types are unique within a storage object.  Putting a block into storage will overwrite
-any other block with the same type.  This makes the whole system simpler to work with, 
-prevents the growth of the storage file, and reduces the chance of getting the wrong block.
-@{ */
-
-/** The S4 Storage object */
-typedef void* Sqrl_Storage;
-
-DLL_PUBLIC bool        sqrl_storage_block_exists( Sqrl_Storage storage, uint16_t blockType );
-DLL_PUBLIC bool        sqrl_storage_block_get( Sqrl_Storage storage, Sqrl_Block *block, uint16_t blockType );
-DLL_PUBLIC bool        sqrl_storage_block_put( Sqrl_Storage storage, Sqrl_Block *block );
-DLL_PUBLIC bool        sqrl_storage_block_remove( Sqrl_Storage storage, uint16_t blockType );
-DLL_PUBLIC Sqrl_Storage
-            sqrl_storage_create(void);
-DLL_PUBLIC Sqrl_Storage
-            sqrl_storage_destroy( Sqrl_Storage storage );
-DLL_PUBLIC bool        sqrl_storage_load_from_buffer( Sqrl_Storage storage, UT_string *buffer );
-DLL_PUBLIC bool        sqrl_storage_load_from_file( Sqrl_Storage storage, const char *filename );
-DLL_PUBLIC bool        sqrl_storage_save_to_buffer(
-                Sqrl_Storage storage, 
-                UT_string *buf, 
-                Sqrl_Export etype, 
-                Sqrl_Encoding encoding );
-DLL_PUBLIC int         sqrl_storage_save_to_file(
-                Sqrl_Storage storage, 
-                const char *filename, 
-                Sqrl_Export etype,
-                Sqrl_Encoding encoding );
-void        sqrl_storage_unique_id( 
-                Sqrl_Storage storage, 
-                char *unique_id );
-/** @} */ // endgroup storage
+#include "storage.h"
 
 #endif // SQRL_EXPERT_H_INCLUDED

@@ -33,9 +33,4 @@
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
-  <ItemGroup>
-    <None Include="..\..\data\test1.sqrl" />
-    <None Include="..\..\data\test2.sqrl" />
-    <None Include="..\..\data\test1.sqrl.txt" />
-  </ItemGroup>
 </Project>

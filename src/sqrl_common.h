@@ -41,42 +41,7 @@ typedef enum {
 	SQRL_SCHEME_FILE
 } Sqrl_Scheme;
 
-/**
-A structure to hold information about a parsed SQRL URI
-*/
-class DLL_PUBLIC SqrlUri
-{
-private:
-	char *challenge;
-	char *host;
-	char *prefix;
-	char *url;
-	Sqrl_Scheme scheme;
-	char *sfn;
-
-public:
-	SqrlUri(const char *source);
-	~SqrlUri();
-	char *getChallenge();
-	void setChallenge(const char *val);
-	char *getHost();
-	char *getPrefix();
-	char *getUrl();
-	void setUrl(const char *val);
-	char* getSFN();
-	Sqrl_Scheme getScheme();
-	size_t getChallengeLength();
-	size_t getHostLength();
-	size_t getPrefixLength();
-	size_t getUrlLength();
-	size_t getSFNLength();
-
-	SqrlUri* copy();
-};
-
-/** @} */ // endgroup URI
-
-
+#include "uri.h"
 
 typedef enum {
 	SQRL_CMD_QUERY,

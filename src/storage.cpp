@@ -9,6 +9,7 @@ For more details, see the LICENSE file included with this package.
 #include <sodium.h>
 #include <stdio.h>
 #include "sqrl_internal.h"
+#include "storage.h"
 
 // TODO: Determine PAGE_SIZE at runtime?
 #define PAGE_SIZE 4096
@@ -43,48 +44,34 @@ struct S4Pointer {
 	struct S4Page *page;
 };
 
-/**
-Allocates and Initializes a new \p Sqrl_Storage object.
 
-@return The new \p Sqrl_Storage object.
-*/
 
-Sqrl_Storage sqrl_storage_create()
+static struct S4Page * sqrl_page_create()
 {
-	struct S4Page *page = (struct S4Page*)sodium_malloc( sizeof( struct S4Page ));
-	if( !page ) return NULL;
+	struct S4Page *page = (struct S4Page*)sodium_malloc(sizeof(struct S4Page));
 	page->nextPage = NULL;
-	memset( page->index, 0, sizeof( struct S4Table ) * BLOCKS_PER_PAGE );	
-	SQRL_STORAGE_LOCK( page );
-	return (Sqrl_Storage)page;
+	memset(page->index, 0, sizeof(struct S4Table) * BLOCKS_PER_PAGE);
+	SQRL_STORAGE_LOCK(page);
+	return page;
 }
 
-/**
-Securely erase and free a \p Sqrl_Storage object.
-
-@param storage The \p Sqrl_Storage object to destroy
-@return NULL pointer
-*/
-
-Sqrl_Storage sqrl_storage_destroy( Sqrl_Storage storage )
+static struct S4Page * sqrl_page_destroy(struct S4Page *page)
 {
-	SQRL_CAST_PAGE(page,storage);
-	if( page ) {
-		SQRL_STORAGE_READ_ONLY( page );
-		if( page->nextPage ) {
-			sqrl_storage_destroy( (Sqrl_Storage)page->nextPage );
+	if (page) {
+		SQRL_STORAGE_READ_ONLY(page);
+		if (page->nextPage) {
+			sqrl_page_destroy(page->nextPage);
 		}
-		sodium_free( page );
+		sodium_free(page);
 		page = NULL;
 	}
 	return page;
 }
 
-bool find_block( Sqrl_Storage storage, struct S4Pointer *pointer, uint16_t blockType )
+static bool find_block( struct S4Page *page, struct S4Pointer *pointer, uint16_t blockType )
 {
 	if( !pointer ) return false;
 
-	SQRL_CAST_PAGE(page,storage);
 	struct S4Page *nextPage = NULL;
 
 	int i;
@@ -105,12 +92,11 @@ bool find_block( Sqrl_Storage storage, struct S4Pointer *pointer, uint16_t block
 	return false;
 }
 
-bool allocate_block( Sqrl_Storage storage, struct S4Pointer *pointer, uint16_t blockType, uint16_t blockLength )
+static bool allocate_block( struct S4Page *page, struct S4Pointer *pointer, uint16_t blockType, uint16_t blockLength )
 {
-	if( !pointer || !storage ) return false;
+	if( !pointer || !page ) return false;
 	if( blockLength > PAGE_DATA_SIZE ) return false;
 
-	SQRL_CAST_PAGE(page,storage);
 	struct S4Page *nextPage;
 	uint16_t lastOffset = 0;
 	uint16_t lastLength = 0;
@@ -155,26 +141,18 @@ bool allocate_block( Sqrl_Storage storage, struct S4Pointer *pointer, uint16_t b
 	}
 	if( !page->nextPage ) {
 		SQRL_STORAGE_READ_WRITE( page );
-		page->nextPage = (struct S4Page*)sqrl_storage_create();
+		page->nextPage = sqrl_page_create();
 	}
 	nextPage = page->nextPage;
 	SQRL_STORAGE_LOCK( page );
 	return allocate_block( nextPage, pointer, blockType, blockLength );
 }
 
-/**
-Removes a block from storage.
-
-@param storage The \p Sqrl_Storage object
-@param blockType The type of block to remove
-@return TRUE on success, FALSE if not found
-*/
-
-bool sqrl_storage_block_remove( Sqrl_Storage storage, uint16_t blockType )
+static bool sqrl_storage_block_remove( struct S4Page *page, uint16_t blockType )
 {
-	if( !storage ) return false;
+	if( !page ) return false;
 	struct S4Pointer pointer;
-	if( find_block( storage, &pointer, blockType )) {
+	if( find_block( page, &pointer, blockType )) {
 		SQRL_STORAGE_READ_WRITE( pointer.page );
 		pointer.index->active = 0;
 		sodium_memzero( pointer.page->blocks + pointer.index->offset, pointer.index->blockLength );
@@ -184,21 +162,11 @@ bool sqrl_storage_block_remove( Sqrl_Storage storage, uint16_t blockType )
 	return false;
 }
 
-/**
-Adds a block to storage.
-
-\warning If a block already exists in \p storage, it will be overwritten.
-
-@param storage The \p Sqrl_Storage object
-@param block Pointer to a \p Sqrl_Block containing the data to add to \p storage
-@return TRUE on success, FALSE on failure
-*/
-
-bool sqrl_storage_block_put( Sqrl_Storage storage, Sqrl_Block *block )
+static bool sqrl_storage_block_put( struct S4Page *page, Sqrl_Block *block )
 {
-	if( !storage || !block ) return false;
+	if( !page || !block ) return false;
 	struct S4Pointer pointer;
-	if( find_block( storage, &pointer, block->blockType )) {
+	if( find_block( page, &pointer, block->blockType )) {
 		SQRL_STORAGE_READ_ONLY( pointer.page );
 		if( pointer.index->blockLength <= block->blockLength ) {
 			SQRL_STORAGE_READ_WRITE( pointer.page );
@@ -215,9 +183,9 @@ bool sqrl_storage_block_put( Sqrl_Storage storage, Sqrl_Block *block )
 			return true;
 		}
 		SQRL_STORAGE_LOCK( pointer.page );
-		sqrl_storage_block_remove( storage, block->blockType );
+		sqrl_storage_block_remove( page, block->blockType );
 	}
-	if( allocate_block( storage, &pointer, block->blockType, block->blockLength )) {
+	if( allocate_block( page, &pointer, block->blockType, block->blockLength )) {
 		SQRL_STORAGE_READ_WRITE( pointer.page );
 		if( block->data ) {
 			memcpy( &pointer.page->blocks[pointer.index->offset], 
@@ -229,39 +197,22 @@ bool sqrl_storage_block_put( Sqrl_Storage storage, Sqrl_Block *block )
 	return false;
 }
 
-/** 
-Checks to see if a block exists in storage.
-
-@param storage The \p Sqrl_Storage object
-@param blockType The type of block to check for
-@return TRUE is \p storage contains a block of type \p blockType; FALSE if not
-*/
-
-bool sqrl_storage_block_exists( Sqrl_Storage storage, uint16_t blockType )
+static bool sqrl_storage_block_exists( struct S4Page *page, uint16_t blockType )
 {
-	if( !storage ) return false;
+	if( !page ) return false;
 	struct S4Pointer pointer;
-	if( find_block( storage, &pointer, blockType )) {
+	if( find_block( page, &pointer, blockType )) {
 		return true;
 	}
 	return false;
 }
 
-/**
-Retrieves the contents of a block from storage.
-
-@param storage The \p Sqrl_Storage object
-@param block Pointer to a \p Sqrl_Block to populate
-@param blockType The type of block to retrieve
-@return TRUE on success; FALSE on failure
-*/
-
-bool sqrl_storage_block_get( Sqrl_Storage storage, Sqrl_Block *block, uint16_t blockType )
+static bool sqrl_storage_block_get( struct S4Page *page, Sqrl_Block *block, uint16_t blockType )
 {
-	if( !storage || !block ) return false;
+	if( !page || !block ) return false;
 	sqrl_block_free( block );
 	struct S4Pointer pointer;
-	if( find_block( storage, &pointer, blockType )) {
+	if( find_block( page, &pointer, blockType )) {
 		SQRL_STORAGE_READ_ONLY( pointer.page );
 		if( sqrl_block_init( block, 
 				pointer.index->blockType, pointer.index->blockLength )) {
@@ -275,17 +226,7 @@ bool sqrl_storage_block_get( Sqrl_Storage storage, Sqrl_Block *block, uint16_t b
 	return false;
 }
 
-/**
-Loads data from a buffer into storage
-
-\warning Does not clear the storage first, but does overwrite blocks of the same type.
-
-@param storage The \p Sqrl_Storage object
-@param buffer A UT_string buffer
-@return TRUE on success; FALSE on failure
-*/
-
-bool sqrl_storage_load_from_buffer( Sqrl_Storage storage, UT_string *buffer )
+static bool sqrl_storage_load_from_buffer( struct S4Page *page, UT_string *buffer )
 {
 	uint8_t *cur, *end;
 	bool retVal = true;
@@ -322,7 +263,7 @@ bool sqrl_storage_load_from_buffer( Sqrl_Storage storage, UT_string *buffer )
 			goto ERR;
 		}
 		block.data = cur;
-		if( sqrl_storage_block_put( storage, &block )) {
+		if( sqrl_storage_block_put( page, &block )) {
 			cur += block.blockLength;
 			continue;
 		}
@@ -340,17 +281,7 @@ DONE:
 	return retVal;
 }
 
-/**
-Loads data from a file into storage
-
-\warning Does not clear the storage first, but does overwrite blocks of the same type.
-
-@param storage The \p Sqrl_Storage object
-@param filename The path of the file to load
-@return TRUE on success; FALSE on failure
-*/
-
-bool sqrl_storage_load_from_file( Sqrl_Storage storage, const char *filename )
+static bool sqrl_storage_load_from_file( struct S4Page *page, const char *filename )
 {
 	uint8_t tmp[256];
 	size_t bytesRead;
@@ -369,23 +300,13 @@ bool sqrl_storage_load_from_file( Sqrl_Storage storage, const char *filename )
 	}
 	fclose( fp );
 
-	retVal = sqrl_storage_load_from_buffer( storage, buf );
+	retVal = sqrl_storage_load_from_buffer( page, buf );
 	utstring_free( buf );
 	return retVal;
 }
 
-/**
-Saves data from storage into a buffer
-
-@param storage The \p Sqrl_Storage object
-@param buf A UT_string buffer
-@param etype The type of export to perform
-@param encoding the type of encoding to use
-@return TRUE on success; FALSE on failure
-*/
-
-bool sqrl_storage_save_to_buffer( 
-	Sqrl_Storage storage, 
+static bool sqrl_storage_save_to_buffer( 
+	struct S4Page *page, 
 	UT_string *buf, 
 	Sqrl_Export etype, 
 	Sqrl_Encoding encoding )
@@ -397,16 +318,15 @@ bool sqrl_storage_save_to_buffer(
 	if( etype == SQRL_EXPORT_RESCUE ) {
 		Sqrl_Block block;
 		memset( &block, 0, sizeof( Sqrl_Block ));
-		if( sqrl_storage_block_get( storage, &block, SQRL_BLOCK_RESCUE )) {
+		if( sqrl_storage_block_get( page, &block, SQRL_BLOCK_RESCUE )) {
 			utstring_bincpy( tmp, block.data, block.blockLength );
 			sqrl_block_free( &block );
 		}
-		if( sqrl_storage_block_get( storage, &block, SQRL_BLOCK_PREVIOUS )) {
+		if( sqrl_storage_block_get( page, &block, SQRL_BLOCK_PREVIOUS )) {
 			utstring_bincpy( tmp, block.data, block.blockLength );
 			sqrl_block_free( &block );
 		}
 	} else {
-		SQRL_CAST_PAGE(page,storage);
 		struct S4Page *nextPage;
 		while( page ) {
 			SQRL_STORAGE_READ_ONLY( page );
@@ -433,23 +353,13 @@ bool sqrl_storage_save_to_buffer(
 	return true;
 }
 
-/**
-Saves data from storage to a file
-
-@param storage The \p Sqrl_Storage object
-@param filename The path of the file to save
-@param etype The type of export to perform
-@param encoding the type of encoding to use
-@return Number of bytes written.  -1 indicates failure.
-*/
-
-int sqrl_storage_save_to_file( Sqrl_Storage storage, const char *filename, Sqrl_Export etype, Sqrl_Encoding encoding )
+static int sqrl_storage_save_to_file( struct S4Page *page, const char *filename, Sqrl_Export etype, Sqrl_Encoding encoding )
 {
 	int retVal;
 	UT_string *buf;
 	utstring_new( buf );
 	if( buf == NULL ) return -1;
-	sqrl_storage_save_to_buffer( storage, buf, etype, encoding );
+	sqrl_storage_save_to_buffer( page, buf, etype, encoding );
 	FILE *fp = fopen( filename, "wb" );
 	if( !fp ) {
 		utstring_free( buf );
@@ -462,14 +372,14 @@ int sqrl_storage_save_to_file( Sqrl_Storage storage, const char *filename, Sqrl_
 	return retVal;
 }
 
-void sqrl_storage_unique_id( Sqrl_Storage storage, char *unique_id )
+static void sqrl_storage_unique_id(struct S4Page *page, char *unique_id )
 {
 	if( !unique_id ) return;
 	Sqrl_Block block;
 	memset( &block, 0, sizeof( Sqrl_Block ));
-	if( !storage ) goto ERR;
-	if( sqrl_storage_block_exists( storage, SQRL_BLOCK_RESCUE &&
-		sqrl_storage_block_get( storage, &block, SQRL_BLOCK_RESCUE )))
+	if( !page ) goto ERR;
+	if( sqrl_storage_block_exists( page, SQRL_BLOCK_RESCUE &&
+		sqrl_storage_block_get( page, &block, SQRL_BLOCK_RESCUE )))
 	{
 		if( block.blockLength == 73 ) {
 			UT_string *buf;
@@ -485,4 +395,77 @@ ERR:
 	memset( unique_id, 0, SQRL_UNIQUE_ID_LENGTH + 1 );
 DONE:
 	sqrl_block_free( &block );
+}
+
+SqrlStorage::SqrlStorage()
+{
+	this->data = sqrl_page_create();
+}
+
+SqrlStorage::~SqrlStorage()
+{
+	SQRL_CAST_PAGE(page, this->data);
+	page = sqrl_page_destroy(page);
+}
+
+bool SqrlStorage::hasBlock(uint16_t blockType)
+{
+	SQRL_CAST_PAGE(page, this->data);
+	return sqrl_storage_block_exists(page, blockType);
+}
+
+bool SqrlStorage::getBlock(Sqrl_Block *block, uint16_t blockType)
+{
+	SQRL_CAST_PAGE(page, this->data);
+	return sqrl_storage_block_get(page, block, blockType);
+}
+
+bool SqrlStorage::putBlock(Sqrl_Block *block)
+{
+	SQRL_CAST_PAGE(page, this->data);
+	return sqrl_storage_block_put(page, block);
+}
+
+bool SqrlStorage::removeBlock(uint16_t blockType)
+{
+	SQRL_CAST_PAGE(page, this->data);
+	return sqrl_storage_block_remove(page, blockType);
+}
+
+bool SqrlStorage::load(UT_string *buffer)
+{
+	SQRL_CAST_PAGE(page, this->data);
+	return sqrl_storage_load_from_buffer(page, buffer);
+}
+
+bool SqrlStorage::load(SqrlUri *uri)
+{
+	SQRL_CAST_PAGE(page, this->data);
+	if (uri->getScheme() != SQRL_SCHEME_FILE) return false;
+	char *fn = uri->getChallenge();
+	bool ret = sqrl_storage_load_from_file(page, fn);
+	free(fn);
+	return ret;
+}
+
+bool SqrlStorage::save(UT_string *buffer, Sqrl_Export etype, Sqrl_Encoding encoding)
+{
+	SQRL_CAST_PAGE(page, this->data);
+	return sqrl_storage_save_to_buffer(page, buffer, etype, encoding);
+}
+
+bool SqrlStorage::save(SqrlUri *uri, Sqrl_Export etype, Sqrl_Encoding encoding)
+{
+	SQRL_CAST_PAGE(page, this->data);
+	if (uri->getScheme() != SQRL_SCHEME_FILE) return false;
+	char *fn = uri->getUrl();
+	int ret = sqrl_storage_save_to_file(page, fn, etype, encoding);
+	free(fn);
+	return ret > 0;
+}
+
+void SqrlStorage::getUniqueId(char *unique_id)
+{
+	SQRL_CAST_PAGE(page, this->data);
+	return sqrl_storage_unique_id(page, unique_id);
 }
