@@ -7,59 +7,6 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace libsqrltest
 {
-	char StorageTests_myPassword[32];
-
-	bool StorageTests_onAuthenticationRequired(
-		Sqrl_Transaction t,
-		Sqrl_Credential_Type credentialType)
-	{
-		char *cred = NULL;
-		uint8_t len;
-		Sqrl_User user = sqrl_transaction_user(t);
-
-		switch (credentialType) {
-		case SQRL_CREDENTIAL_PASSWORD:
-			printf("   REQ: Password\n");
-			cred = (char*)malloc(strlen(StorageTests_myPassword) + 1);
-			strcpy(cred, StorageTests_myPassword);
-			break;
-		case SQRL_CREDENTIAL_HINT:
-			printf("   REQ: Hint\n");
-			len = sqrl_user_get_hint_length(user);
-			cred = (char*)malloc(len + 1);
-			strncpy(cred, StorageTests_myPassword, len);
-			break;
-		case SQRL_CREDENTIAL_RESCUE_CODE:
-			printf("Rescue Code Requested, but not needed!\n");
-			exit(1);
-		default:
-			return false;
-		}
-		sqrl_client_authenticate(t, credentialType, cred, strlen(cred));
-		if (cred) {
-			free(cred);
-		}
-		return true;
-	}
-
-	char transactionType[11][10] = {
-		"UNKNWN",
-		"IDENT",
-		"DISABL",
-		"ENABLE",
-		"REMOVE",
-		"SAVE",
-		"RECOVR",
-		"REKEY",
-		"UNLOCK",
-		"LOCK",
-		"LOAD"
-	};
-	int onProgress(Sqrl_Transaction transaction, int p)
-	{
-		return 1;
-	}
-
 
 	TEST_CLASS(StorageTests)
 	{
@@ -67,16 +14,10 @@ namespace libsqrltest
 		TEST_CLASS_INITIALIZE(InitializeSqrl)
 		{
 			sqrl_init();
-			Sqrl_Client_Callbacks cbs;
-			memset(&cbs, 0, sizeof(Sqrl_Client_Callbacks));
-			cbs.onAuthenticationRequired = StorageTests_onAuthenticationRequired;
-			cbs.onProgress = onProgress;
-			sqrl_client_set_callbacks(&cbs);
 		}
 
 		TEST_METHOD(StorageTest)
 		{
-			strcpy(StorageTests_myPassword, "the password");
 			bool bError = false;
 			SqrlStorage storage = SqrlStorage();
 			Sqrl_User user = NULL;
@@ -84,9 +25,14 @@ namespace libsqrltest
 
 			SqrlUri fn = SqrlUri("file://test1.sqrl");
 			storage.load(&fn);
-			Assert::IsTrue(storage.hasBlock( SQRL_BLOCK_USER));
-			Assert::IsTrue(storage.hasBlock( SQRL_BLOCK_RESCUE));
-			Assert::IsFalse(storage.hasBlock( 5));
+			Assert::IsTrue(storage.hasBlock(SQRL_BLOCK_USER));
+			Assert::IsTrue(storage.hasBlock(SQRL_BLOCK_RESCUE));
+			Assert::IsFalse(storage.hasBlock(5));
+			UT_string *buf;
+			utstring_new(buf);
+			storage.save(buf, SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64);
+			Logger::WriteMessage(utstring_body(buf));
+			utstring_free(buf);
 		}
 
 		TEST_CLASS_CLEANUP(StopSqrl)

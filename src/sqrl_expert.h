@@ -49,46 +49,7 @@ DLL_PUBLIC int  sqrl_entropy_get_blocking( uint8_t*, int );
 DLL_PUBLIC int  sqrl_entropy_bytes( uint8_t*, int );
 /** @} */ // endgroup entropy
 
-/** \defgroup block Secure Storage Blocks
-
-These are convenience functions for working with S4 blocks.  The read / write functions are
-particularly useful if you want your files to work on different platforms, but don't want
-to worry about byte order.
-
-@{ */
-/** 
-The S4 Block
-
-The basic unit of storage in S4.  A \p Sqrl_Storage object can contain many of these.
-*/
-typedef struct Sqrl_Block {
-    /** The length of the block, in bytes */
-    uint16_t blockLength;
-    /** The type of block */
-    uint16_t blockType;
-    /** An offset into the block where reading or writing will occur */
-    uint16_t cur;
-    /** Pointer to the actual data of the block */
-    uint8_t *data;
-} Sqrl_Block;
-
-DLL_PUBLIC void        sqrl_block_clear( Sqrl_Block *block );
-DLL_PUBLIC Sqrl_Block* sqrl_block_create();
-DLL_PUBLIC Sqrl_Block* sqrl_block_destroy( Sqrl_Block *block );
-DLL_PUBLIC void        sqrl_block_free( Sqrl_Block *block );
-DLL_PUBLIC bool        sqrl_block_init( Sqrl_Block *block, uint16_t blockType, uint16_t blockLength );
-DLL_PUBLIC int         sqrl_block_read( Sqrl_Block *block, uint8_t *data, size_t data_len );
-DLL_PUBLIC uint16_t    sqrl_block_read_int16( Sqrl_Block *block );
-DLL_PUBLIC uint32_t    sqrl_block_read_int32( Sqrl_Block *block );
-DLL_PUBLIC uint8_t     sqrl_block_read_int8( Sqrl_Block *block );
-DLL_PUBLIC bool        sqrl_block_resize( Sqrl_Block *block, size_t new_size );
-DLL_PUBLIC uint16_t    sqrl_block_seek( Sqrl_Block *block, uint16_t dest );
-DLL_PUBLIC int         sqrl_block_write( Sqrl_Block *block, uint8_t *data, size_t data_len );
-DLL_PUBLIC bool        sqrl_block_write_int16( Sqrl_Block *block, uint16_t value );
-DLL_PUBLIC bool        sqrl_block_write_int32( Sqrl_Block *block, uint32_t value );
-DLL_PUBLIC bool        sqrl_block_write_int8( Sqrl_Block *block, uint8_t value );
-/** @} */ // endgroup block
-
+#include "block.h"
 #include "storage.h"
 
 #endif // SQRL_EXPERT_H_INCLUDED

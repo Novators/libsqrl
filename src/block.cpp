@@ -9,291 +9,192 @@ For more details, see the LICENSE file included with this package.
 #include <sodium.h>
 #include <stdio.h>
 #include "sqrl_internal.h"
+#include "block.h"
 
-/**
-Creates a new, empty \p Sqrl_Block
-
-@return the new \p Sqrl_Block
-*/
-
-Sqrl_Block *sqrl_block_create()
+SqrlBlock::SqrlBlock()
 {
-	Sqrl_Block *b = (Sqrl_Block*)malloc( sizeof( Sqrl_Block ) );
-	memset( b, 0, sizeof( Sqrl_Block ));
-	return b;
+	this->data = NULL;
+	this->clear();
 }
 
-/**
-Frees memory associated with a \p Sqrl_Block
-
-\warning If \p block was not properly created (cleared), this function may attempt
-to free memory that has not been allocated!
-
-@param block The \p Sqrl_Block to destroy
-@return NULL pointer
-*/
-
-Sqrl_Block *sqrl_block_destroy( Sqrl_Block *block )
+SqrlBlock::~SqrlBlock()
 {
-	sqrl_block_free( block );
-	free( block );
-	return NULL;
+	this->clear();
 }
 
-/**
-Clears a \p Sqrl_Block to zeros
-
-This should be used to clear a local variable before use.
-
-\warning If there is memory allocated at \p block->data, calling this function may result
-in a memory leak!
-
-@param block The \p Sqrl_Block to clear
-*/
-
-void sqrl_block_clear( Sqrl_Block *block )
+void SqrlBlock::clear()
 {
-	memset( block, 0, sizeof( Sqrl_Block ));
+	this->blockLength = 0;
+	this->blockType = 0;
+	this->cur = 0;
+	if (this->data) {
+		free(this->data);
+		this->data = NULL;
+	}
 }
 
-/**
-Initializes a \p Sqrl_Block
-
-\warning This function attempts to free \p block->data.  Make certain that it is NULL after
-creating a \p Sqrl_Block struct!
-
-\warning This function allocates \p blockLength bytes of memory!  Be sure to 
-\p sqrl_block_free it when you are done with it!  It is safe, though, to call 
-\p sqrl_block_init on a block that's already been used.  It will be freed before 
-it is reallocated.
-
-@param block Pointer to the \p Sqrl_Block
-@param blockType The type of block
-@param blockLength The length of the block
-@return TRUE on success; FALSE on failure
-*/
-
-bool sqrl_block_init( Sqrl_Block *block, uint16_t blockType, uint16_t blockLength )
+bool SqrlBlock::init(uint16_t blockType, uint16_t blockLength)
 {
-	sqrl_block_free( block );
-	block->data = (uint8_t*)malloc( blockLength );
-	if( block->data ) {
-		block->blockType = blockType;
-		block->blockLength = blockLength;
-		block->cur = 0;
-		sodium_mlock( block->data, blockLength );
+	this->clear();
+	this->data = (uint8_t*)malloc(blockLength);
+	if( this->data ) {
+		this->blockType = blockType;
+		this->blockLength = blockLength;
+		sodium_mlock( this->data, blockLength );
 		return true;
 	}
 	return false;
 }
 
-/**
-Frees memory allocated to a \p Sqrl_Block
-
-@param block The \p Sqrl_Block to free
-*/
-
-void sqrl_block_free( Sqrl_Block *block )
-{
-	if( block->data ) {
-		sodium_munlock( block->data, block->blockLength );
-		free( block->data );
-		block->data = NULL;
-	}
-	sodium_memzero( block, sizeof( Sqrl_Block ));
-	//memset( block, 0, sizeof( Sqrl_Block ));
-}
-
-/**
-Resizes a \p Sqrl_Block
-
-@param block The \p Sqrl_Block to resize
-@param new_size The size (in bytes) that the block should be
-@return TRUE on success; FALSE on failure
-*/
-
-bool sqrl_block_resize( Sqrl_Block *block, size_t new_size )
+bool SqrlBlock::resize(size_t new_size)
 {
 	if( new_size == 0 ) return false;
-	if( new_size == block->blockLength ) return true;
+	if( new_size == this->blockLength ) return true;
 
 	uint8_t *buf = (uint8_t*)malloc( new_size );
 	if( !buf ) return false;
 
-	if( new_size < block->blockLength ) {
-		memcpy( buf, block->data, new_size );
+	if( new_size < this->blockLength ) {
+		memcpy( buf, this->data, new_size );
 	} else {
 		memset( buf, 0, new_size );
-		memcpy( buf, block->data, block->blockLength );
+		memcpy( buf, this->data, this->blockLength );
 	}
 	
-	sodium_munlock( block->data, block->blockLength );
-	free( block->data );
-	block->data = (uint8_t*)malloc( new_size );
-	sodium_mlock( block->data, new_size );
-	block->blockLength = (uint16_t)new_size;
-	if( block->cur >= block->blockLength ) {
-		block->cur = block->blockLength - 1;
+	sodium_munlock( this->data, this->blockLength );
+	free( this->data );
+	this->data = (uint8_t*)malloc( new_size );
+	sodium_mlock( this->data, new_size );
+	this->blockLength = (uint16_t)new_size;
+	if( this->cur >= this->blockLength ) {
+		this->cur = this->blockLength - 1;
 	}
-	memcpy( block->data, buf, new_size );
+	memcpy( this->data, buf, new_size );
 	memset( buf, 0, new_size );
 	free( buf );
 	return false;
 }
 
-/**
-Moves the read/write cursor with a \p Sqrl_Block
-
-@param block The \p Sqrl_Block
-@param dest The offset where the cursor should point
-@return The current position of the cursor.  If this != \p dest, something went wrong
-*/
-
-uint16_t sqrl_block_seek( Sqrl_Block *block, uint16_t dest )
+uint16_t SqrlBlock::seek( uint16_t dest, bool offset )
 {
-	if( dest < block->blockLength ) {
-		block->cur = dest;
+	if (offset) {
+		dest += this->cur;
 	}
-	return block->cur;
+	if( dest < this->blockLength ) {
+		this->cur = dest;
+	}
+	return this->cur;
 }
 
-/**
-Writes data to a \p Sqrl_Block at the current cursor position.
-
-@param block The \p Sqrl_Block
-@param data Pointer to a buffer containing the data to be written
-@param data_len Length (in bytes) of data to write
-@return Number of bytes written; -1 on failure
-*/
-
-int sqrl_block_write( Sqrl_Block *block, uint8_t *data, size_t data_len )
+uint16_t SqrlBlock::seekBack(uint16_t dest, bool offset)
 {
-	if( block->cur + data_len > block->blockLength ) return -1;
-	memcpy( &block->data[block->cur], data, data_len );
-	block->cur += (uint16_t)data_len;
+	if (offset) {
+		dest = this->cur - dest;
+	} else {
+		dest = this->blockLength - dest;
+	}
+	if (dest > 0) {
+		this->cur = dest;
+	}
+	return this->cur;
+}
+
+int SqrlBlock::write( uint8_t *data, size_t data_len )
+{
+	if( this->cur + data_len > this->blockLength ) return -1;
+	memcpy( &this->data[this->cur], data, data_len );
+	this->cur += (uint16_t)data_len;
 	return data_len;
 }
 
-/**
-Read bytes from a \p Sqrl_Block
-
-@param block The \p Sqrl_Block
-@param data Pointer to a buffer to hold the data (must be at least \p data_len bytes)
-@param data_len Number of bytes to read
-@return Number of bytes read; -1 on failure
-*/
-
-int sqrl_block_read( Sqrl_Block *block, uint8_t *data, size_t data_len )
+int SqrlBlock::read( uint8_t *data, size_t data_len )
 {
-	if( block->cur + data_len > block->blockLength ) return -1;
-	memcpy( data, &block->data[block->cur], data_len );
-	block->cur += (uint16_t)data_len;
+	if( this->cur + data_len > this->blockLength ) return -1;
+	memcpy( data, &this->data[this->cur], data_len );
+	this->cur += (uint16_t)data_len;
 	return data_len;
 }
 
-/**
-Reads a 16-bit unsigned integer from a block at the cursor position.
-
-Moves the cursor forward by 2.
-
-@param block The \p Sqrl_Block
-@return The value read from the block
-*/
-
-uint16_t sqrl_block_read_int16( Sqrl_Block *block )
+uint16_t SqrlBlock::readInt16()
 {
-	if( block->cur + 2 > block->blockLength ) return 0;
-	uint8_t *b = (uint8_t*)(block->data + block->cur);
+	if( this->cur + 2 > this->blockLength ) return 0;
+	uint8_t *b = (uint8_t*)(this->data + this->cur);
 	uint16_t r = b[0] | (b[1] << 8);
-	block->cur += 2;
+	this->cur += 2;
 	return r;
 }
 
-/**
-Writes a 16-bit unsigned integer to a block at the current cursor position.
-
-Moves the cursor forward by 2.
-
-@param block The \p Sqrl_Block
-@param value The value to write
-@return TRUE on success; FALSE on failure
-*/
-
-bool sqrl_block_write_int16( Sqrl_Block *block, uint16_t value )
+bool SqrlBlock::writeInt16( uint16_t value )
 {
-	if( block->cur + 2 > block->blockLength ) return false;
-	block->data[block->cur++] = value & 0xff;
-	block->data[block->cur++] = value >> 8;
+	if( this->cur + 2 > this->blockLength ) return false;
+	this->data[this->cur++] = value & 0xff;
+	this->data[this->cur++] = value >> 8;
 	return true;
 }
 
-/**
-Reads a 32-bit unsigned integer from a block at the cursor position.
-
-Moves the cursor forward by 4.
-
-@param block The \p Sqrl_Block
-@return The value read from the block
-*/
-
-uint32_t sqrl_block_read_int32( Sqrl_Block *block )
+uint32_t SqrlBlock::readInt32()
 {
-	if( block->cur + 4 > block->blockLength ) return 0;
-	uint32_t r = block->data[block->cur++];
-	r |= ((uint32_t)block->data[block->cur++])<<8;
-	r |= ((uint32_t)block->data[block->cur++])<<16;
-	r |= ((uint32_t)block->data[block->cur++])<<24;
+	if( this->cur + 4 > this->blockLength ) return 0;
+	uint32_t r = this->data[this->cur++];
+	r |= ((uint32_t)this->data[this->cur++])<<8;
+	r |= ((uint32_t)this->data[this->cur++])<<16;
+	r |= ((uint32_t)this->data[this->cur++])<<24;
 	return r;
 }
 
-/**
-Writes a 32-bit unsigned integer to a block at the current cursor position.
-
-Moves the cursor forward by 4.
-
-@param block The \p Sqrl_Block
-@param value The value to write
-@return TRUE on success; FALSE on failure
-*/
-
-bool sqrl_block_write_int32( Sqrl_Block *block, uint32_t value )
+bool SqrlBlock::writeInt32( uint32_t value )
 {
-	if( block->cur + 4 > block->blockLength ) return false;
-	block->data[block->cur++] = (uint8_t)value;
-	block->data[block->cur++] = (uint8_t)(value>>8);
-	block->data[block->cur++] = (uint8_t)(value>>16);
-	block->data[block->cur++] = (uint8_t)(value>>24);
+	if( this->cur + 4 > this->blockLength ) return false;
+	this->data[this->cur++] = (uint8_t)value;
+	this->data[this->cur++] = (uint8_t)(value>>8);
+	this->data[this->cur++] = (uint8_t)(value>>16);
+	this->data[this->cur++] = (uint8_t)(value>>24);
 	return true;	
 }
 
-/**
-Reads an 8-bit unsigned integer from a block at the cursor position.
-
-Moves the cursor forward by 1.
-
-@param block The \p Sqrl_Block
-@return The value read from the block
-*/
-
-uint8_t sqrl_block_read_int8( Sqrl_Block *block )
+uint8_t SqrlBlock::readInt8()
 {
-	if( block->cur + 1 > block->blockLength ) return 0;
-	return block->data[block->cur++];
+	if( this->cur + 1 > this->blockLength ) return 0;
+	return this->data[this->cur++];
 }
 
-/**
-Writes an 8-bit unsigned integer to a block at the current cursor position.
-
-Moves the cursor forward by 1.
-
-@param block The \p Sqrl_Block
-@param value The value to write
-@return TRUE on success; FALSE on failure
-*/
-
-bool sqrl_block_write_int8( Sqrl_Block *block, uint8_t value )
+bool SqrlBlock::writeInt8( uint8_t value )
 {
-	if( block->cur + 1 > block->blockLength ) return false;
-	block->data[block->cur++] = value;
+	if( this->cur + 1 > this->blockLength ) return false;
+	this->data[this->cur++] = value;
 	return true;
+}
+
+UT_string* SqrlBlock::getData(UT_string *buf, bool append)
+{
+	if (!buf) {
+		utstring_new(buf);
+	} else {
+		if (!append) {
+			utstring_clear(buf);
+		}
+	}
+	if (this->blockLength > 0) {
+		utstring_bincpy(buf, this->data, this->blockLength);
+	}
+	return buf;
+}
+
+uint8_t* SqrlBlock::getDataPointer( bool atCursor )
+{
+	if (atCursor) {
+		return this->data + this->cur;
+	} else {
+		return this->data;
+	}
+}
+
+uint16_t SqrlBlock::getBlockLength()
+{
+	return this->blockLength;
+}
+
+uint16_t SqrlBlock::getBlockType()
+{
+	return this->blockType;
 }

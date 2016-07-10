@@ -133,9 +133,9 @@ typedef struct Sqrl_Crypt_Context
 {
 	uint8_t *plain_text;
 	uint8_t *cipher_text;
-	size_t text_len;
+	uint16_t text_len;
 	uint8_t *add;
-	size_t add_len;
+	uint16_t add_len;
 	uint8_t *tag;
 	uint8_t *salt;
 	uint8_t *iv;

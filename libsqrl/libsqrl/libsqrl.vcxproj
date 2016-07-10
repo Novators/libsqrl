@@ -175,6 +175,7 @@
     <ClCompile Include="..\..\src\util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\block.h" />
     <ClInclude Include="..\..\src\crypto\aes.h" />
     <ClInclude Include="..\..\src\crypto\gcm.h" />
     <ClInclude Include="..\..\src\detect_platform.h" />

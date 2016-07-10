@@ -20,8 +20,8 @@ public:
 	~SqrlStorage();
 
 	bool hasBlock(uint16_t blockType);
-	bool getBlock(Sqrl_Block *block, uint16_t blockType);
-	bool putBlock(Sqrl_Block *block);
+	bool getBlock(SqrlBlock *block, uint16_t blockType);
+	bool putBlock(SqrlBlock *block);
 	bool removeBlock(uint16_t blockType);
 
 	bool load(UT_string *buffer);
