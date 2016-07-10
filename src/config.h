@@ -5,8 +5,7 @@
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
-#ifndef CONFIG_H_INCLUDED
-#define CONFIG_H_INCLUDED
+#pragma once
 
 #define SCRYPT_SALSA
 #define SCRYPT_SHA256
@@ -26,6 +25,4 @@ For more details, see the LICENSE file included with this package.
 #else
   #define DLL_PUBLIC __attribute__ ((visibility ("default")))
   #define DLL_LOCAL  __attribute__ ((visibility ("hidden")))
-#endif
-
 #endif

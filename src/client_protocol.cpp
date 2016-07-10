@@ -7,6 +7,10 @@ For more details, see the LICENSE file included with this package.
 **/
 
 #include "sqrl_internal.h"
+#include "sqrl.h"
+#include "uri.h"
+#include "user.h"
+#include "transaction.h"
 
 #define SITE_KV_COUNT 6
 #define SITE_KV_LENGTH 3
@@ -31,7 +35,6 @@ static uint8_t emptyKey[SQRL_KEY_SIZE] = {0};
 bool sqrl_site_set_user_keys( Sqrl_Site *site )
 {
 	if( !site ) return false;
-	SQRL_CAST_TRANSACTION(transaction,site->transaction);
 	bool retVal = true;
 	UT_string *uid;
 	UT_string *host;
@@ -41,17 +44,18 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 	utstring_new( uid );
 	utstring_new( host );
 
-	mk = transaction->user->key( transaction, KEY_MK );
+	mk = site->transaction->getUser()->key( site->transaction, KEY_MK );
 	if( !mk ) goto ERR;
 
-	if( !transaction->altIdentity ) {
+	if( !site->transaction->getAltIdentity() ) {
 		sqrl_client_call_select_alternate_identity( site->transaction );
 	}
 
 	// Create host string...
-	char *str = transaction->uri->getHost();
-	if( transaction->altIdentity ) {
-		utstring_printf( host, "%s+%s", str, transaction->altIdentity );
+	char *str = site->transaction->getUri()->getHost();
+	char *alt = site->transaction->getAltIdentity();
+	if( alt ) {
+		utstring_printf( host, "%s+%s", str, alt );
 	} else {
 		utstring_printf( host, "%s", str );
 	}
@@ -74,10 +78,10 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 	site->keys[SITE_KEY_LOOKUP][SITE_KEY_PUB] = 1;
 
 	// Copy User Option Flags
-	site->userOptFlags = transaction->user->getFlags();
+	site->userOptFlags = site->transaction->getUser()->getFlags();
 
 	// Generate previous keys
-	piuk = transaction->user->key( site->transaction, previousKeys[ site->previous_identity ]);
+	piuk = site->transaction->getUser()->key( site->transaction, previousKeys[ site->previous_identity ]);
 	while( piuk && (0 == sodium_memcmp( piuk, emptyKey, SQRL_KEY_SIZE ))) {
 		site->previous_identity++;
 		if( site->previous_identity > 3 ) {
@@ -85,7 +89,7 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 			piuk = NULL;
 			break;
 		}
-		piuk = transaction->user->key( site->transaction, previousKeys[ site->previous_identity ]);
+		piuk = site->transaction->getUser()->key( site->transaction, previousKeys[ site->previous_identity ]);
 	}
 
 	if( piuk ) {
@@ -166,8 +170,8 @@ void parseQry( struct Sqrl_Site *site, const char *url, size_t url_len )
 	UT_string *chal;
 	UT_string *srvStr;
 	UT_string *newUrl;
-	SQRL_CAST_TRANSACTION(transaction,site->transaction);
-	SqrlUri *suri = transaction->uri;
+	SqrlTransaction *transaction = site->transaction;
+	SqrlUri *suri = transaction->getUri();
 	char *str;
 
 	utstring_new( chal );
@@ -332,10 +336,10 @@ UT_string *sqrl_site_domain( Sqrl_Site *site )
 	UT_string *ret = NULL;
 	char *tmpString;
 
-	SQRL_CAST_TRANSACTION(transaction,site->transaction);
-	if( transaction->uri && transaction->uri->getHostLength() ) {
+	SqrlUri *uri = site->transaction->getUri();
+	if( uri && uri->getHostLength() ) {
 		utstring_new( ret );
-		tmpString = transaction->uri->getHost();
+		tmpString = uri->getHost();
 		utstring_bincpy( ret, tmpString, strlen(tmpString));
 		free(tmpString);
 	}
@@ -398,8 +402,7 @@ void sqrl_site_create_unlock_keys( struct Sqrl_Site *site ) {
 	if( !site ) return;
 	uint8_t scratch[64];
 
-	SQRL_CAST_TRANSACTION(transaction, site->transaction);
-	uint8_t *ilk = transaction->user->key( site->transaction, KEY_ILK );
+	uint8_t *ilk = site->transaction->getUser()->key( site->transaction, KEY_ILK );
 	sodium_mlock( scratch, 64 );
 	uint8_t rlk[SQRL_KEY_SIZE];
 	sqrl_gen_rlk( rlk );
@@ -415,7 +418,6 @@ void sqrl_site_create_unlock_keys( struct Sqrl_Site *site ) {
 void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 {
 	if( !site || !clientString ) return;
-	SQRL_CAST_TRANSACTION(transaction, site->transaction);
 	sqrl_site_add_key_value( clientString, "idk", NULL );
 	sqrl_b64u_encode_append( clientString, site->keys[SITE_KEY_PUB], SQRL_KEY_SIZE );
 
@@ -443,9 +445,9 @@ void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 		site->keys[SITE_KEY_LOOKUP][SITE_KEY_URPK] = 0;
 		uint8_t *tiuk = NULL;
 		if( FLAG_CHECK( site->tif, SQRL_TIF_PREVIOUS_ID_MATCH )) {
-			tiuk = transaction->user->key( site->transaction, KEY_PIUK0 + site->previous_identity );
+			tiuk = site->transaction->getUser()->key( site->transaction, KEY_PIUK0 + site->previous_identity );
 		} else if( FLAG_CHECK( site->tif, SQRL_TIF_ID_MATCH )) {
-			tiuk = transaction->user->key( site->transaction, KEY_IUK );
+			tiuk = site->transaction->getUser()->key( site->transaction, KEY_IUK );
 		}
 		if( tiuk ) {
 			site->keys[SITE_KEY_LOOKUP][SITE_KEY_URSK] = 1;
@@ -609,20 +611,20 @@ int sqrl_site_count()
     return i;
 }
 
-Sqrl_Site *sqrl_client_site_create( Sqrl_Transaction t )
+Sqrl_Site *sqrl_client_site_create( SqrlTransaction *transaction )
 {
-	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return NULL;
 	Sqrl_Site *site = (Sqrl_Site*)calloc( 1, sizeof( Sqrl_Site ));
 	char *tmpString;
-	site->transaction = sqrl_transaction_hold(t);
+	site->transaction = transaction;
+	transaction->hold();
 	site->currentTransaction = SQRL_TRANSACTION_AUTH_QUERY;
 	site->previous_identity = -1;
 	site->mutex = sqrl_mutex_create();
 
-	if( transaction->uri ) {
+	if( transaction->getUri() ) {
 		utstring_new( site->serverString );
-		tmpString = transaction->uri->getChallenge();
+		tmpString = transaction->getUri()->getChallenge();
 		sqrl_b64u_encode( site->serverString, (uint8_t*)tmpString, strlen( tmpString ));
 		free(tmpString);
 		FLAG_SET( site->flags, SITE_FLAG_VALID_SERVER_STRING );
@@ -640,7 +642,6 @@ Sqrl_Site *sqrl_client_site_create( Sqrl_Transaction t )
 		list->next = item;
 	}
 	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.site );
-	END_WITH_TRANSACTION(transaction);
 	return site;
 }
 
@@ -656,7 +657,8 @@ static struct Sqrl_Site_List *_scsm( struct Sqrl_Site_List *cur, double now, boo
 		// Delete this one
 		struct Sqrl_Site_List *next = cur->next;
 
-		cur->site->transaction = (Sqrl_Transaction*)sqrl_transaction_release( cur->site->transaction );
+		cur->site->transaction->release();
+		cur->site->transaction = NULL;
 		if( cur->site->serverFriendlyName ) {
 			free( cur->site->serverFriendlyName );
 		}
@@ -693,8 +695,7 @@ Sqrl_Transaction_Status sqrl_client_do_loop( Sqrl_Site *site )
 	if( sqrl_site_generate_client_body( site )) {
 		UT_string *bdy;
 		bdy = sqrl_site_client_body( site );
-		SQRL_CAST_TRANSACTION(transaction,site->transaction);
-		char *tmpString = transaction->uri->getUrl();
+		char *tmpString = site->transaction->getUri()->getUrl();
 		sqrl_client_call_send(
 			site->transaction, tmpString, strlen( tmpString ),
 			utstring_body( bdy ), utstring_len( bdy ));
@@ -704,9 +705,8 @@ Sqrl_Transaction_Status sqrl_client_do_loop( Sqrl_Site *site )
 	return SQRL_TRANSACTION_STATUS_WORKING;
 }
 
-Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, const char *response, size_t response_len )
+Sqrl_Transaction_Status sqrl_client_resume_transaction( SqrlTransaction *transaction, const char *response, size_t response_len )
 {
-	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return SQRL_TRANSACTION_STATUS_FAILED;
 	Sqrl_Site *site = NULL;
 
@@ -714,7 +714,7 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.site );
 	struct Sqrl_Site_List *list = SQRL_SITE_LIST;
 	while( list ) {
-		if( list->site->transaction == t ) {
+		if( list->site->transaction == transaction ) {
 			site = list->site;
 			break;
 		}
@@ -731,7 +731,7 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 		}
 	} else {
 		// No existing site... Create a new one.
-		site = sqrl_client_site_create( t );
+		site = sqrl_client_site_create( transaction );
 	}
 	
 	if( !site ) goto ERR;
@@ -751,12 +751,12 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 			if( (site->tif & SQRL_TIF_ID_MATCH) || (site->tif & SQRL_TIF_PREVIOUS_ID_MATCH) ) {
 				// Already found a match.
 				if( FLAG_CHECK( site->tif, SQRL_TIF_SQRL_DISABLED )) {
-					if( transaction->type != SQRL_TRANSACTION_AUTH_ENABLE &&
-						transaction->type != SQRL_TRANSACTION_AUTH_REMOVE ) {
+					if( transaction->getType() != SQRL_TRANSACTION_AUTH_ENABLE &&
+						transaction->getType() != SQRL_TRANSACTION_AUTH_REMOVE ) {
 						goto ERR;
 					}
 				}
-				site->currentTransaction = transaction->type;
+				site->currentTransaction = transaction->getType();
 			} else {
 				// Identity not matched.
 				if( site->previous_identity < 3 ) {
@@ -765,8 +765,8 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 				} else {
 					// Tried all previous identities
 					site->previous_identity = 0;
-					site->currentTransaction = transaction->type;
-					if( transaction->type != SQRL_TRANSACTION_AUTH_IDENT ) {
+					site->currentTransaction = transaction->getType();
+					if( transaction->getType() != SQRL_TRANSACTION_AUTH_IDENT ) {
 						goto ERR;
 					}
 					// If it's an ident, we'll continue (create new account)
@@ -775,31 +775,31 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 			break;
 		case SQRL_TRANSACTION_AUTH_IDENT:
 			if( site->tif & SQRL_TIF_ID_MATCH ) {
-				transaction->status = SQRL_TRANSACTION_STATUS_SUCCESS;
+				transaction->setStatus(SQRL_TRANSACTION_STATUS_SUCCESS);
 			} else {
-				transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
+				transaction->setStatus(SQRL_TRANSACTION_STATUS_FAILED);
 			}
 			goto DONE;
 		case SQRL_TRANSACTION_AUTH_DISABLE:
 			if( FLAG_CHECK( site->tif, SQRL_TIF_SQRL_DISABLED )) {
-				transaction->status = SQRL_TRANSACTION_STATUS_SUCCESS;
+				transaction->setStatus(SQRL_TRANSACTION_STATUS_SUCCESS);
 			} else {
-				transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
+				transaction->setStatus(SQRL_TRANSACTION_STATUS_FAILED);
 			}
 			goto DONE;
 		case SQRL_TRANSACTION_AUTH_ENABLE:
 			if( !FLAG_CHECK( site->tif, SQRL_TIF_SQRL_DISABLED )) {
-				transaction->status = SQRL_TRANSACTION_STATUS_SUCCESS;
+				transaction->setStatus(SQRL_TRANSACTION_STATUS_SUCCESS);
 			} else {
-				transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
+				transaction->setStatus(SQRL_TRANSACTION_STATUS_FAILED);
 			}
 			goto DONE;
 		case SQRL_TRANSACTION_AUTH_REMOVE:
 			if( !FLAG_CHECK( site->tif, SQRL_TIF_ID_MATCH ) &&
 				!FLAG_CHECK( site->tif, SQRL_TIF_PREVIOUS_ID_MATCH )) {
-				transaction->status = SQRL_TRANSACTION_STATUS_SUCCESS;
+				transaction->setStatus(SQRL_TRANSACTION_STATUS_SUCCESS);
 			} else {
-				transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
+				transaction->setStatus(SQRL_TRANSACTION_STATUS_FAILED);
 			}
 			goto DONE;
 		default:
@@ -811,9 +811,8 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 	goto DONE;
 
 ERR:
-	transaction->status = SQRL_TRANSACTION_STATUS_FAILED;
+	transaction->setStatus(SQRL_TRANSACTION_STATUS_FAILED);
 
 DONE:
-	END_WITH_TRANSACTION(transaction);
-	return transaction->status;
+	return transaction->getStatus();
 }

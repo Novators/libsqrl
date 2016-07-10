@@ -7,6 +7,7 @@ For more details, see the LICENSE file included with this package.
 **/
 
 #include "sqrl_internal.h"
+#include "sqrl.h"
 
 static const char B64_ENC_TABLE[64] = {
 	'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',

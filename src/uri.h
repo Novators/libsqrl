@@ -1,15 +1,7 @@
-#ifndef SQRL_URI_H_INCLUDED
-#define SQRL_URI_H_INCLUDED
+#pragma once
 
-#ifndef DLL_PUBLIC
-#define DLL_PUBLIC _declspec(dllimport)
-#endif
+#include "uri.fwd.h"
 
-#include "sqrl_common.h"
-
-/** 
- * Parses a URL and stores the parts that libsqrl needs.
- */
 class DLL_PUBLIC SqrlUri
 {
 public:
@@ -28,8 +20,8 @@ public:
 	size_t getHostLength();
 
 	/** The portion of the URL that the Site Specific Keys are based on.
-	  * Typically, the FQDN, followed by an optional extension.
-	  */
+	* Typically, the FQDN, followed by an optional extension.
+	*/
 	char *getPrefix();
 	size_t getPrefixLength();
 
@@ -53,6 +45,3 @@ private:
 	char *url;
 	char *sfn;
 };
-
-
-#endif //SQRL_URI_H_INCLUDED

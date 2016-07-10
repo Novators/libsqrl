@@ -1,7 +1,9 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 
-#include "sqrl_expert.h"
+#include "sqrl.h"
+#include "storage.h"
+#include "uri.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 

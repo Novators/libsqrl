@@ -6,11 +6,8 @@ This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
 #include "sqrl_internal.h"
+#include "uri.h"
 
 Sqrl_Scheme SqrlUri::getScheme() {
 	return this->scheme;

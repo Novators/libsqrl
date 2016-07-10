@@ -5,6 +5,8 @@
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
+#pragma once
+
 #if defined(__linux__)
     #if defined(__ANDROID__)
         #define OSTYPE_Android /* Android */

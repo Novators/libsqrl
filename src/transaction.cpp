@@ -5,16 +5,23 @@
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 */
-#include <stdlib.h>
-#include <stdio.h>
 #include "sqrl_internal.h"
+#include "sqrl.h"
+#include "transaction.h"
+#include "uri.h"
+#include "user.h"
 
-struct Sqrl_Transaction_s_List *SQRL_TRANSACTION_LIST = NULL;
+struct Sqrl_Transaction_List {
+	SqrlTransaction *transaction;
+	struct Sqrl_Transaction_List *next;
+};
+
+struct Sqrl_Transaction_List *SQRL_TRANSACTION_LIST = NULL;
 
 #if defined(DEBUG) && DEBUG_PRINT_TRANSACTION_COUNT==1
 #define PRINT_TRANSACTION_COUNT(tag) \
 int _ptcI = 0;\
-struct Sqrl_Transaction_s_List *_ptcC = SQRL_TRANSACTION_LIST;\
+struct Sqrl_Transaction_List *_ptcC = SQRL_TRANSACTION_LIST;\
 while( _ptcC ) {\
     _ptcI++;\
     _ptcC = _ptcC->next;\
@@ -24,27 +31,25 @@ printf( "%10s: %d\n", tag, _ptcI )
 #define PRINT_TRANSACTION_COUNT(tag)
 #endif
 
-Sqrl_Transaction sqrl_transaction_create( Sqrl_Transaction_Type type )
+SqrlTransaction::SqrlTransaction( Sqrl_Transaction_Type type)
 {
-    struct Sqrl_Transaction_s *transaction = (struct Sqrl_Transaction_s*)calloc( 1, sizeof( struct Sqrl_Transaction_s ));
-    struct Sqrl_Transaction_s_List *list = (struct Sqrl_Transaction_s_List*)calloc( 1, sizeof( struct Sqrl_Transaction_s_List ));
-    transaction->type = type;
-    transaction->referenceCount = 1;
-    transaction->mutex = sqrl_mutex_create();
-    list->transaction = transaction;
+    struct Sqrl_Transaction_List *list = (struct Sqrl_Transaction_List*)calloc( 1, sizeof( struct Sqrl_Transaction_List ));
+	this->type = type;
+    this->referenceCount = 1;
+    this->mutex = sqrl_mutex_create();
+    list->transaction = this;
     sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
     list->next = SQRL_TRANSACTION_LIST;
     SQRL_TRANSACTION_LIST = list;
-    PRINT_TRANSACTION_COUNT( "trn_create" );
     sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
-    return (Sqrl_Transaction)transaction;
 }
 
-int sqrl_transaction_count()
+
+int SqrlTransaction::countTransactions()
 {
     sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
     int i = 0;
-    struct Sqrl_Transaction_s_List *list = SQRL_TRANSACTION_LIST;
+    struct Sqrl_Transaction_List *list = SQRL_TRANSACTION_LIST;
     while( list ) {
         i++;
         list = list->next;
@@ -53,123 +58,137 @@ int sqrl_transaction_count()
     return i;
 }
 
-Sqrl_Transaction sqrl_transaction_hold( Sqrl_Transaction t )
+void SqrlTransaction::hold()
 {
-    SQRL_CAST_TRANSACTION(transaction,t);
-    if( !transaction ) return NULL;
-    struct Sqrl_Transaction_s_List *l;
+    struct Sqrl_Transaction_List *l;
     sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
     l = SQRL_TRANSACTION_LIST;
     while( l ) {
-        if( l->transaction == transaction ) {
-            sqrl_mutex_enter( transaction->mutex );
-            transaction->referenceCount++;
-            sqrl_mutex_leave( transaction->mutex );
+        if( l->transaction == this ) {
+            sqrl_mutex_enter( this->mutex );
+            this->referenceCount++;
+            sqrl_mutex_leave( this->mutex );
             break;
         }
         l = l->next;
     }
     sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
-    return (Sqrl_Transaction)transaction;
 }
 
-Sqrl_Transaction sqrl_transaction_release( Sqrl_Transaction t )
+void SqrlTransaction::release()
 {
-    SQRL_CAST_TRANSACTION(transaction,t);
-    if( transaction == NULL ) return NULL;
-    struct Sqrl_Transaction_s *freeMe = NULL;
-    struct Sqrl_Transaction_s_List *l = NULL, *n = NULL;
+	bool freeMe = false;
+    struct Sqrl_Transaction_List *l = NULL, *n = NULL;
     sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
     n = SQRL_TRANSACTION_LIST;
     while( n ) {
-        if( n->transaction == transaction ) {
-            sqrl_mutex_enter( transaction->mutex );
-            transaction->referenceCount--;
-            if( transaction->referenceCount < 1 ) {
+        if( n->transaction == this ) {
+            sqrl_mutex_enter( this->mutex );
+            this->referenceCount--;
+            if( this->referenceCount < 1 ) {
                 if( l ) l->next = n->next;
                 else SQRL_TRANSACTION_LIST = n->next;
                 free( n );
-                freeMe = transaction;
+                freeMe = true;
             }
-            sqrl_mutex_leave( transaction->mutex );
+            sqrl_mutex_leave( this->mutex );
             break;
         }
         l = n;
         n = l->next;
     }
-    PRINT_TRANSACTION_COUNT( "trn_rel" );
     sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
     if( freeMe ) {
-		if (freeMe->user) freeMe->user->release();
-		if (freeMe->uri) delete(freeMe->uri);
-        if( freeMe->string ) free( freeMe->string );
-        if( freeMe->altIdentity ) free( freeMe->altIdentity );
+		if (this->user) {
+			this->user->release();
+		}
+		if (this->uri) delete(this->uri);
+        if( this->string ) free( this->string );
+        if( this->altIdentity ) free( this->altIdentity );
         // free ->data
-        sqrl_mutex_destroy( freeMe->mutex );
-        free( freeMe );
+        sqrl_mutex_destroy( this->mutex );
+        free( this );
     }
-    return NULL;
 }
 
-void sqrl_transaction_set_user( Sqrl_Transaction t, SqrlUser *u )
+void SqrlTransaction::setUser( SqrlUser *u )
 {
     if( !u ) return;
-    WITH_TRANSACTION(transaction,t);
-    if( !transaction ) {
-        return;
-    }
-	if (transaction->user) {
-		transaction->user->release();
+	if (this->user) {
+		this->user->release();
 	}
-	transaction->user = u;
+	this->user = u;
 	u->hold();
-    END_WITH_TRANSACTION(transaction);
 }
 
-/**
-Gets the current \p Sqrl_Transaction_Status of a \p Sqrl_Transaction
-
-@param transaction the \p Sqrl_Transaction
-@return \p Sqrl_Transaction_Status
-*/
-
-Sqrl_Transaction_Status sqrl_transaction_status( Sqrl_Transaction t )
+Sqrl_Transaction_Status SqrlTransaction::getStatus()
 {
-    Sqrl_Transaction_Status status = SQRL_TRANSACTION_STATUS_FAILED;
-    SQRL_CAST_TRANSACTION(transaction,t);
-    if( transaction ) status = transaction->status;
-    return status;
+	return this->status;
 }
 
-/**
-Gets the \p Sqrl_Transaction_Type of a \p Sqrl_Transaction
-
-@param transaction the \p Sqrl_Transaction
-@return \p Sqrl_Transaction_Type
-*/
-
-Sqrl_Transaction_Type sqrl_transaction_type( Sqrl_Transaction t )
+void SqrlTransaction::setStatus(Sqrl_Transaction_Status status)
 {
-    Sqrl_Transaction_Type type = SQRL_TRANSACTION_UNKNOWN;
-    SQRL_CAST_TRANSACTION(transaction,t);
-    if( transaction ) type = transaction->type;
-    return type;
+	this->status = status;
 }
 
-/**
-Gets the \p Sqrl_User associated with a \p Sqrl_Transaction
-
-@param transaction the \p Sqrl_Transaction
-@return \p Sqrl_User the associated user
-@return NULL A \p Sqrl_User is not associated with this transaction
-*/
-
-SqrlUser *sqrl_transaction_user( Sqrl_Transaction t )
+Sqrl_Export SqrlTransaction::getExportType()
 {
-    SqrlUser *user = NULL;
-    SQRL_CAST_TRANSACTION(transaction,t);
-    if( transaction ) user = transaction->user;
-    return user;
+	return this->exportType;
+}
+
+void SqrlTransaction::setExportType(Sqrl_Export type)
+{
+	this->exportType = type;
+}
+
+Sqrl_Encoding SqrlTransaction::getEncodingType()
+{
+	return this->encodingType;
+}
+
+void SqrlTransaction::setEncodingType(Sqrl_Encoding type)
+{
+	this->encodingType = type;
+}
+
+Sqrl_Transaction_Type SqrlTransaction::getType()
+{
+	return this->type;
+}
+
+SqrlUser *SqrlTransaction::getUser()
+{
+	return this->user;
+}
+
+char *SqrlTransaction::getAltIdentity()
+{
+	return this->altIdentity;
+}
+
+void SqrlTransaction::setAltIdentity(const char *alt)
+{
+	if (this->altIdentity) {
+		free(this->altIdentity);
+		this->altIdentity = NULL;
+	}
+	if (alt) {
+		this->altIdentity = (char*)malloc(strlen(alt) + 1);
+		strcpy(this->altIdentity, alt);
+	}
+}
+
+SqrlUri *SqrlTransaction::getUri()
+{
+	return this->uri;
+}
+
+void SqrlTransaction::setUri(SqrlUri *uri)
+{
+	if (this->uri) {
+		delete(this->uri);
+	}
+	this->uri = uri->copy();
 }
 
 /**
@@ -183,21 +202,35 @@ the result of a \p sqrl_client_export_user() during the
 @return \p size_t Length of the \p Sqrl_Transaction's string
 */
 
-size_t sqrl_transaction_string( Sqrl_Transaction t, char *buf, size_t *len )
+size_t SqrlTransaction::getString( char *buf, size_t *len )
 {
-    WITH_TRANSACTION(transaction,t);
-    size_t retVal = transaction->string_len;
-    if( transaction->string ) {
+    size_t retVal = this->string_len;
+    if( this->string ) {
         if( buf && len && *len ) {
             if( retVal < *len ) {
-                memcpy( buf, transaction->string, retVal );
+                memcpy( buf, this->string, retVal );
                 buf[retVal] = 0;
                 *len = retVal;
             } else {
-                memcpy( buf, transaction->string, *len );
+                memcpy( buf, this->string, *len );
             }
         }
     }
-    END_WITH_TRANSACTION(transaction);
     return retVal;
 }
+
+void SqrlTransaction::setString(char *buf, size_t len)
+{
+	if (this->string) {
+		free(this->string);
+	}
+	this->string = NULL;
+	this->string_len = 0;
+	if (buf && len > 0) {
+		this->string = (char*)malloc(len + 1);
+		memcpy(this->string, buf, len);
+		this->string[len] = 0;
+		this->string_len = len;
+	}
+}
+

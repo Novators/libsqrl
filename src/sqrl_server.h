@@ -5,14 +5,15 @@
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/  
-#ifndef SQRL_SERVER_H_INCLUDED
-#define SQRL_SERVER_H_INCLUDED
+#pragma once
 
 #ifndef DLL_PUBLIC
 #define DLL_PUBLIC _declspec(dllimport)
 #endif
 
-#include "sqrl_common.h"
+#include <stdint.h>
+#include "sqrl.h"
+#include "uri.fwd.h"
 
 #define SQRL_SERVER_MAC_LENGTH 16
 #define SQRL_SERVER_TOKEN_SFN "_LIBSQRL_SFN_"
@@ -58,114 +59,111 @@ For more details, see the LICENSE file included with this package.
 
 
 typedef struct Sqrl_Server_User {
-    uint8_t idk[SQRL_KEY_SIZE];
-    uint8_t suk[SQRL_KEY_SIZE];
-    uint8_t vuk[SQRL_KEY_SIZE];
-    uint16_t flags;
+	uint8_t idk[SQRL_KEY_SIZE];
+	uint8_t suk[SQRL_KEY_SIZE];
+	uint8_t vuk[SQRL_KEY_SIZE];
+	uint16_t flags;
 } Sqrl_Server_User;
 
 #pragma pack(push,4)
 typedef struct Sqrl_Nut {
-    uint32_t ip;
-    uint32_t random;
-    uint64_t timestamp;
+	uint32_t ip;
+	uint32_t random;
+	uint64_t timestamp;
 } Sqrl_Nut;
 #pragma pack(pop)
 
 typedef enum {
-    SQRL_SCB_USER_FIND,
-    SQRL_SCB_USER_CREATE,
-    SQRL_SCB_USER_UPDATE,
-    SQRL_SCB_USER_DELETE,
-    SQRL_SCB_USER_REKEYED,
-    SQRL_SCB_USER_IDENTIFIED
+	SQRL_SCB_USER_FIND,
+	SQRL_SCB_USER_CREATE,
+	SQRL_SCB_USER_UPDATE,
+	SQRL_SCB_USER_DELETE,
+	SQRL_SCB_USER_REKEYED,
+	SQRL_SCB_USER_IDENTIFIED
 } Sqrl_Server_User_Op;
 
 typedef struct Sqrl_Server {
-    SqrlUri *uri;
-    char *sfn;
-    uint8_t key[32];
-    uint64_t nut_expires;
-    void *onUserOp;
-    void *onSend;
+	SqrlUri *uri;
+	char *sfn;
+	uint8_t key[32];
+	uint64_t nut_expires;
+	void *onUserOp;
+	void *onSend;
 } Sqrl_Server;
 
 typedef struct Sqrl_Server_Context {
-    Sqrl_Server *server;
-    Sqrl_Server_User *user;
-    Sqrl_Nut nut;
-    Sqrl_Cmd command;
-    Sqrl_Tif tif;
-    uint16_t flags;
-    char *context_strings[CONTEXT_KV_COUNT];
-    char *client_strings[CLIENT_KV_COUNT];
-    char *server_strings[SERVER_KV_COUNT];
-    char *reply;
+	Sqrl_Server *server;
+	Sqrl_Server_User *user;
+	Sqrl_Nut nut;
+	Sqrl_Cmd command;
+	Sqrl_Tif tif;
+	uint16_t flags;
+	char *context_strings[CONTEXT_KV_COUNT];
+	char *client_strings[CLIENT_KV_COUNT];
+	char *server_strings[SERVER_KV_COUNT];
+	char *reply;
 } Sqrl_Server_Context;
 
 typedef bool (sqrl_scb_user)(
-    Sqrl_Server_User_Op op,
-    char *host,
-    char *idk,
-    char *pidk,
-    char *blob );
+	Sqrl_Server_User_Op op,
+	char *host,
+	char *idk,
+	char *pidk,
+	char *blob);
 typedef void (sqrl_scb_send)(
-    Sqrl_Server_Context *context,
-    char *reply,
-    size_t reply_len );
+	Sqrl_Server_Context *context,
+	char *reply,
+	size_t reply_len);
 
 
 void sqrl_scb_send_default(
-    Sqrl_Server_Context *context,
-    char *reply,
-    size_t reply_len );
+	Sqrl_Server_Context *context,
+	char *reply,
+	size_t reply_len);
 
 bool sqrl_scb_user_default(
-    Sqrl_Server_User_Op op,
-    char *host,
-    char *idk,
-    char *pidk,
-    char *blob );
+	Sqrl_Server_User_Op op,
+	char *host,
+	char *idk,
+	char *pidk,
+	char *blob);
 
 DLL_PUBLIC bool sqrl_server_init(
-    Sqrl_Server *server,
-    char *uri,
-    char *sfn,
-    char *passcode,
-    size_t passcode_len,
-    sqrl_scb_user *onUserOp,
-    sqrl_scb_send *onSend,
-    int nut_life );
-void sqrl_server_clear( Sqrl_Server *server );
+	Sqrl_Server *server,
+	char *uri,
+	char *sfn,
+	char *passcode,
+	size_t passcode_len,
+	sqrl_scb_user *onUserOp,
+	sqrl_scb_send *onSend,
+	int nut_life);
+void sqrl_server_clear(Sqrl_Server *server);
 DLL_PUBLIC Sqrl_Server *sqrl_server_create(
-    char *uri,
-    char *sfn,
-    char *passcode,
-    size_t passcode_len,
-    sqrl_scb_user *onUserOp,
-    sqrl_scb_send *onSend,
-    int nut_life );
-DLL_PUBLIC Sqrl_Server *sqrl_server_destroy( Sqrl_Server *server );
+	char *uri,
+	char *sfn,
+	char *passcode,
+	size_t passcode_len,
+	sqrl_scb_user *onUserOp,
+	sqrl_scb_send *onSend,
+	int nut_life);
+DLL_PUBLIC Sqrl_Server *sqrl_server_destroy(Sqrl_Server *server);
 
 DLL_PUBLIC bool sqrl_server_nut_generate(
-    Sqrl_Server *server,
-    Sqrl_Nut *nut, 
-    uint32_t ip );
+	Sqrl_Server *server,
+	Sqrl_Nut *nut,
+	uint32_t ip);
 DLL_PUBLIC bool sqrl_server_nut_decrypt(
-    Sqrl_Server *server,
-    Sqrl_Nut *nut );
+	Sqrl_Server *server,
+	Sqrl_Nut *nut);
 
-DLL_PUBLIC Sqrl_Server_Context *sqrl_server_context_create( Sqrl_Server *server );
-DLL_PUBLIC Sqrl_Server_Context *sqrl_server_context_destroy( Sqrl_Server_Context *context );
-void sqrl_server_add_mac( Sqrl_Server *server, UT_string *str, char sep );
-bool sqrl_server_verify_mac( Sqrl_Server *server, UT_string *str ); 
+DLL_PUBLIC Sqrl_Server_Context *sqrl_server_context_create(Sqrl_Server *server);
+DLL_PUBLIC Sqrl_Server_Context *sqrl_server_context_destroy(Sqrl_Server_Context *context);
+void sqrl_server_add_mac(Sqrl_Server *server, UT_string *str, char sep);
+bool sqrl_server_verify_mac(Sqrl_Server *server, UT_string *str);
 
-DLL_PUBLIC char *sqrl_server_create_link( Sqrl_Server *server, uint32_t ip );
+DLL_PUBLIC char *sqrl_server_create_link(Sqrl_Server *server, uint32_t ip);
 DLL_PUBLIC void sqrl_server_handle_query(
-    Sqrl_Server_Context *context,
-    uint32_t client_ip,
-    const char *query,
-    size_t query_len );
-
-
-#endif // SQRL_SERVER_H_INCLUDED
+	Sqrl_Server_Context *context,
+	uint32_t client_ip,
+	const char *query,
+	size_t query_len);

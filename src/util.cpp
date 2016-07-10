@@ -6,14 +6,10 @@ This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <ctype.h>
-#include <sodium.h>
-
-
 #include "sqrl_internal.h"
+#include "sqrl.h"
+#include "user.h"
+#include "transaction.h"
 #include "crypto/gcm.h"
 
 
@@ -66,7 +62,7 @@ int sqrl_stop()
 #endif
         sqrl_client_site_maintenance( true );
         sqrl_client_user_maintenance( true );
-        transactionCount = sqrl_transaction_count();
+        transactionCount = SqrlTransaction::countTransactions();
 		userCount = SqrlUser::countUsers();
         siteCount = sqrl_site_count();
 #ifdef DEBUG

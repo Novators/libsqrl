@@ -7,6 +7,9 @@ For more details, see the LICENSE file included with this package.
 */
 
 #include "sqrl_internal.h"
+#include "sqrl.h"
+#include "sqrl_server.h"
+#include "uri.h"
 
 #define COMMAND_COUNT 5
 

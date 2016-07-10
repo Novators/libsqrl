@@ -19,8 +19,6 @@ For more details, see the LICENSE file included with this package.
 #define SQRL_ENTROPY_REPEAT_SLOW 190
 #define SQRL_ENTROPY_TARGET 512
 
-#include <sodium.h>
-
 #include "rdrand.h"
 #include "../sqrl_internal.h"
 

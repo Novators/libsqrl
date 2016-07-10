@@ -6,10 +6,10 @@ This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
 
-#include <sodium.h>
-#include <stdio.h>
 #include "sqrl_internal.h"
 #include "storage.h"
+#include "block.h"
+#include "uri.h"
 
 // TODO: Determine PAGE_SIZE at runtime?
 #define PAGE_SIZE 4096

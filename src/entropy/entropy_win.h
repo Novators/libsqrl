@@ -5,8 +5,7 @@
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
-#ifndef ENTROPY_WIN_H_INCLUDED
-#define ENTROPY_WIN_H_INCLUDED
+#pragma once
 
 #include <Windows.h>
 #include <stdlib.h>
@@ -47,7 +46,7 @@ struct sqrl_entropy_bracket_block
 	uint64_t rdrand[32];
 };
 
-void sqrl_store_fast_flux_entropy( struct sqrl_fast_flux_entropy* ffe )
+void sqrl_store_fast_flux_entropy(struct sqrl_fast_flux_entropy* ffe)
 {
 	QueryPerformanceCounter(&ffe->performanceCounter);
 	GetSystemTimeAsFileTime(&ffe->filetime);
@@ -60,29 +59,28 @@ void sqrl_store_fast_flux_entropy( struct sqrl_fast_flux_entropy* ffe )
 }
 
 
-void sqrl_add_entropy_bracket( struct sqrl_entropy_pool* pool, uint8_t* seed )
+void sqrl_add_entropy_bracket(struct sqrl_entropy_pool* pool, uint8_t* seed)
 {
 	int i;
 	struct sqrl_entropy_bracket_block bracket;
-	memset( &bracket, 0, sizeof( struct sqrl_entropy_bracket_block ));
-	sqrl_store_fast_flux_entropy( &bracket.ffe );
-	if( seed ) {
-		memcpy( &bracket.seed, seed, crypto_hash_sha512_BYTES );
+	memset(&bracket, 0, sizeof(struct sqrl_entropy_bracket_block));
+	sqrl_store_fast_flux_entropy(&bracket.ffe);
+	if (seed) {
+		memcpy(&bracket.seed, seed, crypto_hash_sha512_BYTES);
 	}
-	randombytes_buf( &bracket.random, crypto_hash_sha512_BYTES );
-	if( rdrand_available() ) {
-		for( i = 0; i < 32; i++ ) {
-			rdrand64( &bracket.rdrand[i] );
+	randombytes_buf(&bracket.random, crypto_hash_sha512_BYTES);
+	if (rdrand_available()) {
+		for (i = 0; i < 32; i++) {
+			rdrand64(&bracket.rdrand[i]);
 		}
-	} else {
-		randombytes_buf( &bracket.rdrand, 256 );
+	}
+	else {
+		randombytes_buf(&bracket.rdrand, 256);
 	}
 	bracket.processID = GetCurrentProcessId();
 	bracket.threadID = GetCurrentThreadId();
 	bracket.desktopWindow = GetDesktopWindow();
 	bracket.winsta = GetProcessWindowStation();
 	GetCursorPos(&bracket.curPos);
-	crypto_hash_sha512_update( &pool->state, (unsigned char*)(&bracket), sizeof( struct sqrl_entropy_bracket_block ));
+	crypto_hash_sha512_update(&pool->state, (unsigned char*)(&bracket), sizeof(struct sqrl_entropy_bracket_block));
 }
-
-#endif

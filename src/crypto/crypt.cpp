@@ -12,6 +12,8 @@ extern "C" {
 }
 
 #include "../sqrl_internal.h"
+#include "aes.h"
+#include "gcm.h"
 
 #define ENSCRYPT_R 256
 #define ENSCRYPT_P 1

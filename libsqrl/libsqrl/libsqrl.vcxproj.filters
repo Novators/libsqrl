@@ -13,51 +13,36 @@
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
       <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
     </Filter>
+    <Filter Include="Header Files\Crypto">
+      <UniqueIdentifier>{3089433a-aa2e-4e69-a332-a8383bf1fe12}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Entropy">
+      <UniqueIdentifier>{642d36bd-c52e-4f37-a30f-a7e2c37ac4c3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Crypto">
+      <UniqueIdentifier>{a97d2e3e-7af7-46e4-aeaa-fcb9551a6bec}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Entropy">
+      <UniqueIdentifier>{f791e6ef-4836-4753-a05e-69ddc96fa676}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Classes">
+      <UniqueIdentifier>{5c2d5464-55a6-4f70-905f-0507e9e854f4}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Classes">
+      <UniqueIdentifier>{2f953f56-41a8-4db5-b033-0227908f6dd2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Util">
+      <UniqueIdentifier>{e547ce9c-6fc9-48f4-b96a-88731eea1f96}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Util">
+      <UniqueIdentifier>{05a70570-9ea4-4777-b3b5-b7c85d597910}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\user_storage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\user.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\uri.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\transaction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\storage.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\server_protocol.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\server.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\realtime.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\entropy\rdrand.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\platform.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\crypto\gcm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\entropy\entropy.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\encdec.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\crypto\crypt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\client_protocol.cpp">
@@ -66,72 +51,123 @@
     <ClCompile Include="..\..\src\client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\block.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\crypto\aes.cpp">
-      <Filter>Source Files</Filter>
+      <Filter>Source Files\Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\crypto\crypt.cpp">
+      <Filter>Source Files\Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\crypto\gcm.cpp">
+      <Filter>Source Files\Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\entropy\rdrand.cpp">
+      <Filter>Source Files\Entropy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\entropy\entropy.cpp">
+      <Filter>Source Files\Entropy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\block.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\uri.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\user.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\user_storage.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\storage.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\encdec.cpp">
+      <Filter>Source Files\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\platform.cpp">
+      <Filter>Source Files\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\realtime.cpp">
+      <Filter>Source Files\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\util.cpp">
+      <Filter>Source Files\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\transaction.cpp">
+      <Filter>Source Files\Classes</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\crypto\aes.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\detect_platform.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\entropy\entropy.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\entropy\entropy_linux.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\entropy\entropy_mac.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\entropy\entropy_win.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\entropy\rdrand.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\sqrl_client.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\sqrl_common.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\sqrl_expert.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\sqrl_internal.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\sqrl_server.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\utstring.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\..\src\crypto\aes.h">
+      <Filter>Header Files\Crypto</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\crypto\gcm.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Crypto</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\uri.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\..\src\entropy\entropy.h">
+      <Filter>Header Files\Entropy</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\storage.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\..\src\entropy\entropy_linux.h">
+      <Filter>Header Files\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\entropy\entropy_mac.h">
+      <Filter>Header Files\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\entropy\entropy_win.h">
+      <Filter>Header Files\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\entropy\rdrand.h">
+      <Filter>Header Files\Entropy</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\block.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\uri.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\storage.h">
+      <Filter>Header Files\Classes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\user.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\detect_platform.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\utstring.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transaction.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\sqrl.h">
       <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\block.fwd.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\storage.fwd.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\transaction.fwd.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\uri.fwd.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\user.fwd.h">
+      <Filter>Header Files\Classes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\config.h">
-      <Filter>Header Files</Filter>
+      <Filter>Header Files\Util</Filter>
     </None>
   </ItemGroup>
 </Project>

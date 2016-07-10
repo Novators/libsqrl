@@ -5,8 +5,7 @@
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
-#ifndef ENTROPY_MAC_H_INCLUDED
-#define ENTROPY_MAC_H_INCLUDED
+#pragma once
 
 #include <mach/clock.h>
 #include <mach/mach.h>
@@ -14,7 +13,6 @@ For more details, see the LICENSE file included with this package.
 #include <sys/syscall.h>
 #include <unistd.h>
 #include <sys/time.h>
-
 
 struct sqrl_fast_flux_entropy
 {
@@ -35,35 +33,34 @@ struct sqrl_entropy_bracket_block
 	uint64_t rdrand[32];
 };
 
-static void sqrl_store_fast_flux_entropy( struct sqrl_fast_flux_entropy* ffe )
+static void sqrl_store_fast_flux_entropy(struct sqrl_fast_flux_entropy* ffe)
 {
 	ffe->mat = mach_absolute_time();
-	gettimeofday( &ffe->realtime, NULL );
-	getrusage( RUSAGE_SELF, &ffe->rusage );
+	gettimeofday(&ffe->realtime, NULL);
+	getrusage(RUSAGE_SELF, &ffe->rusage);
 	asm volatile("rdtsc" : "=a" (ffe->rdtsclow), "=d" (ffe->rdtschigh));
 }
 
 
-static void sqrl_add_entropy_bracket( struct sqrl_entropy_pool* pool, uint8_t* seed )
+static void sqrl_add_entropy_bracket(struct sqrl_entropy_pool* pool, uint8_t* seed)
 {
 	int i;
 	struct sqrl_entropy_bracket_block bracket;
-	memset( &bracket, 0, sizeof( struct sqrl_entropy_bracket_block ));
-	sqrl_store_fast_flux_entropy( &bracket.ffe );
-	if( seed ) {
-		memcpy( &bracket.seed, seed, crypto_hash_sha512_BYTES );
+	memset(&bracket, 0, sizeof(struct sqrl_entropy_bracket_block));
+	sqrl_store_fast_flux_entropy(&bracket.ffe);
+	if (seed) {
+		memcpy(&bracket.seed, seed, crypto_hash_sha512_BYTES);
 	}
-	randombytes_buf( &bracket.random, crypto_hash_sha512_BYTES );
-	if( rdrand_available() ) {
-		for( i = 0; i < 32; i++ ) {
-			rdrand64( &bracket.rdrand[i] );
+	randombytes_buf(&bracket.random, crypto_hash_sha512_BYTES);
+	if (rdrand_available()) {
+		for (i = 0; i < 32; i++) {
+			rdrand64(&bracket.rdrand[i]);
 		}
-	} else {
-		randombytes_buf( &bracket.rdrand, 256 );
+	}
+	else {
+		randombytes_buf(&bracket.rdrand, 256);
 	}
 	bracket.processId = getpid();
 	bracket.threadId = syscall(SYS_gettid);
-	crypto_hash_sha512_update( &pool->state, (unsigned char*)(&bracket), sizeof( struct sqrl_entropy_bracket_block ));
+	crypto_hash_sha512_update(&pool->state, (unsigned char*)(&bracket), sizeof(struct sqrl_entropy_bracket_block));
 }
-
-#endif

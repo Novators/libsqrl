@@ -1,18 +1,11 @@
-#ifndef SQRL_STORAGE_H_INCLUDED
-#define SQRL_STORAGE_H_INCLUDED
-
-#ifndef DLL_PUBLIC
-#define DLL_PUBLIC _declspec(dllimport)
-#endif
+#pragma once
 
 #include <stdint.h>
-#include "uri.h"
-#include "block.h"
+#include "utstring.h"
+#include "storage.fwd.h"
+#include "block.fwd.h"
+#include "uri.fwd.h"
 
-
-/**
-* Parses a URL and stores the parts that libsqrl needs.
-*/
 class DLL_PUBLIC SqrlStorage
 {
 public:
@@ -35,6 +28,3 @@ public:
 private:
 	void *data;
 };
-
-
-#endif //SQRL_STORAGE_H_INCLUDED

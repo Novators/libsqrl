@@ -1,18 +1,9 @@
-#ifndef SQRL_BLOCK_H_INCLUDED
-#define SQRL_BLOCK_H_INCLUDED
-
-#ifndef DLL_PUBLIC
-#define DLL_PUBLIC _declspec(dllimport)
-#endif
+#pragma once
 
 #include <stdint.h>
-#include "sqrl_expert.h"
-#include "uri.h"
+#include "utstring.h"
+#include "block.fwd.h"
 
-
-/**
-* Parses a URL and stores the parts that libsqrl needs.
-*/
 class DLL_PUBLIC SqrlBlock
 {
 public:
@@ -33,7 +24,7 @@ public:
 	bool        writeInt32(uint32_t value);
 	bool        writeInt8(uint8_t value);
 	UT_string*	getData(UT_string *buf, bool append = false);
-	uint8_t*	getDataPointer( bool atCursor = false );
+	uint8_t*	getDataPointer(bool atCursor = false);
 	uint16_t	getBlockLength();
 	uint16_t	getBlockType();
 
@@ -48,5 +39,3 @@ private:
 	uint8_t *data;
 };
 
-
-#endif //SQRL_BLOCK_H_INCLUDED

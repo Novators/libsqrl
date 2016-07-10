@@ -7,6 +7,7 @@ For more details, see the LICENSE file included with this package.
 **/  
 
 #include "sqrl_internal.h"
+#include "sqrl.h"
 
 void sqrl_sleep(int sleepMs)
 {

@@ -175,6 +175,7 @@
     <ClCompile Include="..\..\src\util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\block.fwd.h" />
     <ClInclude Include="..\..\src\block.h" />
     <ClInclude Include="..\..\src\crypto\aes.h" />
     <ClInclude Include="..\..\src\crypto\gcm.h" />
@@ -184,21 +185,18 @@
     <ClInclude Include="..\..\src\entropy\entropy_mac.h" />
     <ClInclude Include="..\..\src\entropy\entropy_win.h" />
     <ClInclude Include="..\..\src\entropy\rdrand.h" />
-    <ClInclude Include="..\..\src\sqrl_client.h">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
-    </ClInclude>
-    <ClInclude Include="..\..\src\sqrl_common.h">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
-    </ClInclude>
-    <ClInclude Include="..\..\src\sqrl_expert.h">
-      <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
-    </ClInclude>
+    <ClInclude Include="..\..\src\sqrl.h" />
     <ClInclude Include="..\..\src\sqrl_internal.h" />
     <ClInclude Include="..\..\src\sqrl_server.h">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
     </ClInclude>
+    <ClInclude Include="..\..\src\storage.fwd.h" />
     <ClInclude Include="..\..\src\storage.h" />
+    <ClInclude Include="..\..\src\transaction.fwd.h" />
+    <ClInclude Include="..\..\src\transaction.h" />
+    <ClInclude Include="..\..\src\uri.fwd.h" />
     <ClInclude Include="..\..\src\uri.h" />
+    <ClInclude Include="..\..\src\user.fwd.h" />
     <ClInclude Include="..\..\src\user.h" />
     <ClInclude Include="..\..\src\utstring.h" />
   </ItemGroup>

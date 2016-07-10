@@ -5,9 +5,9 @@
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 */
-#include <stdlib.h>
-#include <stdio.h>
 #include "sqrl_internal.h"
+#include "user.h"
+#include "transaction.h"
 
 struct SqrlUserList {
 	SqrlUser *user;
@@ -236,9 +236,8 @@ void SqrlUser::hintLock()
 	if( this->keys->password_len == 0 ) {
 		return;
 	}
-	Sqrl_Transaction t = sqrl_transaction_create( SQRL_TRANSACTION_IDENTITY_LOCK );
-	SQRL_CAST_TRANSACTION(transaction,t);
-	transaction->user = this;
+	SqrlTransaction *transaction = new SqrlTransaction( SQRL_TRANSACTION_IDENTITY_LOCK );
+	transaction->setUser(this);
 	struct Sqrl_User_s_callback_data cbdata;
 	cbdata.transaction = transaction;
 	cbdata.adder = 0;
@@ -284,26 +283,23 @@ void SqrlUser::hintLock()
 	sodium_memzero( key, SQRL_KEY_SIZE );
 
 DONE:
-	transaction->user = NULL;
-	sqrl_transaction_release( transaction );
+	transaction->release();
 }
 
-void SqrlUser::hintUnlock( Sqrl_Transaction t, 
+void SqrlUser::hintUnlock( SqrlTransaction *transaction, 
 				char *hint, 
 				size_t length )
 {
 	if( hint == NULL || length == 0 ) {
-		sqrl_client_require_hint( t );
+		sqrl_client_require_hint( transaction );
 		return;
 	}
-	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return;
-	if (transaction->user != this || ! this->isHintLocked()) {
-		END_WITH_TRANSACTION(transaction);
+	if (transaction->getUser() != this || ! this->isHintLocked()) {
 		return;
 	}
 	struct Sqrl_User_s_callback_data cbdata;
-	cbdata.transaction = t;
+	cbdata.transaction = transaction;
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
 
@@ -329,16 +325,12 @@ void SqrlUser::hintUnlock( Sqrl_Transaction t,
 	this->hint_iterations = 0;
 	sodium_memzero( key, SQRL_KEY_SIZE );
 	sodium_memzero( this->keys->scratch, KEY_SCRATCH_SIZE );
-
-	END_WITH_TRANSACTION(transaction);
 }
 
-bool SqrlUser::_keyGen( Sqrl_Transaction t, int key_type, uint8_t *key )
+bool SqrlUser::_keyGen( SqrlTransaction *transaction, int key_type, uint8_t *key )
 {
-	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return false;
-	if( transaction->user != this ) {
-		END_WITH_TRANSACTION(transaction);
+	if( transaction->getUser() != this ) {
 		return false;
 	}
 	bool retVal = false;
@@ -349,7 +341,7 @@ bool SqrlUser::_keyGen( Sqrl_Transaction t, int key_type, uint8_t *key )
 	case KEY_IUK:
 		for( i = 0; i < 4; i++ ) {
 			if( this->hasKey( keys[i] )) {
-				temp[i] = this->key( t, keys[i] );
+				temp[i] = this->key( transaction, keys[i] );
 			} else {
 				temp[i] = this->newKey( keys[i] );
 			}
@@ -363,7 +355,7 @@ bool SqrlUser::_keyGen( Sqrl_Transaction t, int key_type, uint8_t *key )
 		break;
 	case KEY_MK:
 		if( this->hasKey( KEY_IUK )) {
-			temp[0] = this->key( t, KEY_IUK );
+			temp[0] = this->key( transaction, KEY_IUK );
 			if( temp[0] ) {
 				sqrl_gen_mk( key, temp[0] );
 				retVal = true;
@@ -371,14 +363,14 @@ bool SqrlUser::_keyGen( Sqrl_Transaction t, int key_type, uint8_t *key )
 		}
 		break;
 	case KEY_ILK:
-		temp[0] = this->key( t, KEY_IUK );
+		temp[0] = this->key( transaction, KEY_IUK );
 		if( temp[0] ) {
 			sqrl_gen_ilk( key, temp[0] );
 			retVal = true;
 		}
 		break;
 	case KEY_LOCAL:
-		temp[0] = this->key( t, KEY_MK );
+		temp[0] = this->key( transaction, KEY_MK );
 		if( temp[0] ) {
 			sqrl_gen_local( key, temp[0] );
 			retVal = true;
@@ -398,16 +390,13 @@ bool SqrlUser::_keyGen( Sqrl_Transaction t, int key_type, uint8_t *key )
 		}
 		break;
 	}
-	END_WITH_TRANSACTION(transaction);
 	return retVal;
 }
 
-bool SqrlUser::regenKeys( Sqrl_Transaction t )
+bool SqrlUser::regenKeys( SqrlTransaction *transaction )
 {
-	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return false;
-	if( transaction->user != this ) {
-		END_WITH_TRANSACTION(transaction);
+	if( transaction->getUser() != this ) {
 		return false;
 	}
 	uint8_t *key;
@@ -415,35 +404,32 @@ bool SqrlUser::regenKeys( Sqrl_Transaction t )
 	int i;
 	for( i = 0; i < 3; i++ ) {
 		key = this->newKey( keys[i] );
-		this->_keyGen( t, keys[i], key );
+		this->_keyGen( transaction, keys[i], key );
 	}
-	END_WITH_TRANSACTION(transaction);
 	return true;
 }
 
-bool SqrlUser::rekey( Sqrl_Transaction t )
+bool SqrlUser::rekey( SqrlTransaction *transaction )
 {
-	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return false;
-	if( transaction->user != this ) {
-		END_WITH_TRANSACTION(transaction);
+	if( transaction->getUser() != this ) {
 		return false;
 	}
 	bool retVal = true;
 	uint8_t *key;
 	if( this->hasKey( KEY_IUK )) {
-		key = this->key( t, KEY_IUK );
+		key = this->key( transaction, KEY_IUK );
 	} else {
 		key = this->newKey( KEY_IUK );
 	}
-	if( ! this->_keyGen( t, KEY_IUK, key )) {
+	if( ! this->_keyGen( transaction, KEY_IUK, key )) {
 		goto ERR;
 	}
 	key = this->newKey( KEY_RESCUE_CODE );
 	if( ! this->_keyGen( transaction, KEY_RESCUE_CODE, key )) {
 		goto ERR;
 	}
-	if( ! this->regenKeys( t )) {
+	if( ! this->regenKeys( transaction )) {
 		goto ERR;
 	}
 	this->flags |= (USER_FLAG_T1_CHANGED | USER_FLAG_T2_CHANGED);
@@ -453,7 +439,6 @@ ERR:
 	retVal = false;
 
 DONE:
-	END_WITH_TRANSACTION(transaction);
 	return retVal;
 }
 
@@ -486,12 +471,10 @@ uint8_t *SqrlUser::newKey( int key_type )
 	return NULL;
 }
 
-uint8_t *SqrlUser::key( Sqrl_Transaction t, int key_type )
+uint8_t *SqrlUser::key( SqrlTransaction *transaction, int key_type )
 {
-	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return NULL;
-	if( transaction->user != this ) {
-		END_WITH_TRANSACTION(transaction);
+	if( transaction->getUser() != this ) {
 		return NULL;
 	}
 	int offset, i;
@@ -511,17 +494,15 @@ LOOP:
 	}
 	if( offset > -1 ) {
 		key = this->keys->keys[offset];
-		END_WITH_TRANSACTION(transaction);
 		return key;
 	} else {
 		// Not Found!
 		switch( key_type ) {
 		case KEY_RESCUE_CODE:
 			// We cannot regenerate this key!
-			END_WITH_TRANSACTION(transaction);
 			return NULL;
 		case KEY_IUK:
-			this->tryLoadRescue(t, true);
+			this->tryLoadRescue(transaction, true);
 			goto LOOP;
 			break;
 		case KEY_MK:
@@ -530,14 +511,13 @@ LOOP:
 		case KEY_PIUK1:
 		case KEY_PIUK2:
 		case KEY_PIUK3:
-			this->tryLoadPassword(t, true);
+			this->tryLoadPassword(transaction, true);
 			goto LOOP;
 			break;
 		}
 	}
 
 DONE:
-	END_WITH_TRANSACTION(transaction);
 	return NULL;
 }
 
@@ -567,17 +547,14 @@ void SqrlUser::removeKey( int key_type )
 	}
 }
 
-char *SqrlUser::getRescueCode( Sqrl_Transaction t )
+char *SqrlUser::getRescueCode( SqrlTransaction *transaction )
 {
-	WITH_TRANSACTION(transaction,t);
 	if( !transaction ) return NULL;
-	if( transaction->user != this || !this->hasKey( KEY_RESCUE_CODE )) {
+	if( transaction->getUser() != this || !this->hasKey( KEY_RESCUE_CODE )) {
 		printf( "No key!\n" );
-		END_WITH_TRANSACTION(transaction);
 		return NULL;
 	}
-	char *retVal = (char*)(this->key( t, KEY_RESCUE_CODE ));
-	END_WITH_TRANSACTION(transaction);
+	char *retVal = (char*)(this->key( transaction, KEY_RESCUE_CODE ));
 	return retVal;
 }
 
@@ -595,7 +572,7 @@ bool SqrlUser::setRescueCode( char *rc )
 	return true;
 }
 
-bool SqrlUser::forceDecrypt( Sqrl_Transaction t )
+bool SqrlUser::forceDecrypt( SqrlTransaction *t )
 {
 	if( !t ) return false;
 	if( this->key( t, KEY_MK )) {
@@ -604,13 +581,19 @@ bool SqrlUser::forceDecrypt( Sqrl_Transaction t )
 	return false;
 }
 
-bool SqrlUser::forceRescue( Sqrl_Transaction t )
+bool SqrlUser::forceRescue( SqrlTransaction *t )
 {
 	if( !t ) return false;
 	if( this->key( t, KEY_IUK )) {
 		return true;
 	}
 	return false;
+}
+
+size_t SqrlUser::getPasswordLength()
+{
+	if (this->isHintLocked()) return 0;
+	return this->keys->password_len;
 }
 
 bool SqrlUser::setPassword( char *password, size_t password_len )
