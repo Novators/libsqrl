@@ -17,6 +17,7 @@ SqrlBlock::SqrlBlock()
 
 SqrlBlock::~SqrlBlock()
 {
+	this->data = NULL;
 	this->clear();
 }
 
@@ -34,12 +35,18 @@ void SqrlBlock::clear()
 bool SqrlBlock::init(uint16_t blockType, uint16_t blockLength)
 {
 	this->clear();
-	this->data = (uint8_t*)malloc(blockLength);
-	if( this->data ) {
-		this->blockType = blockType;
-		this->blockLength = blockLength;
-		sodium_mlock( this->data, blockLength );
-		return true;
+	if (this->data) {
+		free(this->data);
+		this->data = NULL;
+	}
+	this->blockLength = blockLength;
+	this->blockType = blockType;
+	if (blockLength > 0) {
+		this->data = (uint8_t*)malloc(blockLength);
+		if (this->data) {
+			sodium_mlock(this->data, blockLength);
+			return true;
+		}
 	}
 	return false;
 }
@@ -89,7 +96,7 @@ uint16_t SqrlBlock::seekBack(uint16_t dest, bool offset)
 	if (offset) {
 		dest = this->cur - dest;
 	} else {
-		dest = this->blockLength - dest;
+		dest = this->blockLength - dest - 1;
 	}
 	if (dest > 0) {
 		this->cur = dest;
@@ -174,6 +181,8 @@ UT_string* SqrlBlock::getData(UT_string *buf, bool append)
 	}
 	if (this->blockLength > 0) {
 		utstring_bincpy(buf, this->data, this->blockLength);
+	} else {
+		return NULL;
 	}
 	return buf;
 }
