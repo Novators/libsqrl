@@ -10,7 +10,7 @@ For more details, see the LICENSE file included with this package.
 #include "sqrl.h"
 #include "SqrlUser.h"
 #include "SqrlTransaction.h"
-#include "crypto/gcm.h"
+#include "gcm.h"
 
 
 static bool sqrl_is_initialized = false;

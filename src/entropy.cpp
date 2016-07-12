@@ -20,7 +20,7 @@ For more details, see the LICENSE file included with this package.
 #define SQRL_ENTROPY_TARGET 512
 
 #include "rdrand.h"
-#include "../sqrl_internal.h"
+#include "sqrl_internal.h"
 
 
 

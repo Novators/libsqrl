@@ -51,21 +51,6 @@
     <ClCompile Include="..\..\src\client.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\crypto\aes.cpp">
-      <Filter>Source Files\Crypto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\crypto\crypt.cpp">
-      <Filter>Source Files\Crypto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\crypto\gcm.cpp">
-      <Filter>Source Files\Crypto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\entropy\rdrand.cpp">
-      <Filter>Source Files\Entropy</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\entropy\entropy.cpp">
-      <Filter>Source Files\Entropy</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\encdec.cpp">
       <Filter>Source Files\Util</Filter>
     </ClCompile>
@@ -96,6 +81,21 @@
     <ClCompile Include="..\..\src\SqrlUser_storage.cpp">
       <Filter>Source Files\Classes</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\aes.cpp">
+      <Filter>Source Files\Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\crypt.cpp">
+      <Filter>Source Files\Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\gcm.cpp">
+      <Filter>Source Files\Crypto</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\entropy.cpp">
+      <Filter>Source Files\Entropy</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\rdrand.cpp">
+      <Filter>Source Files\Entropy</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\sqrl_internal.h">
@@ -103,27 +103,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\sqrl_server.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\crypto\aes.h">
-      <Filter>Header Files\Crypto</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\crypto\gcm.h">
-      <Filter>Header Files\Crypto</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\entropy\entropy.h">
-      <Filter>Header Files\Entropy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\entropy\entropy_linux.h">
-      <Filter>Header Files\Entropy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\entropy\entropy_mac.h">
-      <Filter>Header Files\Entropy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\entropy\entropy_win.h">
-      <Filter>Header Files\Entropy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\entropy\rdrand.h">
-      <Filter>Header Files\Entropy</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\detect_platform.h">
       <Filter>Header Files\Util</Filter>
@@ -163,6 +142,27 @@
     </ClInclude>
     <ClInclude Include="..\..\src\SqrlUser.fwd.h">
       <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\aes.h">
+      <Filter>Header Files\Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\gcm.h">
+      <Filter>Header Files\Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\entropy.h">
+      <Filter>Header Files\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\entropy_linux.h">
+      <Filter>Header Files\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\entropy_mac.h">
+      <Filter>Header Files\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\entropy_win.h">
+      <Filter>Header Files\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\rdrand.h">
+      <Filter>Header Files\Entropy</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

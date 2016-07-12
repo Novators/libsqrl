@@ -7,7 +7,7 @@ For more details, see the LICENSE file included with this package.
 */
 
 #include "sqrl_internal.h"
-#include "crypto/aes.h"
+#include "aes.h"
 #include "sqrl_server.h"
 #include "sqrl.h"
 #include "SqrlUri.h"

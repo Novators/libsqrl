@@ -154,15 +154,15 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
+    <ClCompile Include="..\..\src\aes.cpp" />
+    <ClCompile Include="..\..\src\crypt.cpp" />
+    <ClCompile Include="..\..\src\entropy.cpp" />
+    <ClCompile Include="..\..\src\gcm.cpp" />
+    <ClCompile Include="..\..\src\rdrand.cpp" />
     <ClCompile Include="..\..\src\SqrlBlock.cpp" />
     <ClCompile Include="..\..\src\client.cpp" />
     <ClCompile Include="..\..\src\client_protocol.cpp" />
-    <ClCompile Include="..\..\src\crypto\aes.cpp" />
-    <ClCompile Include="..\..\src\crypto\crypt.cpp" />
-    <ClCompile Include="..\..\src\crypto\gcm.cpp" />
     <ClCompile Include="..\..\src\encdec.cpp" />
-    <ClCompile Include="..\..\src\entropy\entropy.cpp" />
-    <ClCompile Include="..\..\src\entropy\rdrand.cpp" />
     <ClCompile Include="..\..\src\platform.cpp" />
     <ClCompile Include="..\..\src\realtime.cpp" />
     <ClCompile Include="..\..\src\server.cpp" />
@@ -175,16 +175,16 @@
     <ClCompile Include="..\..\src\util.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\..\src\aes.h" />
+    <ClInclude Include="..\..\src\entropy.h" />
+    <ClInclude Include="..\..\src\entropy_linux.h" />
+    <ClInclude Include="..\..\src\entropy_mac.h" />
+    <ClInclude Include="..\..\src\entropy_win.h" />
+    <ClInclude Include="..\..\src\gcm.h" />
+    <ClInclude Include="..\..\src\rdrand.h" />
     <ClInclude Include="..\..\src\SqrlBlock.fwd.h" />
     <ClInclude Include="..\..\src\SqrlBlock.h" />
-    <ClInclude Include="..\..\src\crypto\aes.h" />
-    <ClInclude Include="..\..\src\crypto\gcm.h" />
     <ClInclude Include="..\..\src\detect_platform.h" />
-    <ClInclude Include="..\..\src\entropy\entropy.h" />
-    <ClInclude Include="..\..\src\entropy\entropy_linux.h" />
-    <ClInclude Include="..\..\src\entropy\entropy_mac.h" />
-    <ClInclude Include="..\..\src\entropy\entropy_win.h" />
-    <ClInclude Include="..\..\src\entropy\rdrand.h" />
     <ClInclude Include="..\..\src\sqrl.h" />
     <ClInclude Include="..\..\src\sqrl_internal.h" />
     <ClInclude Include="..\..\src\sqrl_server.h">

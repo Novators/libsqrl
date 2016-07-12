@@ -59,7 +59,7 @@ namespace libsqrltest
 			UT_string *str;
 			utstring_new(str);
 			SqrlBlock block = SqrlBlock();
-			block.init(1, strlen(testString) + 2);
+			block.init(1, (uint16_t)strlen(testString) + 2);
 			block.write((uint8_t*)testString, strlen(testString));
 			block.writeInt16(0);
 			Assert::IsTrue(strcmp((char*)block.getDataPointer(), testString) == 0);

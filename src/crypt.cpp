@@ -11,7 +11,7 @@ extern "C" {
 #include "crypto_scrypt.h"
 }
 
-#include "../sqrl_internal.h"
+#include "sqrl_internal.h"
 #include "aes.h"
 #include "gcm.h"
 
