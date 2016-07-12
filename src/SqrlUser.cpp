@@ -8,6 +8,7 @@ For more details, see the LICENSE file included with this package.
 #include "sqrl_internal.h"
 #include "SqrlUser.h"
 #include "SqrlTransaction.h"
+#include "SqrlClient.h"
 
 struct SqrlUserList {
 	SqrlUser *user;
@@ -24,7 +25,7 @@ int SqrlUser::enscryptCallback( int percent, void *data )
 		if( progress > 100 ) progress = 100;
 		if( progress < 0 ) progress = 0;
 		if( percent == 100 && progress >= 99 ) progress = 100;
-		return sqrl_client_call_progress( cbdata->transaction, progress );
+		return cbdata->transaction->getClient()->callProgress(cbdata->transaction, progress);
 	} else {
 		return 1;
 	}
@@ -236,7 +237,7 @@ void SqrlUser::hintLock()
 	if( this->keys->password_len == 0 ) {
 		return;
 	}
-	SqrlTransaction *transaction = new SqrlTransaction( SQRL_TRANSACTION_IDENTITY_LOCK );
+	SqrlTransaction *transaction = new SqrlTransaction( SqrlClient::getClient(), SQRL_TRANSACTION_IDENTITY_LOCK );
 	transaction->setUser(this);
 	struct Sqrl_User_s_callback_data cbdata;
 	cbdata.transaction = transaction;
@@ -291,7 +292,7 @@ void SqrlUser::hintUnlock( SqrlTransaction *transaction,
 				size_t length )
 {
 	if( hint == NULL || length == 0 ) {
-		sqrl_client_require_hint( transaction );
+		transaction->getClient()->callAuthenticationRequired(transaction, SQRL_CREDENTIAL_HINT);
 		return;
 	}
 	if( !transaction ) return;

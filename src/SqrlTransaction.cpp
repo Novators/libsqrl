@@ -31,7 +31,7 @@ printf( "%10s: %d\n", tag, _ptcI )
 #define PRINT_TRANSACTION_COUNT(tag)
 #endif
 
-SqrlTransaction::SqrlTransaction( Sqrl_Transaction_Type type)
+SqrlTransaction::SqrlTransaction( SqrlClient *client, Sqrl_Transaction_Type type)
 {
     struct Sqrl_Transaction_List *list = (struct Sqrl_Transaction_List*)calloc( 1, sizeof( struct Sqrl_Transaction_List ));
 	this->type = type;
@@ -42,6 +42,7 @@ SqrlTransaction::SqrlTransaction( Sqrl_Transaction_Type type)
     list->next = SQRL_TRANSACTION_LIST;
     SQRL_TRANSACTION_LIST = list;
     sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
+	this->client = client;
 }
 
 
@@ -154,6 +155,11 @@ void SqrlTransaction::setEncodingType(Sqrl_Encoding type)
 Sqrl_Transaction_Type SqrlTransaction::getType()
 {
 	return this->type;
+}
+
+SqrlClient *SqrlTransaction::getClient()
+{
+	return this->client;
 }
 
 SqrlUser *SqrlTransaction::getUser()

@@ -2,14 +2,16 @@
 
 #include "SqrlTransaction.fwd.h"
 #include "SqrlUser.fwd.h"
+#include "SqrlClient.fwd.h"
 
 class DLL_PUBLIC SqrlTransaction
 {
 public:
-	SqrlTransaction(Sqrl_Transaction_Type type);
+	SqrlTransaction(SqrlClient *client, Sqrl_Transaction_Type type);
 
 	void hold();
 	void release();
+	SqrlClient *getClient();
 	void setUser(SqrlUser *user);
 	SqrlUser* getUser();
 	Sqrl_Transaction_Status getStatus();
@@ -28,6 +30,7 @@ public:
 	void setEncodingType(Sqrl_Encoding type);
 
 private:
+	SqrlClient *client;
 	Sqrl_Transaction_Type type;
 	SqrlUser *user;
 	SqrlUri *uri;

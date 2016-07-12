@@ -12,6 +12,7 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlBlock.h"
 #include "SqrlStorage.h"
 #include "SqrlUri.h"
+#include "SqrlClient.h"
 
 bool SqrlUser::_init_t2( 
 	SqrlTransaction *transaction, 
@@ -303,7 +304,7 @@ bool SqrlUser::sus_block_1( SqrlTransaction *transaction, SqrlBlock *block, stru
 	if (transaction->getUser() != this) return false;
 	bool retVal = true;
 	Sqrl_Crypt_Context sctx;
-	if( !sqrl_client_require_password( cbdata.transaction )) {
+	if( !cbdata.transaction->getClient()->callAuthenticationRequired( cbdata.transaction, SQRL_CREDENTIAL_PASSWORD)) {
 		return false;
 	}
 	uint8_t *keyPointer;
@@ -585,7 +586,7 @@ LOOP:
 NEEDAUTH:
 	if( retry ) {
 		retry = false;
-		sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_PASSWORD );
+		transaction->getClient()->callAuthenticationRequired(transaction, SQRL_CREDENTIAL_PASSWORD);
 		goto LOOP;
 	}
 
@@ -629,7 +630,7 @@ LOOP:
 NEEDAUTH:
 	if( retry ) {
 		retry = false;
-		sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_RESCUE_CODE );
+		transaction->getClient()->callAuthenticationRequired( transaction, SQRL_CREDENTIAL_RESCUE_CODE );
 		goto LOOP;
 	}
 

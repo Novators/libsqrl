@@ -96,6 +96,9 @@
     <ClCompile Include="..\..\src\rdrand.cpp">
       <Filter>Source Files\Entropy</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\SqrlClient.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\sqrl_internal.h">
@@ -163,6 +166,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\rdrand.h">
       <Filter>Header Files\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlClient.fwd.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlClient.h">
+      <Filter>Header Files\Classes</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
