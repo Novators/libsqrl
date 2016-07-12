@@ -7,9 +7,9 @@ For more details, see the LICENSE file included with this package.
 **/
 
 #include "sqrl_internal.h"
-#include "storage.h"
-#include "block.h"
-#include "uri.h"
+#include "SqrlStorage.h"
+#include "SqrlBlock.h"
+#include "SqrlUri.h"
 
 // TODO: Determine PAGE_SIZE at runtime?
 #define PAGE_SIZE 4096

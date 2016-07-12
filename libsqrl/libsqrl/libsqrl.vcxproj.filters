@@ -66,21 +66,6 @@
     <ClCompile Include="..\..\src\entropy\entropy.cpp">
       <Filter>Source Files\Entropy</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\block.cpp">
-      <Filter>Source Files\Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\uri.cpp">
-      <Filter>Source Files\Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\user.cpp">
-      <Filter>Source Files\Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\user_storage.cpp">
-      <Filter>Source Files\Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\storage.cpp">
-      <Filter>Source Files\Classes</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\encdec.cpp">
       <Filter>Source Files\Util</Filter>
     </ClCompile>
@@ -93,7 +78,22 @@
     <ClCompile Include="..\..\src\util.cpp">
       <Filter>Source Files\Util</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\transaction.cpp">
+    <ClCompile Include="..\..\src\SqrlBlock.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlStorage.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlTransaction.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlUri.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlUser.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlUser_storage.cpp">
       <Filter>Source Files\Classes</Filter>
     </ClCompile>
   </ItemGroup>
@@ -125,43 +125,43 @@
     <ClInclude Include="..\..\src\entropy\rdrand.h">
       <Filter>Header Files\Entropy</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\block.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\uri.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\storage.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\user.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\detect_platform.h">
       <Filter>Header Files\Util</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\utstring.h">
       <Filter>Header Files\Util</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transaction.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\sqrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\block.fwd.h">
+    <ClInclude Include="..\..\src\SqrlBlock.h">
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\storage.fwd.h">
+    <ClInclude Include="..\..\src\SqrlBlock.fwd.h">
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\transaction.fwd.h">
+    <ClInclude Include="..\..\src\SqrlUri.h">
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\uri.fwd.h">
+    <ClInclude Include="..\..\src\SqrlUri.fwd.h">
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\user.fwd.h">
+    <ClInclude Include="..\..\src\SqrlStorage.fwd.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlStorage.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlTransaction.fwd.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlTransaction.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlUser.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlUser.fwd.h">
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
   </ItemGroup>

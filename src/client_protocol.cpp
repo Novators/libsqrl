@@ -8,9 +8,9 @@ For more details, see the LICENSE file included with this package.
 
 #include "sqrl_internal.h"
 #include "sqrl.h"
-#include "uri.h"
-#include "user.h"
-#include "transaction.h"
+#include "SqrlUri.h"
+#include "SqrlUser.h"
+#include "SqrlTransaction.h"
 
 #define SITE_KV_COUNT 6
 #define SITE_KV_LENGTH 3

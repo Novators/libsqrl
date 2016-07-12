@@ -3,7 +3,7 @@
 #include "CppUnitTest.h"
 
 #include "sqrl.h"
-#include "block.h"
+#include "SqrlBlock.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace std;

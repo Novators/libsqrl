@@ -7,7 +7,7 @@ For more details, see the LICENSE file included with this package.
 **/
 
 #include "sqrl_internal.h"
-#include "uri.h"
+#include "SqrlUri.h"
 
 Sqrl_Scheme SqrlUri::getScheme() {
 	return this->scheme;
@@ -79,10 +79,38 @@ size_t SqrlUri::getSFNLength() {
 	return strlen(this->sfn);
 }
 
+SqrlUri::SqrlUri()
+{
+	this->challenge = NULL;
+	this->host = NULL;
+	this->prefix = NULL;
+	this->url = NULL;
+	this->sfn = NULL;
+}
+
 SqrlUri* SqrlUri::copy() {
-	SqrlUri *nuri = new SqrlUri(this->challenge);
-	nuri->setChallenge(this->challenge);
-	nuri->setUrl(this->url);
+	SqrlUri *nuri = new SqrlUri();
+
+	if (this->challenge) { 
+		nuri->challenge = (char*)malloc(strlen(this->challenge) + 1);
+		strcpy(nuri->challenge, this->challenge);
+	}
+	if (this->host) {
+		nuri->host = (char*)malloc(strlen(this->host) + 1);
+		strcpy(nuri->host, this->host);
+	}
+	if (this->prefix) {
+		nuri->prefix = (char*)malloc(strlen(this->prefix) + 1);
+		strcpy(nuri->prefix, this->prefix);
+	}
+	if (this->url) {
+		nuri->url = (char*)malloc(strlen(this->url) + 1);
+		strcpy(nuri->url, this->url);
+	}
+	if (this->sfn) {
+		nuri->sfn = (char*)malloc(strlen(this->sfn) + 1);
+		strcpy(nuri->sfn, this->sfn);
+	}
 	return nuri;
 }
 

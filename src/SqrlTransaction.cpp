@@ -7,9 +7,9 @@ For more details, see the LICENSE file included with this package.
 */
 #include "sqrl_internal.h"
 #include "sqrl.h"
-#include "transaction.h"
-#include "uri.h"
-#include "user.h"
+#include "SqrlTransaction.h"
+#include "SqrlUri.h"
+#include "SqrlUser.h"
 
 struct Sqrl_Transaction_List {
 	SqrlTransaction *transaction;

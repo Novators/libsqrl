@@ -7,7 +7,7 @@ For more details, see the LICENSE file included with this package.
 **/
 
 #include "sqrl_internal.h"
-#include "block.h"
+#include "SqrlBlock.h"
 
 SqrlBlock::SqrlBlock()
 {

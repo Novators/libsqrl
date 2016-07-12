@@ -13,7 +13,7 @@ For more details, see the LICENSE file included with this package.
 
 #include <stdint.h>
 #include "sqrl.h"
-#include "uri.fwd.h"
+#include "SqrlUri.fwd.h"
 
 #define SQRL_SERVER_MAC_LENGTH 16
 #define SQRL_SERVER_TOKEN_SFN "_LIBSQRL_SFN_"

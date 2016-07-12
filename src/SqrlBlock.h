@@ -2,7 +2,7 @@
 
 #include <stdint.h>
 #include "utstring.h"
-#include "block.fwd.h"
+#include "SqrlBlock.fwd.h"
 
 class DLL_PUBLIC SqrlBlock
 {

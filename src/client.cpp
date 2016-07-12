@@ -8,9 +8,9 @@ For more details, see the LICENSE file included with this package.
 
 #include "sqrl_internal.h"
 #include "sqrl.h"
-#include "user.h"
-#include "uri.h"
-#include "transaction.h"
+#include "SqrlUser.h"
+#include "SqrlUri.h"
+#include "SqrlTransaction.h"
 
 Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
 

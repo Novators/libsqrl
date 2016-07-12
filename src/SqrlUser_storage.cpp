@@ -7,11 +7,11 @@ For more details, see the LICENSE file included with this package.
 **/
 #include "sqrl_internal.h"
 #include "sqrl.h"
-#include "user.h"
-#include "transaction.h"
-#include "block.h"
-#include "storage.h"
-#include "uri.h"
+#include "SqrlUser.h"
+#include "SqrlTransaction.h"
+#include "SqrlBlock.h"
+#include "SqrlStorage.h"
+#include "SqrlUri.h"
 
 bool SqrlUser::_init_t2( 
 	SqrlTransaction *transaction, 

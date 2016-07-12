@@ -1,9 +1,9 @@
 #pragma once
 
-#include "user.fwd.h"
-#include "uri.fwd.h"
-#include "block.fwd.h"
-#include "storage.fwd.h"
+#include "SqrlUser.fwd.h"
+#include "SqrlUri.fwd.h"
+#include "SqrlBlock.fwd.h"
+#include "SqrlStorage.fwd.h"
 
 class DLL_PUBLIC SqrlUser
 {

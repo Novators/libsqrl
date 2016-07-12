@@ -11,11 +11,11 @@
 
 #include <stdint.h>
 #include "utstring.h"
-#include "block.fwd.h"
-#include "storage.fwd.h"
-#include "transaction.fwd.h"
-#include "uri.fwd.h"
-#include "user.fwd.h"
+#include "SqrlBlock.fwd.h"
+#include "SqrlStorage.fwd.h"
+#include "SqrlTransaction.fwd.h"
+#include "SqrlUri.fwd.h"
+#include "SqrlUser.fwd.h"
 
 #define KEY_MK           1
 #define KEY_ILK          2

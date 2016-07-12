@@ -1,6 +1,6 @@
 #pragma once
 
-#include "uri.fwd.h"
+#include "SqrlUri.fwd.h"
 
 class DLL_PUBLIC SqrlUri
 {
@@ -38,6 +38,7 @@ public:
 	SqrlUri* copy();
 
 private:
+	SqrlUri();
 	Sqrl_Scheme scheme;
 	char *challenge;
 	char *host;

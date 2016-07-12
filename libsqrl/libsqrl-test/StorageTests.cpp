@@ -2,8 +2,8 @@
 #include "CppUnitTest.h"
 
 #include "sqrl.h"
-#include "storage.h"
-#include "uri.h"
+#include "SqrlStorage.h"
+#include "SqrlUri.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 

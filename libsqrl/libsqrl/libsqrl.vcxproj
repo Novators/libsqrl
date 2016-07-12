@@ -154,7 +154,7 @@
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\src\block.cpp" />
+    <ClCompile Include="..\..\src\SqrlBlock.cpp" />
     <ClCompile Include="..\..\src\client.cpp" />
     <ClCompile Include="..\..\src\client_protocol.cpp" />
     <ClCompile Include="..\..\src\crypto\aes.cpp" />
@@ -167,16 +167,16 @@
     <ClCompile Include="..\..\src\realtime.cpp" />
     <ClCompile Include="..\..\src\server.cpp" />
     <ClCompile Include="..\..\src\server_protocol.cpp" />
-    <ClCompile Include="..\..\src\storage.cpp" />
-    <ClCompile Include="..\..\src\transaction.cpp" />
-    <ClCompile Include="..\..\src\uri.cpp" />
-    <ClCompile Include="..\..\src\user.cpp" />
-    <ClCompile Include="..\..\src\user_storage.cpp" />
+    <ClCompile Include="..\..\src\SqrlStorage.cpp" />
+    <ClCompile Include="..\..\src\SqrlTransaction.cpp" />
+    <ClCompile Include="..\..\src\SqrlUri.cpp" />
+    <ClCompile Include="..\..\src\SqrlUser.cpp" />
+    <ClCompile Include="..\..\src\SqrlUser_storage.cpp" />
     <ClCompile Include="..\..\src\util.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="..\..\src\block.fwd.h" />
-    <ClInclude Include="..\..\src\block.h" />
+    <ClInclude Include="..\..\src\SqrlBlock.fwd.h" />
+    <ClInclude Include="..\..\src\SqrlBlock.h" />
     <ClInclude Include="..\..\src\crypto\aes.h" />
     <ClInclude Include="..\..\src\crypto\gcm.h" />
     <ClInclude Include="..\..\src\detect_platform.h" />
@@ -190,14 +190,14 @@
     <ClInclude Include="..\..\src\sqrl_server.h">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>
     </ClInclude>
-    <ClInclude Include="..\..\src\storage.fwd.h" />
-    <ClInclude Include="..\..\src\storage.h" />
-    <ClInclude Include="..\..\src\transaction.fwd.h" />
-    <ClInclude Include="..\..\src\transaction.h" />
-    <ClInclude Include="..\..\src\uri.fwd.h" />
-    <ClInclude Include="..\..\src\uri.h" />
-    <ClInclude Include="..\..\src\user.fwd.h" />
-    <ClInclude Include="..\..\src\user.h" />
+    <ClInclude Include="..\..\src\SqrlStorage.fwd.h" />
+    <ClInclude Include="..\..\src\SqrlStorage.h" />
+    <ClInclude Include="..\..\src\SqrlTransaction.fwd.h" />
+    <ClInclude Include="..\..\src\SqrlTransaction.h" />
+    <ClInclude Include="..\..\src\SqrlUri.fwd.h" />
+    <ClInclude Include="..\..\src\SqrlUri.h" />
+    <ClInclude Include="..\..\src\SqrlUser.fwd.h" />
+    <ClInclude Include="..\..\src\SqrlUser.h" />
     <ClInclude Include="..\..\src\utstring.h" />
   </ItemGroup>
   <ItemGroup>

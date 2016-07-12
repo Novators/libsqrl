@@ -1,7 +1,7 @@
 #pragma once
 
-#include "transaction.fwd.h"
-#include "user.fwd.h"
+#include "SqrlTransaction.fwd.h"
+#include "SqrlUser.fwd.h"
 
 class DLL_PUBLIC SqrlTransaction
 {

@@ -6,8 +6,8 @@ This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 */
 #include "sqrl_internal.h"
-#include "user.h"
-#include "transaction.h"
+#include "SqrlUser.h"
+#include "SqrlTransaction.h"
 
 struct SqrlUserList {
 	SqrlUser *user;
@@ -20,7 +20,7 @@ int SqrlUser::enscryptCallback( int percent, void *data )
 {
 	struct Sqrl_User_s_callback_data *cbdata = (struct Sqrl_User_s_callback_data*)data;
 	if( cbdata ) {
-		int progress = cbdata->adder + (percent * cbdata->multiplier);
+		int progress = cbdata->adder + (int)((double)percent * cbdata->multiplier);
 		if( progress > 100 ) progress = 100;
 		if( progress < 0 ) progress = 0;
 		if( percent == 100 && progress >= 99 ) progress = 100;

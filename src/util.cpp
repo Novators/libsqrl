@@ -8,8 +8,8 @@ For more details, see the LICENSE file included with this package.
 
 #include "sqrl_internal.h"
 #include "sqrl.h"
-#include "user.h"
-#include "transaction.h"
+#include "SqrlUser.h"
+#include "SqrlTransaction.h"
 #include "crypto/gcm.h"
 
 

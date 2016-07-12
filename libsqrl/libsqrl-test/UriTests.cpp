@@ -2,7 +2,7 @@
 #include "CppUnitTest.h"
 
 #include "sqrl.h"
-#include "uri.h"
+#include "SqrlUri.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 

@@ -2,9 +2,9 @@
 
 #include <stdint.h>
 #include "utstring.h"
-#include "storage.fwd.h"
-#include "block.fwd.h"
-#include "uri.fwd.h"
+#include "SqrlStorage.fwd.h"
+#include "SqrlBlock.fwd.h"
+#include "SqrlUri.fwd.h"
 
 class DLL_PUBLIC SqrlStorage
 {

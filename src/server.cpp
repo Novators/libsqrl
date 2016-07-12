@@ -10,7 +10,7 @@ For more details, see the LICENSE file included with this package.
 #include "crypto/aes.h"
 #include "sqrl_server.h"
 #include "sqrl.h"
-#include "uri.h"
+#include "SqrlUri.h"
 
 
 bool sqrl_server_init( 
