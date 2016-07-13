@@ -35,11 +35,11 @@ bool sqrl_server_init(
         server->sfn = (char*)malloc( strlen( sfn ) + 1 );
         strcpy( server->sfn, sfn );
     } else {
-        SqrlUri *tmpUri = new SqrlUri( uri );
+        SqrlUri *tmpUri = SqrlUri::parse( uri );
         if( tmpUri ) {
 			server->sfn = tmpUri->getHost();
         }
-		delete(tmpUri);
+		tmpUri->release();
     }
 
     if( uri ) {
@@ -52,10 +52,10 @@ bool sqrl_server_init(
             sqrl_b64u_encode_append( str, (uint8_t*)server->sfn, strlen( server->sfn ));
             pp = p + strlen( SQRL_SERVER_TOKEN_SFN );
             utstring_printf( str, "%s", pp );
-            server->uri = new SqrlUri( utstring_body( str ));
+            server->uri = SqrlUri::parse( utstring_body( str ));
             utstring_free( str );
         } else {
-            server->uri = new SqrlUri( uri );
+            server->uri = SqrlUri::parse( uri );
         }
         if( ! server->uri ) {
             sqrl_server_clear( server );
@@ -79,8 +79,7 @@ void sqrl_server_clear( Sqrl_Server *server )
 {
     if( !server ) return;
 	if (server->uri) {
-		delete(server->uri);
-		server->uri = NULL;
+		server->uri = server->uri->release();
 	}
     if( server->sfn ) free( server->sfn );
     sodium_memzero( server, sizeof( Sqrl_Server ));

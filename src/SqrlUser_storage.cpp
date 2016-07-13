@@ -304,9 +304,9 @@ bool SqrlUser::sus_block_1( SqrlTransaction *transaction, SqrlBlock *block, stru
 	if (transaction->getUser() != this) return false;
 	bool retVal = true;
 	Sqrl_Crypt_Context sctx;
-	if( !cbdata.transaction->getClient()->callAuthenticationRequired( cbdata.transaction, SQRL_CREDENTIAL_PASSWORD)) {
-		return false;
-	}
+	SqrlClient::getClient()->callAuthenticationRequired( cbdata.transaction, SQRL_CREDENTIAL_PASSWORD );
+	// TODO: Verify Password obtained
+
 	uint8_t *keyPointer;
 	block->init( 1, 125 );
 	// Block Length
@@ -413,21 +413,21 @@ bool SqrlUser::updateStorage( SqrlTransaction *transaction )
 		return false;
 	}
 	if( this->storage == NULL ) {
-		this->storage = new SqrlStorage();
+		this->storage = SqrlStorage::empty();
 	}
 	struct Sqrl_User_s_callback_data cbdata;
 	memset( &cbdata, 0, sizeof( struct Sqrl_User_s_callback_data ));
 	cbdata.transaction = transaction;
 	this->saveCallbackData( &cbdata );
 
-	SqrlBlock block = SqrlBlock();
+	SqrlBlock *block = SqrlBlock::create();
 	bool retVal = true;
 
 	if( (this->flags & USER_FLAG_T1_CHANGED) == USER_FLAG_T1_CHANGED ||
 		! this->storage->hasBlock( SQRL_BLOCK_USER )) 
 	{
-		if( sus_block_1( transaction, &block, cbdata )) {
-			this->storage->putBlock(&block);
+		if( sus_block_1( transaction, block, cbdata )) {
+			this->storage->putBlock(block);
 		}
 	}
 
@@ -441,19 +441,19 @@ bool SqrlUser::updateStorage( SqrlTransaction *transaction )
 		} else {
 			cbdata.multiplier = 1;
 		}
-		if( sus_block_2( transaction, &block, cbdata )) {
-			this->storage->putBlock(&block);
+		if( sus_block_2( transaction, block, cbdata )) {
+			this->storage->putBlock(block);
 		}
 	}
 
 	if( (this->flags & USER_FLAG_T2_CHANGED) == USER_FLAG_T2_CHANGED ||
 		! this->storage->hasBlock( SQRL_BLOCK_PREVIOUS ))
 	{
-		if( sus_block_3( transaction, &block, cbdata )) {
-			this->storage->putBlock( &block );
+		if( sus_block_3( transaction, block, cbdata )) {
+			this->storage->putBlock( block );
 		}
 	}
-
+	block->release();
 	return retVal;
 }
 
@@ -470,14 +470,11 @@ SqrlUser::SqrlUser( SqrlUri *uri )
 	if (uri->getScheme() != SQRL_SCHEME_FILE) {
 		return;
 	}
-	this->storage = new SqrlStorage();
-	if (!this->storage->load(uri)) {
-		delete(this->storage);
-		this->storage = NULL;
-		return;
+	this->storage = SqrlStorage::from( uri );
+	if( this->storage ) {
+		this->_load_unique_id();
+		// TODO: Load Options
 	}
-	this->_load_unique_id();
-	// TODO: Load Options
 }
 
 SqrlUser::SqrlUser( const char *buffer, size_t buffer_len )
@@ -486,12 +483,9 @@ SqrlUser::SqrlUser( const char *buffer, size_t buffer_len )
 	UT_string *buf;
 	utstring_new( buf );
 	utstring_bincpy(buf, buffer, buffer_len);
-	this->storage = new SqrlStorage();
-	if( this->storage->load( buf )) {
+	this->storage = SqrlStorage::from( buf );
+	if( this->storage ) {
 		this->_load_unique_id();
-	} else {
-		delete(this->storage);
-		this->storage = NULL;
 	}
 	utstring_free( buf );
 }
@@ -557,7 +551,7 @@ bool SqrlUser::tryLoadPassword( SqrlTransaction *transaction, bool retry )
 		return false;
 	}
 	bool retVal = false;
-	SqrlBlock block = SqrlBlock();
+	SqrlBlock *block = SqrlBlock::create();
 	struct Sqrl_User_s_callback_data cbdata;
 	cbdata.transaction = transaction;
 	cbdata.adder = 0;
@@ -571,14 +565,14 @@ LOOP:
 		goto NEEDAUTH;
 	}
 
-	this->storage->getBlock( &block, SQRL_BLOCK_USER );
-	if( ! sul_block_1( transaction, &block, cbdata )) {
+	this->storage->getBlock( block, SQRL_BLOCK_USER );
+	if( ! sul_block_1( transaction, block, cbdata )) {
 		goto NEEDAUTH;
 	}
 	if( this->storage->hasBlock( SQRL_BLOCK_PREVIOUS ) &&
-		this->storage->getBlock( &block, SQRL_BLOCK_PREVIOUS ))
+		this->storage->getBlock( block, SQRL_BLOCK_PREVIOUS ))
 	{
-		sul_block_3( transaction, &block, cbdata );
+		sul_block_3( transaction, block, cbdata );
 	}
 	retVal = true;
 	goto DONE;
@@ -586,11 +580,12 @@ LOOP:
 NEEDAUTH:
 	if( retry ) {
 		retry = false;
-		transaction->getClient()->callAuthenticationRequired(transaction, SQRL_CREDENTIAL_PASSWORD);
+		SqrlClient::getClient()->callAuthenticationRequired(transaction, SQRL_CREDENTIAL_PASSWORD);
 		goto LOOP;
 	}
 
 DONE:
+	block->release();
 	return retVal;
 }
 
@@ -605,7 +600,7 @@ bool SqrlUser::tryLoadRescue( SqrlTransaction *transaction, bool retry )
 	cbdata.transaction = transaction;
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
-	SqrlBlock block = SqrlBlock();
+	SqrlBlock *block = SqrlBlock::create();
 
 LOOP:
 	if( !this->storage->hasBlock( SQRL_BLOCK_RESCUE )) {
@@ -615,26 +610,27 @@ LOOP:
 		goto NEEDAUTH;
 	}
 
-	this->storage->getBlock( &block, SQRL_BLOCK_RESCUE );
-	if( ! sul_block_2( transaction, &block, cbdata )) {
+	this->storage->getBlock( block, SQRL_BLOCK_RESCUE );
+	if( ! sul_block_2( transaction, block, cbdata )) {
 		goto NEEDAUTH;
 	}
 	this->regenKeys( transaction );
 	if( this->storage->hasBlock( SQRL_BLOCK_PREVIOUS ) &&
-		this->storage->getBlock( &block, SQRL_BLOCK_PREVIOUS ))
+		this->storage->getBlock( block, SQRL_BLOCK_PREVIOUS ))
 	{
-		sul_block_3( transaction, &block, cbdata );
+		sul_block_3( transaction, block, cbdata );
 	}
 	goto DONE;
 
 NEEDAUTH:
 	if( retry ) {
 		retry = false;
-		transaction->getClient()->callAuthenticationRequired( transaction, SQRL_CREDENTIAL_RESCUE_CODE );
+		SqrlClient::getClient()->callAuthenticationRequired( transaction, SQRL_CREDENTIAL_RESCUE_CODE );
 		goto LOOP;
 	}
 
 DONE:
+	block->release();
 	return retVal;
 }
 

@@ -14,58 +14,6 @@ For more details, see the LICENSE file included with this package.
 
 Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
 
-/**
-Makes a copy of the \p Sqrl_Client_Callbacks that libsqrl is currently using.
-
-@param callbacks An allocated \p Sqrl_Client_Callbacks structure
-*/
-
-void sqrl_client_get_callbacks( Sqrl_Client_Callbacks *callbacks )
-{
-	if( !callbacks ) return;
-	if( !SQRL_CLIENT_CALLBACKS ) {
-		SQRL_CLIENT_CALLBACKS = (Sqrl_Client_Callbacks*)calloc( 1, sizeof( Sqrl_Client_Callbacks ));
-	}
-	memcpy( callbacks, SQRL_CLIENT_CALLBACKS, sizeof( Sqrl_Client_Callbacks ));
-}
-
-/**
-Updates the active \p Sqrl_Client_Callbacks.  Libsqrl makes a copy of \p callbacks
-to use internally.
-
-@param callbacks The updated callbacks to use
-*/
-
-void sqrl_client_set_callbacks( Sqrl_Client_Callbacks *callbacks )
-{
-	if( !callbacks ) {
-		if( SQRL_CLIENT_CALLBACKS ) {
-			free(SQRL_CLIENT_CALLBACKS);
-			SQRL_CLIENT_CALLBACKS = NULL;
-		}
-		return;
-	} else {
-		if( !SQRL_CLIENT_CALLBACKS ) {
-			SQRL_CLIENT_CALLBACKS = (Sqrl_Client_Callbacks*)malloc( sizeof( Sqrl_Client_Callbacks ));
-		}
-		if( SQRL_CLIENT_CALLBACKS ) {
-			memcpy( SQRL_CLIENT_CALLBACKS, callbacks, sizeof( Sqrl_Client_Callbacks ));
-		}
-	}
-}
-
-SqrlUser *sqrl_client_call_select_user( SqrlTransaction *transaction )
-{
-	if( SQRL_CLIENT_CALLBACKS && SQRL_CLIENT_CALLBACKS->onSelectUser ) {
-		SqrlUser *user = (SQRL_CLIENT_CALLBACKS->onSelectUser)( transaction );
-		if( user ) {
-			transaction->setUser(user);
-    		return user;
-		}
-	}
-	return NULL;
-}
-
 
 void sqrl_client_transaction_set_alternate_identity(
 	SqrlTransaction *transaction,
@@ -85,10 +33,6 @@ void sqrl_client_transaction_set_alternate_identity(
 
 void sqrl_client_call_select_alternate_identity( SqrlTransaction *transaction )
 {
-	if( !transaction ) return;	
-	if( SQRL_CLIENT_CALLBACKS && SQRL_CLIENT_CALLBACKS->onSelectAlternateIdentity ) {
-		(SQRL_CLIENT_CALLBACKS->onSelectAlternateIdentity)( transaction );
-	}
 }
 
 bool sqrl_client_call_authentication_required( SqrlTransaction *t, Sqrl_Credential_Type credentialType )

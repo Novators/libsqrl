@@ -6,8 +6,24 @@ This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
 
+#include <new>
 #include "sqrl_internal.h"
 #include "SqrlBlock.h"
+
+SqrlBlock *SqrlBlock::create() {
+	SqrlBlock *b = (SqrlBlock*)malloc( sizeof( SqrlBlock ) );
+	new (b) SqrlBlock;
+	return b;
+}
+
+SqrlBlock *SqrlBlock::create( uint16_t blockType, uint16_t blockLength ) {
+	SqrlBlock *b = (SqrlBlock*)malloc( sizeof( SqrlBlock ) );
+	new (b) SqrlBlock;
+	if( b->init( blockType, blockLength ) ) {
+		return b;
+	}
+	return b->release();
+}
 
 SqrlBlock::SqrlBlock()
 {
@@ -15,10 +31,17 @@ SqrlBlock::SqrlBlock()
 	this->clear();
 }
 
+SqrlBlock *SqrlBlock::release() {
+	this->~SqrlBlock();
+	return NULL;
+}
+
 SqrlBlock::~SqrlBlock()
 {
-	this->data = NULL;
-	this->clear();
+	if( this->data ) {
+		free( this->data );
+	}
+	free( this );
 }
 
 void SqrlBlock::clear()

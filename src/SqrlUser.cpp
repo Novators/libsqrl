@@ -5,6 +5,7 @@
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 */
+#include <new>
 #include "sqrl_internal.h"
 #include "SqrlUser.h"
 #include "SqrlTransaction.h"
@@ -25,10 +26,28 @@ int SqrlUser::enscryptCallback( int percent, void *data )
 		if( progress > 100 ) progress = 100;
 		if( progress < 0 ) progress = 0;
 		if( percent == 100 && progress >= 99 ) progress = 100;
-		return cbdata->transaction->getClient()->callProgress(cbdata->transaction, progress);
+		return SqrlClient::getClient()->callProgress(cbdata->transaction, progress);
 	} else {
 		return 1;
 	}
+}
+
+SqrlUser *SqrlUser::create() {
+	SqrlUser *user = (SqrlUser*)malloc( sizeof( SqrlUser ) );
+	new (user) SqrlUser();
+	return user;
+}
+
+SqrlUser *SqrlUser::create( const char *buffer, size_t buffer_len ) {
+	SqrlUser *user = (SqrlUser*)malloc( sizeof( SqrlUser ) );
+	new (user) SqrlUser( buffer, buffer_len );
+	return user;
+}
+
+SqrlUser *SqrlUser::create( SqrlUri *uri ) {
+	SqrlUser *user = (SqrlUser*)malloc( sizeof( SqrlUser ) );
+	new (user) SqrlUser();
+	return user;
 }
 
 void SqrlUser::ensureKeysAllocated()
@@ -237,7 +256,7 @@ void SqrlUser::hintLock()
 	if( this->keys->password_len == 0 ) {
 		return;
 	}
-	SqrlTransaction *transaction = new SqrlTransaction( SqrlClient::getClient(), SQRL_TRANSACTION_IDENTITY_LOCK );
+	SqrlTransaction *transaction = new SqrlTransaction( SQRL_TRANSACTION_IDENTITY_LOCK );
 	transaction->setUser(this);
 	struct Sqrl_User_s_callback_data cbdata;
 	cbdata.transaction = transaction;
@@ -292,7 +311,7 @@ void SqrlUser::hintUnlock( SqrlTransaction *transaction,
 				size_t length )
 {
 	if( hint == NULL || length == 0 ) {
-		transaction->getClient()->callAuthenticationRequired(transaction, SQRL_CREDENTIAL_HINT);
+		SqrlClient::getClient()->callAuthenticationRequired(transaction, SQRL_CREDENTIAL_HINT);
 		return;
 	}
 	if( !transaction ) return;

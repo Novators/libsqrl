@@ -7,8 +7,10 @@
 class DLL_PUBLIC SqrlBlock
 {
 public:
-	SqrlBlock();
-	~SqrlBlock();
+	static SqrlBlock *create();
+	static SqrlBlock *create( uint16_t blockType, uint16_t blockLength );
+
+	SqrlBlock *release();
 
 	void        clear();
 	bool        init(uint16_t blockType, uint16_t blockLength);
@@ -29,6 +31,9 @@ public:
 	uint16_t	getBlockType();
 
 private:
+	SqrlBlock();
+	~SqrlBlock();
+
 	/** The length of the block, in bytes */
 	uint16_t blockLength;
 	/** The type of block */

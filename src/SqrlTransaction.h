@@ -6,12 +6,14 @@
 
 class DLL_PUBLIC SqrlTransaction
 {
+	friend class SqrlUser;
 public:
-	SqrlTransaction(SqrlClient *client, Sqrl_Transaction_Type type);
+	static SqrlTransaction *beginTransaction( 
+		Sqrl_Transaction_Type type, SqrlUser *user,
+		const char *string, size_t string_len );
 
 	void hold();
-	void release();
-	SqrlClient *getClient();
+	SqrlTransaction *release();
 	void setUser(SqrlUser *user);
 	SqrlUser* getUser();
 	Sqrl_Transaction_Status getStatus();
@@ -28,9 +30,16 @@ public:
 	void setExportType(Sqrl_Export type);
 	Sqrl_Encoding getEncodingType();
 	void setEncodingType(Sqrl_Encoding type);
+	void authenticate( Sqrl_Credential_Type credentialType,
+		char *credential, size_t credentialLength );
+	void dataReceived( const char *payload, size_t payload_len );
+	void answer( Sqrl_Button answer );
+	void setAlternateIdentity( const char *altIdentity );
+
+
 
 private:
-	SqrlClient *client;
+	SqrlTransaction( Sqrl_Transaction_Type type );
 	Sqrl_Transaction_Type type;
 	SqrlUser *user;
 	SqrlUri *uri;

@@ -5,8 +5,8 @@
 class DLL_PUBLIC SqrlUri
 {
 public:
-	SqrlUri(const char *source);
-	~SqrlUri();
+	static SqrlUri *parse( const char *source );
+	SqrlUri *release();
 
 	Sqrl_Scheme getScheme();
 
@@ -39,6 +39,7 @@ public:
 
 private:
 	SqrlUri();
+	~SqrlUri();
 	Sqrl_Scheme scheme;
 	char *challenge;
 	char *host;

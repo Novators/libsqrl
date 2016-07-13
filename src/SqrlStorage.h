@@ -9,8 +9,11 @@
 class DLL_PUBLIC SqrlStorage
 {
 public:
-	SqrlStorage();
-	~SqrlStorage();
+	static SqrlStorage *empty();
+	static SqrlStorage *from( UT_string *buffer );
+	static SqrlStorage *from( SqrlUri *uri );
+
+	SqrlStorage *release();
 
 	bool hasBlock(uint16_t blockType);
 	bool getBlock(SqrlBlock *block, uint16_t blockType);
@@ -26,5 +29,7 @@ public:
 	void getUniqueId(char *unique_id);
 
 private:
+	SqrlStorage();
+	~SqrlStorage();
 	void *data;
 };

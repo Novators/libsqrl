@@ -6,6 +6,7 @@ This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
 
+#include <new>
 #include "sqrl_internal.h"
 #include "SqrlUri.h"
 
@@ -86,10 +87,12 @@ SqrlUri::SqrlUri()
 	this->prefix = NULL;
 	this->url = NULL;
 	this->sfn = NULL;
+	this->scheme = SQRL_SCHEME_INVALID;
 }
 
 SqrlUri* SqrlUri::copy() {
-	SqrlUri *nuri = new SqrlUri();
+	SqrlUri *nuri = (SqrlUri*)malloc( sizeof( SqrlUri ) );
+	new (nuri) SqrlUri();
 
 	if (this->challenge) { 
 		nuri->challenge = (char*)malloc(strlen(this->challenge) + 1);
@@ -138,13 +141,9 @@ Parses a SQRL URL and returns a \p SqrlUri object
 @param theUrl NULL terminated SQRL URL string
 @return A new \p SqrlUri object
 */
-SqrlUri::SqrlUri(const char *source) {
-	this->challenge = NULL;
-	this->host = NULL;
-	this->prefix = NULL;
-	this->url = NULL;
-	this->sfn = NULL;
-	this->scheme = SQRL_SCHEME_INVALID;
+SqrlUri *SqrlUri::parse(const char *source) {
+	SqrlUri *theUri = (SqrlUri*)malloc( sizeof( SqrlUri ) );
+	new (theUri) SqrlUri();
 
 	const char *tmpstr;
 	const char *curstr;
@@ -188,8 +187,8 @@ SqrlUri::SqrlUri(const char *source) {
 	(void)strncpy(sch, curstr, len);
 	sch[len] = '\0';
 	sqrl_lcstr(sch);
-	if (strcmp(sch, "sqrl") == 0) this->scheme = SQRL_SCHEME_SQRL;
-	else if (strcmp(sch, "file") == 0) this->scheme = SQRL_SCHEME_FILE;
+	if (strcmp(sch, "sqrl") == 0) theUri->scheme = SQRL_SCHEME_SQRL;
+	else if (strcmp(sch, "file") == 0) theUri->scheme = SQRL_SCHEME_FILE;
 	else {
 		free(sch);
 		goto ERR;
@@ -363,26 +362,26 @@ SqrlUri::SqrlUri(const char *source) {
 
 	/* SQRL Specific... */
 SQRL:
-	switch (this->scheme) {
+	switch (theUri->scheme) {
 	case SQRL_SCHEME_SQRL:
-		this->url = (char*)malloc(strlen(uri) + 2);
-		strcpy(this->url + 1, uri);
-		memcpy(this->url, "https", 5);
+		theUri->url = (char*)malloc(strlen(uri) + 2);
+		strcpy(theUri->url + 1, uri);
+		memcpy(theUri->url, "https", 5);
 		utstring_new(prefix);
 		utstring_bincpy(prefix, "https://", 8);
 		break;
 	case SQRL_SCHEME_FILE:
-		this->url = (char*)malloc(strlen(uri) + 2);
-		strcpy(this->url, uri);
-		this->challenge = (char*)malloc(strlen(uri) - 6);
-		strcpy(this->challenge, uri + 7);
+		theUri->url = (char*)malloc(strlen(uri) + 2);
+		strcpy(theUri->url, uri);
+		theUri->challenge = (char*)malloc(strlen(uri) - 6);
+		strcpy(theUri->challenge, uri + 7);
 		goto END;
 	default:
 		goto ERR;
 	}
-	this->challenge = (char*)malloc(strlen(source) + 1);
-	if (this->challenge == NULL || this->url == NULL) goto ERR;
-	strcpy(this->challenge, source);
+	theUri->challenge = (char*)malloc(strlen(source) + 1);
+	if (theUri->challenge == NULL || theUri->url == NULL) goto ERR;
+	strcpy(theUri->challenge, source);
 
 	size_t hl = strlen(host);
 	long pl = 0;
@@ -403,8 +402,8 @@ SQRL:
 		}
 		UT_string *utsfn = sqrl_b64u_decode(NULL, pp, pl);
 		if (utsfn) {
-			this->sfn = (char*)calloc(1, utstring_len(utsfn) + 1);
-			memcpy(this->sfn, utstring_body(utsfn), utstring_len(utsfn));
+			theUri->sfn = (char*)calloc(1, utstring_len(utsfn) + 1);
+			memcpy(theUri->sfn, utstring_body(utsfn), utstring_len(utsfn));
 			utstring_free(utsfn);
 		}
 		pl = 0;
@@ -415,34 +414,25 @@ SQRL:
 		}
 	}
 	if (pl) ul += pl + 1;
-	this->host = (char*)malloc(ul);
-	if (this->host == NULL) goto ERR;
-	strcpy(this->host, host);
+	theUri->host = (char*)malloc(ul);
+	if (theUri->host == NULL) goto ERR;
+	strcpy(theUri->host, host);
 	utstring_bincpy(prefix, host, strlen(host));
 	if (port) {
 		utstring_printf(prefix, ":%s", port);
 	}
 	if (pl) {
-		this->host[hl] = '/';
-		strncpy(this->host + hl + 1, path, pl);
+		theUri->host[hl] = '/';
+		strncpy(theUri->host + hl + 1, path, pl);
 	}
-	this->prefix = (char*)malloc(utstring_len(prefix) + 1);
-	if (this->prefix == NULL) goto ERR;
-	strcpy(this->prefix, utstring_body(prefix));
+	theUri->prefix = (char*)malloc(utstring_len(prefix) + 1);
+	if (theUri->prefix == NULL) goto ERR;
+	strcpy(theUri->prefix, utstring_body(prefix));
 	goto END;
 
 ERR:
-	if (this->challenge) free(this->challenge);
-	this->challenge = NULL;
-	if (this->host) free(this->host);
-	this->host = NULL;
-	if (this->prefix) free(this->prefix);
-	this->prefix = NULL;
-	if (this->url) free(this->url);
-	this->url = NULL;
-	if (this->sfn) free(this->sfn);
-	this->sfn = NULL;
-	this->scheme = SQRL_SCHEME_INVALID;
+	theUri->~SqrlUri();
+	theUri = NULL;
 
 END:
 	if (host) free(host);
@@ -454,6 +444,7 @@ END:
 	if (path) free(path);
 	if (prefix) utstring_free(prefix);
 	if (uri) free(uri);
+	return theUri;
 }
 
 /**
@@ -469,5 +460,10 @@ SqrlUri::~SqrlUri() {
 	if (this->prefix) free(this->prefix);
 	if (this->url) free(this->url);
 	if (this->sfn) free(this->sfn);
+	free( this );
 }
 
+SqrlUri *SqrlUri::release() {
+	this->~SqrlUri();
+	return NULL;
+}

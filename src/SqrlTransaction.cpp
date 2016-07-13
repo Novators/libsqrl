@@ -31,7 +31,7 @@ printf( "%10s: %d\n", tag, _ptcI )
 #define PRINT_TRANSACTION_COUNT(tag)
 #endif
 
-SqrlTransaction::SqrlTransaction( SqrlClient *client, Sqrl_Transaction_Type type)
+SqrlTransaction::SqrlTransaction( Sqrl_Transaction_Type type)
 {
     struct Sqrl_Transaction_List *list = (struct Sqrl_Transaction_List*)calloc( 1, sizeof( struct Sqrl_Transaction_List ));
 	this->type = type;
@@ -42,7 +42,6 @@ SqrlTransaction::SqrlTransaction( SqrlClient *client, Sqrl_Transaction_Type type
     list->next = SQRL_TRANSACTION_LIST;
     SQRL_TRANSACTION_LIST = list;
     sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
-	this->client = client;
 }
 
 
@@ -76,7 +75,7 @@ void SqrlTransaction::hold()
     sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
 }
 
-void SqrlTransaction::release()
+SqrlTransaction *SqrlTransaction::release()
 {
 	bool freeMe = false;
     struct Sqrl_Transaction_List *l = NULL, *n = NULL;
@@ -103,13 +102,14 @@ void SqrlTransaction::release()
 		if (this->user) {
 			this->user->release();
 		}
-		if (this->uri) delete(this->uri);
+		if (this->uri) this->uri = this->uri->release();
         if( this->string ) free( this->string );
         if( this->altIdentity ) free( this->altIdentity );
         // free ->data
         sqrl_mutex_destroy( this->mutex );
         free( this );
     }
+	return NULL;
 }
 
 void SqrlTransaction::setUser( SqrlUser *u )
@@ -157,11 +157,6 @@ Sqrl_Transaction_Type SqrlTransaction::getType()
 	return this->type;
 }
 
-SqrlClient *SqrlTransaction::getClient()
-{
-	return this->client;
-}
-
 SqrlUser *SqrlTransaction::getUser()
 {
 	return this->user;
@@ -192,7 +187,7 @@ SqrlUri *SqrlTransaction::getUri()
 void SqrlTransaction::setUri(SqrlUri *uri)
 {
 	if (this->uri) {
-		delete(this->uri);
+		this->uri = this->uri->release();
 	}
 	this->uri = uri->copy();
 }
