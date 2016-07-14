@@ -19,6 +19,12 @@ For more details, see the LICENSE file included with this package.
 
 #include <stdio.h>
 #include <sodium.h>
+extern "C" {
+#include "crypto_scrypt.h"
+}
+
+#include "sqrl.h"
+
 
 #define DEBUG_ERR 1
 #define DEBUG_INFO 1
@@ -75,12 +81,36 @@ if ((s)->d != NULL) sodium_memzero( (s)->d, (s)->n );  \
 #define FLAG_CLEAR(f,v) f &= ~(v)
 #define FLAG_CHECK(f,v) (v == (f & v))
 
+typedef enum
+{
+	SQRL_TRANSACTION_UNKNOWN = 0,
+	SQRL_TRANSACTION_AUTH_QUERY,
+	SQRL_TRANSACTION_AUTH_IDENT,
+	SQRL_TRANSACTION_AUTH_DISABLE,
+	SQRL_TRANSACTION_AUTH_ENABLE,
+	SQRL_TRANSACTION_AUTH_REMOVE,
+	SQRL_TRANSACTION_IDENTITY_SAVE,
+	SQRL_TRANSACTION_IDENTITY_RESCUE,
+	SQRL_TRANSACTION_IDENTITY_REKEY,
+	SQRL_TRANSACTION_IDENTITY_UNLOCK,
+	SQRL_TRANSACTION_IDENTITY_LOCK,
+	SQRL_TRANSACTION_IDENTITY_LOAD,
+	SQRL_TRANSACTION_IDENTITY_GENERATE,
+	SQRL_TRANSACTION_IDENTITY_CHANGE_PASSWORD
+} Sqrl_Transaction_Type;
+
+typedef enum
+{
+	SQRL_TRANSACTION_STATUS_SUCCESS = 0,
+	SQRL_TRANSACTION_STATUS_FAILED,
+	SQRL_TRANSACTION_STATUS_CANCELLED,
+	SQRL_TRANSACTION_STATUS_WORKING
+} Sqrl_Transaction_Status;
+
 
 typedef int(*enscrypt_progress_fn)(int percent, void* data);
 DLL_PUBLIC double sqrl_get_real_time();
 DLL_PUBLIC uint64_t sqrl_get_timestamp();
-
-#include "sqrl.h"
 
 struct Sqrl_Global_Mutices {
 	SqrlMutex user;
@@ -113,18 +143,6 @@ typedef SQRL_THREAD_FUNCTION_RETURN_TYPE(*sqrl_thread_function)(SQRL_THREAD_FUNC
 
 SqrlThread sqrl_thread_create(sqrl_thread_function function, SQRL_THREAD_FUNCTION_INPUT_TYPE input);
 
-#pragma pack(push,8)
-struct Sqrl_Keys
-{
-	uint8_t keys[USER_MAX_KEYS][SQRL_KEY_SIZE];		//  512   (28 * 32)
-	size_t password_len;							//    8
-	char password[KEY_PASSWORD_MAX_LEN];			//  512
-													// Internal Use Only:
-	uint8_t scratch[KEY_SCRATCH_SIZE];				// 2048
-													// 3080 bytes
-};
-#pragma pack(pop)
-
 struct Sqrl_User_s_callback_data {
 	SqrlTransaction *transaction;
 	int adder;
@@ -150,9 +168,6 @@ typedef struct Sqrl_Site {
 	SqrlMutex mutex;
 } Sqrl_Site;
 
-
-
-
 int sqrl_site_count();
 void sqrl_client_user_maintenance(bool forceLockAll);
 
@@ -166,31 +181,6 @@ struct Sqrl_Site_List {
 };
 
 extern struct Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
-
-SqrlUser *sqrl_client_call_select_user(
-	SqrlTransaction *transaction);
-void sqrl_client_call_select_alternate_identity(
-	SqrlTransaction *transaction);
-bool sqrl_client_call_authentication_required(
-	SqrlTransaction *transaction,
-	Sqrl_Credential_Type credentialType);
-void sqrl_client_call_ask(
-	SqrlTransaction *transaction,
-	const char *message, size_t message_len,
-	const char *firstButton, size_t firstButton_len,
-	const char *secondButton, size_t secondButton_len);
-void sqrl_client_call_send(
-	SqrlTransaction *transaction,
-	const char *url, size_t url_len,
-	const char *payload, size_t payload_len);
-int sqrl_client_call_progress(
-	SqrlTransaction *transaction,
-	int progress);
-void sqrl_client_call_save_suggested(
-	SqrlUser *user);
-void sqrl_client_call_transaction_complete(
-	SqrlTransaction *transaction);
-
 
 bool sqrl_client_require_password(SqrlTransaction *transaction);
 bool sqrl_client_require_hint(SqrlTransaction *transaction);
@@ -213,50 +203,11 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction(SqrlTransaction *t, const
 void sqrl_client_site_maintenance(bool forceDeleteAll);
 
 /* crypt.c */
-void 		sqrl_sign(const UT_string *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64]);
-bool 		sqrl_verify_sig(const UT_string *, const uint8_t *, const uint8_t *);
-int 		sqrl_make_shared_secret(uint8_t *, const uint8_t *, const uint8_t *);
-//int 		sqrl_make_dh_keys( uint8_t *, uint8_t * );
-void 		sqrl_ed_public_key(uint8_t *puk, const uint8_t *prk);
-bool 		sqrl_crypt(Sqrl_Crypt_Context *sctx, const char *password, size_t password_len, enscrypt_progress_fn callback, void * callback_data);
+//bool 		sqrl_crypt(Sqrl_Crypt_Context *sctx, const char *password, size_t password_len, enscrypt_progress_fn callback, void * callback_data);
 bool 		sqrl_crypt_gcm(Sqrl_Crypt_Context *sctx, uint8_t *key);
 uint32_t 	sqrl_crypt_enscrypt(Sqrl_Crypt_Context *sctx, uint8_t *key, const char *password, size_t password_len, enscrypt_progress_fn callback, void * callback_data);
 
-void sqrl_gen_ilk(uint8_t ilk[SQRL_KEY_SIZE], const uint8_t iuk[SQRL_KEY_SIZE]);
-void sqrl_gen_local(uint8_t local[SQRL_KEY_SIZE], const uint8_t mk[SQRL_KEY_SIZE]);
-void sqrl_gen_mk(uint8_t mk[SQRL_KEY_SIZE], const uint8_t iuk[SQRL_KEY_SIZE]);
-void sqrl_gen_rlk(uint8_t rlk[SQRL_KEY_SIZE]);
-void sqrl_gen_suk(uint8_t suk[SQRL_KEY_SIZE], const uint8_t rlk[SQRL_KEY_SIZE]);
-void sqrl_gen_vuk(uint8_t vuk[SQRL_KEY_SIZE], const uint8_t ilk[SQRL_KEY_SIZE], const uint8_t rlk[SQRL_KEY_SIZE]);
-void sqrl_gen_ursk(uint8_t ursk[SQRL_KEY_SIZE], const uint8_t suk[SQRL_KEY_SIZE], const uint8_t iuk[SQRL_KEY_SIZE]);
-
-
 uint16_t readint_16(void *buf);
-int Sqrl_EnHash(uint64_t *out, uint64_t *in);
-
-int sqrl_enscrypt(
-	uint8_t *buf,
-	const char *password,
-	size_t password_len,
-	const uint8_t *salt,
-	uint8_t salt_len,
-	uint8_t nFactor,
-	uint16_t iterations,
-	enscrypt_progress_fn cb_ptr,
-	void *cb_data);
-int sqrl_enscrypt_ms(
-	uint8_t *buf,
-	const char *password,
-	size_t password_len,
-	const uint8_t *salt,
-	uint8_t salt_len,
-	uint8_t nFactor,
-	int millis,
-	enscrypt_progress_fn cb_ptr,
-	void *cb_data);
-
-void sqrl_curve_private_key(uint8_t *key);
-void sqrl_curve_public_key(uint8_t *puk, const uint8_t *prk);
 
 void sqrl_lcstr(char *);
 

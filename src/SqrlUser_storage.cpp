@@ -129,7 +129,7 @@ bool SqrlUser::sus_block_2( SqrlTransaction *transaction, SqrlBlock *block, stru
 	UT_string *str;
 	utstring_new( str );
 	sqrl_b64u_encode( str, sctx.cipher_text, SQRL_KEY_SIZE );
-	strcpy( this->uniqueId, utstring_body(str));
+	strcpy_s( this->uniqueId, utstring_body( str ) );
 	utstring_free( str );
 
 	goto DONE;

@@ -1,13 +1,14 @@
 #pragma once
 
 #ifndef DLL_PUBLIC
-#define DLL_PUBLIC __declspec( dllimport )
+#define DLL_PUBLIC
 #endif
 
-#define SQRL_LIB_VERSION "1.2016.32"
+#define SQRL_LIB_VERSION "1.0.160713.1"
 #define SQRL_LIB_VERSION_MAJOR 1
-#define SQRL_LIB_VERSION_MINOR 2016
-#define SQRL_LIB_VERSION_BUILD 32
+#define SQRL_LIB_VERSION_MINOR 0
+#define SQRL_LIB_VERSION_BUILD 160713
+#define SQRL_LIB_VERSION_REVISION 1
 
 #include <stdint.h>
 #include "utstring.h"
@@ -16,68 +17,6 @@
 #include "SqrlTransaction.fwd.h"
 #include "SqrlUri.fwd.h"
 #include "SqrlUser.fwd.h"
-
-#define KEY_MK           1
-#define KEY_ILK          2
-#define KEY_PIUK0        3
-#define KEY_PIUK1        4
-#define KEY_PIUK2        5
-#define KEY_PIUK3        6
-#define KEY_IUK          7
-#define KEY_LOCAL        8
-#define KEY_RESCUE_CODE  9
-#define KEY_PASSWORD    10
-
-#define KEY_PASSWORD_MAX_LEN 512
-#define KEY_SCRATCH_SIZE 2048
-
-#define USER_MAX_KEYS 16
-
-#define USER_FLAG_MEMLOCKED 	0x0001
-#define USER_FLAG_T1_CHANGED	0x0002
-#define USER_FLAG_T2_CHANGED	0x0004
-
-
-typedef struct Sqrl_User_Options {
-	/** 16 bit Flags, defined at [grc sqrl storage](https://www.grc.com/sqrl/storage.htm) */
-	uint16_t flags;
-	/** The number of characters to use for password hints (0 to disable) */
-	uint8_t hintLength;
-	/** The number of seconds to enscrypt */
-	uint8_t enscryptSeconds;
-	/** Minutes to hold a hint when system is idle */
-	uint16_t timeoutMinutes;
-} Sqrl_User_Options;
-
-typedef enum {
-	SQRL_SCHEME_INVALID = 0,
-	SQRL_SCHEME_SQRL,
-	SQRL_SCHEME_FILE
-} Sqrl_Scheme;
-
-typedef enum {
-	SQRL_TRANSACTION_UNKNOWN = 0,
-	SQRL_TRANSACTION_AUTH_QUERY,
-	SQRL_TRANSACTION_AUTH_IDENT,
-	SQRL_TRANSACTION_AUTH_DISABLE,
-	SQRL_TRANSACTION_AUTH_ENABLE,
-	SQRL_TRANSACTION_AUTH_REMOVE,
-	SQRL_TRANSACTION_IDENTITY_SAVE,
-	SQRL_TRANSACTION_IDENTITY_RESCUE,
-	SQRL_TRANSACTION_IDENTITY_REKEY,
-	SQRL_TRANSACTION_IDENTITY_UNLOCK,
-	SQRL_TRANSACTION_IDENTITY_LOCK,
-	SQRL_TRANSACTION_IDENTITY_LOAD,
-	SQRL_TRANSACTION_IDENTITY_GENERATE,
-	SQRL_TRANSACTION_IDENTITY_CHANGE_PASSWORD
-} Sqrl_Transaction_Type;
-
-typedef enum {
-	SQRL_TRANSACTION_STATUS_SUCCESS = 0,
-	SQRL_TRANSACTION_STATUS_FAILED,
-	SQRL_TRANSACTION_STATUS_CANCELLED,
-	SQRL_TRANSACTION_STATUS_WORKING
-} Sqrl_Transaction_Status;
 
 typedef enum {
 	SQRL_ENCODING_BINARY = 0,

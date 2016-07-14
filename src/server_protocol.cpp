@@ -10,6 +10,7 @@ For more details, see the LICENSE file included with this package.
 #include "sqrl.h"
 #include "sqrl_server.h"
 #include "SqrlUri.h"
+#include "SqrlCrypt.h"
 
 #define COMMAND_COUNT 5
 
@@ -152,7 +153,7 @@ bool sqrl_server_verify_urs( Sqrl_Server_Context *context )
     utstring_printf( str, "%s%s", context->context_strings[CONTEXT_KV_CLIENT], context->context_strings[CONTEXT_KV_SERVER] );    
     sqrl_b64u_decode( sig, context->context_strings[CONTEXT_KV_URS], strlen( context->context_strings[CONTEXT_KV_URS]));
 
-    if( sqrl_verify_sig( str, (uint8_t*)utstring_body( sig ), context->user->vuk )) {
+    if( SqrlCrypt::verifySignature( str, (uint8_t*)utstring_body( sig ), context->user->vuk )) {
         FLAG_SET( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_URS );
         retVal = true;
     }
@@ -174,7 +175,7 @@ bool sqrl_server_verify_signatures(
         if( context->context_strings[CONTEXT_KV_IDS] ) {
             sqrl_b64u_decode( sig, context->context_strings[CONTEXT_KV_IDS], strlen( context->context_strings[CONTEXT_KV_IDS] ));
             sqrl_b64u_decode( key, context->client_strings[CLIENT_KV_IDK], strlen( context->client_strings[CLIENT_KV_IDK] ));
-            if( !sqrl_verify_sig( str, (uint8_t*)utstring_body( sig ), (uint8_t*)utstring_body( key ))) {
+            if( !SqrlCrypt::verifySignature( str, (uint8_t*)utstring_body( sig ), (uint8_t*)utstring_body( key ))) {
                 utstring_free( str );
                 utstring_free( key );
                 utstring_free( sig );
@@ -187,7 +188,7 @@ bool sqrl_server_verify_signatures(
         if( context->context_strings[CONTEXT_KV_PIDS] ) {
             sqrl_b64u_decode( sig, context->context_strings[CONTEXT_KV_PIDS], strlen( context->context_strings[CONTEXT_KV_PIDS] ));
             sqrl_b64u_decode( key, context->client_strings[CLIENT_KV_PIDK], strlen( context->client_strings[CLIENT_KV_PIDK] ));
-            if( !sqrl_verify_sig( str, (uint8_t*)utstring_body( sig ), (uint8_t*)utstring_body( key ))) {
+            if( !SqrlCrypt::verifySignature( str, (uint8_t*)utstring_body( sig ), (uint8_t*)utstring_body( key ))) {
                 utstring_free( str );
                 utstring_free( key );
                 utstring_free( sig );
@@ -343,8 +344,9 @@ void sqrl_server_add_user_suk( Sqrl_Server_Context *context )
     UT_string *tmp;
     utstring_new( tmp );
     sqrl_b64u_encode( tmp, context->user->suk, SQRL_KEY_SIZE );
-    context->server_strings[SERVER_KV_SUK] = (char*)malloc( 1 + utstring_len( tmp ));
-    strcpy( context->server_strings[SERVER_KV_SUK], utstring_body( tmp ));
+	unsigned len = utstring_len( tmp ) + 1;
+	context->server_strings[SERVER_KV_SUK] = (char*)malloc( len );
+    strcpy_s( context->server_strings[SERVER_KV_SUK], len, utstring_body( tmp ));
     utstring_free( tmp );
 }
 

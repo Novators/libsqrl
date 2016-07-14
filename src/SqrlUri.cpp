@@ -15,48 +15,55 @@ Sqrl_Scheme SqrlUri::getScheme() {
 }
 char* SqrlUri::getChallenge() {
 	if (this->challenge == NULL) return NULL;
-	char *ret = (char*)malloc(strlen(this->challenge)+1);
-	strcpy(ret, this->challenge);
+	size_t len = strlen( this->challenge ) + 1;
+	char *ret = (char*)malloc(len);
+	strcpy_s(ret, len, this->challenge);
 	return ret;
 }
 void SqrlUri::setChallenge(const char *val) {
 	if (this->challenge) free(this->challenge);
 	this->challenge = NULL;
 	if (val) {
-		this->challenge = (char*)malloc(strlen(val) + 1);
-		strcpy(this->challenge, val);
+		size_t len = strlen( val ) + 1;
+		this->challenge = (char*)malloc(len);
+		strcpy_s(this->challenge, len, val);
 	}
 }
 void SqrlUri::setUrl(const char *val) {
 	if (this->url) free(this->url);
 	this->url = NULL;
 	if (val) {
-		this->url = (char*)malloc(strlen(val) + 1);
-		strcpy(this->url, val);
+		size_t len = strlen( val ) + 1;
+		this->url = (char*)malloc(len);
+		strcpy_s(this->url, len, val);
 	}
 }
 char* SqrlUri::getHost() {
 	if (this->host == NULL) return NULL;
-	char *ret = (char*)malloc(strlen(this->host)+1);
-	strcpy(ret, this->host);
+	size_t len = strlen( this->host ) + 1;
+	char *ret = (char*)malloc(len);
+	strcpy_s(ret, len, this->host);
 	return ret;
 }
 char* SqrlUri::getPrefix() {
 	if (this->prefix == NULL) return NULL;
-	char *ret = (char*)malloc(strlen(this->prefix)+1);
-	strcpy(ret, this->prefix);
+	size_t len = strlen( this->prefix ) + 1;
+	char *ret = (char*)malloc(len);
+	strcpy_s(ret, len, this->prefix);
 	return ret;
 }
 char* SqrlUri::getUrl() {
 	if (this->url == NULL) return NULL;
-	char *ret = (char*)malloc(strlen(this->url)+1);
-	strcpy(ret, this->url);
+	size_t len = strlen( this->url ) + 1;
+	char *ret = (char*)malloc(len);
+	strcpy_s(ret, len, this->url);
 	return ret;
 }
 char* SqrlUri::getSFN() {
 	if (this->sfn == NULL) return NULL;
-	char *ret = (char*)malloc(strlen(this->sfn)+1);
-	strcpy(ret, this->sfn);
+	size_t len = strlen( this->sfn ) + 1;
+	char *ret = (char*)malloc(len);
+	strcpy_s(ret, len, this->sfn);
 	return ret;
 }
 size_t SqrlUri::getChallengeLength() {
@@ -93,26 +100,32 @@ SqrlUri::SqrlUri()
 SqrlUri* SqrlUri::copy() {
 	SqrlUri *nuri = (SqrlUri*)malloc( sizeof( SqrlUri ) );
 	new (nuri) SqrlUri();
+	size_t len;
 
 	if (this->challenge) { 
-		nuri->challenge = (char*)malloc(strlen(this->challenge) + 1);
-		strcpy(nuri->challenge, this->challenge);
+		len = strlen( this->challenge ) + 1;
+		nuri->challenge = (char*)malloc(len);
+		strcpy_s(nuri->challenge, len, this->challenge);
 	}
 	if (this->host) {
-		nuri->host = (char*)malloc(strlen(this->host) + 1);
-		strcpy(nuri->host, this->host);
+		len = strlen( this->challenge ) + 1;
+		nuri->host = (char*)malloc( len );
+		strcpy_s(nuri->host, len, this->host);
 	}
 	if (this->prefix) {
-		nuri->prefix = (char*)malloc(strlen(this->prefix) + 1);
-		strcpy(nuri->prefix, this->prefix);
+		len = strlen( this->challenge ) + 1;
+		nuri->prefix = (char*)malloc( len );
+		strcpy_s(nuri->prefix, len, this->prefix);
 	}
 	if (this->url) {
-		nuri->url = (char*)malloc(strlen(this->url) + 1);
-		strcpy(nuri->url, this->url);
+		len = strlen( this->challenge ) + 1;
+		nuri->url = (char*)malloc( len );
+		strcpy_s(nuri->url, len, this->url);
 	}
 	if (this->sfn) {
-		nuri->sfn = (char*)malloc(strlen(this->sfn) + 1);
-		strcpy(nuri->sfn, this->sfn);
+		len = strlen( this->challenge ) + 1;
+		nuri->sfn = (char*)malloc( len );
+		strcpy_s(nuri->sfn, len, this->sfn);
 	}
 	return nuri;
 }
@@ -158,10 +171,12 @@ SqrlUri *SqrlUri::parse(const char *source) {
 		*fragment = NULL,
 		*username = NULL,
 		*password = NULL;
+	size_t ln;
 
 	UT_string *prefix = NULL;
-	char *uri = (char*)malloc(strlen(source) + 1);
-	strcpy(uri, source);
+	ln = strlen( source ) + 1;
+	char *uri = (char*)malloc(ln);
+	strcpy_s(uri, ln, source);
 
 	curstr = uri;
 
@@ -181,10 +196,11 @@ SqrlUri *SqrlUri::parse(const char *source) {
 		if (!_is_scheme_char(curstr[i])) goto ERR;
 	}
 	/* Copy the scheme to the storage */
-	char *sch = (char*)malloc(sizeof(char) * (len + 1));
+	ln = sizeof( char ) * (len + 1);
+	char *sch = (char*)malloc(ln);
 	if (NULL == sch) goto ERR;
 
-	(void)strncpy(sch, curstr, len);
+	(void)strncpy_s(sch, ln, curstr, len);
 	sch[len] = '\0';
 	sqrl_lcstr(sch);
 	if (strcmp(sch, "sqrl") == 0) theUri->scheme = SQRL_SCHEME_SQRL;
@@ -234,9 +250,10 @@ SqrlUri *SqrlUri::parse(const char *source) {
 			tmpstr++;
 		}
 		len = tmpstr - curstr;
-		username = (char*)malloc(sizeof(char) * (len + 1));
+		ln = sizeof( char ) * (len + 1);
+		username = (char*)malloc(ln);
 		if (NULL == username) goto ERR;
-		(void)strncpy(username, curstr, len);
+		(void)strncpy_s(username, ln, curstr, len);
 		username[len] = '\0';
 		/* Proceed current pointer */
 		curstr = tmpstr;
@@ -249,9 +266,10 @@ SqrlUri *SqrlUri::parse(const char *source) {
 				tmpstr++;
 			}
 			len = tmpstr - curstr;
-			password = (char*)malloc(sizeof(char) * (len + 1));
+			ln = sizeof( char ) * (len + 1);
+			password = (char*)malloc(ln);
 			if (NULL == password) goto ERR;
-			(void)strncpy(password, curstr, len);
+			(void)strncpy_s(password, ln, curstr, len);
 			password[len] = '\0';
 			curstr = tmpstr;
 		}
@@ -281,9 +299,10 @@ SqrlUri *SqrlUri::parse(const char *source) {
 		tmpstr++;
 	}
 	len = tmpstr - curstr;
-	host = (char*)malloc(sizeof(char) * (len + 1));
+	ln = sizeof( char ) * (len + 1);
+	host = (char*)malloc(ln);
 	if (NULL == host || len <= 0) goto ERR;
-	(void)strncpy(host, curstr, len);
+	(void)strncpy_s(host, ln, curstr, len);
 	host[len] = '\0';
 	curstr = tmpstr;
 
@@ -296,9 +315,10 @@ SqrlUri *SqrlUri::parse(const char *source) {
 			tmpstr++;
 		}
 		len = tmpstr - curstr;
-		port = (char*)malloc(sizeof(char) * (len + 1));
+		ln = sizeof( char ) * (len + 1);
+		port = (char*)malloc(ln);
 		if (NULL == port) goto ERR;
-		(void)strncpy(port, curstr, len);
+		(void)strncpy_s(port, ln, curstr, len);
 		port[len] = '\0';
 		curstr = tmpstr;
 	}
@@ -318,10 +338,11 @@ SqrlUri *SqrlUri::parse(const char *source) {
 		tmpstr++;
 	}
 	len = tmpstr - curstr;
-	path = (char*)malloc(sizeof(char) * (len + 1));
+	ln = sizeof( char ) * (len + 1);
+	path = (char*)malloc(ln);
 	if (NULL == path) goto ERR;
 
-	(void)strncpy(path, curstr, len);
+	(void)strncpy_s(path, ln, curstr, len);
 	path[len] = '\0';
 	curstr = tmpstr;
 
@@ -335,10 +356,11 @@ SqrlUri *SqrlUri::parse(const char *source) {
 			tmpstr++;
 		}
 		len = tmpstr - curstr;
-		query = (char*)malloc(sizeof(char) * (len + 1));
+		ln = sizeof( char ) * (len + 1);
+		query = (char*)malloc(ln);
 		if (NULL == query) goto ERR;
 
-		(void)strncpy(query, curstr, len);
+		(void)strncpy_s(query, ln, curstr, len);
 		query[len] = '\0';
 		curstr = tmpstr;
 	}
@@ -353,10 +375,11 @@ SqrlUri *SqrlUri::parse(const char *source) {
 			tmpstr++;
 		}
 		len = tmpstr - curstr;
-		fragment = (char*)malloc(sizeof(char) * (len + 1));
+		ln = sizeof( char ) * (len + 1);
+		fragment = (char*)malloc(ln);
 		if (NULL == fragment) goto ERR;
 
-		(void)strncpy(fragment, curstr, len);
+		(void)strncpy_s(fragment, ln, curstr, len);
 		fragment[len] = '\0';
 	}
 
@@ -364,24 +387,28 @@ SqrlUri *SqrlUri::parse(const char *source) {
 SQRL:
 	switch (theUri->scheme) {
 	case SQRL_SCHEME_SQRL:
-		theUri->url = (char*)malloc(strlen(uri) + 2);
-		strcpy(theUri->url + 1, uri);
+		ln = strlen( uri ) + 2;
+		theUri->url = (char*)malloc(ln);
+		strcpy_s(theUri->url + 1, ln - 1, uri);
 		memcpy(theUri->url, "https", 5);
 		utstring_new(prefix);
 		utstring_bincpy(prefix, "https://", 8);
 		break;
 	case SQRL_SCHEME_FILE:
-		theUri->url = (char*)malloc(strlen(uri) + 2);
-		strcpy(theUri->url, uri);
-		theUri->challenge = (char*)malloc(strlen(uri) - 6);
-		strcpy(theUri->challenge, uri + 7);
+		ln = strlen( uri ) + 2;
+		theUri->url = (char*)malloc(ln);
+		strcpy_s(theUri->url, ln, uri);
+		ln -= 8;
+		theUri->challenge = (char*)malloc(ln);
+		strcpy_s(theUri->challenge, ln, uri + 7);
 		goto END;
 	default:
 		goto ERR;
 	}
-	theUri->challenge = (char*)malloc(strlen(source) + 1);
+	ln = strlen( source ) + 1;
+	theUri->challenge = (char*)malloc(ln);
 	if (theUri->challenge == NULL || theUri->url == NULL) goto ERR;
-	strcpy(theUri->challenge, source);
+	strcpy_s(theUri->challenge, ln, source);
 
 	size_t hl = strlen(host);
 	long pl = 0;
@@ -416,7 +443,7 @@ SQRL:
 	if (pl) ul += pl + 1;
 	theUri->host = (char*)malloc(ul);
 	if (theUri->host == NULL) goto ERR;
-	strcpy(theUri->host, host);
+	strcpy_s(theUri->host, ul, host);
 	utstring_bincpy(prefix, host, strlen(host));
 	if (port) {
 		utstring_printf(prefix, ":%s", port);
@@ -425,9 +452,10 @@ SQRL:
 		theUri->host[hl] = '/';
 		strncpy(theUri->host + hl + 1, path, pl);
 	}
-	theUri->prefix = (char*)malloc(utstring_len(prefix) + 1);
+	ln = utstring_len( prefix ) + 1;
+	theUri->prefix = (char*)malloc(ln);
 	if (theUri->prefix == NULL) goto ERR;
-	strcpy(theUri->prefix, utstring_body(prefix));
+	strcpy_s(theUri->prefix, ln, utstring_body(prefix));
 	goto END;
 
 ERR:

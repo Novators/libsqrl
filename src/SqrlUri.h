@@ -2,6 +2,13 @@
 
 #include "SqrlUri.fwd.h"
 
+typedef enum
+{
+	SQRL_SCHEME_INVALID = 0,
+	SQRL_SCHEME_SQRL,
+	SQRL_SCHEME_FILE
+} Sqrl_Scheme;
+
 class DLL_PUBLIC SqrlUri
 {
 public:

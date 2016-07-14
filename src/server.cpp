@@ -26,14 +26,16 @@ bool sqrl_server_init(
     if( !server ) return false;
     memset( server, 0, sizeof( Sqrl_Server ));
 
-    if( !onUserOp ) onUserOp = sqrl_scb_user_default;
+    //if( !onUserOp ) onUserOp = sqrl_scb_user_default;
     if( !onSend ) onSend = sqrl_scb_send_default;
     server->onUserOp = onUserOp;
     server->onSend = onSend;
+	size_t len;
 
     if( sfn ) {
-        server->sfn = (char*)malloc( strlen( sfn ) + 1 );
-        strcpy( server->sfn, sfn );
+		len = strlen( sfn ) + 1;
+        server->sfn = (char*)malloc( len );
+        strcpy_s( server->sfn, len, sfn );
     } else {
         SqrlUri *tmpUri = SqrlUri::parse( uri );
         if( tmpUri ) {
@@ -209,6 +211,7 @@ char *sqrl_server_create_link( Sqrl_Server *server, uint32_t ip )
     if( !server ) return false;
     char *retVal = NULL;
     Sqrl_Nut nut;
+	size_t len;
     if( sqrl_server_nut_generate( server, &nut, ip )) {
 		char *challenge = server->uri->getChallenge();
         char *p, *pp;
@@ -221,8 +224,9 @@ char *sqrl_server_create_link( Sqrl_Server *server, uint32_t ip )
             pp = p + strlen( SQRL_SERVER_TOKEN_NUT );
             utstring_printf( str, "%s", pp );
             sqrl_server_add_mac( server, str, '&' );
-            retVal = (char*)malloc( utstring_len( str ) + 1 );
-            strcpy( retVal, utstring_body( str ));
+			len = utstring_len( str ) + 1;
+            retVal = (char*)malloc( len );
+            strcpy_s( retVal, len, utstring_body( str ));
             utstring_free( str );
         }
 		free(challenge);
@@ -270,6 +274,7 @@ struct sqrl_default_user_list {
 
 static struct sqrl_default_user_list *SDUL = NULL;
 
+/*
 bool sqrl_scb_user_default(
     Sqrl_Server_User_Op op,
     char *host,
@@ -280,13 +285,16 @@ bool sqrl_scb_user_default(
     if( !host || !idk ) return false;
     struct sqrl_default_user_list *l, *lp = NULL;
     char *cmpStr = idk;
+	size_t len;
 
     if( op == SQRL_SCB_USER_CREATE ) {
         l = (sqrl_default_user_list*)calloc( 1, sizeof( struct sqrl_default_user_list ));
-        l->idk = (char*)malloc( 1 + strlen( idk ));
-        strcpy( l->idk, idk );
-        l->blob = (char*)malloc( 1 + strlen( blob ));
-        strcpy( l->blob, blob );
+		len = 1 + strlen( idk );
+        l->idk = (char*)malloc( len );
+        strcpy_s( l->idk, len, idk );
+		len = 1 + strlen( blob );
+        l->blob = (char*)malloc( len );
+        strcpy_s( l->blob, len, blob );
         l->next = SDUL;
         SDUL = l;
         return true;
@@ -330,6 +338,7 @@ bool sqrl_scb_user_default(
     }
     return false;
 }
+*/
 
 void sqrl_scb_send_default(
     Sqrl_Server_Context *context,

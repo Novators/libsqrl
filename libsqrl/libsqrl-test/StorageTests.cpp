@@ -22,6 +22,7 @@ namespace libsqrltest
 		{
 			bool bError = false;
 			SqrlUri *fn = SqrlUri::parse( "file://test1.sqrl" );
+			Assert::IsNotNull( fn );
 			SqrlStorage *storage = SqrlStorage::from( fn );
 			fn->release();
 

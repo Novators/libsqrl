@@ -5,6 +5,51 @@
 #include "SqrlBlock.fwd.h"
 #include "SqrlStorage.fwd.h"
 
+#define USER_MAX_KEYS 16
+
+#define USER_FLAG_MEMLOCKED 	0x0001
+#define USER_FLAG_T1_CHANGED	0x0002
+#define USER_FLAG_T2_CHANGED	0x0004
+
+typedef struct Sqrl_User_Options
+{
+	/** 16 bit Flags, defined at [grc sqrl storage](https://www.grc.com/sqrl/storage.htm) */
+	uint16_t flags;
+	/** The number of characters to use for password hints (0 to disable) */
+	uint8_t hintLength;
+	/** The number of seconds to enscrypt */
+	uint8_t enscryptSeconds;
+	/** Minutes to hold a hint when system is idle */
+	uint16_t timeoutMinutes;
+} Sqrl_User_Options;
+
+#define KEY_MK           1
+#define KEY_ILK          2
+#define KEY_PIUK0        3
+#define KEY_PIUK1        4
+#define KEY_PIUK2        5
+#define KEY_PIUK3        6
+#define KEY_IUK          7
+#define KEY_LOCAL        8
+#define KEY_RESCUE_CODE  9
+#define KEY_PASSWORD    10
+
+#define KEY_PASSWORD_MAX_LEN 512
+#define KEY_SCRATCH_SIZE 2048
+
+#pragma pack(push,8)
+struct Sqrl_Keys
+{
+	uint8_t keys[USER_MAX_KEYS][SQRL_KEY_SIZE];		//  512   (28 * 32)
+	size_t password_len;							//    8
+	char password[KEY_PASSWORD_MAX_LEN];			//  512
+													// Internal Use Only:
+	uint8_t scratch[KEY_SCRATCH_SIZE];				// 2048
+													// 3080 bytes
+};
+#pragma pack(pop)
+
+
 class DLL_PUBLIC SqrlUser
 {
 public:

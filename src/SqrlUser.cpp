@@ -10,6 +10,7 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlUser.h"
 #include "SqrlTransaction.h"
 #include "SqrlClient.h"
+#include "SqrlCrypt.h"
 
 struct SqrlUserList {
 	SqrlUser *user;
@@ -377,7 +378,7 @@ bool SqrlUser::_keyGen( SqrlTransaction *transaction, int key_type, uint8_t *key
 		if( this->hasKey( KEY_IUK )) {
 			temp[0] = this->key( transaction, KEY_IUK );
 			if( temp[0] ) {
-				sqrl_gen_mk( key, temp[0] );
+				SqrlCrypt::generateMasterKey( key, temp[0] );
 				retVal = true;
 			}
 		}
@@ -385,14 +386,14 @@ bool SqrlUser::_keyGen( SqrlTransaction *transaction, int key_type, uint8_t *key
 	case KEY_ILK:
 		temp[0] = this->key( transaction, KEY_IUK );
 		if( temp[0] ) {
-			sqrl_gen_ilk( key, temp[0] );
+			SqrlCrypt::generateIdentityLockKey( key, temp[0] );
 			retVal = true;
 		}
 		break;
 	case KEY_LOCAL:
 		temp[0] = this->key( transaction, KEY_MK );
 		if( temp[0] ) {
-			sqrl_gen_local( key, temp[0] );
+			SqrlCrypt::generateLocalKey( key, temp[0] );
 			retVal = true;
 		}
 		break;
@@ -718,7 +719,7 @@ void SqrlUser::defaultOptions( Sqrl_User_Options *options ) {
 bool SqrlUser::getUniqueId( char *buffer )
 {
 	if( !buffer ) return false;
-	strncpy( buffer, this->uniqueId, SQRL_UNIQUE_ID_LENGTH );
+	strncpy_s( buffer, SQRL_UNIQUE_ID_LENGTH + 1, this->uniqueId, SQRL_UNIQUE_ID_LENGTH );
 	return true;
 }
 

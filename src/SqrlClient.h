@@ -15,6 +15,10 @@ public:
 	~SqrlClient();
 	static SqrlClient *getClient();
 
+	void updateIdleTime( int idleTime );
+	void screenLocked();
+	void userChanged();
+
 protected:
 
 	virtual void onSend(

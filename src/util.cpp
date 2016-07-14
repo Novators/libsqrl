@@ -52,9 +52,8 @@ int sqrl_stop()
 	if( sqrl_is_initialized ) {
         int transactionCount, userCount, siteCount = 0;
 #ifdef DEBUG
-		transactionCount = sqrl_transaction_count();
-		userCount = sqrl_user_count();
-		siteCount = sqrl_site_count();
+		transactionCount = SqrlTransaction::countTransactions();
+		userCount = SqrlUser::countUsers();
 		DEBUG_PRINTF( "%10s: %d open sites\n", "sqrl_stop", siteCount );
 		DEBUG_PRINTF( "%10s: %d open transactions\n", "sqrl_stop", transactionCount );
 		DEBUG_PRINTF( "%10s: %d open users\n", "sqrl_stop", userCount );

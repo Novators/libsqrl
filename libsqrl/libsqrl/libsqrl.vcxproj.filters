@@ -37,6 +37,9 @@
     <Filter Include="Header Files\Util">
       <UniqueIdentifier>{05a70570-9ea4-4777-b3b5-b7c85d597910}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Class Forwards">
+      <UniqueIdentifier>{5072caf0-83f0-4fbf-a1c2-3837be5791c2}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\..\src\server_protocol.cpp">
@@ -99,6 +102,9 @@
     <ClCompile Include="..\..\src\SqrlClient.cpp">
       <Filter>Source Files\Classes</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\SqrlCrypt.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\sqrl_internal.h">
@@ -119,31 +125,16 @@
     <ClInclude Include="..\..\src\SqrlBlock.h">
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\SqrlBlock.fwd.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\SqrlUri.h">
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\SqrlUri.fwd.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\SqrlStorage.fwd.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\SqrlStorage.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\SqrlTransaction.fwd.h">
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\SqrlTransaction.h">
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\SqrlUser.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\SqrlUser.fwd.h">
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\aes.h">
@@ -167,11 +158,32 @@
     <ClInclude Include="..\..\src\rdrand.h">
       <Filter>Header Files\Entropy</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\SqrlClient.fwd.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\SqrlClient.h">
       <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlCrypt.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlBlock.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlClient.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlCrypt.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlStorage.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlTransaction.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlUri.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlUser.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

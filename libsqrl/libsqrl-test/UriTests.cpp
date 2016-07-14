@@ -24,6 +24,7 @@ namespace libsqrltest
 		TEST_METHOD(Uri1)
 		{
 			SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
+			Assert::IsNotNull( uri );
 			Assert::IsTrue(uri->getScheme() == SQRL_SCHEME_SQRL);
 			this->testString(uri->getHost(), "sqrlid.com/login");
 			char *tmp = uri->getChallenge();
@@ -37,6 +38,7 @@ namespace libsqrltest
 		TEST_METHOD(Uri2)
 		{
 			SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
+			Assert::IsNotNull( uri );
 			Assert::IsTrue(uri->getScheme() == SQRL_SCHEME_SQRL);
 			this->testString(uri->getHost(), "sqrlid.com");
 			this->testString(uri->getChallenge(), "sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
@@ -49,6 +51,7 @@ namespace libsqrltest
 		TEST_METHOD(Uri3)
 		{
 			SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
+			Assert::IsNotNull( uri );
 			Assert::IsTrue(uri->getScheme() == SQRL_SCHEME_SQRL);
 			this->testString(uri->getHost(), "sqrlid.com");
 			this->testString(uri->getChallenge(), "sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
@@ -61,6 +64,7 @@ namespace libsqrltest
 		TEST_METHOD(FileUri)
 		{
 			SqrlUri *uri = SqrlUri::parse("file://test1.sqrl");
+			Assert::IsNotNull( uri );
 			Assert::IsTrue(uri->getScheme() == SQRL_SCHEME_FILE);
 			Assert::IsTrue(uri->getHostLength() == 0);
 			this->testString(uri->getUrl(), "file://test1.sqrl");

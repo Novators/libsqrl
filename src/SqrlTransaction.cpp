@@ -174,8 +174,9 @@ void SqrlTransaction::setAltIdentity(const char *alt)
 		this->altIdentity = NULL;
 	}
 	if (alt) {
-		this->altIdentity = (char*)malloc(strlen(alt) + 1);
-		strcpy(this->altIdentity, alt);
+		size_t len = strlen( alt ) + 1;
+		this->altIdentity = (char*)malloc(len);
+		strcpy_s(this->altIdentity, len, alt);
 	}
 }
 
