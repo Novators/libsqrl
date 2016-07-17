@@ -6,7 +6,7 @@
 #include <stdint.h>
 #include "sqrl.h"
 #include "SqrlCrypt.h"
-#include "entropy.h"
+#include "SqrlEntropy.h"
 #include "SqrlBase64.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
@@ -144,7 +144,7 @@ namespace libsqrltest
 			SqrlBase64 b64 = SqrlBase64();
 
 			uint8_t sig[SQRL_SIG_SIZE];
-			sqrl_entropy_bytes( iuk, 32 );
+			SqrlEntropy::bytes( iuk, 32 );
 			SqrlCrypt::generateIdentityLockKey( ilk, iuk );
 			SqrlCrypt::generateRandomLockKey( rlk );
 			SqrlCrypt::generateCurvePrivateKey( rlk );

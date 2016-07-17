@@ -11,6 +11,7 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlTransaction.h"
 #include "SqrlClient.h"
 #include "SqrlCrypt.h"
+#include "SqrlEntropy.h"
 
 struct SqrlUserList {
 	SqrlUser *user;
@@ -371,7 +372,7 @@ bool SqrlUser::_keyGen( SqrlTransaction *transaction, int key_type, uint8_t *key
 		memcpy( temp[2], temp[1], SQRL_KEY_SIZE );
 		memcpy( temp[1], temp[0], SQRL_KEY_SIZE );
 		memcpy( temp[0], key, SQRL_KEY_SIZE );
-		sqrl_entropy_bytes( key, SQRL_KEY_SIZE );
+		SqrlEntropy::bytes( key, SQRL_KEY_SIZE );
 		retVal = true;
 		break;
 	case KEY_MK:
@@ -402,7 +403,7 @@ bool SqrlUser::_keyGen( SqrlTransaction *transaction, int key_type, uint8_t *key
 		if( temp[0] ) {
 			memset( key, 0, SQRL_KEY_SIZE );
 			sodium_mlock( temp[0], 512 );
-			sqrl_entropy_get_blocking( temp[0], SQRL_ENTROPY_NEEDED );
+			SqrlEntropy::get( temp[0], SQRL_ENTROPY_NEEDED );
 			bin2rc( (char*)key, temp[0] );
 			sodium_munlock( temp[0], 512 );
 			free( temp[0] );

@@ -120,22 +120,6 @@ void sqrl_mutex_destroy(SqrlMutex sm);
 bool sqrl_mutex_enter(SqrlMutex sm);
 void sqrl_mutex_leave(SqrlMutex sm);
 
-#ifdef UNIX
-typedef pthread_t SqrlThread;
-#define SQRL_THREAD_FUNCTION_RETURN_TYPE void*
-#define SQRL_THREAD_FUNCTION_INPUT_TYPE void*
-#define SQRL_THREAD_LEAVE pthread_exit(NULL)
-#endif
-
-#ifdef WIN32
-typedef HANDLE SqrlThread;
-#define SQRL_THREAD_FUNCTION_RETURN_TYPE DWORD 
-#define SQRL_THREAD_FUNCTION_INPUT_TYPE LPVOID
-#define SQRL_THREAD_LEAVE ExitThread(0)
-#endif
-
-typedef SQRL_THREAD_FUNCTION_RETURN_TYPE(*sqrl_thread_function)(SQRL_THREAD_FUNCTION_INPUT_TYPE data);
-
 SqrlThread sqrl_thread_create(sqrl_thread_function function, SQRL_THREAD_FUNCTION_INPUT_TYPE input);
 
 struct Sqrl_User_s_callback_data {

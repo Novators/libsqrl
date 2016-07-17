@@ -167,7 +167,6 @@
   <ItemGroup>
     <ClCompile Include="..\..\src\aes.cpp" />
     <ClCompile Include="..\..\src\crypt.cpp" />
-    <ClCompile Include="..\..\src\entropy.cpp" />
     <ClCompile Include="..\..\src\gcm.cpp" />
     <ClCompile Include="..\..\src\rdrand.cpp" />
     <ClCompile Include="..\..\src\SqrlBase64.cpp" />
@@ -192,6 +191,7 @@
     </ClCompile>
     <ClCompile Include="..\..\src\SqrlClient.cpp" />
     <ClCompile Include="..\..\src\SqrlCrypt.cpp" />
+    <ClCompile Include="..\..\src\SqrlEntropy.cpp" />
     <ClCompile Include="..\..\src\SqrlStorage.cpp" />
     <ClCompile Include="..\..\src\SqrlTransaction.cpp" />
     <ClCompile Include="..\..\src\SqrlUri.cpp" />
@@ -202,7 +202,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\aes.h" />
-    <ClInclude Include="..\..\src\entropy.h" />
     <ClInclude Include="..\..\src\entropy_linux.h" />
     <ClInclude Include="..\..\src\entropy_mac.h" />
     <ClInclude Include="..\..\src\entropy_win.h" />
@@ -220,6 +219,8 @@
     <ClInclude Include="..\..\src\SqrlCrypt.h" />
     <ClInclude Include="..\..\src\SqrlEncoder.fwd.h" />
     <ClInclude Include="..\..\src\SqrlEncoder.h" />
+    <ClInclude Include="..\..\src\SqrlEntropy.fwd.h" />
+    <ClInclude Include="..\..\src\SqrlEntropy.h" />
     <ClInclude Include="..\..\src\SqrlUrlEncode.fwd.h" />
     <ClInclude Include="..\..\src\SqrlUrlEncode.h" />
     <ClInclude Include="..\..\src\sqrl_internal.h" />

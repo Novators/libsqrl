@@ -86,12 +86,6 @@ uint16_t Sqrl_Version_Minor();
 uint16_t Sqrl_Version_Build();
 uint16_t Sqrl_Version_Revision();
 
-DLL_PUBLIC void sqrl_entropy_add(uint8_t*, size_t);
-DLL_PUBLIC int  sqrl_entropy_estimate();
-DLL_PUBLIC int  sqrl_entropy_get(uint8_t*, int);
-DLL_PUBLIC int  sqrl_entropy_get_blocking(uint8_t*, int);
-DLL_PUBLIC int  sqrl_entropy_bytes(uint8_t*, int);
-
 #define SQRL_BLOCK_USER                     0x0001
 #define SQRL_BLOCK_RESCUE                   0x0002
 #define SQRL_BLOCK_PREVIOUS                 0x0003
@@ -147,4 +141,21 @@ SQRL_CREDENTIAL_RESCUE_CODE,
 SQRL_CREDENTIAL_NEW_PASSWORD
 } Sqrl_Credential_Type;
 
+
+#ifdef UNIX
+typedef pthread_t SqrlThread;
+#define SQRL_THREAD_FUNCTION_RETURN_TYPE void*
+#define SQRL_THREAD_FUNCTION_INPUT_TYPE void*
+#define SQRL_THREAD_LEAVE pthread_exit(NULL)
+#endif
+
+#ifdef WIN32
+#include <Windows.h>
+typedef HANDLE SqrlThread;
+#define SQRL_THREAD_FUNCTION_RETURN_TYPE DWORD 
+#define SQRL_THREAD_FUNCTION_INPUT_TYPE LPVOID
+#define SQRL_THREAD_LEAVE ExitThread(0)
+#endif
+
+typedef SQRL_THREAD_FUNCTION_RETURN_TYPE( *sqrl_thread_function )(SQRL_THREAD_FUNCTION_INPUT_TYPE data);
 

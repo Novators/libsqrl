@@ -1,6 +1,7 @@
 #include "sqrl_internal.h"
 
 #include "SqrlCrypt.h"
+#include "SqrlEntropy.h"
 #include "aes.h"
 #include "gcm.h"
 
@@ -231,7 +232,7 @@ void SqrlCrypt::generateMasterKey( uint8_t mk[SQRL_KEY_SIZE], const uint8_t iuk[
 }
 
 void SqrlCrypt::generateRandomLockKey( uint8_t rlk[SQRL_KEY_SIZE] ) {
-	sqrl_entropy_bytes( rlk, SQRL_KEY_SIZE );
+	SqrlEntropy::bytes( rlk, SQRL_KEY_SIZE );
 	SqrlCrypt::generateCurvePrivateKey( rlk );
 }
 

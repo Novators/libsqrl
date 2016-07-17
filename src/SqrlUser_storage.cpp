@@ -15,6 +15,7 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlClient.h"
 #include "SqrlCrypt.h"
 #include "SqrlBase64.h"
+#include "SqrlEntropy.h"
 
 bool SqrlUser::_init_t2( 
 	SqrlTransaction *transaction, 
@@ -32,7 +33,7 @@ bool SqrlUser::_init_t2(
 		block->writeInt16( 73 );
 		block->writeInt16( 2 );
 		uint8_t ent[16];
-		sqrl_entropy_bytes(ent, 16);
+		SqrlEntropy::bytes(ent, 16);
 		block->write(ent, 16);
 		sctx->nFactor = SQRL_DEFAULT_N_FACTOR;
 		block->writeInt8( SQRL_DEFAULT_N_FACTOR );
@@ -321,7 +322,7 @@ bool SqrlUser::sus_block_1( SqrlTransaction *transaction, SqrlBlock *block, stru
 	block->writeInt16( 45 );
 	// IV and Salt
 	uint8_t ent[28];
-	sqrl_entropy_bytes(ent, 28);
+	SqrlEntropy::bytes(ent, 28);
 	block->write(ent, 28);
 	block->seekBack(28, true);
 	sctx.iv = block->getDataPointer(true);

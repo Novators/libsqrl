@@ -90,9 +90,6 @@
     <ClCompile Include="..\..\src\gcm.cpp">
       <Filter>Source Files\Crypto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\entropy.cpp">
-      <Filter>Source Files\Entropy</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\rdrand.cpp">
       <Filter>Source Files\Entropy</Filter>
     </ClCompile>
@@ -106,6 +103,9 @@
       <Filter>Source Files\Classes</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\SqrlUrlEncode.cpp">
+      <Filter>Source Files\Classes</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlEntropy.cpp">
       <Filter>Source Files\Classes</Filter>
     </ClCompile>
   </ItemGroup>
@@ -145,9 +145,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\gcm.h">
       <Filter>Header Files\Crypto</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\entropy.h">
-      <Filter>Header Files\Entropy</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\entropy_linux.h">
       <Filter>Header Files\Entropy</Filter>
@@ -204,6 +201,12 @@
       <Filter>Header Files\Classes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\SqrlUrlEncode.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlEntropy.h">
+      <Filter>Header Files\Classes</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlEntropy.fwd.h">
       <Filter>Header Files\Class Forwards</Filter>
     </ClInclude>
   </ItemGroup>
