@@ -14,6 +14,7 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlUri.h"
 #include "SqrlClient.h"
 #include "SqrlCrypt.h"
+#include "SqrlBase64.h"
 
 bool SqrlUser::_init_t2( 
 	SqrlTransaction *transaction, 
@@ -129,7 +130,7 @@ bool SqrlUser::sus_block_2( SqrlTransaction *transaction, SqrlBlock *block, stru
 	// Save unique id
 	UT_string *str;
 	utstring_new( str );
-	sqrl_b64u_encode( str, sctx.cipher_text, SQRL_KEY_SIZE );
+	SqrlBase64().encode( str, sctx.cipher_text, SQRL_KEY_SIZE );
 	strcpy_s( this->uniqueId, utstring_body( str ) );
 	utstring_free( str );
 

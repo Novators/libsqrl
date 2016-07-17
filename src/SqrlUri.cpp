@@ -9,6 +9,7 @@ For more details, see the LICENSE file included with this package.
 #include <new>
 #include "sqrl_internal.h"
 #include "SqrlUri.h"
+#include "SqrlBase64.h"
 
 Sqrl_Scheme SqrlUri::getScheme() {
 	return this->scheme;
@@ -427,7 +428,7 @@ SQRL:
 		} else {
 			pl = strlen(pp);
 		}
-		UT_string *utsfn = sqrl_b64u_decode(NULL, pp, pl);
+		UT_string *utsfn = SqrlBase64().decode(NULL, pp, pl);
 		if (utsfn) {
 			theUri->sfn = (char*)calloc(1, utstring_len(utsfn) + 1);
 			memcpy(theUri->sfn, utstring_body(utsfn), utstring_len(utsfn));

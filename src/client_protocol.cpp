@@ -239,7 +239,7 @@ int parseKeyValue( struct Sqrl_Site *site, char *key, size_t key_len, char *valu
 		parseVer( site, theValue, value_len );
 		break;
 	case SITE_KV_TIF:
-		site->tif = sqrl_hex2uint( theValue );
+		site->tif = (uint32_t)strtol( theValue, NULL, 16 );
 		FLAG_SET(site->flags, SITE_FLAG_TIF);
 		break;
 	case SITE_KV_QRY:

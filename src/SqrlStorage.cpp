@@ -10,6 +10,7 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlStorage.h"
 #include "SqrlBlock.h"
 #include "SqrlUri.h"
+#include "SqrlBase64.h"
 
 // TODO: Determine PAGE_SIZE at runtime?
 #define PAGE_SIZE 4096
@@ -242,9 +243,9 @@ static bool sqrl_storage_load_from_buffer( struct S4Page *page, UT_string *buffe
 		utstring_new( buf );
 		utstring_printf( buf, "sqrldata" );
 		if( strncmp( utstring_body( buffer ), "SQRLDATA", 8 ) == 0) {
-			sqrl_b64u_decode_append( buf, utstring_body(buffer)+8, utstring_len(buffer)-8 );
+			SqrlBase64().decode( buf, utstring_body(buffer)+8, utstring_len(buffer)-8, true );
 		} else if( strncmp( utstring_body( buffer ), "SQAC", 4) == 0 ) {
-			sqrl_b64u_decode_append( buf, utstring_body(buffer), utstring_len(buffer) );
+			SqrlBase64().decode( buf, utstring_body(buffer), utstring_len(buffer), true );
 		} else {
 			printf( "Unrecognized format\n" );
 			utstring_free(buf);
@@ -347,7 +348,7 @@ static bool sqrl_storage_save_to_buffer(
 	utstring_clear( buf );
 	if( encoding == SQRL_ENCODING_BASE64 ) {
 		utstring_printf( buf, "SQRLDATA" );
-		sqrl_b64u_encode_append( buf, (uint8_t*)(utstring_body( tmp )), utstring_len( tmp ));
+		SqrlBase64().encode( buf, (uint8_t*)(utstring_body( tmp )), utstring_len( tmp ), true );
 	} else {
 		utstring_printf( buf, "sqrldata" );
 		utstring_concat( buf, tmp );
@@ -389,7 +390,7 @@ static void sqrl_storage_unique_id(struct S4Page *page, char *unique_id )
 			uint8_t tmp[SQRL_KEY_SIZE];
 			block->seek(25);
 			block->read(tmp, SQRL_KEY_SIZE);
-			sqrl_b64u_encode( buf, tmp, SQRL_KEY_SIZE );
+			SqrlBase64().encode( buf, tmp, SQRL_KEY_SIZE );
 			strcpy( unique_id, utstring_body( buf ));
 			utstring_free( buf );
 			return;

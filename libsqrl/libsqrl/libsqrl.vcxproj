@@ -165,6 +165,7 @@
     <ClCompile Include="..\..\src\entropy.cpp" />
     <ClCompile Include="..\..\src\gcm.cpp" />
     <ClCompile Include="..\..\src\rdrand.cpp" />
+    <ClCompile Include="..\..\src\SqrlBase64.cpp" />
     <ClCompile Include="..\..\src\SqrlBlock.cpp" />
     <ClCompile Include="..\..\src\client.cpp">
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
@@ -174,7 +175,6 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</ExcludedFromBuild>
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">true</ExcludedFromBuild>
     </ClCompile>
-    <ClCompile Include="..\..\src\encdec.cpp" />
     <ClCompile Include="..\..\src\platform.cpp" />
     <ClCompile Include="..\..\src\realtime.cpp" />
     <ClCompile Include="..\..\src\server.cpp">
@@ -190,6 +190,7 @@
     <ClCompile Include="..\..\src\SqrlStorage.cpp" />
     <ClCompile Include="..\..\src\SqrlTransaction.cpp" />
     <ClCompile Include="..\..\src\SqrlUri.cpp" />
+    <ClCompile Include="..\..\src\SqrlUrlEncode.cpp" />
     <ClCompile Include="..\..\src\SqrlUser.cpp" />
     <ClCompile Include="..\..\src\SqrlUser_storage.cpp" />
     <ClCompile Include="..\..\src\util.cpp" />
@@ -202,6 +203,8 @@
     <ClInclude Include="..\..\src\entropy_win.h" />
     <ClInclude Include="..\..\src\gcm.h" />
     <ClInclude Include="..\..\src\rdrand.h" />
+    <ClInclude Include="..\..\src\SqrlBase64.fwd.h" />
+    <ClInclude Include="..\..\src\SqrlBase64.h" />
     <ClInclude Include="..\..\src\SqrlBlock.fwd.h" />
     <ClInclude Include="..\..\src\SqrlBlock.h" />
     <ClInclude Include="..\..\src\detect_platform.h" />
@@ -210,6 +213,10 @@
     <ClInclude Include="..\..\src\SqrlClient.h" />
     <ClInclude Include="..\..\src\SqrlCrypt.fwd.h" />
     <ClInclude Include="..\..\src\SqrlCrypt.h" />
+    <ClInclude Include="..\..\src\SqrlEncoder.fwd.h" />
+    <ClInclude Include="..\..\src\SqrlEncoder.h" />
+    <ClInclude Include="..\..\src\SqrlUrlEncode.fwd.h" />
+    <ClInclude Include="..\..\src\SqrlUrlEncode.h" />
     <ClInclude Include="..\..\src\sqrl_internal.h" />
     <ClInclude Include="..\..\src\sqrl_server.h">
       <DeploymentContent Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">true</DeploymentContent>

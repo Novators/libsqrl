@@ -7,12 +7,29 @@
 #include "sqrl.h"
 #include "SqrlCrypt.h"
 #include "entropy.h"
+#include "SqrlBase64.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace std;
 
 namespace libsqrltest
 {
+	UT_string *sqrl_hex_encode( UT_string *dest, const uint8_t *src, size_t src_len ) {
+		if( !dest ) return NULL;
+		static const char tab[] = "0123456789abcdef";
+		int i;
+		char tmp[3] = {0};
+
+		utstring_renew( dest );
+		utstring_reserve( dest, src_len * 2 + 1 );
+		for( i = 0; i < src_len; i++ ) {
+			tmp[0] = tab[src[i] >> 4];
+			tmp[1] = tab[src[i] & 0x0F];
+			utstring_bincpy( dest, tmp, 2 );
+		}
+		return dest;
+	}
+
 	TEST_CLASS( CryptoTests ) {
 	public:
 		TEST_CLASS_INITIALIZE( InitializeSqrl ) {
@@ -34,12 +51,13 @@ namespace libsqrltest
 			utstring_new( input );
 			utstring_new( output );
 			uint8_t out[SQRL_KEY_SIZE];
+			SqrlBase64 b64 = SqrlBase64();
 
 			int ln = 0;
 			while( fgets(line,sizeof(line),fp) ) {
 				ln++;
-				sqrl_b64u_decode( input, line, 43 );
-				sqrl_b64u_decode( output, line + 43, 43 );
+				b64.decode( input, line, 43 );
+				b64.decode( output, line + 43, 43 );
 				SqrlCrypt::enHash( (uint64_t*)out, (uint64_t*)(utstring_body( input )) );
 				Assert::IsTrue( memcmp( out, utstring_body( output ), 32 ) == 0 );
 			}
@@ -123,6 +141,7 @@ namespace libsqrltest
 			uint8_t vuk[32];
 			uint8_t ursk[32];
 			uint8_t tmp[32];
+			SqrlBase64 b64 = SqrlBase64();
 
 			uint8_t sig[SQRL_SIG_SIZE];
 			sqrl_entropy_bytes( iuk, 32 );
@@ -141,17 +160,17 @@ namespace libsqrltest
 
 			UT_string *buf;
 			utstring_new( buf );
-			sqrl_b64u_encode( buf, iuk, SQRL_KEY_SIZE );
+			b64.encode( buf, iuk, SQRL_KEY_SIZE );
 			printf( "IUK: %s\n", utstring_body( buf ) );
-			sqrl_b64u_encode( buf, ilk, SQRL_KEY_SIZE );
+			b64.encode( buf, ilk, SQRL_KEY_SIZE );
 			printf( "ILK: %s\n", utstring_body( buf ) );
-			sqrl_b64u_encode( buf, rlk, SQRL_KEY_SIZE );
+			b64.encode( buf, rlk, SQRL_KEY_SIZE );
 			printf( "RLK: %s\n", utstring_body( buf ) );
-			sqrl_b64u_encode( buf, suk, SQRL_KEY_SIZE );
+			b64.encode( buf, suk, SQRL_KEY_SIZE );
 			printf( "SUK: %s\n", utstring_body( buf ) );
-			sqrl_b64u_encode( buf, vuk, SQRL_KEY_SIZE );
+			b64.encode( buf, vuk, SQRL_KEY_SIZE );
 			printf( "VUK: %s\n", utstring_body( buf ) );
-			sqrl_b64u_encode( buf, ursk, SQRL_KEY_SIZE );
+			b64.encode( buf, ursk, SQRL_KEY_SIZE );
 			printf( "URK: %s\n", utstring_body( buf ) );
 
 			Assert::IsTrue( SqrlCrypt::verifySignature( msg, sig, vuk ) );
