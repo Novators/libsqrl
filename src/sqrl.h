@@ -85,6 +85,8 @@ DLL_PUBLIC void 		sqrl_b64u_encode_append(UT_string *dest, const uint8_t *src, s
 DLL_PUBLIC uint32_t	sqrl_hex2uint(const char *hex);
 DLL_PUBLIC UT_string*	sqrl_urldecode(UT_string *dest, const char *src);
 DLL_PUBLIC UT_string*	sqrl_urlencode(UT_string *dest, const char *src);
+DLL_PUBLIC UT_string*   sqrl_hex_encode( UT_string *dest, const uint8_t *src, size_t src_len );
+
 
 DLL_PUBLIC int 		sqrl_init();
 DLL_PUBLIC int         sqrl_stop();

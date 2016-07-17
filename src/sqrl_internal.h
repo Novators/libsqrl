@@ -68,11 +68,6 @@ do{                                                   \
 if ((s)->d != NULL) sodium_memzero( (s)->d, (s)->n );  \
 } while(0)
 
-#define SQRL_ENCRYPT 1
-#define SQRL_DECRYPT 0
-#define SQRL_MILLIS 2
-#define SQRL_ITERATIONS 0
-
 #define SQRL_VERSION_STRING "1"
 #define SQRL_KNOWN_VERSIONS_COUNT 1
 #define SQRL_CLIENT_VERSIONS {1}

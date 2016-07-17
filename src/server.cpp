@@ -39,7 +39,7 @@ bool sqrl_server_init(
     } else {
         SqrlUri *tmpUri = SqrlUri::parse( uri );
         if( tmpUri ) {
-			server->sfn = tmpUri->getHost();
+			server->sfn = tmpUri->getSiteKeyString();
         }
 		tmpUri->release();
     }

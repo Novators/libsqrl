@@ -308,7 +308,7 @@ bool sqrl_server_get_user(
     char *idk )
 {
     char *blob = (char*)malloc( 512 );
-	char *host = context->server->uri->getHost();
+	char *host = context->server->uri->getSiteKeyString();
     sqrl_scb_user *onUserOp = (sqrl_scb_user*)context->server->onUserOp;
     if( (onUserOp)( 
         SQRL_SCB_USER_FIND,
@@ -361,7 +361,7 @@ void sqrl_server_handle_query(
     sqrl_scb_user *onUserOp = (sqrl_scb_user*)context->server->onUserOp;
 
     UT_string *reply, *tmp;
-	char *host = context->server->uri->getHost();
+	char *host = context->server->uri->getSiteKeyString();
     utstring_new( reply );
     sqrl_server_parse_query( context, client_ip, query, query_len );
     if( !FLAG_CHECK( context->flags, SQRL_SERVER_CONTEXT_FLAG_VALID_QUERY )) {

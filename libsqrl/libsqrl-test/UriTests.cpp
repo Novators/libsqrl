@@ -26,8 +26,7 @@ namespace libsqrltest
 			SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
 			Assert::IsNotNull( uri );
 			Assert::IsTrue(uri->getScheme() == SQRL_SCHEME_SQRL);
-			this->testString(uri->getHost(), "sqrlid.com/login");
-			char *tmp = uri->getChallenge();
+			this->testString(uri->getSiteKeyString(), "sqrlid.com/login");
 			this->testString(uri->getChallenge(), "sqrl://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
 			this->testString(uri->getUrl(), "https://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
 			this->testString(uri->getPrefix(), "https://sqrlid.com");
@@ -40,7 +39,7 @@ namespace libsqrltest
 			SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
 			Assert::IsNotNull( uri );
 			Assert::IsTrue(uri->getScheme() == SQRL_SCHEME_SQRL);
-			this->testString(uri->getHost(), "sqrlid.com");
+			this->testString(uri->getSiteKeyString(), "sqrlid.com");
 			this->testString(uri->getChallenge(), "sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
 			this->testString(uri->getUrl(), "https://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
 			this->testString(uri->getPrefix(), "https://sqrlid.com");
@@ -53,7 +52,7 @@ namespace libsqrltest
 			SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
 			Assert::IsNotNull( uri );
 			Assert::IsTrue(uri->getScheme() == SQRL_SCHEME_SQRL);
-			this->testString(uri->getHost(), "sqrlid.com");
+			this->testString(uri->getSiteKeyString(), "sqrlid.com");
 			this->testString(uri->getChallenge(), "sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
 			this->testString(uri->getUrl(), "https://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
 			this->testString(uri->getPrefix(), "https://sqrlid.com:8080");
@@ -66,7 +65,7 @@ namespace libsqrltest
 			SqrlUri *uri = SqrlUri::parse("file://test1.sqrl");
 			Assert::IsNotNull( uri );
 			Assert::IsTrue(uri->getScheme() == SQRL_SCHEME_FILE);
-			Assert::IsTrue(uri->getHostLength() == 0);
+			Assert::IsTrue(uri->getSiteKeyStringLength() == 0);
 			this->testString(uri->getUrl(), "file://test1.sqrl");
 			this->testString(uri->getChallenge(), "test1.sqrl");
 			this->testString(uri->getPrefix(), NULL);

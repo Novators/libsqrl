@@ -38,7 +38,7 @@ void SqrlUri::setUrl(const char *val) {
 		strcpy_s(this->url, len, val);
 	}
 }
-char* SqrlUri::getHost() {
+char* SqrlUri::getSiteKeyString() {
 	if (this->host == NULL) return NULL;
 	size_t len = strlen( this->host ) + 1;
 	char *ret = (char*)malloc(len);
@@ -70,7 +70,7 @@ size_t SqrlUri::getChallengeLength() {
 	if (this->challenge == NULL) return 0;
 	return strlen(this->challenge);
 }
-size_t SqrlUri::getHostLength() {
+size_t SqrlUri::getSiteKeyStringLength() {
 	if (this->host == NULL) return 0;
 	return strlen(this->host);
 }

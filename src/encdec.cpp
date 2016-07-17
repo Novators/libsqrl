@@ -73,6 +73,23 @@ uint32_t sqrl_hex2uint( const char *hex )
 	return (uint32_t) strtol( hex, NULL, 16 );	
 }
 
+UT_string *sqrl_hex_encode( UT_string *dest, const uint8_t *src, size_t src_len ) 
+{
+	if( !dest ) return NULL;
+	static const char tab[] = "0123456789abcdef";
+	int i;
+	char tmp[3] = {0};
+
+	utstring_renew( dest );
+	utstring_reserve( dest, src_len * 2 + 1 );
+	for( i = 0; i < src_len; i++ ) {
+		tmp[0] = tab[src[i] >> 4];
+		tmp[1] = tab[src[i] & 0x0F];
+		utstring_bincpy( dest, tmp, 2 );
+	}
+	return dest;
+}
+
 /**
  * URL-Encode a string.
  *

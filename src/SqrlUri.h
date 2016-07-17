@@ -22,11 +22,11 @@ public:
 	size_t getChallengeLength();
 	void setChallenge(const char *val);
 
-	/** The Hostname (fqdn) */
-	char *getHost();
-	size_t getHostLength();
+	/** The Hostname (fqdn), and any extension defined by the server.  Used in creating Site Specific Keys */
+	char *getSiteKeyString();
+	size_t getSiteKeyStringLength();
 
-	/** The portion of the URL that the Site Specific Keys are based on.
+	/** The prefix URL.  Combined with a server's qry= parameter, defines where the client should connect for the next loop.
 	* Typically, the FQDN, followed by an optional extension.
 	*/
 	char *getPrefix();

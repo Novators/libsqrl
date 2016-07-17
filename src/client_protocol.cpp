@@ -52,7 +52,7 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 	}
 
 	// Create host string...
-	char *str = site->transaction->getUri()->getHost();
+	char *str = site->transaction->getUri()->getSiteKeyString();
 	char *alt = site->transaction->getAltIdentity();
 	if( alt ) {
 		utstring_printf( host, "%s+%s", str, alt );
@@ -178,7 +178,7 @@ void parseQry( struct Sqrl_Site *site, const char *url, size_t url_len )
 	utstring_new( srvStr );
 	utstring_new( newUrl );
 
-	str = suri->getHost();
+	str = suri->getSiteKeyString();
 	utstring_printf( chal, "sqrl://%s", str );
 	free(str);
 	str = suri->getPrefix();
@@ -337,9 +337,9 @@ UT_string *sqrl_site_domain( Sqrl_Site *site )
 	char *tmpString;
 
 	SqrlUri *uri = site->transaction->getUri();
-	if( uri && uri->getHostLength() ) {
+	if( uri && uri->getSiteKeyStringLength() ) {
 		utstring_new( ret );
-		tmpString = uri->getHost();
+		tmpString = uri->getSiteKeyString();
 		utstring_bincpy( ret, tmpString, strlen(tmpString));
 		free(tmpString);
 	}

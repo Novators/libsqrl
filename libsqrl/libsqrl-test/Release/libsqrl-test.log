@@ -1,0 +1,37 @@
+﻿  stdafx.cpp
+  BlockTests.cpp
+  CryptoTests.cpp
+c:\users\adam\source\repos\libsqrl\libsqrl\libsqrl-test\cryptotests.cpp(28): warning C4996: 'fopen': This function or variable may be unsafe. Consider using fopen_s instead. To disable deprecation, use _CRT_SECURE_NO_WARNINGS. See online help for details.
+  c:\program files (x86)\windows kits\10\include\10.0.10240.0\ucrt\stdio.h(205): note: see declaration of 'fopen'
+  StorageTests.cpp
+  UriTests.cpp
+LINK : warning LNK4075: ignoring '/INCREMENTAL' due to '/LTCG' specification
+     Creating library C:\Users\adam\Source\Repos\libsqrl\libsqrl\Release\libsqrl-test.lib and object C:\Users\adam\Source\Repos\libsqrl\libsqrl\Release\libsqrl-test.exp
+LINK : warning LNK4098: defaultlib 'LIBCMT' conflicts with use of other libs; use /NODEFAULTLIB:library
+  Generating code
+  All 372 functions were compiled because no usable IPDB/IOBJ from previous compilation was found.
+  Finished generating code
+entropy.obj : warning LNK4049: locally defined symbol _crypto_hash_sha512_init imported
+entropy.obj : warning LNK4049: locally defined symbol _sodium_munlock imported
+entropy.obj : warning LNK4049: locally defined symbol _sodium_mlock imported
+entropy.obj : warning LNK4049: locally defined symbol _randombytes_buf imported
+entropy.obj : warning LNK4049: locally defined symbol _crypto_hash_sha512_update imported
+entropy.obj : warning LNK4049: locally defined symbol _crypto_stream_chacha20 imported
+entropy.obj : warning LNK4049: locally defined symbol _crypto_hash_sha512_final imported
+SqrlCrypt.obj : warning LNK4049: locally defined symbol _crypto_sign_detached imported
+SqrlCrypt.obj : warning LNK4049: locally defined symbol _crypto_hash_sha256 imported
+SqrlCrypt.obj : warning LNK4049: locally defined symbol _crypto_scalarmult imported
+SqrlCrypt.obj : warning LNK4049: locally defined symbol _sodium_runtime_has_sse2 imported
+SqrlCrypt.obj : warning LNK4049: locally defined symbol _crypto_sign_ed25519_sk_to_curve25519 imported
+SqrlCrypt.obj : warning LNK4049: locally defined symbol _crypto_sign_verify_detached imported
+SqrlCrypt.obj : warning LNK4049: locally defined symbol _crypto_scalarmult_base imported
+SqrlCrypt.obj : warning LNK4049: locally defined symbol _sodium_memzero imported
+SqrlCrypt.obj : warning LNK4049: locally defined symbol _crypto_sign_seed_keypair imported
+SqrlStorage.obj : warning LNK4049: locally defined symbol _sodium_free imported
+SqrlStorage.obj : warning LNK4049: locally defined symbol _sodium_malloc imported
+SqrlStorage.obj : warning LNK4049: locally defined symbol _sodium_mprotect_readwrite imported
+SqrlStorage.obj : warning LNK4049: locally defined symbol _sodium_mprotect_readonly imported
+SqrlStorage.obj : warning LNK4049: locally defined symbol _sodium_mprotect_noaccess imported
+util.obj : warning LNK4049: locally defined symbol _sodium_init imported
+  libsqrl-test.vcxproj -> C:\Users\adam\Source\Repos\libsqrl\libsqrl\Release\libsqrl-test.dll
+  libsqrl-test.vcxproj -> C:\Users\adam\Source\Repos\libsqrl\libsqrl\Release\libsqrl-test.pdb (Full PDB)

@@ -13,6 +13,7 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlStorage.h"
 #include "SqrlUri.h"
 #include "SqrlClient.h"
+#include "SqrlCrypt.h"
 
 bool SqrlUser::_init_t2( 
 	SqrlTransaction *transaction, 

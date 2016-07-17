@@ -3,6 +3,11 @@
 #include "sqrl.h"
 #include "SqrlTransaction.fwd.h"
 
+#define SQRL_ENCRYPT 1
+#define SQRL_DECRYPT 0
+#define SQRL_MILLIS 2
+#define SQRL_ITERATIONS 0
+
 class DLL_PUBLIC SqrlCrypt
 {
 public:
