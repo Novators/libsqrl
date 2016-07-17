@@ -8,3 +8,5 @@ build
 /libsqrl/.vs/libsqrl/v14
 /libsqrl/libsqrl/Release
 /libsqrl/libsqrl-test/Debug
+/libsqrl/libsqrl-test/Release
+/libsqrl/Release
