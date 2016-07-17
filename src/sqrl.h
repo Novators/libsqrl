@@ -4,11 +4,11 @@
 #define DLL_PUBLIC
 #endif
 
-#define SQRL_LIB_VERSION "1.0.160713.1"
 #define SQRL_LIB_VERSION_MAJOR 1
-#define SQRL_LIB_VERSION_MINOR 0
-#define SQRL_LIB_VERSION_BUILD 160713
-#define SQRL_LIB_VERSION_REVISION 1
+#define SQRL_LIB_VERSION_MINOR 1
+#define SQRL_LIB_VERSION_BUILD 16199
+#define SQRL_LIB_VERSION_REVISION 14
+#define SQRL_LIB_VERSION "1.1.16199.14"
 
 #include <stdint.h>
 #include "utstring.h"
@@ -19,13 +19,13 @@
 #include "SqrlUser.fwd.h"
 
 typedef enum {
-	SQRL_ENCODING_BINARY = 0,
-	SQRL_ENCODING_BASE64
+SQRL_ENCODING_BINARY = 0,
+SQRL_ENCODING_BASE64
 } Sqrl_Encoding;
 
 typedef enum {
-	SQRL_EXPORT_ALL = 0,
-	SQRL_EXPORT_RESCUE
+SQRL_EXPORT_ALL = 0,
+SQRL_EXPORT_RESCUE
 } Sqrl_Export;
 
 // SQRL_BASE64_PAD_CHAR = 0x3D for = padding.
@@ -45,11 +45,11 @@ typedef enum {
 typedef void* SqrlMutex;
 
 typedef enum {
-	SQRL_CMD_QUERY,
-	SQRL_CMD_IDENT,
-	SQRL_CMD_DISABLE,
-	SQRL_CMD_ENABLE,
-	SQRL_CMD_REMOVE
+SQRL_CMD_QUERY,
+SQRL_CMD_IDENT,
+SQRL_CMD_DISABLE,
+SQRL_CMD_ENABLE,
+SQRL_CMD_REMOVE
 } Sqrl_Cmd;
 
 typedef unsigned int Sqrl_Tif;
@@ -65,25 +65,26 @@ typedef unsigned int Sqrl_Tif;
 
 typedef struct Sqrl_Crypt_Context
 {
-	uint8_t *plain_text;
-	uint8_t *cipher_text;
-	uint16_t text_len;
-	uint8_t *add;
-	uint16_t add_len;
-	uint8_t *tag;
-	uint8_t *salt;
-	uint8_t *iv;
-	uint32_t count;
-	uint8_t nFactor;
-	uint8_t flags;
+uint8_t *plain_text;
+uint8_t *cipher_text;
+uint16_t text_len;
+uint8_t *add;
+uint16_t add_len;
+uint8_t *tag;
+uint8_t *salt;
+uint8_t *iv;
+uint32_t count;
+uint8_t nFactor;
+uint8_t flags;
 } Sqrl_Crypt_Context;
 
 DLL_PUBLIC int 		sqrl_init();
 DLL_PUBLIC int         sqrl_stop();
 size_t		Sqrl_Version(char *buffer, size_t buffer_len);
-int 		Sqrl_Version_Major();
-int 		Sqrl_Version_Minor();
-int 		Sqrl_Version_Build();
+uint16_t Sqrl_Version_Major();
+uint16_t Sqrl_Version_Minor();
+uint16_t Sqrl_Version_Build();
+uint16_t Sqrl_Version_Revision();
 
 DLL_PUBLIC void sqrl_entropy_add(uint8_t*, size_t);
 DLL_PUBLIC int  sqrl_entropy_estimate();
@@ -133,17 +134,17 @@ DLL_PUBLIC int  sqrl_entropy_bytes(uint8_t*, int);
 
 
 typedef enum {
-	SQRL_BUTTON_CANCEL = 0,
-	SQRL_BUTTON_FIRST = 1,
-	SQRL_BUTTON_SECOND = 2,
-	SQRL_BUTTON_OK = 3
+SQRL_BUTTON_CANCEL = 0,
+SQRL_BUTTON_FIRST = 1,
+SQRL_BUTTON_SECOND = 2,
+SQRL_BUTTON_OK = 3
 } Sqrl_Button;
 
 typedef enum {
-	SQRL_CREDENTIAL_PASSWORD,
-	SQRL_CREDENTIAL_HINT,
-	SQRL_CREDENTIAL_RESCUE_CODE,
-	SQRL_CREDENTIAL_NEW_PASSWORD
+SQRL_CREDENTIAL_PASSWORD,
+SQRL_CREDENTIAL_HINT,
+SQRL_CREDENTIAL_RESCUE_CODE,
+SQRL_CREDENTIAL_NEW_PASSWORD
 } Sqrl_Credential_Type;
 
 

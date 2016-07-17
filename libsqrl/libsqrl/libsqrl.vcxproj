@@ -140,6 +140,11 @@
       <OptimizeReferences>true</OptimizeReferences>
       <GenerateDebugInformation>true</GenerateDebugInformation>
     </Link>
+    <CustomBuildStep />
+    <CustomBuildStep />
+    <PreBuildEvent>
+      <Command>C:\Python27\python.exe $(SolutionDir)..\scripts\newVersion.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
