@@ -38,6 +38,8 @@ public:
 	static void generateCurvePublicKey( uint8_t *puk, const uint8_t *prk );
 	static int generateSharedSecret( uint8_t *shared, const uint8_t *puk, const uint8_t *prk );
 
+	bool genKey( SqrlTransaction *transaction, const char *password, size_t password_len );
+	bool doCrypt();
 
 	uint8_t *plain_text = NULL;
 	uint8_t *cipher_text = NULL;
@@ -50,7 +52,5 @@ public:
 	uint32_t count = 0;
 	uint8_t nFactor = 9;
 	uint8_t flags = SQRL_ENCRYPT | SQRL_ITERATIONS;
-
-private:
-	uint8_t *key;
+	uint8_t *key = NULL;
 };

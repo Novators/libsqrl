@@ -103,7 +103,6 @@ typedef enum
 } Sqrl_Transaction_Status;
 
 
-typedef int(*enscrypt_progress_fn)(int percent, void* data);
 DLL_PUBLIC double sqrl_get_real_time();
 DLL_PUBLIC uint64_t sqrl_get_timestamp();
 
@@ -159,12 +158,6 @@ struct Sqrl_Site_List {
 	struct Sqrl_Site_List *next;
 };
 
-extern struct Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
-
-bool sqrl_client_require_password(SqrlTransaction *transaction);
-bool sqrl_client_require_hint(SqrlTransaction *transaction);
-bool sqrl_client_require_rescue_code(SqrlTransaction *transaction);
-
 #define SITE_KEY_LOOKUP 0
 #define SITE_KEY_SEC 1
 #define SITE_KEY_PUB 2
@@ -177,14 +170,6 @@ bool sqrl_client_require_rescue_code(SqrlTransaction *transaction);
 
 // Site information saved for 5 minutes (600 seconds) past last action
 #define SQRL_CLIENT_SITE_TIMEOUT 600
-
-Sqrl_Transaction_Status sqrl_client_resume_transaction(SqrlTransaction *t, const char *response, size_t response_len);
-void sqrl_client_site_maintenance(bool forceDeleteAll);
-
-/* crypt.c */
-//bool 		sqrl_crypt(Sqrl_Crypt_Context *sctx, const char *password, size_t password_len, enscrypt_progress_fn callback, void * callback_data);
-bool 		sqrl_crypt_gcm(Sqrl_Crypt_Context *sctx, uint8_t *key);
-uint32_t 	sqrl_crypt_enscrypt(Sqrl_Crypt_Context *sctx, uint8_t *key, const char *password, size_t password_len, enscrypt_progress_fn callback, void * callback_data);
 
 uint16_t readint_16(void *buf);
 

@@ -84,9 +84,6 @@
     <ClCompile Include="..\..\src\aes.cpp">
       <Filter>Source Files\Crypto</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\crypt.cpp">
-      <Filter>Source Files\Crypto</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\gcm.cpp">
       <Filter>Source Files\Crypto</Filter>
     </ClCompile>

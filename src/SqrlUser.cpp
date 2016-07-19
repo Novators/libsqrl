@@ -265,43 +265,39 @@ void SqrlUser::hintLock()
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
 
-	Sqrl_Crypt_Context sctx;
+	SqrlCrypt crypt = SqrlCrypt();
 	uint8_t iv[12] = {0};
-	sctx.plain_text = this->keys->keys[0];
-	sctx.text_len = sizeof( struct Sqrl_Keys ) - KEY_SCRATCH_SIZE;
-	sctx.salt = this->keys->scratch;
-	sctx.iv = iv;
-	sctx.tag = this->keys->scratch + 16;
-	sctx.cipher_text = this->keys->scratch + 64;
-	sctx.add = NULL;
-	sctx.add_len = 0;
-	sctx.nFactor = SQRL_DEFAULT_N_FACTOR;
-	sctx.count = this->options.enscryptSeconds * SQRL_MILLIS_PER_SECOND;
-	sctx.flags = SQRL_ENCRYPT | SQRL_MILLIS;
+	crypt.plain_text = this->keys->keys[0];
+	crypt.text_len = sizeof( struct Sqrl_Keys ) - KEY_SCRATCH_SIZE;
+	crypt.salt = this->keys->scratch;
+	crypt.iv = iv;
+	crypt.tag = this->keys->scratch + 16;
+	crypt.cipher_text = this->keys->scratch + 64;
+	crypt.add = NULL;
+	crypt.add_len = 0;
+	crypt.nFactor = SQRL_DEFAULT_N_FACTOR;
+	crypt.count = this->options.enscryptSeconds * SQRL_MILLIS_PER_SECOND;
+	crypt.flags = SQRL_ENCRYPT | SQRL_MILLIS;
 
-	randombytes_buf( sctx.salt, 16 );
+	randombytes_buf( crypt.salt, 16 );
 	uint8_t *key = this->keys->scratch + 32;
 	size_t password_len = this->options.hintLength;
 	if( password_len == 0 || this->keys->password_len < password_len ) {
 		password_len = this->keys->password_len;
 	}
 
-	this->hint_iterations = sqrl_crypt_enscrypt( 
-		&sctx, 
-		key, 
-		this->keys->password, 
-		password_len,
-		SqrlUser::enscryptCallback,
-		&cbdata );
+	if( crypt.genKey( transaction, this->keys->password, password_len ) ) {
+		this->hint_iterations = crypt.count;
+	}
 	if( this->hint_iterations <= 0 ||
-		!sqrl_crypt_gcm( &sctx, key )) {
+		!crypt.doCrypt()) {
 		// Encryption failed!
 		this->hint_iterations = 0;
 		sodium_memzero( this->keys->scratch, KEY_SCRATCH_SIZE );
 		goto DONE;
 	}
 
-	sodium_memzero( sctx.plain_text, sctx.text_len );
+	sodium_memzero( crypt.plain_text, crypt.text_len );
 	sodium_memzero( key, SQRL_KEY_SIZE );
 
 DONE:
@@ -325,24 +321,24 @@ void SqrlUser::hintUnlock( SqrlTransaction *transaction,
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
 
-	Sqrl_Crypt_Context sctx;
+	SqrlCrypt crypt = SqrlCrypt();
 	uint8_t iv[12] = {0};
-	sctx.plain_text = this->keys->keys[0];
-	sctx.text_len = sizeof( struct Sqrl_Keys ) - KEY_SCRATCH_SIZE;
-	sctx.salt = this->keys->scratch;
-	sctx.iv = iv;
-	sctx.tag = this->keys->scratch + 16;
-	sctx.cipher_text = this->keys->scratch + 64;
-	sctx.add = NULL;
-	sctx.add_len = 0;
-	sctx.nFactor = SQRL_DEFAULT_N_FACTOR;
-	sctx.count = this->hint_iterations;
-	sctx.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
+	crypt.plain_text = this->keys->keys[0];
+	crypt.text_len = sizeof( struct Sqrl_Keys ) - KEY_SCRATCH_SIZE;
+	crypt.salt = this->keys->scratch;
+	crypt.iv = iv;
+	crypt.tag = this->keys->scratch + 16;
+	crypt.cipher_text = this->keys->scratch + 64;
+	crypt.add = NULL;
+	crypt.add_len = 0;
+	crypt.nFactor = SQRL_DEFAULT_N_FACTOR;
+	crypt.count = this->hint_iterations;
+	crypt.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
 
 	uint8_t *key = this->keys->scratch + 32;
-	sqrl_crypt_enscrypt( &sctx, key, hint, length, SqrlUser::enscryptCallback, &cbdata );
-	if( !sqrl_crypt_gcm( &sctx, key )) {
-		sodium_memzero( sctx.plain_text, sctx.text_len );
+	if( !crypt.genKey( transaction, hint, length ) ||
+		!crypt.doCrypt() ) {
+		sodium_memzero( crypt.plain_text, crypt.text_len );
 	}
 	this->hint_iterations = 0;
 	sodium_memzero( key, SQRL_KEY_SIZE );

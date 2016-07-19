@@ -77,6 +77,39 @@ int SqrlCrypt::decrypt( uint8_t *plainText, const uint8_t *cipherText, size_t te
 
 }
 
+bool SqrlCrypt::genKey( SqrlTransaction *transaction, const char *password, size_t password_len ) {
+	if( !transaction || !password ) return false;
+	if( !this->key || this->count == 0 ) return false;
+	size_t salt_len = this->salt ? 16 : 0;
+	uint32_t newCount;
+	if( (this->flags & SQRL_MILLIS) == SQRL_MILLIS ) {
+		newCount = SqrlCrypt::enScryptMillis( NULL, this->key, password, password_len, this->salt, (uint8_t)salt_len, this->count, this->nFactor );
+		if( newCount == -1 ) return false;
+		this->count = newCount;
+		this->flags &= ~SQRL_MILLIS;
+		this->flags |= SQRL_ITERATIONS;
+	} else {
+		newCount = SqrlCrypt::enScrypt( NULL, this->key, password, password_len, this->salt, (uint8_t)salt_len, this->count, this->nFactor );
+		if( newCount == -1 ) return false;
+	}
+	return true;
+}
+
+bool SqrlCrypt::doCrypt() {
+	if( !this->cipher_text || !this->plain_text || this->text_len == 0 ||
+		!this->key || !this->iv || !this->tag ) return false;
+	if( this->flags & SQRL_ENCRYPT ) {
+		SqrlCrypt::encrypt( this->cipher_text, this->plain_text, this->text_len,
+			key, this->iv, this->add, this->add_len, this->tag );
+	} else {
+		if( SqrlCrypt::decrypt( this->plain_text, this->cipher_text, this->text_len,
+			key, this->iv, this->add, this->add_len, this->tag ) ) {
+			return false;
+		}
+	}
+	return true;
+}
+
 int SqrlCrypt::enScrypt( SqrlTransaction *transaction,
 	uint8_t *buf, const char *password, size_t password_len,
 	const uint8_t *salt, uint8_t salt_len,

@@ -4,6 +4,7 @@
 #include "SqrlUri.fwd.h"
 #include "SqrlBlock.fwd.h"
 #include "SqrlStorage.fwd.h"
+#include "SqrlCrypt.fwd.h"
 
 #define USER_MAX_KEYS 16
 
@@ -124,11 +125,7 @@ private:
 	bool        updateStorage( SqrlTransaction *transaction );
 	void initialize();
 	bool _keyGen( SqrlTransaction *t, int key_type, uint8_t *key );
-	bool _init_t2(
-		SqrlTransaction *t,
-		Sqrl_Crypt_Context *sctx,
-		SqrlBlock *block,
-		bool forSaving );
+	SqrlCrypt* _init_t2( SqrlTransaction *t, SqrlBlock *block, bool forSaving );
 	bool sul_block_2( SqrlTransaction *t, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata );
 	bool sus_block_2( SqrlTransaction *t, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata );
 	bool sul_block_3( SqrlTransaction *t, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata );

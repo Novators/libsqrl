@@ -60,7 +60,7 @@ int sqrl_stop()
         DEBUG_PRINTF( "%10s: Cleaning Up...\n", "sqrl_stop" );
 #endif
         //sqrl_client_site_maintenance( true );
-        sqrl_client_user_maintenance( true );
+        //sqrl_client_user_maintenance( true );
         transactionCount = SqrlTransaction::countTransactions();
 		userCount = SqrlUser::countUsers();
         //siteCount = sqrl_site_count();
@@ -134,3 +134,14 @@ bool sqrl_parse_key_value( char **strPtr, char **keyPtr, char **valPtr,
 }
 
 
+size_t Sqrl_Version( char *buffer, size_t buffer_len ) {
+	static const char *ver = SQRL_LIB_VERSION;
+	size_t len = strlen( ver );
+	strncpy( buffer, ver, buffer_len );
+	return len;
+}
+
+uint16_t Sqrl_Version_Major() { return SQRL_LIB_VERSION_MAJOR; }
+uint16_t Sqrl_Version_Minor() { return SQRL_LIB_VERSION_MINOR; }
+uint16_t Sqrl_Version_Build() { return SQRL_LIB_VERSION_BUILD; }
+uint16_t Sqrl_Version_Revision() { return SQRL_LIB_VERSION_REVISION; }
