@@ -18,7 +18,7 @@ ovDate = parts[2]
 ovBuild = int(parts[3])
 
 today = datetime.datetime.utcnow()
-nvDate = str(today.year)[2:] + str(today.timetuple().tm_yday)
+nvDate = str(today.year)[2:] + str(today.timetuple().tm_yday).zfill(3)
 
 if ovDate == nvDate:
     nvBuild = str(ovBuild + 1)
