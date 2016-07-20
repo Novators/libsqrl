@@ -6,9 +6,9 @@
 
 #define SQRL_LIB_VERSION_MAJOR 1
 #define SQRL_LIB_VERSION_MINOR 1
-#define SQRL_LIB_VERSION_BUILD 16201
+#define SQRL_LIB_VERSION_BUILD 16202
 #define SQRL_LIB_VERSION_REVISION 1
-#define SQRL_LIB_VERSION "1.1.16201.1"
+#define SQRL_LIB_VERSION "1.1.16202.1"
 
 #include <stdint.h>
 #include "utstring.h"
