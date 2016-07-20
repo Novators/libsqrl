@@ -35,18 +35,19 @@ int SqrlCrypt::enHash( uint64_t *out, const uint64_t *in ) {
 int SqrlCrypt::encrypt( uint8_t *cipherText, const uint8_t *plainText, size_t textLength,
 	const uint8_t *key, const uint8_t *iv, const uint8_t *add, size_t add_len, uint8_t *tag ) {
 	gcm_context ctx;
-	size_t iv_len = 0;
+	uint8_t miv[12] = {0};
+	size_t iv_len = 12;
 	size_t tag_len = 0;
 	int retVal;
 
-	if( iv ) iv_len = 12;
+	if( iv ) memcpy( miv, iv, iv_len );
 	if( tag ) tag_len = 16;
 	if( !add ) add_len = 0;
 
 	gcm_setkey( &ctx, (unsigned char*)key, 32 );
 	retVal = gcm_crypt_and_tag(
 		&ctx, ENCRYPT,
-		iv, iv_len,
+		miv, iv_len,
 		add, add_len,
 		plainText, cipherText, textLength,
 		tag, tag_len );
@@ -77,7 +78,7 @@ int SqrlCrypt::decrypt( uint8_t *plainText, const uint8_t *cipherText, size_t te
 
 }
 
-bool SqrlCrypt::genKey( SqrlTransaction *transaction, const char *password, size_t password_len ) {
+bool SqrlCrypt::genKey( SqrlAction *transaction, const char *password, size_t password_len ) {
 	if( !transaction || !password ) return false;
 	if( !this->key || this->count == 0 ) return false;
 	size_t salt_len = this->salt ? 16 : 0;
@@ -97,7 +98,7 @@ bool SqrlCrypt::genKey( SqrlTransaction *transaction, const char *password, size
 
 bool SqrlCrypt::doCrypt() {
 	if( !this->cipher_text || !this->plain_text || this->text_len == 0 ||
-		!this->key || !this->iv || !this->tag ) return false;
+		!this->key || !this->tag ) return false;
 	if( this->flags & SQRL_ENCRYPT ) {
 		SqrlCrypt::encrypt( this->cipher_text, this->plain_text, this->text_len,
 			key, this->iv, this->add, this->add_len, this->tag );
@@ -110,7 +111,7 @@ bool SqrlCrypt::doCrypt() {
 	return true;
 }
 
-int SqrlCrypt::enScrypt( SqrlTransaction *transaction,
+int SqrlCrypt::enScrypt( SqrlAction *transaction,
 	uint8_t *buf, const char *password, size_t password_len,
 	const uint8_t *salt, uint8_t salt_len,
 	uint16_t iterations, uint8_t nFactor ) {
@@ -178,7 +179,7 @@ DONE:
 	return retVal == 0 ? (int)endTime : -1;
 }
 
-int SqrlCrypt::enScryptMillis( SqrlTransaction *transaction,
+int SqrlCrypt::enScryptMillis( SqrlAction *transaction,
 	uint8_t *buf, const char *password, size_t password_len,
 	const uint8_t *salt, uint8_t salt_len,
 	int millis, uint8_t nFactor ) {

@@ -497,7 +497,7 @@ bool SqrlStorage::save(SqrlUri *uri, Sqrl_Export etype, Sqrl_Encoding encoding)
 {
 	SQRL_CAST_PAGE(page, this->data);
 	if (uri->getScheme() != SQRL_SCHEME_FILE) return false;
-	char *fn = uri->getUrl();
+	char *fn = uri->getChallenge();
 	int ret = sqrl_storage_save_to_file(page, fn, etype, encoding);
 	free(fn);
 	return ret > 0;

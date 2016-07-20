@@ -8,10 +8,11 @@ For more details, see the LICENSE file included with this package.
 #include <new>
 #include "sqrl_internal.h"
 #include "SqrlUser.h"
-#include "SqrlTransaction.h"
+#include "SqrlAction.h"
 #include "SqrlClient.h"
 #include "SqrlCrypt.h"
 #include "SqrlEntropy.h"
+#include "SqrlActionLock.h"
 
 struct SqrlUserList {
 	SqrlUser *user;
@@ -28,7 +29,7 @@ int SqrlUser::enscryptCallback( int percent, void *data )
 		if( progress > 100 ) progress = 100;
 		if( progress < 0 ) progress = 0;
 		if( percent == 100 && progress >= 99 ) progress = 100;
-		return SqrlClient::getClient()->callProgress(cbdata->transaction, progress);
+		return SqrlClient::getClient()->onProgress(cbdata->transaction, progress);
 	} else {
 		return 1;
 	}
@@ -258,8 +259,7 @@ void SqrlUser::hintLock()
 	if( this->keys->password_len == 0 ) {
 		return;
 	}
-	SqrlTransaction *transaction = new SqrlTransaction( SQRL_TRANSACTION_IDENTITY_LOCK );
-	transaction->setUser(this);
+	SqrlActionLock *transaction = new SqrlActionLock( this );
 	struct Sqrl_User_s_callback_data cbdata;
 	cbdata.transaction = transaction;
 	cbdata.adder = 0;
@@ -304,12 +304,12 @@ DONE:
 	transaction->release();
 }
 
-void SqrlUser::hintUnlock( SqrlTransaction *transaction, 
+void SqrlUser::hintUnlock( SqrlAction *transaction, 
 				char *hint, 
 				size_t length )
 {
 	if( hint == NULL || length == 0 ) {
-		SqrlClient::getClient()->callAuthenticationRequired(transaction, SQRL_CREDENTIAL_HINT);
+		SqrlClient::getClient()->onAuthenticationRequired(transaction, SQRL_CREDENTIAL_HINT);
 		return;
 	}
 	if( !transaction ) return;
@@ -345,7 +345,7 @@ void SqrlUser::hintUnlock( SqrlTransaction *transaction,
 	sodium_memzero( this->keys->scratch, KEY_SCRATCH_SIZE );
 }
 
-bool SqrlUser::_keyGen( SqrlTransaction *transaction, int key_type, uint8_t *key )
+bool SqrlUser::_keyGen( SqrlAction *transaction, int key_type, uint8_t *key )
 {
 	if( !transaction ) return false;
 	if( transaction->getUser() != this ) {
@@ -411,7 +411,7 @@ bool SqrlUser::_keyGen( SqrlTransaction *transaction, int key_type, uint8_t *key
 	return retVal;
 }
 
-bool SqrlUser::regenKeys( SqrlTransaction *transaction )
+bool SqrlUser::regenKeys( SqrlAction *transaction )
 {
 	if( !transaction ) return false;
 	if( transaction->getUser() != this ) {
@@ -427,12 +427,13 @@ bool SqrlUser::regenKeys( SqrlTransaction *transaction )
 	return true;
 }
 
-bool SqrlUser::rekey( SqrlTransaction *transaction )
+bool SqrlUser::rekey( SqrlAction *transaction )
 {
 	if( !transaction ) return false;
 	if( transaction->getUser() != this ) {
 		return false;
 	}
+	this->ensureKeysAllocated();
 	bool retVal = true;
 	uint8_t *key;
 	if( this->hasKey( KEY_IUK )) {
@@ -489,7 +490,7 @@ uint8_t *SqrlUser::newKey( int key_type )
 	return NULL;
 }
 
-uint8_t *SqrlUser::key( SqrlTransaction *transaction, int key_type )
+uint8_t *SqrlUser::key( SqrlAction *transaction, int key_type )
 {
 	if( !transaction ) return NULL;
 	if( transaction->getUser() != this ) {
@@ -565,7 +566,7 @@ void SqrlUser::removeKey( int key_type )
 	}
 }
 
-char *SqrlUser::getRescueCode( SqrlTransaction *transaction )
+char *SqrlUser::getRescueCode( SqrlAction *transaction )
 {
 	if( !transaction ) return NULL;
 	if( transaction->getUser() != this || !this->hasKey( KEY_RESCUE_CODE )) {
@@ -590,7 +591,7 @@ bool SqrlUser::setRescueCode( char *rc )
 	return true;
 }
 
-bool SqrlUser::forceDecrypt( SqrlTransaction *t )
+bool SqrlUser::forceDecrypt( SqrlAction *t )
 {
 	if( !t ) return false;
 	if( this->key( t, KEY_MK )) {
@@ -599,7 +600,7 @@ bool SqrlUser::forceDecrypt( SqrlTransaction *t )
 	return false;
 }
 
-bool SqrlUser::forceRescue( SqrlTransaction *t )
+bool SqrlUser::forceRescue( SqrlAction *t )
 {
 	if( !t ) return false;
 	if( this->key( t, KEY_IUK )) {
@@ -614,7 +615,7 @@ size_t SqrlUser::getPasswordLength()
 	return this->keys->password_len;
 }
 
-bool SqrlUser::setPassword( char *password, size_t password_len )
+bool SqrlUser::setPassword( const char *password, size_t password_len )
 {
 	if( this->isHintLocked() ) return false;
 	char *p = this->keys->password;

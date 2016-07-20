@@ -25,12 +25,6 @@
     <Filter Include="Source Files\Entropy">
       <UniqueIdentifier>{f791e6ef-4836-4753-a05e-69ddc96fa676}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Classes">
-      <UniqueIdentifier>{5c2d5464-55a6-4f70-905f-0507e9e854f4}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Classes">
-      <UniqueIdentifier>{2f953f56-41a8-4db5-b033-0227908f6dd2}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Source Files\Util">
       <UniqueIdentifier>{e547ce9c-6fc9-48f4-b96a-88731eea1f96}</UniqueIdentifier>
     </Filter>
@@ -39,6 +33,24 @@
     </Filter>
     <Filter Include="Header Files\Class Forwards">
       <UniqueIdentifier>{5072caf0-83f0-4fbf-a1c2-3837be5791c2}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Client">
+      <UniqueIdentifier>{4b18ff0d-8838-43aa-a862-46b9c6009760}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Identity Actions">
+      <UniqueIdentifier>{202fe31f-c6e2-487c-8097-fd02a71b2976}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Protocol Actions">
+      <UniqueIdentifier>{a154f605-c3c6-482e-af12-7b223bfbaf75}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Protocol Actions">
+      <UniqueIdentifier>{547d879b-b72e-4a38-8eea-6a791d2092b7}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Client">
+      <UniqueIdentifier>{adcf12a7-38cc-402d-b63a-bdbebd39bcbc}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Identity Actions">
+      <UniqueIdentifier>{1596118e-e105-4d49-a297-5680f926d3db}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -63,24 +75,6 @@
     <ClCompile Include="..\..\src\util.cpp">
       <Filter>Source Files\Util</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\SqrlBlock.cpp">
-      <Filter>Source Files\Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\SqrlStorage.cpp">
-      <Filter>Source Files\Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\SqrlTransaction.cpp">
-      <Filter>Source Files\Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\SqrlUri.cpp">
-      <Filter>Source Files\Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\SqrlUser.cpp">
-      <Filter>Source Files\Classes</Filter>
-    </ClCompile>
-    <ClCompile Include="..\..\src\SqrlUser_storage.cpp">
-      <Filter>Source Files\Classes</Filter>
-    </ClCompile>
     <ClCompile Include="..\..\src\aes.cpp">
       <Filter>Source Files\Crypto</Filter>
     </ClCompile>
@@ -90,20 +84,74 @@
     <ClCompile Include="..\..\src\rdrand.cpp">
       <Filter>Source Files\Entropy</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\SqrlActionChangePassword.cpp">
+      <Filter>Source Files\Identity Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlActionGenerate.cpp">
+      <Filter>Source Files\Identity Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlActionLock.cpp">
+      <Filter>Source Files\Identity Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlActionRekey.cpp">
+      <Filter>Source Files\Identity Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlActionRescue.cpp">
+      <Filter>Source Files\Identity Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlActionSave.cpp">
+      <Filter>Source Files\Identity Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlIdentityAction.cpp">
+      <Filter>Source Files\Identity Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlSiteAction.cpp">
+      <Filter>Source Files\Protocol Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlActionIdent.cpp">
+      <Filter>Source Files\Protocol Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlActionDisable.cpp">
+      <Filter>Source Files\Protocol Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlActionEnable.cpp">
+      <Filter>Source Files\Protocol Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlActionRemove.cpp">
+      <Filter>Source Files\Protocol Actions</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlAction.cpp">
+      <Filter>Source Files\Client</Filter>
+    </ClCompile>
     <ClCompile Include="..\..\src\SqrlClient.cpp">
-      <Filter>Source Files\Classes</Filter>
+      <Filter>Source Files\Client</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\SqrlCrypt.cpp">
-      <Filter>Source Files\Classes</Filter>
+    <ClCompile Include="..\..\src\SqrlBlock.cpp">
+      <Filter>Source Files\Client</Filter>
     </ClCompile>
-    <ClCompile Include="..\..\src\SqrlBase64.cpp">
-      <Filter>Source Files\Classes</Filter>
+    <ClCompile Include="..\..\src\SqrlStorage.cpp">
+      <Filter>Source Files\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlUser.cpp">
+      <Filter>Source Files\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlUser_storage.cpp">
+      <Filter>Source Files\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlUri.cpp">
+      <Filter>Source Files\Util</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\SqrlUrlEncode.cpp">
-      <Filter>Source Files\Classes</Filter>
+      <Filter>Source Files\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlBase64.cpp">
+      <Filter>Source Files\Util</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\src\SqrlCrypt.cpp">
+      <Filter>Source Files\Crypto</Filter>
     </ClCompile>
     <ClCompile Include="..\..\src\SqrlEntropy.cpp">
-      <Filter>Source Files\Classes</Filter>
+      <Filter>Source Files\Entropy</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -121,21 +169,6 @@
     </ClInclude>
     <ClInclude Include="..\..\src\sqrl.h">
       <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\SqrlBlock.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\SqrlUri.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\SqrlStorage.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\SqrlTransaction.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\SqrlUser.h">
-      <Filter>Header Files\Classes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\aes.h">
       <Filter>Header Files\Crypto</Filter>
@@ -155,12 +188,6 @@
     <ClInclude Include="..\..\src\rdrand.h">
       <Filter>Header Files\Entropy</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\SqrlClient.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\SqrlCrypt.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\SqrlBlock.fwd.h">
       <Filter>Header Files\Class Forwards</Filter>
     </ClInclude>
@@ -173,9 +200,6 @@
     <ClInclude Include="..\..\src\SqrlStorage.fwd.h">
       <Filter>Header Files\Class Forwards</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\SqrlTransaction.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\SqrlUri.fwd.h">
       <Filter>Header Files\Class Forwards</Filter>
     </ClInclude>
@@ -185,26 +209,122 @@
     <ClInclude Include="..\..\src\SqrlEncoder.fwd.h">
       <Filter>Header Files\Class Forwards</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\SqrlEncoder.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\SqrlBase64.fwd.h">
       <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\SqrlBase64.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
-    <ClInclude Include="..\..\src\SqrlUrlEncode.h">
-      <Filter>Header Files\Classes</Filter>
     </ClInclude>
     <ClInclude Include="..\..\src\SqrlUrlEncode.fwd.h">
       <Filter>Header Files\Class Forwards</Filter>
     </ClInclude>
-    <ClInclude Include="..\..\src\SqrlEntropy.h">
-      <Filter>Header Files\Classes</Filter>
-    </ClInclude>
     <ClInclude Include="..\..\src\SqrlEntropy.fwd.h">
       <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlAction.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionChangePassword.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionDisable.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionEnable.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionGenerate.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionIdent.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionLock.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionRekey.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionRemove.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionRescue.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionSave.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionChangePassword.h">
+      <Filter>Header Files\Identity Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionGenerate.h">
+      <Filter>Header Files\Identity Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionLock.h">
+      <Filter>Header Files\Identity Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionRekey.h">
+      <Filter>Header Files\Identity Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionRescue.h">
+      <Filter>Header Files\Identity Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionSave.h">
+      <Filter>Header Files\Identity Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlSiteAction.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlIdentityAction.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlIdentityAction.h">
+      <Filter>Header Files\Identity Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlEntropy.h">
+      <Filter>Header Files\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlCrypt.h">
+      <Filter>Header Files\Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlEncoder.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlBase64.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlUri.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlUrlEncode.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlBlock.h">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlClient.h">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlStorage.h">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlUser.h">
+      <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionRemove.h">
+      <Filter>Header Files\Protocol Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionIdent.h">
+      <Filter>Header Files\Protocol Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionDisable.h">
+      <Filter>Header Files\Protocol Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlActionEnable.h">
+      <Filter>Header Files\Protocol Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlSiteAction.h">
+      <Filter>Header Files\Protocol Actions</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlAction.h">
+      <Filter>Header Files\Client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

@@ -10,7 +10,7 @@ For more details, see the LICENSE file included with this package.
 #include "sqrl.h"
 #include "SqrlUri.h"
 #include "SqrlUser.h"
-#include "SqrlTransaction.h"
+#include "SqrlAction.h"
 
 #define SITE_KV_COUNT 6
 #define SITE_KV_LENGTH 3
@@ -170,7 +170,7 @@ void parseQry( struct Sqrl_Site *site, const char *url, size_t url_len )
 	UT_string *chal;
 	UT_string *srvStr;
 	UT_string *newUrl;
-	SqrlTransaction *transaction = site->transaction;
+	SqrlAction *transaction = site->transaction;
 	SqrlUri *suri = transaction->getUri();
 	char *str;
 
@@ -611,7 +611,7 @@ int sqrl_site_count()
     return i;
 }
 
-Sqrl_Site *sqrl_client_site_create( SqrlTransaction *transaction )
+Sqrl_Site *sqrl_client_site_create( SqrlAction *transaction )
 {
 	if( !transaction ) return NULL;
 	Sqrl_Site *site = (Sqrl_Site*)calloc( 1, sizeof( Sqrl_Site ));
@@ -705,7 +705,7 @@ Sqrl_Transaction_Status sqrl_client_do_loop( Sqrl_Site *site )
 	return SQRL_TRANSACTION_STATUS_WORKING;
 }
 
-Sqrl_Transaction_Status sqrl_client_resume_transaction( SqrlTransaction *transaction, const char *response, size_t response_len )
+Sqrl_Transaction_Status sqrl_client_resume_transaction( SqrlAction *transaction, const char *response, size_t response_len )
 {
 	if( !transaction ) return SQRL_TRANSACTION_STATUS_FAILED;
 	Sqrl_Site *site = NULL;

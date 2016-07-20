@@ -122,7 +122,7 @@ void sqrl_mutex_leave(SqrlMutex sm);
 SqrlThread sqrl_thread_create(sqrl_thread_function function, SQRL_THREAD_FUNCTION_INPUT_TYPE input);
 
 struct Sqrl_User_s_callback_data {
-	SqrlTransaction *transaction;
+	SqrlAction *transaction;
 	int adder;
 	double multiplier;
 	int t1;
@@ -131,7 +131,7 @@ struct Sqrl_User_s_callback_data {
 };
 
 typedef struct Sqrl_Site {
-	SqrlTransaction *transaction;
+	SqrlAction *transaction;
 	uint16_t userOptFlags;
 	uint16_t flags;
 	char *serverFriendlyName;

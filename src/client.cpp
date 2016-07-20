@@ -10,13 +10,13 @@ For more details, see the LICENSE file included with this package.
 #include "sqrl.h"
 #include "SqrlUser.h"
 #include "SqrlUri.h"
-#include "SqrlTransaction.h"
+#include "SqrlAction.h"
 
 Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
 
 
 void sqrl_client_transaction_set_alternate_identity(
-	SqrlTransaction *transaction,
+	SqrlAction *transaction,
 	const char *altIdentity )
 {
 	if( altIdentity ) {
@@ -31,11 +31,11 @@ void sqrl_client_transaction_set_alternate_identity(
 	}
 }
 
-void sqrl_client_call_select_alternate_identity( SqrlTransaction *transaction )
+void sqrl_client_call_select_alternate_identity( SqrlAction *transaction )
 {
 }
 
-bool sqrl_client_call_authentication_required( SqrlTransaction *t, Sqrl_Credential_Type credentialType )
+bool sqrl_client_call_authentication_required( SqrlAction *t, Sqrl_Credential_Type credentialType )
 {
 	bool retVal = false;
 	if( SQRL_CLIENT_CALLBACKS && SQRL_CLIENT_CALLBACKS->onAuthenticationRequired ) {
@@ -45,7 +45,7 @@ bool sqrl_client_call_authentication_required( SqrlTransaction *t, Sqrl_Credenti
 }
 
 void sqrl_client_call_ask(
-	SqrlTransaction *t,
+	SqrlAction *t,
 	const char *message, size_t message_len,
 	const char *firstButton, size_t firstButton_len,
 	const char *secondButton, size_t secondButton_len )
@@ -57,7 +57,7 @@ void sqrl_client_call_ask(
 }
 
 void sqrl_client_call_send(
-	SqrlTransaction *t,
+	SqrlAction *t,
 	const char *url, size_t url_len,
 	const char *payload, size_t payload_len )
 {
@@ -67,7 +67,7 @@ void sqrl_client_call_send(
 }
 
 int sqrl_client_call_progress(
-	SqrlTransaction *t,
+	SqrlAction *t,
 	int progress )
 {
 	int retVal = 1;
@@ -87,7 +87,7 @@ void sqrl_client_call_save_suggested(
 }
 
 void sqrl_client_call_transaction_complete(
-	SqrlTransaction *t )
+	SqrlAction *t )
 {
 	if( SQRL_CLIENT_CALLBACKS && SQRL_CLIENT_CALLBACKS->onTransactionComplete ) {
 		(SQRL_CLIENT_CALLBACKS->onTransactionComplete)(t);
@@ -107,7 +107,7 @@ a \p sqrl_ccb_authentication_required request.
 */
 
 void sqrl_client_authenticate(
-	SqrlTransaction *transaction,
+	SqrlAction *transaction,
 	Sqrl_Credential_Type credentialType,
 	char *credential, size_t credentialLength )
 {
@@ -141,7 +141,7 @@ void sqrl_client_authenticate(
 	sodium_memzero( credential, credentialLength );
 }
 
-bool sqrl_client_require_hint( SqrlTransaction *transaction )
+bool sqrl_client_require_hint( SqrlAction *transaction )
 {
 	if( !transaction ) return false;
 
@@ -152,7 +152,7 @@ bool sqrl_client_require_hint( SqrlTransaction *transaction )
 	return retVal;
 }
 
-bool sqrl_client_require_new_password( SqrlTransaction *transaction )
+bool sqrl_client_require_new_password( SqrlAction *transaction )
 {
 	bool retVal = true;
 	if( !transaction ) return false;
@@ -169,7 +169,7 @@ DONE:
 	return retVal;
 }
 
-bool sqrl_client_require_password( SqrlTransaction *transaction )
+bool sqrl_client_require_password( SqrlAction *transaction )
 {
 	bool retVal = true;
 	if( !transaction ) goto ERR;
@@ -190,7 +190,7 @@ DONE:
 	return retVal;
 }
 
-bool sqrl_client_require_rescue_code( SqrlTransaction *transaction )
+bool sqrl_client_require_rescue_code( SqrlAction *transaction )
 {
 	bool retVal = true;
 	if( !transaction ) goto ERR;
@@ -228,7 +228,7 @@ Sqrl_Transaction_Status sqrl_client_export_user(
 	Sqrl_Encoding encodingType )
 {
 	Sqrl_Transaction_Status status = SQRL_TRANSACTION_STATUS_WORKING;
-	SqrlTransaction *transaction = new SqrlTransaction(SQRL_TRANSACTION_IDENTITY_SAVE);
+	SqrlAction *transaction = new SqrlAction(SQRL_TRANSACTION_IDENTITY_SAVE);
 	transaction->setUser(user);
 	transaction->setStatus(status);
 	transaction->setExportType( exportType );
@@ -275,7 +275,7 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	Sqrl_Transaction_Status retVal = SQRL_TRANSACTION_STATUS_WORKING;
 	SqrlUser *tmpUser;
 	SqrlUri *uri;
-	SqrlTransaction *transaction = new SqrlTransaction( type );
+	SqrlAction *transaction = new SqrlAction( type );
 	transaction->setStatus(retVal);
 
 	if( string ) {
@@ -384,7 +384,7 @@ Call \p sqrl_client_receive with the server's response to a \p sqrl_ccb_send cal
 */
 
 void sqrl_client_receive( 
-	SqrlTransaction *transaction,
+	SqrlAction *transaction,
 	const char *payload, size_t payload_len )
 {
 	sqrl_client_resume_transaction( transaction, payload, payload_len );

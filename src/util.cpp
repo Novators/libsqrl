@@ -9,7 +9,7 @@ For more details, see the LICENSE file included with this package.
 #include "sqrl_internal.h"
 #include "sqrl.h"
 #include "SqrlUser.h"
-#include "SqrlTransaction.h"
+#include "SqrlAction.h"
 #include "gcm.h"
 
 
@@ -52,7 +52,7 @@ int sqrl_stop()
 	if( sqrl_is_initialized ) {
         int transactionCount, userCount, siteCount = 0;
 #ifdef DEBUG
-		transactionCount = SqrlTransaction::countTransactions();
+		transactionCount = SqrlAction::countTransactions();
 		userCount = SqrlUser::countUsers();
 		DEBUG_PRINTF( "%10s: %d open sites\n", "sqrl_stop", siteCount );
 		DEBUG_PRINTF( "%10s: %d open transactions\n", "sqrl_stop", transactionCount );
@@ -61,7 +61,7 @@ int sqrl_stop()
 #endif
         //sqrl_client_site_maintenance( true );
         //sqrl_client_user_maintenance( true );
-        transactionCount = SqrlTransaction::countTransactions();
+        transactionCount = SqrlAction::countTransactions();
 		userCount = SqrlUser::countUsers();
         //siteCount = sqrl_site_count();
 #ifdef DEBUG

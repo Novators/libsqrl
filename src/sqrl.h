@@ -14,7 +14,7 @@
 #include "utstring.h"
 #include "SqrlBlock.fwd.h"
 #include "SqrlStorage.fwd.h"
-#include "SqrlTransaction.fwd.h"
+#include "SqrlAction.fwd.h"
 #include "SqrlUri.fwd.h"
 #include "SqrlUser.fwd.h"
 
@@ -118,8 +118,8 @@ uint16_t Sqrl_Version_Revision();
 #define SQRL_MILLIS_PER_SECOND 				   100
 #define SQRL_HINT_ENSCRYPT_MILLISECONDS 	   100
 #else
-#define SQRL_DEFAULT_ENSCRYPT_SECONDS 		     5
-#define SQRL_RESCUE_ENSCRYPT_SECONDS 		    60
+#define SQRL_DEFAULT_ENSCRYPT_SECONDS 		     1
+#define SQRL_RESCUE_ENSCRYPT_SECONDS 		     5
 #define SQRL_ENTROPY_NEEDED 				   512
 #define SQRL_MILLIS_PER_SECOND				  1000
 #define SQRL_HINT_ENSCRYPT_MILLISECONDS 	  1000
