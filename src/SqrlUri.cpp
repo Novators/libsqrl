@@ -191,7 +191,7 @@ SqrlUri *SqrlUri::parse(const char *source) {
 	if (NULL == tmpstr) goto ERR;
 
 	/* Get the scheme length */
-	len = tmpstr - curstr;
+	len = (int)(tmpstr - curstr);
 	/* Check restrictions */
 	for (i = 0; i < len; i++) {
 		if (!_is_scheme_char(curstr[i])) goto ERR;
@@ -250,7 +250,7 @@ SqrlUri *SqrlUri::parse(const char *source) {
 		while ('\0' != *tmpstr && ':' != *tmpstr && '@' != *tmpstr) {
 			tmpstr++;
 		}
-		len = tmpstr - curstr;
+		len = (int)(tmpstr - curstr);
 		ln = sizeof( char ) * (len + 1);
 		username = (char*)malloc(ln);
 		if (NULL == username) goto ERR;
@@ -266,7 +266,7 @@ SqrlUri *SqrlUri::parse(const char *source) {
 			while ('\0' != *tmpstr && '@' != *tmpstr) {
 				tmpstr++;
 			}
-			len = tmpstr - curstr;
+			len = (int)(tmpstr - curstr);
 			ln = sizeof( char ) * (len + 1);
 			password = (char*)malloc(ln);
 			if (NULL == password) goto ERR;
@@ -299,7 +299,7 @@ SqrlUri *SqrlUri::parse(const char *source) {
 		}
 		tmpstr++;
 	}
-	len = tmpstr - curstr;
+	len = (int)(tmpstr - curstr);
 	ln = sizeof( char ) * (len + 1);
 	host = (char*)malloc(ln);
 	if (NULL == host || len <= 0) goto ERR;
@@ -315,7 +315,7 @@ SqrlUri *SqrlUri::parse(const char *source) {
 		while ('\0' != *tmpstr && '/' != *tmpstr) {
 			tmpstr++;
 		}
-		len = tmpstr - curstr;
+		len = (int)(tmpstr - curstr);
 		ln = sizeof( char ) * (len + 1);
 		port = (char*)malloc(ln);
 		if (NULL == port) goto ERR;
@@ -338,7 +338,7 @@ SqrlUri *SqrlUri::parse(const char *source) {
 	while ('\0' != *tmpstr && '#' != *tmpstr  && '?' != *tmpstr) {
 		tmpstr++;
 	}
-	len = tmpstr - curstr;
+	len = (int)(tmpstr - curstr);
 	ln = sizeof( char ) * (len + 1);
 	path = (char*)malloc(ln);
 	if (NULL == path) goto ERR;
@@ -356,7 +356,7 @@ SqrlUri *SqrlUri::parse(const char *source) {
 		while ('\0' != *tmpstr && '#' != *tmpstr) {
 			tmpstr++;
 		}
-		len = tmpstr - curstr;
+		len = (int)(tmpstr - curstr);
 		ln = sizeof( char ) * (len + 1);
 		query = (char*)malloc(ln);
 		if (NULL == query) goto ERR;
@@ -375,7 +375,7 @@ SqrlUri *SqrlUri::parse(const char *source) {
 		while ('\0' != *tmpstr) {
 			tmpstr++;
 		}
-		len = tmpstr - curstr;
+		len = (int)(tmpstr - curstr);
 		ln = sizeof( char ) * (len + 1);
 		fragment = (char*)malloc(ln);
 		if (NULL == fragment) goto ERR;
@@ -424,9 +424,9 @@ SQRL:
 		pp += 4;
 		ppp = strchr(pp, '&');
 		if (ppp) {
-			pl = ppp - pp;
+			pl = (int)(ppp - pp);
 		} else {
-			pl = strlen(pp);
+			pl = (long)strlen(pp);
 		}
 		UT_string *utsfn = SqrlBase64().decode(NULL, pp, pl);
 		if (utsfn) {

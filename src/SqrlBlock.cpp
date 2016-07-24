@@ -132,7 +132,7 @@ int SqrlBlock::write( uint8_t *data, size_t data_len )
 	if( this->cur + data_len > this->blockLength ) return -1;
 	memcpy( &this->data[this->cur], data, data_len );
 	this->cur += (uint16_t)data_len;
-	return data_len;
+	return (int)data_len;
 }
 
 int SqrlBlock::read( uint8_t *data, size_t data_len )
@@ -140,7 +140,7 @@ int SqrlBlock::read( uint8_t *data, size_t data_len )
 	if( this->cur + data_len > this->blockLength ) return -1;
 	memcpy( data, &this->data[this->cur], data_len );
 	this->cur += (uint16_t)data_len;
-	return data_len;
+	return (int)data_len;
 }
 
 uint16_t SqrlBlock::readInt16()

@@ -10,3 +10,6 @@ build
 /libsqrl/libsqrl-test/Debug
 /libsqrl/libsqrl-test/Release
 /libsqrl/Release
+/libsqrl/libsqrl/x64
+/libsqrl/libsqrl-test/x64
+/libsqrl/x64

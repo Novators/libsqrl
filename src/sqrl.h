@@ -6,9 +6,9 @@
 
 #define SQRL_LIB_VERSION_MAJOR 1
 #define SQRL_LIB_VERSION_MINOR 1
-#define SQRL_LIB_VERSION_BUILD 16202
-#define SQRL_LIB_VERSION_REVISION 2
-#define SQRL_LIB_VERSION "1.1.16202.2"
+#define SQRL_LIB_VERSION_BUILD 16206
+#define SQRL_LIB_VERSION_REVISION 1
+#define SQRL_LIB_VERSION "1.1.16206.1"
 
 #include <stdint.h>
 #include "utstring.h"
@@ -149,7 +149,7 @@ typedef pthread_t SqrlThread;
 #define SQRL_THREAD_LEAVE pthread_exit(NULL)
 #endif
 
-#ifdef WIN32
+#ifdef _WINDOWS
 #include <Windows.h>
 typedef HANDLE SqrlThread;
 #define SQRL_THREAD_FUNCTION_RETURN_TYPE DWORD

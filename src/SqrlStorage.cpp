@@ -369,7 +369,7 @@ static int sqrl_storage_save_to_file( struct S4Page *page, const char *filename,
 		utstring_free( buf );
 		return -1;
 	}
-	retVal = fwrite( utstring_body(buf), 1, utstring_len(buf), fp );
+	retVal = (int)fwrite( utstring_body(buf), 1, utstring_len(buf), fp );
 	fclose(fp);
 	if( retVal != utstring_len( buf )) retVal = -1;
 	utstring_free( buf );

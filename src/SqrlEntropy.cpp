@@ -1,6 +1,6 @@
 #include "sqrl_internal.h"
 #include "SqrlEntropy.h"
-#include <sodium.h>
+#include "sodium.h"
 #include "rdrand.h"
 
 #define SQRL_ENTROPY_REPEAT_FAST 9
@@ -105,7 +105,7 @@ void SqrlEntropy::add( uint8_t* msg, size_t msg_len ) {
 				memcpy( buf, msg, msg_len );
 				memcpy( buf + msg_len, &ffe, sizeof( struct sqrl_fast_flux_entropy ) );
 				crypto_hash_sha512_update( &pool->state, (unsigned char*)buf, sizeof( buf ) );
-				SqrlEntropy::increment( pool, 1 + (msg_len / 64) );
+				SqrlEntropy::increment( pool, 1 + ((int)msg_len / 64) );
 				free( buf );
 			}
 		}
