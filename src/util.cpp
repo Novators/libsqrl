@@ -76,14 +76,6 @@ int sqrl_stop()
 	return -1;
 }
 
-
-void string_zero( std::string *str )
-{
-	if( !str ) return;
-	// TODO: Secure erase std::string
-	str->clear();
-}
-
 void bin2rc( char *buf, uint8_t *bin ) 
 {
 	// bin must be 512+ bits of entropy!

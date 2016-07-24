@@ -65,7 +65,6 @@ uint16_t readint_16(void *buf);
 void sqrl_lcstr(char *);
 
 void bin2rc(char *buf, uint8_t *bin);
-void string_zero( std::string *str );
 
 void sqrl_sleep(int sleepMs);
 bool sqrl_parse_key_value(char **strPtr, char **keyPtr, char **valPtr,
