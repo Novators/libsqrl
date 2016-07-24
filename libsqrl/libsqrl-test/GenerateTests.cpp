@@ -47,7 +47,6 @@ namespace libsqrltest
 			default:
 				Assert::Fail();
 			}
-			Logger::WriteMessage( "Authenticate" );
 		}
 
 		void onSelectUser( SqrlAction *transaction ) {
@@ -57,13 +56,11 @@ namespace libsqrltest
 			Assert::Fail();
 		}
 		void onSaveSuggested( SqrlUser *user ) {
-			Logger::WriteMessage( "SaveSuggested" );
 			SqrlActionSave *save = new SqrlActionSave( user, "file://test2.sqrl" );
 			save->setEncodingType( SQRL_ENCODING_BINARY );
 			save->run();
 		}
 		void onActionComplete( SqrlAction *action ) {
-			Logger::WriteMessage( "ActionComplete" );
 
 		}
 	};
@@ -73,6 +70,11 @@ public:
 	TEST_CLASS_INITIALIZE( InitializeSqrl ) {
 		sqrl_init();
 		new GenClient();
+		char v[64];
+		Sqrl_Version( v, 64 );
+		std::string str( "GenerateTests: " );
+		str.append( v );
+		Logger::WriteMessage( str.data() );
 	}
 
 	TEST_METHOD( generateId ) {

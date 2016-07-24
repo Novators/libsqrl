@@ -14,6 +14,11 @@ namespace libsqrltest
 		TEST_CLASS_INITIALIZE(InitializeSqrl)
 		{
 			sqrl_init();
+			char v[64];
+			Sqrl_Version( v, 64 );
+			std::string str( "UriTests: " );
+			str.append( v );
+			Logger::WriteMessage( str.data() );
 		}
 		
 		void testString(char *a, const char *b) {

@@ -17,6 +17,11 @@ namespace libsqrltest
 		{
 			sqrl_init();
 			srand(1);
+			char v[64];
+			Sqrl_Version( v, 64 );
+			std::string str( "BlockTests: " );
+			str.append( v );
+			Logger::WriteMessage( str.data() );
 		}
 
 		void testString(char *a, const char *b) {
