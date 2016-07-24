@@ -24,10 +24,6 @@ SQRL_EXPORT_ALL = 0,
 SQRL_EXPORT_RESCUE
 } Sqrl_Export;
 
-// SQRL_BASE64_PAD_CHAR = 0x3D for = padding.
-// SQRL_BASE64_PAD_CHAR = 0x00 for no padding.
-#define SQRL_BASE64_PAD_CHAR 				  0x00
-
 // Buffer sizes for keys, etc...
 #define SQRL_KEY_SIZE 						    32
 #define SQRL_SIG_SIZE 						    64
@@ -38,16 +34,6 @@ SQRL_EXPORT_RESCUE
 #define SQRL_OPTION_TOKEN_SUK                "suk"
 #define SQRL_OPTION_TOKEN_SEPARATOR            '~'
 
-typedef enum {
-SQRL_CMD_QUERY,
-SQRL_CMD_IDENT,
-SQRL_CMD_DISABLE,
-SQRL_CMD_ENABLE,
-SQRL_CMD_REMOVE
-} Sqrl_Cmd;
-
-typedef unsigned int Sqrl_Tif;
-
 #define SQRL_TIF_ID_MATCH 					 0x0001
 #define SQRL_TIF_PREVIOUS_ID_MATCH 			 0x0002
 #define SQRL_TIF_IP_MATCH 					 0x0004
@@ -56,29 +42,6 @@ typedef unsigned int Sqrl_Tif;
 #define SQRL_TIF_TRANSIENT_ERR 				 0x0020
 #define SQRL_TIF_COMMAND_FAILURE 			 0x0040
 #define SQRL_TIF_CLIENT_FAILURE 			 0x0080
-
-typedef struct Sqrl_Crypt_Context
-{
-uint8_t *plain_text;
-uint8_t *cipher_text;
-uint16_t text_len;
-uint8_t *add;
-uint16_t add_len;
-uint8_t *tag;
-uint8_t *salt;
-uint8_t *iv;
-uint32_t count;
-uint8_t nFactor;
-uint8_t flags;
-} Sqrl_Crypt_Context;
-
-DLL_PUBLIC int 		sqrl_init();
-DLL_PUBLIC int         sqrl_stop();
-size_t		Sqrl_Version(char *buffer, size_t buffer_len);
-uint16_t Sqrl_Version_Major();
-uint16_t Sqrl_Version_Minor();
-uint16_t Sqrl_Version_Build();
-uint16_t Sqrl_Version_Revision();
 
 #define SQRL_BLOCK_USER                     0x0001
 #define SQRL_BLOCK_RESCUE                   0x0002
@@ -104,22 +67,11 @@ uint16_t Sqrl_Version_Revision();
 #define SQRL_OPTION_CLEAR_HINT_USER_SWITCH	0x0040
 #define SQRL_OPTION_CLEAR_HINT_IDLE			0x0080
 
-#ifdef DEBUG
-// (Much) faster enscrypt during debug...
-#define SQRL_DEFAULT_ENSCRYPT_SECONDS 		     1
-#define SQRL_RESCUE_ENSCRYPT_SECONDS 			 5
-#define SQRL_ENTROPY_NEEDED 					 1
-#define SQRL_MILLIS_PER_SECOND 				   100
-#define SQRL_HINT_ENSCRYPT_MILLISECONDS 	   100
-#else
 #define SQRL_DEFAULT_ENSCRYPT_SECONDS 		     1
 #define SQRL_RESCUE_ENSCRYPT_SECONDS 		     5
 #define SQRL_ENTROPY_NEEDED 				   512
 #define SQRL_MILLIS_PER_SECOND				  1000
 #define SQRL_HINT_ENSCRYPT_MILLISECONDS 	  1000
-#endif
-
-
 
 typedef enum {
 SQRL_BUTTON_CANCEL = 0,
@@ -135,4 +87,24 @@ SQRL_CREDENTIAL_RESCUE_CODE,
 SQRL_CREDENTIAL_NEW_PASSWORD
 } Sqrl_Credential_Type;
 
+typedef enum
+{
+	SQRL_CMD_QUERY,
+	SQRL_CMD_IDENT,
+	SQRL_CMD_DISABLE,
+	SQRL_CMD_ENABLE,
+	SQRL_CMD_REMOVE
+} Sqrl_Cmd;
+
+typedef unsigned int Sqrl_Tif;
+
+
+
+DLL_PUBLIC int 		sqrl_init();
+DLL_PUBLIC int         sqrl_stop();
+size_t		Sqrl_Version( char *buffer, size_t buffer_len );
+uint16_t Sqrl_Version_Major();
+uint16_t Sqrl_Version_Minor();
+uint16_t Sqrl_Version_Build();
+uint16_t Sqrl_Version_Revision();
 

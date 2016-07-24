@@ -35,13 +35,7 @@ UT_string *SqrlBase64::encode( UT_string *dest, const uint8_t *src, size_t src_l
 	}
 	i = src_len % 3;
 	if( i ) {
-#if SQRL_BASE64_PAD_CHAR == 0x00
 		utstring_shrink( dest, 3 - i );
-#else
-		for( i = 3 - i; i > 0; i-- ) {
-			utstring_body( dest )[utstring_len( dest ) - i] = SQRL_BASE64_PAD_CHAR;
-		}
-#endif
 	}
 	return dest;
 }
@@ -54,12 +48,7 @@ UT_string *SqrlBase64::decode( UT_string *dest, const char *src, size_t src_len,
 	int charCount = 0;
 	uint32_t tmp = 0, val;
 	char str[3];
-#if SQRL_BASE64_PAD_CHAR == 0x00
 	size_t input_length = src_len;
-#else
-	char *p = strchr( src, SQRL_BASE64_PAD_CHAR );;
-	size_t input_length = (p && (p <= src + src_len)) ? p - src : src_len;
-#endif
 
 	while( i < input_length ) {
 		i += this->nextValue( &val, &src[i] );

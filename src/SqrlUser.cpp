@@ -58,7 +58,7 @@ void SqrlUser::ensureKeysAllocated()
 	if( this->keys == NULL ) {
 		this->keys = (Sqrl_Keys*)sodium_malloc( sizeof( struct Sqrl_Keys ));
 		memset( this->keys, 0, sizeof( struct Sqrl_Keys ));
-		BIT_UNSET( this->flags, USER_FLAG_MEMLOCKED );
+		FLAG_CLEAR( this->flags, USER_FLAG_MEMLOCKED );
 	}
 }
 
@@ -225,7 +225,7 @@ void sqrl_client_user_maintenance( bool forceLockAll )
 
 bool SqrlUser::isMemLocked() 
 {
-	if( BIT_CHECK( this->flags, USER_FLAG_MEMLOCKED )) {
+	if( FLAG_CHECK( this->flags, USER_FLAG_MEMLOCKED )) {
 		return true;
 	}
 	return false;
@@ -236,7 +236,7 @@ void SqrlUser::memLock()
 	if( this->keys != NULL ) {
 		sodium_mprotect_noaccess( this->keys );
 	}
-	BIT_SET( this->flags, USER_FLAG_MEMLOCKED );
+	FLAG_SET( this->flags, USER_FLAG_MEMLOCKED );
 }
 
 void SqrlUser::memUnlock()
@@ -244,7 +244,7 @@ void SqrlUser::memUnlock()
 	if( this->keys != NULL ) {
 		sodium_mprotect_readwrite( this->keys );
 	}
-	BIT_UNSET( this->flags, USER_FLAG_MEMLOCKED );
+	FLAG_CLEAR( this->flags, USER_FLAG_MEMLOCKED );
 }
 
 bool SqrlUser::isHintLocked()
@@ -628,7 +628,7 @@ bool SqrlUser::setPassword( const char *password, size_t password_len )
 	memcpy( p, password, password_len );
 	if( *l > 0 ) {
 		// 	Changing password
-		BIT_SET(this->flags, USER_FLAG_T1_CHANGED);
+		FLAG_SET(this->flags, USER_FLAG_T1_CHANGED);
 	}
 	*l = password_len;
 	return true;
@@ -664,19 +664,19 @@ uint16_t SqrlUser::getTimeoutMinutes()
 void SqrlUser::setHintLength( uint8_t length )
 {
 	this->options.hintLength = length;
-	BIT_SET( this->flags, USER_FLAG_T1_CHANGED );
+	FLAG_SET( this->flags, USER_FLAG_T1_CHANGED );
 }
 
 void SqrlUser::setEnscryptSeconds( uint8_t seconds )
 {
 	this->options.enscryptSeconds = seconds;
-	BIT_SET( this->flags, USER_FLAG_T1_CHANGED );
+	FLAG_SET( this->flags, USER_FLAG_T1_CHANGED );
 }
 
 void SqrlUser::setTimeoutMinutes( uint16_t minutes )
 {
 	this->options.timeoutMinutes = minutes;
-	BIT_SET( this->flags, USER_FLAG_T1_CHANGED );
+	FLAG_SET( this->flags, USER_FLAG_T1_CHANGED );
 }
 
 uint16_t SqrlUser::getFlags()
@@ -695,7 +695,7 @@ void SqrlUser::setFlags( uint16_t flags )
 {
 	if( (this->options.flags & flags) != flags ) {
 		this->options.flags |= flags;
-		BIT_SET( this->flags, USER_FLAG_T1_CHANGED );
+		FLAG_SET( this->flags, USER_FLAG_T1_CHANGED );
 	}
 }
 
@@ -703,7 +703,7 @@ void SqrlUser::clearFlags( uint16_t flags )
 {
 	if( (this->flags & flags) != 0 ) {
 		this->options.flags &= ~flags;
-		BIT_SET( this->flags, USER_FLAG_T1_CHANGED );
+		FLAG_SET( this->flags, USER_FLAG_T1_CHANGED );
 	}
 }
 

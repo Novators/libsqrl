@@ -83,9 +83,6 @@ void SqrlEntropy::start() {
 void SqrlEntropy::stop() {
 	if( !SqrlEntropy::state ) return;
 	SqrlEntropy::stopping = true;
-	if( SqrlEntropy::thread->joinable() ) {
-		SqrlEntropy::thread->join();
-	}
 	delete SqrlEntropy::thread;
 	SqrlEntropy::thread = NULL;
 }
