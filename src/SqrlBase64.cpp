@@ -1,10 +1,8 @@
 
-#include <string>
-#include <sstream>
 #include "sqrl_internal.h"
 #include "SqrlBase64.h"
 
-UT_string *SqrlBase64::encode( UT_string *dest, const uint8_t *src, size_t src_len, bool append ) {
+std::string *SqrlBase64::encode( std::string *dest, const std::string *src, bool append ) {
 	static const char B64_ENC_TABLE[64] = {
 		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
 		'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -15,82 +13,87 @@ UT_string *SqrlBase64::encode( UT_string *dest, const uint8_t *src, size_t src_l
 		'w', 'x', 'y', 'z', '0', '1', '2', '3',
 		'4', '5', '6', '7', '8', '9', '-', '_'
 	};
-
-	if( !append ) {
-		utstring_renew( dest );
+	size_t src_len = src->length();
+	if( !dest ) dest = new std::string();
+	if( append ) {
+		dest->reserve( dest->length() + (size_t)(src_len * 4.0 / 3.0) );
+	} else {
+		dest->clear();
+		dest->reserve( (size_t)(src_len * 4.0 / 3.0) );
 	}
 	size_t i = 0;
 	uint32_t tmp;
 	char str[4];
-	while( i < src_len ) {
-		tmp = src[i++] << 16;
-		if( i < src_len ) 	tmp |= src[i++] << 8;
-		if( i < src_len ) 	tmp |= src[i++];
+	std::string::const_iterator it = src->cbegin();
+	while( it != src->cend() ) {
+		tmp = (*it++ & 0xFF) << 16;
+		if( it != src->cend() ) tmp |= (*it++ & 0xFF) << 8;
+		if( it != src->cend() ) tmp |= (*it++ & 0xFF);
 
 		str[0] = B64_ENC_TABLE[(tmp >> 18) & 0x3F];
 		str[1] = B64_ENC_TABLE[(tmp >> 12) & 0x3F];
 		str[2] = B64_ENC_TABLE[(tmp >> 6) & 0x3F];
 		str[3] = B64_ENC_TABLE[tmp & 0x3F];
-		utstring_bincpy( dest, str, 4 );
+		dest->append( str, 4 );
 	}
-	i = src_len % 3;
-	if( i ) {
-		utstring_shrink( dest, 3 - i );
+	i = (src_len % 3);
+	if( i ) i = 3 - i;
+	while( i && dest->length() ) {
+		dest->pop_back();
+		i--;
 	}
 	return dest;
 }
 
-UT_string *SqrlBase64::decode( UT_string *dest, const char *src, size_t src_len, bool append ) {
-	if( !append ) {
-		utstring_renew( dest );
+std::string *SqrlBase64::decode( std::string *dest, const std::string *src, bool append ) {
+	size_t input_length = src->length();
+	if( !dest ) dest = new std::string();
+	if( append ) {
+		dest->reserve( dest->length() + (size_t)(input_length *3.0 / 4.0) );
+	} else {
+		dest->clear();
+		dest->reserve( (size_t)(input_length * 3.0 / 4.0) );
 	}
 	size_t i = 0;
 	int charCount = 0;
 	uint32_t tmp = 0, val;
-	char str[3];
-	size_t input_length = src_len;
+	char str[4] = {0};
 
-	while( i < input_length ) {
-		i += this->nextValue( &val, &src[i] );
-		if( i <= input_length ) {
+	std::string::const_iterator it = src->cbegin();
+
+	while( it < src->cend() ) {
+		if( this->nextValue( &val, it, src->cend() ) ) {
 			tmp = val << 18;
 			charCount++;
 		}
-		if( i < input_length ) {
-			i += this->nextValue( &val, &src[i] );
-			if( i <= input_length ) {
-				tmp |= val << 12;
-				charCount++;
-			}
-			if( i < input_length ) {
-				i += this->nextValue( &val, &src[i] );
-				if( i <= input_length ) {
-					tmp |= val << 6;
-					charCount++;
-				}
-				if( i < input_length ) {
-					i += this->nextValue( &val, &src[i] );
-					if( i <= input_length ) {
-						tmp |= val;
-						charCount++;
-					}
-				}
-			}
-		} else {
-			break;
+		if( this->nextValue( &val, it, src->cend() ) ) {
+			tmp |= val << 12;
+			charCount++;
+		}
+		if( this->nextValue( &val, it, src->cend() ) ) {
+			tmp |= val << 6;
+			charCount++;
+		}
+		if( this->nextValue( &val, it, src->cend() ) ) {
+			tmp |= val;
+			charCount++;
 		}
 
 		str[0] = (char)((tmp >> 16) & 0xFF);
 		str[1] = (char)((tmp >> 8) & 0xFF);
 		str[2] = (char)(tmp & 0xFF);
-		utstring_bincpy( dest, str, 3 );
+		dest->append( str, 3 );
 	}
-	i = charCount % 4;
-	if( i ) utstring_shrink( dest, 4 - i );
+	charCount = (charCount % 4);
+	if( charCount ) charCount = 4 - charCount;
+	while( charCount && dest->length() ) {
+		dest->pop_back();
+		charCount--;
+	}
 	return dest;
 }
 
-int SqrlBase64::nextValue( uint32_t *nextValue, const char *src ) {
+bool SqrlBase64::nextValue( uint32_t *nextValue, std::string::const_iterator &it, std::string::const_iterator &end ) {
 	static const char B64_DEC_TABLE[256] = {
 		/*   0 */	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
 		/*  16 */	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
@@ -109,19 +112,19 @@ int SqrlBase64::nextValue( uint32_t *nextValue, const char *src ) {
 		/* 224 */	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
 		/* 240 */	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00'
 	};
-	int i = 0;
-	while( src[i] != 0 ) { // End of String
-		if( src[i] == 'A' ) { // Legitimately return 0x00
-			*nextValue = B64_DEC_TABLE[(int)src[i]];
-			return i + 1;
+	while( it < end ) {
+		if( (it)[0] == 'A' ) { // Legitimately return 0x00
+			*nextValue = B64_DEC_TABLE[(int)(it[0])];
+			++it;
+			return true;
 		}
-		if( B64_DEC_TABLE[(uint8_t)src[i]] != 0 ) { // Legitimate character
-			*nextValue = B64_DEC_TABLE[(int)src[i]];
-			//printf( "Selecting: %c (%x)\n", src[i], *nextValue );
-			return i + 1;
+		if( B64_DEC_TABLE[(uint8_t)(it[0])] != 0 ) { // Legitimate character
+			*nextValue = B64_DEC_TABLE[(int)(it[0])];
+			++it;
+			return true;
 		}
-		i++; // No legitimate character, check the next
+		++it;
 	}
 	*nextValue = 0;
-	return i;
+	return false;
 }

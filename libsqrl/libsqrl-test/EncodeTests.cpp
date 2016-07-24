@@ -25,10 +25,7 @@ public:
 
 	TEST_METHOD( Base64 ) {
 		const int NT = 10;
-		const size_t esize[NT] = {
-			0, 1, 2, 3, 4, 5, 6, 3, 3, 6
-		};
-		const char *evector[NT] = {
+		std::string evector[NT] = {
 			"",
 			"f",
 			"fo",
@@ -36,10 +33,10 @@ public:
 			"foob",
 			"fooba",
 			"foobar",
-			"\x49\x00\x02",
-			"\x00\x08\xa4",
-			"\x49\x00\x02\x00\x08\xa4"};
-		const char *dvector[NT] = {
+			"\x49\x00\x02"s,
+			"\x00\x08\xa4"s,
+			"\x49\x00\x02\x00\x08\xa4"s};
+		std::string dvector[NT] = {
 			"",
 			"Zg",
 			"Zm8",
@@ -50,21 +47,19 @@ public:
 			"SQAC",
 			"AAik",
 			"SQACAAik"};
-		UT_string *s;
+		std::string s;
 		int i;
-		utstring_new( s );
 		SqrlBase64 b64 = SqrlBase64();
 		
 		for( i = 0; i < NT; i++ ) {
-			printf( "%s\n", dvector[i] );
-			b64.encode( s, (uint8_t*)evector[i], esize[i] );
-			Assert::IsTrue( utstring_len( s ) == strlen( dvector[i] ) );
-			Assert::IsTrue( 0 == strcmp( utstring_body( s ), dvector[i] ) );
-			b64.decode( s, dvector[i], strlen( dvector[i] ) );
-			Assert::IsTrue( utstring_len( s ) == esize[i] );
-			Assert::IsTrue( 0 == memcmp( utstring_body( s ), evector[i], esize[i] ) );
+			printf( "%s\n", dvector[i].data() );
+			b64.encode( &s, &(evector[i]) );
+			Assert::IsTrue( s.length() == dvector[i].length() );
+			Assert::IsTrue( 0 == s.compare( dvector[i] ) );
+			b64.decode( &s, &dvector[i] );
+			Assert::IsTrue( s.length() == evector[i].length() );
+			Assert::IsTrue( 0 == s.compare( evector[i] ) );
 		}
-		utstring_free( s );
 	}
 	
 

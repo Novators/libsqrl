@@ -84,7 +84,7 @@ size_t SqrlActionSave::getString( char *buf, size_t *len ) {
 	return retVal;
 }
 
-void SqrlActionSave::setString( char *buf, size_t len ) {
+void SqrlActionSave::setString( const char *buf, size_t len ) {
 	if( this->buffer ) {
 		free( this->buffer );
 	}

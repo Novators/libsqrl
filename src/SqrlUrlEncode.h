@@ -6,6 +6,6 @@
 class DLL_PUBLIC SqrlUrlEncode : SqrlEncoder
 {
 public:
-	UT_string *encode( UT_string *dest, const uint8_t *src, size_t src_len, bool append = false );
-	UT_string *decode( UT_string *dest, const char *src, size_t src_len, bool append = false );
+	std::string *encode( std::string *dest, const uint8_t *src, size_t src_len, bool append = false );
+	std::string *decode( std::string *dest, const char *src, size_t src_len, bool append = false );
 };

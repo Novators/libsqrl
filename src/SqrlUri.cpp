@@ -175,7 +175,7 @@ SqrlUri *SqrlUri::parse(const char *source) {
 		*password = NULL;
 	size_t ln;
 
-	UT_string *prefix = NULL;
+	std::string *prefix = NULL;
 	ln = strlen( source ) + 1;
 	char *uri = (char*)malloc(ln);
 	strcpy_s(uri, ln, source);
@@ -393,8 +393,7 @@ SQRL:
 		theUri->url = (char*)malloc(ln);
 		strcpy_s(theUri->url + 1, ln - 1, uri);
 		memcpy(theUri->url, "https", 5);
-		utstring_new(prefix);
-		utstring_bincpy(prefix, "https://", 8);
+		prefix = new std::string( "https://" );
 		break;
 	case SQRL_SCHEME_FILE:
 		ln = strlen( uri ) + 2;
@@ -429,11 +428,15 @@ SQRL:
 		} else {
 			pl = (long)strlen(pp);
 		}
-		UT_string *utsfn = SqrlBase64().decode(NULL, pp, pl);
-		if (utsfn) {
-			theUri->sfn = (char*)calloc(1, utstring_len(utsfn) + 1);
-			memcpy(theUri->sfn, utstring_body(utsfn), utstring_len(utsfn));
-			utstring_free(utsfn);
+		std::string *utsfnsrc = new std::string( pp, pl );
+		if( utsfnsrc ) {
+			std::string *utsfn = SqrlBase64().decode( NULL, utsfnsrc );
+			if( utsfn ) {
+				theUri->sfn = (char*)calloc( 1, utsfn->length() + 1 );
+				memcpy( theUri->sfn, utsfn->data(), utsfn->length() );
+				delete utsfn;
+			}
+			delete utsfnsrc;
 		}
 		pl = 0;
 		pp = strstr(query, "x=");
@@ -446,18 +449,19 @@ SQRL:
 	theUri->host = (char*)malloc(ul);
 	if (theUri->host == NULL) goto ERR;
 	strcpy_s(theUri->host, ul, host);
-	utstring_bincpy(prefix, host, strlen(host));
+	prefix->append( host );
 	if (port) {
-		utstring_printf(prefix, ":%s", port);
+		prefix->append( ":" );
+		prefix->append( port );
 	}
 	if (pl) {
 		theUri->host[hl] = '/';
 		strncpy(theUri->host + hl + 1, path, pl);
 	}
-	ln = utstring_len( prefix ) + 1;
+	ln = prefix->length() + 1;
 	theUri->prefix = (char*)malloc(ln);
 	if (theUri->prefix == NULL) goto ERR;
-	strcpy_s(theUri->prefix, ln, utstring_body(prefix));
+	strcpy_s(theUri->prefix, ln, prefix->data());
 	goto END;
 
 ERR:
@@ -472,7 +476,7 @@ END:
 	if (username) free(username);
 	if (password) free(password);
 	if (path) free(path);
-	if (prefix) utstring_free(prefix);
+	if (prefix) delete prefix;
 	if (uri) free(uri);
 	return theUri;
 }

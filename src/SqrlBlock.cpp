@@ -193,17 +193,15 @@ bool SqrlBlock::writeInt8( uint8_t value )
 	return true;
 }
 
-UT_string* SqrlBlock::getData(UT_string *buf, bool append)
+std::string* SqrlBlock::getData(std::string *buf, bool append)
 {
-	if (!buf) {
-		utstring_new(buf);
+	if( buf ) {
+		if( !append ) buf->clear();
 	} else {
-		if (!append) {
-			utstring_clear(buf);
-		}
+		if( this->blockLength > 0 )	buf = new std::string();
 	}
 	if (this->blockLength > 0) {
-		utstring_bincpy(buf, this->data, this->blockLength);
+		buf->append( (char*)this->data, this->blockLength );
 	} else {
 		return NULL;
 	}

@@ -1,7 +1,6 @@
 #pragma once
 
 #include <stdint.h>
-#include "utstring.h"
 #include "SqrlBlock.fwd.h"
 
 class DLL_PUBLIC SqrlBlock
@@ -25,7 +24,7 @@ public:
 	bool        writeInt16(uint16_t value);
 	bool        writeInt32(uint32_t value);
 	bool        writeInt8(uint8_t value);
-	UT_string*	getData(UT_string *buf, bool append = false);
+	std::string*	getData(std::string *buf, bool append = false);
 	uint8_t*	getDataPointer(bool atCursor = false);
 	uint16_t	getBlockLength();
 	uint16_t	getBlockType();

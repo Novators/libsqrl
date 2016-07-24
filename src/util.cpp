@@ -77,10 +77,11 @@ int sqrl_stop()
 }
 
 
-void utstring_zero( UT_string *str )
+void string_zero( std::string *str )
 {
 	if( !str ) return;
-	sodium_memzero( utstring_body( str ), utstring_len( str ));
+	// TODO: Secure erase std::string
+	str->clear();
 }
 
 void bin2rc( char *buf, uint8_t *bin ) 

@@ -27,8 +27,6 @@ namespace libsqrltest
 		TEST_METHOD(SizesAndTypes)
 		{
 			uint16_t t, l;
-			UT_string *data;
-			utstring_new(data);
 			SqrlBlock *block = SqrlBlock::create();
 			Assert::IsTrue(block->getBlockLength() == 0);
 			Assert::IsTrue(block->getBlockType() == 0);
@@ -38,24 +36,26 @@ namespace libsqrltest
 			for (l = 0; l < 512; l++) {
 				t = (rand() % 65535);
 				block->init(t, l);
-				utstring_renew(data);
-				block->getData(data);
+				std::string *data = block->getData(NULL);
+				if( l == 0 ) Assert::IsNull( data );
+				else Assert::IsNotNull( data );
 				Assert::IsTrue(block->getBlockLength() == l);
 				Assert::IsTrue(block->getBlockType() == t);
-				Assert::AreEqual(utstring_len(data), (unsigned int)l);
+				if( data ) {
+					Assert::AreEqual( data->length(), (size_t)l );
+					delete data;
+				}
 			}
 			block->init(65535, 1);
 			Assert::IsTrue(block->getBlockType() == 65535);
 			Assert::IsTrue(block->getBlockLength() == 1);
-			utstring_free(data);
 			block->release();
 		}
 
 		TEST_METHOD(RandomAccess)
 		{
 			char *testString = "Bender is Great!";
-			UT_string *str;
-			utstring_new(str);
+			std::string *str = NULL;
 			SqrlBlock *block = SqrlBlock::create();
 			block->init(1, (uint16_t)strlen(testString) + 2);
 			block->write((uint8_t*)testString, strlen(testString));
@@ -64,10 +64,11 @@ namespace libsqrltest
 			block->seekBack(3, true);
 			block->writeInt8((uint8_t)'?');
 			Assert::IsTrue(strcmp("Bender is Great?", (char*)block->getDataPointer()) == 0);
-			block->getData(str);
+			str = block->getData(NULL);
+			Assert::IsNotNull( str );
 			block->seek(7);
 			block->writeInt8((uint8_t)' ');
-			block->write((uint8_t*)(utstring_body(str) + 7), 9);
+			block->write((uint8_t*)(str->data() + 7), 9);
 			Assert::IsTrue(strcmp("Bender  is Great?", (char*)block->getDataPointer()) == 0);
 			block->seek(0);
 			block->writeInt8((uint8_t)'N');
@@ -78,7 +79,7 @@ namespace libsqrltest
 			block->seekBack(1);
 			block->writeInt8((uint8_t)'!');
 			Assert::IsTrue(strcmp("Nibbler is Great!", (char*)block->getDataPointer()) == 0);
-			utstring_free(str);
+			delete str;
 			block->release();
 		}
 

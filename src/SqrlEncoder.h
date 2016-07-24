@@ -1,10 +1,11 @@
 #pragma once
 
+#include <string>
 #include "SqrlEncoder.fwd.h"
 
 class DLL_PUBLIC SqrlEncoder
 {
 public:
-	virtual UT_string *encode( UT_string *dest, const uint8_t *src, size_t src_len, bool append = false ) = 0;
-	virtual UT_string *decode( UT_string *dest, const char *src, size_t src_len, bool append = false ) = 0;
+	virtual std::string *encode( std::string *dest, const std::string *src, bool append = false ) = 0;
+	virtual std::string *decode( std::string *dest, const std::string *src, bool append = false ) = 0;
 };

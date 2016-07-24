@@ -33,18 +33,6 @@ extern "C" {
 // Site information saved for 5 minutes (600 seconds) past last action
 #define SQRL_CLIENT_SITE_TIMEOUT 600
 
-// Some additional UTstring functions...
-#define utstring_shrink(s,l)                          \
-do {                                                  \
-s->i -= l;                                        \
-s->d[s->i]='\0';                                  \
-} while(0)
-
-#define utstring_wipe(s)                              \
-do{                                                   \
-if ((s)->d != NULL) sodium_memzero( (s)->d, (s)->n );  \
-} while(0)
-
 #define FLAG_SET(f,v) f |= v
 #define FLAG_CLEAR(f,v) f &= ~(v)
 #define FLAG_CHECK(f,v) (v == (f & v))
@@ -76,7 +64,7 @@ uint16_t readint_16(void *buf);
 void sqrl_lcstr(char *);
 
 void bin2rc(char *buf, uint8_t *bin);
-void utstring_zero(UT_string *str);
+void string_zero( std::string *str );
 
 void sqrl_sleep(int sleepMs);
 bool sqrl_parse_key_value(char **strPtr, char **keyPtr, char **valPtr,

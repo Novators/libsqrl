@@ -122,17 +122,16 @@ bool SqrlUser::sus_block_2( SqrlAction *transaction, SqrlBlock *block, struct Sq
 	crypt->flags = SQRL_ENCRYPT | SQRL_ITERATIONS;
 	uint8_t *iuk = this->key( transaction, KEY_IUK );
 	memcpy( crypt->plain_text, iuk, crypt->text_len );
-	if( !crypt->doCrypt() ) {
-		goto ERR;
-	}
-	// Save unique id
-	UT_string *str;
-	utstring_new( str );
-	SqrlBase64().encode( str, crypt->cipher_text, SQRL_KEY_SIZE );
-	strcpy_s( this->uniqueId, utstring_body( str ) );
-	utstring_free( str );
+	if( crypt->doCrypt() ) {
+		// Save unique id
+		std::string str;
+		std::string tstr;
+		tstr.append( (char*)crypt->cipher_text, SQRL_KEY_SIZE );
+		SqrlBase64().encode( &str, &tstr );
+		strcpy_s( this->uniqueId, str.data() );
 
-	goto DONE;
+		goto DONE;
+	}
 
 ERR:
 	retVal = false;
@@ -473,14 +472,12 @@ SqrlUser::SqrlUser( SqrlUri *uri )
 SqrlUser::SqrlUser( const char *buffer, size_t buffer_len )
 {
 	this->initialize();
-	UT_string *buf;
-	utstring_new( buf );
-	utstring_bincpy(buf, buffer, buffer_len);
-	this->storage = SqrlStorage::from( buf );
+	std::string buf;
+	buf.append( buffer, buffer_len );
+	this->storage = SqrlStorage::from( &buf );
 	if( this->storage ) {
 		this->_load_unique_id();
 	}
-	utstring_free( buf );
 }
 
 bool SqrlUser::save( SqrlActionSave *transaction )
@@ -513,16 +510,17 @@ bool SqrlUser::saveToBuffer( SqrlActionSave *transaction )
 		return false;
 	}
 	bool retVal = true;
-	UT_string *buf;
-	utstring_new( buf );
 	struct Sqrl_User_s_callback_data cbdata;
 	cbdata.transaction = transaction;
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
 
+	std::string *buf = NULL;
 	if( this->updateStorage( transaction )) {
-		if( this->storage->save( buf, transaction->getExportType(), transaction->getEncodingType())) {
-			transaction->setString( utstring_body( buf ), utstring_len( buf ));
+		buf = this->storage->save( transaction->getExportType(), transaction->getEncodingType() );
+		if( buf ) {
+			transaction->setString( buf->data(), buf->length());
+			delete buf;
 			goto DONE;
 		}
 	}
@@ -531,9 +529,6 @@ bool SqrlUser::saveToBuffer( SqrlActionSave *transaction )
 	retVal = false;
 
 DONE:
-	if( buf ) {
-		utstring_free(buf);
-	}
 	return retVal;
 }
 

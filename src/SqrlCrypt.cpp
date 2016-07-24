@@ -301,14 +301,14 @@ void SqrlCrypt::generatePublicKey( uint8_t *puk, const uint8_t *prk ) {
 }
 
 
-void SqrlCrypt::sign( const UT_string *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] ) {
+void SqrlCrypt::sign( const std::string *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] ) {
 	uint8_t secret[crypto_sign_SECRETKEYBYTES];
 	sodium_mlock( secret, crypto_sign_SECRETKEYBYTES );
 	memcpy( secret, sk, 32 );
 	memcpy( secret + 32, pk, 32 );
 	crypto_sign_detached(
 		sig, NULL,
-		(unsigned char*)utstring_body( msg ), utstring_len( msg ),
+		(const unsigned char*)msg->data(), msg->length(),
 		secret );
 	sodium_munlock( secret, crypto_sign_SECRETKEYBYTES );
 	//	ed25519_sign(
@@ -319,8 +319,8 @@ void SqrlCrypt::sign( const UT_string *msg, const uint8_t sk[32], const uint8_t 
 }
 
 
-bool SqrlCrypt::verifySignature( const UT_string *msg, const uint8_t *sig, const uint8_t *pub ) {
-	if( crypto_sign_verify_detached( sig, (unsigned char *)(utstring_body( msg )), utstring_len( msg ), pub ) == 0 ) {
+bool SqrlCrypt::verifySignature( const std::string *msg, const uint8_t *sig, const uint8_t *pub ) {
+	if( crypto_sign_verify_detached( sig, (const unsigned char *)msg->data(), msg->length(), pub ) == 0 ) {
 		return true;
 	}
 	//	if( ed25519_sign_open( 

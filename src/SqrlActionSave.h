@@ -13,7 +13,7 @@ public:
 	Sqrl_Encoding getEncodingType();
 	void setEncodingType( Sqrl_Encoding type );
 	size_t getString( char * buf, size_t * len );
-	void setString( char * buf, size_t len );
+	void setString( const char * buf, size_t len );
 
 	void run();
 

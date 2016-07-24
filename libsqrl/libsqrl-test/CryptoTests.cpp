@@ -14,20 +14,19 @@ using namespace std;
 
 namespace libsqrltest
 {
-	UT_string *sqrl_hex_encode( UT_string *dest, const uint8_t *src, size_t src_len ) {
-		if( !dest ) return NULL;
+	void sqrl_hex_encode( std::string *dest, const uint8_t *src, size_t src_len ) {
+		if( !dest ) return;
 		static const char tab[] = "0123456789abcdef";
 		int i;
 		char tmp[3] = {0};
 
-		utstring_renew( dest );
-		utstring_reserve( dest, src_len * 2 + 1 );
+		dest->clear();
+		dest->reserve( src_len * 2 + 1 );
 		for( i = 0; i < src_len; i++ ) {
 			tmp[0] = tab[src[i] >> 4];
 			tmp[1] = tab[src[i] & 0x0F];
-			utstring_bincpy( dest, tmp, 2 );
+			dest->append( tmp, 2 );
 		}
-		return dest;
 	}
 
 	TEST_CLASS( CryptoTests ) {
@@ -47,23 +46,25 @@ namespace libsqrltest
 
 			char line[256];
 			size_t len = 0;
-			UT_string *input, *output;
-			utstring_new( input );
-			utstring_new( output );
+			std::string *input, *output;
+			std::string tmp, tmp2;
 			uint8_t out[SQRL_KEY_SIZE];
 			SqrlBase64 b64 = SqrlBase64();
 
 			int ln = 0;
 			while( fgets(line,sizeof(line),fp) ) {
 				ln++;
-				b64.decode( input, line, 43 );
-				b64.decode( output, line + 43, 43 );
-				SqrlCrypt::enHash( (uint64_t*)out, (uint64_t*)(utstring_body( input )) );
-				Assert::IsTrue( memcmp( out, utstring_body( output ), 32 ) == 0 );
+				tmp.append( line, 43 );
+				tmp2.append( line + 43, 43 );
+				input = b64.decode( NULL, &tmp );
+				output = b64.decode( NULL, &tmp2 );
+				SqrlCrypt::enHash( (uint64_t*)out, (uint64_t*)(input->data()) );
+				Assert::IsTrue( 32 == output->length() );
+				Assert::IsTrue( 0 == memcmp( out, output->data(), 32 ));
+				tmp.clear();
+				tmp2.clear();
+				delete input, output;
 			}
-
-			utstring_free( input );
-			utstring_free( output );
 			fclose( fp );
 		}
 
@@ -72,12 +73,9 @@ namespace libsqrltest
 			uint8_t buf[32];
 			int time;
 			time = SqrlCrypt::enScrypt( NULL, buf, NULL, 0, NULL, 0, 1, 9 );
-			UT_string *str;
-			utstring_new( str );
-			sqrl_hex_encode( str, buf, 32 );
-			Assert::IsTrue( strcmp( utstring_body( str ),
-				"a8ea62a6e1bfd20e4275011595307aa302645c1801600ef5cd79bf9d884d911c" ) == 0 );
-			utstring_free( str );
+			std::string str;
+			sqrl_hex_encode( &str, buf, 32 );
+			Assert::IsTrue( str.compare( "a8ea62a6e1bfd20e4275011595307aa302645c1801600ef5cd79bf9d884d911c" ) == 0 );
 		}
 
 		TEST_METHOD( EnScrypt_1s ) {
@@ -95,12 +93,9 @@ namespace libsqrltest
 			uint8_t buf[32];
 			int time;
 			time = SqrlCrypt::enScrypt( NULL, buf, NULL, 0, NULL, 0, 100, 9 );
-			UT_string *str;
-			utstring_new( str );
-			sqrl_hex_encode( str, buf, 32 );
-			Assert::IsTrue( strcmp( utstring_body( str ),
-				"45a42a01709a0012a37b7b6874cf16623543409d19e7740ed96741d2e99aab67" ) == 0 );
-			utstring_free( str );
+			std::string str;
+			sqrl_hex_encode( &str, buf, 32 );
+			Assert::IsTrue( str.compare( "45a42a01709a0012a37b7b6874cf16623543409d19e7740ed96741d2e99aab67" ) == 0 );
 		}
 
 		TEST_METHOD( EnScrypt_p123i ) {
@@ -110,12 +105,9 @@ namespace libsqrltest
 			uint8_t buf[32];
 			int time;
 			time = SqrlCrypt::enScrypt( NULL, buf, password, password_len, NULL, 0, 123, 9 );
-			UT_string *str;
-			utstring_new( str );
-			sqrl_hex_encode( str, buf, 32 );
-			Assert::IsTrue( strcmp( utstring_body( str ),
-				"129d96d1e735618517259416a605be7094c2856a53c14ef7d4e4ba8e4ea36aeb" ) == 0 );
-			utstring_free( str );
+			std::string str;
+			sqrl_hex_encode( &str, buf, 32 );
+			Assert::IsTrue( str.compare("129d96d1e735618517259416a605be7094c2856a53c14ef7d4e4ba8e4ea36aeb" ) == 0 );
 		}
 
 		TEST_METHOD( EnScrypt_p123i_salt ) {
@@ -125,12 +117,9 @@ namespace libsqrltest
 			uint8_t buf[32];
 			int time;
 			time = SqrlCrypt::enScrypt( NULL, buf, password, password_len, emptySalt, 32, 123, 9 );
-			UT_string *str;
-			utstring_new( str );
-			sqrl_hex_encode( str, buf, 32 );
-			Assert::IsTrue( strcmp( utstring_body( str ),
-				"2f30b9d4e5c48056177ff90a6cc9da04b648a7e8451dfa60da56c148187f6a7d" ) == 0 );
-			utstring_free( str );
+			std::string str;
+			sqrl_hex_encode( &str, buf, 32 );
+			Assert::IsTrue( str.compare("2f30b9d4e5c48056177ff90a6cc9da04b648a7e8451dfa60da56c148187f6a7d" ) == 0 );
 		}
 
 		TEST_METHOD( IdLockKeys ) {
@@ -152,26 +141,35 @@ namespace libsqrltest
 			SqrlCrypt::generateVerifyUnlockKey( vuk, ilk, rlk );
 			SqrlCrypt::generateUnlockRequestSigningKey( ursk, suk, iuk );
 
-			UT_string *msg;
-			utstring_new( msg );
-			utstring_printf( msg, "This is a test message!" );
+			std::string *msg = new std::string( "This is a test message!" );
 			SqrlCrypt::generatePublicKey( tmp, ursk );
 			SqrlCrypt::sign( msg, ursk, tmp, sig );
 
-			UT_string *buf;
-			utstring_new( buf );
-			b64.encode( buf, iuk, SQRL_KEY_SIZE );
-			printf( "IUK: %s\n", utstring_body( buf ) );
-			b64.encode( buf, ilk, SQRL_KEY_SIZE );
-			printf( "ILK: %s\n", utstring_body( buf ) );
-			b64.encode( buf, rlk, SQRL_KEY_SIZE );
-			printf( "RLK: %s\n", utstring_body( buf ) );
-			b64.encode( buf, suk, SQRL_KEY_SIZE );
-			printf( "SUK: %s\n", utstring_body( buf ) );
-			b64.encode( buf, vuk, SQRL_KEY_SIZE );
-			printf( "VUK: %s\n", utstring_body( buf ) );
-			b64.encode( buf, ursk, SQRL_KEY_SIZE );
-			printf( "URK: %s\n", utstring_body( buf ) );
+			std::string buf;
+			std::string ts;
+			ts.append( (char*)iuk, SQRL_KEY_SIZE );
+			b64.encode( &buf, &ts );
+			printf( "IUK: %s\n", buf.data() );
+			ts.clear();
+			ts.append( (char*)ilk, SQRL_KEY_SIZE );
+			b64.encode( &buf, &ts );
+			printf( "ILK: %s\n", buf.data() );
+			ts.clear();
+			ts.append( (char*)rlk, SQRL_KEY_SIZE );
+			b64.encode( &buf, &ts );
+			printf( "RLK: %s\n", buf.data() );
+			ts.clear();
+			ts.append( (char*)suk, SQRL_KEY_SIZE );
+			b64.encode( &buf, &ts );
+			printf( "SUK: %s\n", buf.data() );
+			ts.clear();
+			ts.append( (char*)vuk, SQRL_KEY_SIZE );
+			b64.encode( &buf, &ts );
+			printf( "VUK: %s\n", buf.data() );
+			ts.clear();
+			ts.append( (char*)ursk, SQRL_KEY_SIZE );
+			b64.encode( &buf, &ts );
+			printf( "URK: %s\n", buf.data() );
 
 			Assert::IsTrue( SqrlCrypt::verifySignature( msg, sig, vuk ) );
 		}

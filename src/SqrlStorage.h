@@ -1,7 +1,7 @@
 #pragma once
 
 #include <stdint.h>
-#include "utstring.h"
+#include <string>
 #include "SqrlStorage.fwd.h"
 #include "SqrlBlock.fwd.h"
 #include "SqrlUri.fwd.h"
@@ -10,7 +10,7 @@ class DLL_PUBLIC SqrlStorage
 {
 public:
 	static SqrlStorage *empty();
-	static SqrlStorage *from( UT_string *buffer );
+	static SqrlStorage *from( std::string *buffer );
 	static SqrlStorage *from( SqrlUri *uri );
 
 	SqrlStorage *release();
@@ -20,10 +20,10 @@ public:
 	bool putBlock(SqrlBlock *block);
 	bool removeBlock(uint16_t blockType);
 
-	bool load(UT_string *buffer);
+	bool load(std::string *buffer);
 	bool load(SqrlUri *uri);
 
-	bool save(UT_string *buffer, Sqrl_Export etype, Sqrl_Encoding encoding);
+	std::string *save(Sqrl_Export etype, Sqrl_Encoding encoding);
 	bool save(SqrlUri *uri, Sqrl_Export etype, Sqrl_Encoding encoding);
 
 	void getUniqueId(char *unique_id);
