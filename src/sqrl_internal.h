@@ -16,6 +16,7 @@ extern "C" {
 }
 
 #include "sqrl.h"
+#include "SqrlAction.fwd.h"
 
 #define SQRL_VERSION_STRING "1"
 #define SQRL_KNOWN_VERSIONS_COUNT 1

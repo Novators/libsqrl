@@ -3,6 +3,7 @@
 #include "SqrlAction.fwd.h"
 #include "SqrlUser.fwd.h"
 #include "SqrlClient.fwd.h"
+#include "SqrlUri.fwd.h"
 
 class DLL_PUBLIC SqrlAction
 {

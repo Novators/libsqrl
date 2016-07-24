@@ -8,21 +8,6 @@
 #include <thread>
 #include <mutex>
 #include <string>
-#include "SqrlBlock.fwd.h"
-#include "SqrlStorage.fwd.h"
-#include "SqrlAction.fwd.h"
-#include "SqrlUri.fwd.h"
-#include "SqrlUser.fwd.h"
-
-typedef enum {
-SQRL_ENCODING_BINARY = 0,
-SQRL_ENCODING_BASE64
-} Sqrl_Encoding;
-
-typedef enum {
-SQRL_EXPORT_ALL = 0,
-SQRL_EXPORT_RESCUE
-} Sqrl_Export;
 
 // Buffer sizes for keys, etc...
 #define SQRL_KEY_SIZE 						    32
@@ -73,6 +58,18 @@ SQRL_EXPORT_RESCUE
 #define SQRL_MILLIS_PER_SECOND				  1000
 #define SQRL_HINT_ENSCRYPT_MILLISECONDS 	  1000
 
+typedef enum
+{
+	SQRL_ENCODING_BINARY = 0,
+	SQRL_ENCODING_BASE64
+} Sqrl_Encoding;
+
+typedef enum
+{
+	SQRL_EXPORT_ALL = 0,
+	SQRL_EXPORT_RESCUE
+} Sqrl_Export;
+
 typedef enum {
 SQRL_BUTTON_CANCEL = 0,
 SQRL_BUTTON_FIRST = 1,
@@ -86,15 +83,6 @@ SQRL_CREDENTIAL_HINT,
 SQRL_CREDENTIAL_RESCUE_CODE,
 SQRL_CREDENTIAL_NEW_PASSWORD
 } Sqrl_Credential_Type;
-
-typedef enum
-{
-	SQRL_CMD_QUERY,
-	SQRL_CMD_IDENT,
-	SQRL_CMD_DISABLE,
-	SQRL_CMD_ENABLE,
-	SQRL_CMD_REMOVE
-} Sqrl_Cmd;
 
 typedef unsigned int Sqrl_Tif;
 
