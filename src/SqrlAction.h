@@ -29,7 +29,7 @@ protected:
 	SqrlAction();
 	SqrlUser *user;
 	SqrlUri *uri;
-	SqrlMutex mutex;
+	std::mutex mutex;
 	int referenceCount;
 	int runState;
 	bool finished;

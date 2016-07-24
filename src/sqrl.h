@@ -4,13 +4,9 @@
 #define DLL_PUBLIC
 #endif
 
-#define SQRL_LIB_VERSION_MAJOR 1
-#define SQRL_LIB_VERSION_MINOR 1
-#define SQRL_LIB_VERSION_BUILD 16206
-#define SQRL_LIB_VERSION_REVISION 1
-#define SQRL_LIB_VERSION "1.1.16206.1"
-
 #include <stdint.h>
+#include <thread>
+#include <mutex>
 #include "utstring.h"
 #include "SqrlBlock.fwd.h"
 #include "SqrlStorage.fwd.h"
@@ -41,8 +37,6 @@ SQRL_EXPORT_RESCUE
 #define SQRL_OPTION_TOKEN_CPS                "cps"
 #define SQRL_OPTION_TOKEN_SUK                "suk"
 #define SQRL_OPTION_TOKEN_SEPARATOR            '~'
-
-typedef void* SqrlMutex;
 
 typedef enum {
 SQRL_CMD_QUERY,
@@ -141,21 +135,4 @@ SQRL_CREDENTIAL_RESCUE_CODE,
 SQRL_CREDENTIAL_NEW_PASSWORD
 } Sqrl_Credential_Type;
 
-
-#ifdef UNIX
-typedef pthread_t SqrlThread;
-#define SQRL_THREAD_FUNCTION_RETURN_TYPE void*
-#define SQRL_THREAD_FUNCTION_INPUT_TYPE void*
-#define SQRL_THREAD_LEAVE pthread_exit(NULL)
-#endif
-
-#ifdef _WINDOWS
-#include <Windows.h>
-typedef HANDLE SqrlThread;
-#define SQRL_THREAD_FUNCTION_RETURN_TYPE DWORD
-#define SQRL_THREAD_FUNCTION_INPUT_TYPE LPVOID
-#define SQRL_THREAD_LEAVE ExitThread(0)
-#endif
-
-typedef SQRL_THREAD_FUNCTION_RETURN_TYPE( *sqrl_thread_function )(SQRL_THREAD_FUNCTION_INPUT_TYPE data);
 

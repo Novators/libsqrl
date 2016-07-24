@@ -59,7 +59,7 @@ void sqrl_store_fast_flux_entropy(struct sqrl_fast_flux_entropy* ffe)
 }
 
 
-void sqrl_add_entropy_bracket(struct sqrl_entropy_pool* pool, uint8_t* seed)
+void SqrlEntropy::addBracket( uint8_t* seed )
 {
 	int i;
 	struct sqrl_entropy_bracket_block bracket;
@@ -82,5 +82,5 @@ void sqrl_add_entropy_bracket(struct sqrl_entropy_pool* pool, uint8_t* seed)
 	bracket.desktopWindow = GetDesktopWindow();
 	bracket.winsta = GetProcessWindowStation();
 	GetCursorPos(&bracket.curPos);
-	crypto_hash_sha512_update(&pool->state, (unsigned char*)(&bracket), sizeof(struct sqrl_entropy_bracket_block));
+	crypto_hash_sha512_update((crypto_hash_sha512_state *)SqrlEntropy::state, (unsigned char*)(&bracket), sizeof(struct sqrl_entropy_bracket_block));
 }

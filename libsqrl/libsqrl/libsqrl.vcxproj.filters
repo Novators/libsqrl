@@ -326,6 +326,9 @@
     <ClInclude Include="..\..\src\SqrlAction.h">
       <Filter>Header Files\Client</Filter>
     </ClInclude>
+    <ClInclude Include="..\..\src\version.h">
+      <Filter>Header Files\Util</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <None Include="..\..\src\config.h">

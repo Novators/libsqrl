@@ -2,24 +2,21 @@
 #include "SqrlEntropy.h"
 #include "sodium.h"
 #include "rdrand.h"
+#include <mutex>
 
 #define SQRL_ENTROPY_REPEAT_FAST 9
 #define SQRL_ENTROPY_REPEAT_SLOW 190
 #define SQRL_ENTROPY_TARGET 512
 
 void *SqrlEntropy::state = NULL;
+int SqrlEntropy::estimated_entropy = 0;
+int SqrlEntropy::entropy_target = SQRL_ENTROPY_TARGET;
+bool SqrlEntropy::initialized = false;
+bool SqrlEntropy::stopping = false;
+int SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_FAST;
+std::mutex *SqrlEntropy::mutex = NULL;
+std::thread *SqrlEntropy::thread = NULL;
 
-struct sqrl_entropy_pool
-{
-	crypto_hash_sha512_state state;
-	int estimated_entropy;
-	int entropy_target;
-	bool initialized;
-	bool stopping;
-	int sleeptime;
-	SqrlMutex mutex;
-	SqrlThread thread;
-};
 
 #if defined(__MACH__)
 #include "entropy_mac.h"
@@ -37,50 +34,66 @@ struct sqrl_entropy_message
 
 void SqrlEntropy::update() {
 	if( !SqrlEntropy::state ) return;
-	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)SqrlEntropy::state;
 	struct sqrl_fast_flux_entropy ffe;
 	sqrl_store_fast_flux_entropy( &ffe );
-	sqrl_mutex_enter( pool->mutex );
-	crypto_hash_sha512_update( &pool->state, (unsigned char*)&ffe, sizeof( struct sqrl_fast_flux_entropy ) );
-	SqrlEntropy::increment( pool, 1 );
-	sqrl_mutex_leave( pool->mutex );
+	SqrlEntropy::mutex->lock();
+	crypto_hash_sha512_update( 
+		(crypto_hash_sha512_state*)SqrlEntropy::state, 
+		(unsigned char*)&ffe, 
+		sizeof( struct sqrl_fast_flux_entropy ) );
+	if( ++(SqrlEntropy::estimated_entropy) >= SqrlEntropy::entropy_target ) {
+		SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_SLOW;
+	}
+	SqrlEntropy::mutex->unlock();
 }
 
-SQRL_THREAD_FUNCTION_RETURN_TYPE
-SqrlEntropy::thread( SQRL_THREAD_FUNCTION_INPUT_TYPE input ) {
-	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)input;
+void
+SqrlEntropy::threadFunction() {
+	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)SqrlEntropy::state;
 
-	while( !pool->stopping ) {
+	while( !SqrlEntropy::stopping ) {
 		SqrlEntropy::update();
-		sqrl_sleep( pool->sleeptime );
+		sqrl_sleep( SqrlEntropy::sleeptime );
 	}
-	sqrl_mutex_enter( pool->mutex );
-	pool->estimated_entropy = 0;
-	pool->initialized = false;
-	sqrl_mutex_leave( pool->mutex );
-	SQRL_THREAD_LEAVE;
+	SqrlEntropy::mutex->lock();
+	SqrlEntropy::estimated_entropy = 0;
+	SqrlEntropy::initialized = false;
+	free( SqrlEntropy::state );
+	SqrlEntropy::state = NULL;
+	delete SqrlEntropy::mutex;
+	SqrlEntropy::mutex = NULL;
 }
 
 void SqrlEntropy::start() {
 	if( SqrlEntropy::state ) return;
-	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)malloc( sizeof( struct sqrl_entropy_pool ) );
-	pool->initialized = true;
-	pool->stopping = false;
-	pool->estimated_entropy = 0;
-	pool->entropy_target = SQRL_ENTROPY_TARGET;
-	pool->sleeptime = SQRL_ENTROPY_REPEAT_FAST;
+	SqrlEntropy::initialized = true;
+	SqrlEntropy::stopping = false;
+	SqrlEntropy::estimated_entropy = 0;
+	SqrlEntropy::entropy_target = SQRL_ENTROPY_TARGET;
+	SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_FAST;
 
-	crypto_hash_sha512_init( &pool->state );
-	sqrl_add_entropy_bracket( pool, NULL );
-	pool->mutex = sqrl_mutex_create();
-	pool->thread = sqrl_thread_create( SqrlEntropy::thread, (SQRL_THREAD_FUNCTION_INPUT_TYPE)pool );
-	SqrlEntropy::state = (void*)pool;
+	SqrlEntropy::state = calloc( 1, sizeof( crypto_hash_sha512_state ) );
+	SqrlEntropy::mutex = new std::mutex();
+	crypto_hash_sha512_init( (crypto_hash_sha512_state*)SqrlEntropy::state );
+	SqrlEntropy::addBracket( NULL );
+	SqrlEntropy::thread = new std::thread( SqrlEntropy::threadFunction );
+	SqrlEntropy::thread->detach();
 }
 
-void SqrlEntropy::increment( struct sqrl_entropy_pool *pool, int amount ) {
-	pool->estimated_entropy += amount;
-	if( pool->estimated_entropy >= pool->entropy_target ) {
-		pool->sleeptime = SQRL_ENTROPY_REPEAT_SLOW;
+void SqrlEntropy::stop() {
+	if( !SqrlEntropy::state ) return;
+	SqrlEntropy::stopping = true;
+	if( SqrlEntropy::thread->joinable() ) {
+		SqrlEntropy::thread->join();
+	}
+	delete SqrlEntropy::thread;
+	SqrlEntropy::thread = NULL;
+}
+
+void SqrlEntropy::increment( int amount ) {
+	SqrlEntropy::estimated_entropy += amount;
+	if( SqrlEntropy::estimated_entropy >= SqrlEntropy::entropy_target ) {
+		SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_SLOW;
 	}
 }
 
@@ -95,21 +108,24 @@ void SqrlEntropy::increment( struct sqrl_entropy_pool *pool, int amount ) {
 void SqrlEntropy::add( uint8_t* msg, size_t msg_len ) {
 	if( !SqrlEntropy::state ) SqrlEntropy::start();
 	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)SqrlEntropy::state;
-	if( pool->initialized ) {
-		sqrl_mutex_enter( pool->mutex );
-		if( pool->initialized ) {
+	if( SqrlEntropy::initialized ) {
+		SqrlEntropy::mutex->lock();
+		if( SqrlEntropy::initialized ) {
 			struct sqrl_fast_flux_entropy ffe;
 			sqrl_store_fast_flux_entropy( &ffe );
 			uint8_t *buf = (uint8_t*)malloc( msg_len + sizeof( struct sqrl_fast_flux_entropy ) );
 			if( buf ) {
 				memcpy( buf, msg, msg_len );
 				memcpy( buf + msg_len, &ffe, sizeof( struct sqrl_fast_flux_entropy ) );
-				crypto_hash_sha512_update( &pool->state, (unsigned char*)buf, sizeof( buf ) );
-				SqrlEntropy::increment( pool, 1 + ((int)msg_len / 64) );
+				crypto_hash_sha512_update( (crypto_hash_sha512_state*)SqrlEntropy::state, (unsigned char*)buf, sizeof( buf ) );
+				SqrlEntropy::estimated_entropy += (1 + ((int)msg_len / 64));
+				if( SqrlEntropy::estimated_entropy >= SqrlEntropy::entropy_target ) {
+					SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_SLOW;
+				}
 				free( buf );
 			}
 		}
-		sqrl_mutex_leave( pool->mutex );
+		SqrlEntropy::mutex->unlock();
 	}
 }
 
@@ -127,40 +143,40 @@ int SqrlEntropy::get( uint8_t *buf, int desired_entropy, bool blocking ) {
 
 	int received_entropy = 0;
 START:
-	if( !pool->initialized ) return 0;
-	pool->entropy_target = desired_entropy;
+	if( !SqrlEntropy::initialized ) return 0;
+	SqrlEntropy::entropy_target = desired_entropy;
 	if( blocking ) {
-		while( pool->estimated_entropy < desired_entropy ) {
+		while( SqrlEntropy::estimated_entropy < desired_entropy ) {
 			sqrl_sleep( SQRL_ENTROPY_REPEAT_SLOW );
 		}
 	} else {
-		if( pool->estimated_entropy < desired_entropy ) {
-			pool->entropy_target = desired_entropy;
-			pool->sleeptime = SQRL_ENTROPY_REPEAT_FAST;
+		if( SqrlEntropy::estimated_entropy < desired_entropy ) {
+			SqrlEntropy::entropy_target = desired_entropy;
+			SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_FAST;
 		}
 		return 0;
 	}
-	if( pool->initialized &&
-		pool->estimated_entropy >= desired_entropy ) {
-		sqrl_mutex_enter( pool->mutex );
-		if( pool->initialized &&
-			pool->estimated_entropy >= desired_entropy ) {
-			sqrl_add_entropy_bracket( pool, NULL );
-			crypto_hash_sha512_final( &pool->state, buf );
-			crypto_hash_sha512_init( &pool->state );
-			sqrl_add_entropy_bracket( pool, buf );
-			received_entropy = pool->estimated_entropy;
-			pool->estimated_entropy = 0;
+	if( SqrlEntropy::initialized &&
+		SqrlEntropy::estimated_entropy >= desired_entropy ) {
+		SqrlEntropy::mutex->lock();
+		if( SqrlEntropy::initialized &&
+			SqrlEntropy::estimated_entropy >= desired_entropy ) {
+			SqrlEntropy::addBracket( NULL );
+			crypto_hash_sha512_final( (crypto_hash_sha512_state*)SqrlEntropy::state, buf );
+			crypto_hash_sha512_init( (crypto_hash_sha512_state*)SqrlEntropy::state );
+			SqrlEntropy::addBracket( buf );
+			received_entropy = SqrlEntropy::estimated_entropy;
+			SqrlEntropy::estimated_entropy = 0;
 		} else {
-			sqrl_mutex_leave( pool->mutex );
+			SqrlEntropy::mutex->unlock();
 			goto START;
 		}
-		sqrl_mutex_leave( pool->mutex );
+		SqrlEntropy::mutex->unlock();
 	} else {
 		goto START;
 	}
-	pool->entropy_target = SQRL_ENTROPY_TARGET;
-	pool->sleeptime = SQRL_ENTROPY_REPEAT_FAST;
+	SqrlEntropy::entropy_target = SQRL_ENTROPY_TARGET;
+	SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_FAST;
 	return received_entropy;
 }
 
@@ -195,9 +211,8 @@ int SqrlEntropy::bytes( uint8_t* buf, int nBytes ) {
 
 int SqrlEntropy::estimate() {
 	if( !SqrlEntropy::state ) SqrlEntropy::start();
-	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)SqrlEntropy::state;
-	if( pool->initialized ) {
-		return pool->estimated_entropy;
+	if( SqrlEntropy::initialized ) {
+		return SqrlEntropy::estimated_entropy;
 	}
 	return 0;
 }

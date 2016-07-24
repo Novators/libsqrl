@@ -15,9 +15,17 @@ public:
 	static int bytes( uint8_t* buf, int nBytes );
 
 private:
-	static void *state;
 	static void update();
-	static SQRL_THREAD_FUNCTION_RETURN_TYPE	thread( SQRL_THREAD_FUNCTION_INPUT_TYPE input );
-	static void increment( struct sqrl_entropy_pool *pool, int amount );
+	static void	threadFunction();
+	static void increment( int amount );
+	static void addBracket( uint8_t* seed );
 
+	static void *state;
+	static int estimated_entropy;
+	static int entropy_target;
+	static bool initialized;
+	static bool stopping;
+	static int sleeptime;
+	static std::mutex *mutex;
+	static std::thread *thread;
 };

@@ -79,7 +79,7 @@ SqrlUser* SqrlUser::find( const char *unique_id )
 {
 	SqrlUser *user = NULL;
 	struct SqrlUserList *l;
-	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
+	SQRL_GLOBAL_MUTICES.user->lock();
 	l = SQRL_USER_LIST;
 	while( l ) {
 		if( l->user && l->user->uniqueIdMatches( unique_id )) {
@@ -89,7 +89,7 @@ SqrlUser* SqrlUser::find( const char *unique_id )
 		}
 		l = l->next;
 	}
-	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+	SQRL_GLOBAL_MUTICES.user->unlock();
 	return user;
 }
 
@@ -97,13 +97,13 @@ void SqrlUser::initialize()
 {
 	SqrlUser::defaultOptions(&this->options);
 	this->referenceCount = 1;
-	this->referenceCountMutex = sqrl_mutex_create();
+	this->referenceCountMutex = new std::mutex();
 	struct SqrlUserList *l = (struct SqrlUserList*)calloc(1, sizeof(struct SqrlUserList));
 	l->user = this;
-	sqrl_mutex_enter(SQRL_GLOBAL_MUTICES.user);
+	SQRL_GLOBAL_MUTICES.user->lock();
 	l->next = SQRL_USER_LIST;
 	SQRL_USER_LIST = l;
-	sqrl_mutex_leave(SQRL_GLOBAL_MUTICES.user);
+	SQRL_GLOBAL_MUTICES.user->unlock();
 }
 
 SqrlUser::SqrlUser()
@@ -113,42 +113,42 @@ SqrlUser::SqrlUser()
 
 int SqrlUser::countUsers()
 {
-    sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
+    SQRL_GLOBAL_MUTICES.user->lock();
     int i = 0;
     struct SqrlUserList *list = SQRL_USER_LIST;
     while( list ) {
         i++;
         list = list->next;
     }
-    sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+    SQRL_GLOBAL_MUTICES.user->unlock();
     return i;
 }
 
 void SqrlUser::hold()
 {
-	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
+	SQRL_GLOBAL_MUTICES.user->lock();
 	// Make sure the user is still in active memory...
 	struct SqrlUserList *c = SQRL_USER_LIST;
 	while( c ) {
 		if( c->user == this ) {
-			sqrl_mutex_enter( this->referenceCountMutex );
+			this->referenceCountMutex->lock();
 			this->referenceCount++;
-			sqrl_mutex_leave( this->referenceCountMutex );
+			this->referenceCountMutex->unlock();
 			break;
 		}
 		c = c->next;
 	}
-	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+	SQRL_GLOBAL_MUTICES.user->unlock();
 }
 
 void SqrlUser::release()
 {
 	bool shouldFreeThis = false;
-	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
+	SQRL_GLOBAL_MUTICES.user->lock();
 	struct SqrlUserList *list = SQRL_USER_LIST;
 	if( list == NULL ) {
 		// Not saved in memory... Go ahead and release it.
-		sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+		SQRL_GLOBAL_MUTICES.user->unlock();
 		shouldFreeThis = true;
 		goto END;
 	}
@@ -168,18 +168,18 @@ void SqrlUser::release()
 	}
 	if( list == NULL ) {
 		// Not saved in memory... Go ahead and release it.
-		sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+		SQRL_GLOBAL_MUTICES.user->unlock();
 		shouldFreeThis = true;
 		goto END;
 	}
 	// Release this reference
-	sqrl_mutex_enter( this->referenceCountMutex );
+	this->referenceCountMutex->lock();
 	this->referenceCount--;
 
 	if( this->referenceCount > 0 ) {
 		// There are other references... Do not delete.
-		sqrl_mutex_leave( this->referenceCountMutex );
-		sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+		this->referenceCountMutex->unlock();
+		SQRL_GLOBAL_MUTICES.user->unlock();
 		goto END;
 	}
 	// There were no other references... We can delete this.
@@ -191,7 +191,7 @@ void SqrlUser::release()
 		prev->next = list->next;
 	}
 	free( list );
-	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+	SQRL_GLOBAL_MUTICES.user->unlock();
 
 END:
 	if (shouldFreeThis) {
@@ -205,14 +205,14 @@ SqrlUser::~SqrlUser()
 		sodium_mprotect_readwrite(this->keys);
 		sodium_free(this->keys);
 	}
-	sqrl_mutex_destroy(this->referenceCountMutex);
+	delete this->referenceCountMutex;
 }
 
 void sqrl_client_user_maintenance( bool forceLockAll )
 {
 	// TODO: Get User Idle Time
 	double idleTime = 600;
-	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
+	SQRL_GLOBAL_MUTICES.user->lock();
 	struct SqrlUserList *list = SQRL_USER_LIST;
 	while( list ) {
 		if( forceLockAll || idleTime >= list->user->getTimeoutMinutes()) {
@@ -220,7 +220,7 @@ void sqrl_client_user_maintenance( bool forceLockAll )
 		}
 		list = list->next;
 	}
-	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+	SQRL_GLOBAL_MUTICES.user->unlock();
 }
 
 bool SqrlUser::isMemLocked() 

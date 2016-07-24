@@ -7,9 +7,11 @@ For more details, see the LICENSE file included with this package.
 **/
 
 #include "sqrl_internal.h"
+#include "version.h"
 #include "sqrl.h"
 #include "SqrlUser.h"
 #include "SqrlAction.h"
+#include "SqrlEntropy.h"
 #include "gcm.h"
 
 
@@ -25,9 +27,10 @@ int sqrl_init()
 {
 	if( !sqrl_is_initialized ) {
 		sqrl_is_initialized = true;
-		SQRL_GLOBAL_MUTICES.user = sqrl_mutex_create();
-		SQRL_GLOBAL_MUTICES.site = sqrl_mutex_create();
-		SQRL_GLOBAL_MUTICES.transaction = sqrl_mutex_create();
+		SqrlEntropy::start();
+		SQRL_GLOBAL_MUTICES.user = new std::mutex();
+		SQRL_GLOBAL_MUTICES.site = new std::mutex();
+		SQRL_GLOBAL_MUTICES.transaction = new std::mutex();
 		#ifdef DEBUG
 		DEBUG_PRINTF( "libsqrl %s\n", SQRL_LIB_VERSION );
 		#endif
@@ -50,6 +53,7 @@ DLL_PUBLIC
 int sqrl_stop()
 {
 	if( sqrl_is_initialized ) {
+		SqrlEntropy::stop();
         int transactionCount, userCount, siteCount = 0;
 #ifdef DEBUG
 		transactionCount = SqrlAction::countTransactions();
@@ -143,5 +147,5 @@ size_t Sqrl_Version( char *buffer, size_t buffer_len ) {
 
 uint16_t Sqrl_Version_Major() { return SQRL_LIB_VERSION_MAJOR; }
 uint16_t Sqrl_Version_Minor() { return SQRL_LIB_VERSION_MINOR; }
-uint16_t Sqrl_Version_Build() { return SQRL_LIB_VERSION_BUILD; }
+uint16_t Sqrl_Version_Build() { return SQRL_LIB_VERSION_BUILD_DATE; }
 uint16_t Sqrl_Version_Revision() { return SQRL_LIB_VERSION_REVISION; }

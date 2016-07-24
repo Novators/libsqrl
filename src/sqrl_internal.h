@@ -9,14 +9,6 @@ For more details, see the LICENSE file included with this package.
 
 #include "config.h"
 
-#ifdef UNIX
-#include <unistd.h>
-#include <pthread.h>
-#endif
-#ifdef WIN32
-#include <Windows.h>
-#endif
-
 #include <stdio.h>
 #include "sodium.h"
 extern "C" {
@@ -107,19 +99,12 @@ DLL_PUBLIC double sqrl_get_real_time();
 DLL_PUBLIC uint64_t sqrl_get_timestamp();
 
 struct Sqrl_Global_Mutices {
-	SqrlMutex user;
-	SqrlMutex site;
-	SqrlMutex transaction;
+	std::mutex *user;
+	std::mutex *site;
+	std::mutex *transaction;
 };
 
 extern struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
-
-SqrlMutex sqrl_mutex_create();
-void sqrl_mutex_destroy(SqrlMutex sm);
-bool sqrl_mutex_enter(SqrlMutex sm);
-void sqrl_mutex_leave(SqrlMutex sm);
-
-SqrlThread sqrl_thread_create(sqrl_thread_function function, SQRL_THREAD_FUNCTION_INPUT_TYPE input);
 
 struct Sqrl_User_s_callback_data {
 	SqrlAction *transaction;
@@ -143,7 +128,7 @@ typedef struct Sqrl_Site {
 	Sqrl_Transaction_Type currentTransaction;
 	int previous_identity;
 	double lastAction;
-	SqrlMutex mutex;
+	std::mutex *mutex;
 } Sqrl_Site;
 
 int sqrl_site_count();

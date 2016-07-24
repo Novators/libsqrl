@@ -103,7 +103,7 @@ private:
 	uint32_t flags;
 	uint32_t hint_iterations;
 	Sqrl_User_Options options;
-	SqrlMutex referenceCountMutex;
+	std::mutex *referenceCountMutex;
 	int referenceCount;
 	SqrlStorage *storage;
 	char uniqueId[SQRL_UNIQUE_ID_LENGTH + 1];

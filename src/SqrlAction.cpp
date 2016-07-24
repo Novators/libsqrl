@@ -39,53 +39,52 @@ SqrlAction::SqrlAction()
   finished(false),
   running(false) {
 	struct Sqrl_Transaction_List *list = (struct Sqrl_Transaction_List*)calloc( 1, sizeof( struct Sqrl_Transaction_List ) );
-	this->mutex = sqrl_mutex_create();
 	list->transaction = this;
-	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
+	this->mutex.lock();
 	list->next = SQRL_TRANSACTION_LIST;
 	SQRL_TRANSACTION_LIST = list;
-	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
+	this->mutex.unlock();
 }
 
 int SqrlAction::countTransactions()
 {
-    sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
+	SQRL_GLOBAL_MUTICES.transaction->lock();
     int i = 0;
     struct Sqrl_Transaction_List *list = SQRL_TRANSACTION_LIST;
     while( list ) {
         i++;
         list = list->next;
     }
-    sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
+	SQRL_GLOBAL_MUTICES.transaction->unlock();
     return i;
 }
 
 void SqrlAction::hold()
 {
     struct Sqrl_Transaction_List *l;
-    sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
-    l = SQRL_TRANSACTION_LIST;
+	SQRL_GLOBAL_MUTICES.transaction->lock();
+	l = SQRL_TRANSACTION_LIST;
     while( l ) {
         if( l->transaction == this ) {
-            sqrl_mutex_enter( this->mutex );
+			this->mutex.lock();
             this->referenceCount++;
-            sqrl_mutex_leave( this->mutex );
+			this->mutex.unlock();
             break;
         }
         l = l->next;
     }
-    sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
+	SQRL_GLOBAL_MUTICES.transaction->unlock();
 }
 
 SqrlAction *SqrlAction::release()
 {
 	bool freeMe = false;
     struct Sqrl_Transaction_List *l = NULL, *n = NULL;
-    sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
-    n = SQRL_TRANSACTION_LIST;
+	SQRL_GLOBAL_MUTICES.transaction->lock();
+	n = SQRL_TRANSACTION_LIST;
     while( n ) {
         if( n->transaction == this ) {
-            sqrl_mutex_enter( this->mutex );
+			this->mutex.lock();
             this->referenceCount--;
             if( this->referenceCount < 1 ) {
                 if( l ) l->next = n->next;
@@ -93,20 +92,19 @@ SqrlAction *SqrlAction::release()
                 free( n );
                 freeMe = true;
             }
-            sqrl_mutex_leave( this->mutex );
+			this->mutex.unlock();
             break;
         }
         l = n;
         n = l->next;
     }
-    sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
-    if( freeMe ) {
+	SQRL_GLOBAL_MUTICES.transaction->unlock();
+	if( freeMe ) {
 		this->onRelease();
 		if( this->user ) {
 			this->user->release();
 		}
 		if( this->uri ) this->uri = this->uri->release();
-		sqrl_mutex_destroy( this->mutex );
 		free( this );
 	}
 	return NULL;

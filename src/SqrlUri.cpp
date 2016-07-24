@@ -7,6 +7,7 @@ For more details, see the LICENSE file included with this package.
 **/
 
 #include <new>
+#include <ctype.h>
 #include "sqrl_internal.h"
 #include "SqrlUri.h"
 #include "SqrlBase64.h"

@@ -38,13 +38,13 @@ for line in fileinput.input("../README.md", inplace=True):
     else:
         print line.strip()
 
-for line in fileinput.input("../src/sqrl.h", inplace=True):
+for line in fileinput.input("../src/version.h", inplace=True):
     if line.startswith( "#define SQRL_LIB_VERSION_MAJOR" ):
         print "#define SQRL_LIB_VERSION_MAJOR " + vMajor
     elif line.startswith( "#define SQRL_LIB_VERSION_MINOR" ):
         print "#define SQRL_LIB_VERSION_MINOR " + vMinor
-    elif line.startswith( "#define SQRL_LIB_VERSION_BUILD" ):
-        print "#define SQRL_LIB_VERSION_BUILD " + nvDate
+    elif line.startswith( "#define SQRL_LIB_VERSION_BUILD_DATE" ):
+        print "#define SQRL_LIB_VERSION_BUILD_DATE " + nvDate
     elif line.startswith( "#define SQRL_LIB_VERSION_REVISION" ):
         print "#define SQRL_LIB_VERSION_REVISION " + nvBuild
     elif line.startswith( "#define SQRL_LIB_VERSION" ):
