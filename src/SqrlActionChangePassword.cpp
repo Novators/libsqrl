@@ -21,7 +21,7 @@ void SqrlActionChangePassword::run() {
 	switch( this->runState ) {
 	case 0:
 		if( !this->user ) {
-			client->onSelectUser( this );
+			client->callSelectUser( this );
 		}
 		if( !this->user ) {
 			this->runState = -1;
@@ -37,12 +37,12 @@ void SqrlActionChangePassword::run() {
 		}
 		this->runState++;
 	case 2:
-		client->onAuthenticationRequired( this, SQRL_CREDENTIAL_NEW_PASSWORD );
+		client->callAuthenticationRequired( this, SQRL_CREDENTIAL_NEW_PASSWORD );
 		this->finished = true;
 		break;
 	}
 	this->running = false;
 	if( this->finished ) {
-		client->onActionComplete( this );
+		client->callActionComplete( this );
 	}
 }

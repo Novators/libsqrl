@@ -309,7 +309,7 @@ void SqrlUser::hintUnlock( SqrlAction *transaction,
 				size_t length )
 {
 	if( hint == NULL || length == 0 ) {
-		SqrlClient::getClient()->onAuthenticationRequired(transaction, SQRL_CREDENTIAL_HINT);
+		SqrlClient::getClient()->callAuthenticationRequired(transaction, SQRL_CREDENTIAL_HINT);
 		return;
 	}
 	if( !transaction ) return;

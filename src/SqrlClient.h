@@ -24,6 +24,7 @@ public:
 	void updateIdleTime( int idleTime );
 	void screenLocked();
 	void userChanged();
+	void loop();
 
 protected:
 
@@ -51,5 +52,27 @@ protected:
 		SqrlAction *transaction) = 0;
 
 private:
+	void callSaveSuggested(
+		SqrlUser *user );
+	void callSelectUser( SqrlAction *transaction );
+	void callSelectAlternateIdentity(
+		SqrlAction *transaction );
+	void callActionComplete(
+		SqrlAction *transaction );
+	int callProgress(
+		SqrlAction *transaction,
+		int progress );
+	void callAuthenticationRequired(
+		SqrlAction *transaction,
+		Sqrl_Credential_Type credentialType );
+	void callSend(
+		SqrlAction *t,
+		const char *url, size_t url_len,
+		const char *payload, size_t payload_len );
+	void callAsk(
+		SqrlAction *transaction,
+		const char *message, size_t message_len,
+		const char *firstButton, size_t firstButton_len,
+		const char *secondButton, size_t secondButton_len );
 
 };

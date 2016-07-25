@@ -43,7 +43,7 @@ void SqrlActionSave::run() {
 		this->runState = this->user->saveToBuffer( this ) ? 1 : -1;
 	}
 	this->finished = true;
-	SqrlClient::getClient()->onActionComplete( this );
+	SqrlClient::getClient()->callActionComplete( this );
 	this->running = false;
 }
 

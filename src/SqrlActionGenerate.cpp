@@ -26,7 +26,7 @@ void SqrlActionGenerate::run() {
 		}
 		this->runState++;
 	case 1:
-		client->onAuthenticationRequired( this, SQRL_CREDENTIAL_NEW_PASSWORD );
+		client->callAuthenticationRequired( this, SQRL_CREDENTIAL_NEW_PASSWORD );
 		if( this->user->getPasswordLength() == 0 ) {
 			this->runState = -1;
 			this->finished = true;
@@ -34,12 +34,12 @@ void SqrlActionGenerate::run() {
 		}
 		this->runState++;
 	case 2:
-		client->onSaveSuggested( this->user );
+		client->callSaveSuggested( this->user );
 		this->finished = true;
 		break;
 	}
 	this->running = false;
 	if( this->finished ) {
-		client->onActionComplete( this );
+		client->callActionComplete( this );
 	}
 }

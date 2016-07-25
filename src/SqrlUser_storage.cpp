@@ -294,7 +294,7 @@ bool SqrlUser::sus_block_1( SqrlAction *transaction, SqrlBlock *block, struct Sq
 	if (transaction->getUser() != this) return false;
 	bool retVal = true;
 	SqrlCrypt crypt = SqrlCrypt();
-	SqrlClient::getClient()->onAuthenticationRequired( cbdata.transaction, SQRL_CREDENTIAL_PASSWORD );
+	SqrlClient::getClient()->callAuthenticationRequired( cbdata.transaction, SQRL_CREDENTIAL_PASSWORD );
 	// TODO: Verify Password obtained
 
 	uint8_t *keyPointer;
@@ -568,7 +568,7 @@ LOOP:
 NEEDAUTH:
 	if( retry ) {
 		retry = false;
-		SqrlClient::getClient()->onAuthenticationRequired(transaction, SQRL_CREDENTIAL_PASSWORD);
+		SqrlClient::getClient()->callAuthenticationRequired(transaction, SQRL_CREDENTIAL_PASSWORD);
 		goto LOOP;
 	}
 
@@ -613,7 +613,7 @@ LOOP:
 NEEDAUTH:
 	if( retry ) {
 		retry = false;
-		SqrlClient::getClient()->onAuthenticationRequired( transaction, SQRL_CREDENTIAL_RESCUE_CODE );
+		SqrlClient::getClient()->callAuthenticationRequired( transaction, SQRL_CREDENTIAL_RESCUE_CODE );
 		goto LOOP;
 	}
 

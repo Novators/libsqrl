@@ -17,7 +17,7 @@ void SqrlActionRekey::run() {
 	switch( this->runState ) {
 	case 0:
 		if( !this->user ) {
-			client->onSelectUser( this );
+			client->callSelectUser( this );
 		}
 		if( !this->user ) {
 			this->runState = -1;
@@ -40,7 +40,7 @@ void SqrlActionRekey::run() {
 		}
 		this->runState++;
 	case 3:
-		client->onAuthenticationRequired( this, SQRL_CREDENTIAL_NEW_PASSWORD );
+		client->callAuthenticationRequired( this, SQRL_CREDENTIAL_NEW_PASSWORD );
 		if( this->user->getPasswordLength() == 0 ) {
 			this->runState = -1;
 			this->finished = true;
@@ -48,12 +48,12 @@ void SqrlActionRekey::run() {
 		}
 		this->runState++;
 	case 4:
-		client->onSaveSuggested( this->user );
+		client->callSaveSuggested( this->user );
 		this->finished = true;
 		break;
 	}
 	this->running = false;
 	if( this->finished ) {
-		client->onActionComplete( this );
+		client->callActionComplete( this );
 	}
 }
