@@ -36,18 +36,19 @@ typedef struct Sqrl_User_Options
 #define KEY_RESCUE_CODE  9
 #define KEY_PASSWORD    10
 
-#define KEY_PASSWORD_MAX_LEN 512
+#define KEY_PASSWORD_MAX_LEN 1024
 #define KEY_SCRATCH_SIZE 2048
 
 #pragma pack(push,8)
 struct Sqrl_Keys
 {
-	uint8_t keys[USER_MAX_KEYS][SQRL_KEY_SIZE];		//  512   (28 * 32)
+													// Size should be less than a 4k page:
+	uint8_t keys[USER_MAX_KEYS][SQRL_KEY_SIZE];		//  512   (16 * 32)
 	size_t password_len;							//    8
-	char password[KEY_PASSWORD_MAX_LEN];			//  512
+	char password[KEY_PASSWORD_MAX_LEN];			// 1024
 													// Internal Use Only:
 	uint8_t scratch[KEY_SCRATCH_SIZE];				// 2048
-													// 3080 bytes
+													// 3592 bytes
 };
 #pragma pack(pop)
 

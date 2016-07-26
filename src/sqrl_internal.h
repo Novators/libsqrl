@@ -38,12 +38,6 @@ extern "C" {
 #define FLAG_CLEAR(f,v) f &= ~(v)
 #define FLAG_CHECK(f,v) (v == (f & v))
 
-struct Sqrl_Global_Mutices
-{
-	std::mutex *user;
-	std::mutex *site;
-};
-
 struct Sqrl_User_s_callback_data
 {
 	SqrlAction *action;

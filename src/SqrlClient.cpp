@@ -18,7 +18,6 @@
 
 SqrlClient *SqrlClient::client = NULL;
 static bool sqrl_is_initialized = false;
-struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
 
 SqrlClient::SqrlClient() {
 	if( SqrlClient::client != NULL ) {
@@ -27,8 +26,6 @@ SqrlClient::SqrlClient() {
 	}
 	if( !sqrl_is_initialized ) {
 		sqrl_is_initialized = true;
-		SQRL_GLOBAL_MUTICES.user = new std::mutex();
-		SQRL_GLOBAL_MUTICES.site = new std::mutex();
 		gcm_initialize();
 		sodium_init();
 	}
@@ -58,6 +55,8 @@ void SqrlClient::loop() {
 	SqrlAction *action;
 	while( !this->callbackQueue.empty() ) {
 		struct CallbackInfo *info = this->callbackQueue.front();
+		this->callbackQueue.pop();
+
 		switch( info->cbType ) {
 		case SQRL_CALLBACK_SAVE_SUGGESTED:
 			this->onSaveSuggested( (SqrlUser*)info->ptr );
@@ -92,7 +91,6 @@ void SqrlClient::loop() {
 			this->onProgress( action, info->progress );
 			break;
 		}
-		this->callbackQueue.pop();
 		delete info;
 	}
 	if( this->actions.size() > 0 ) {
@@ -106,6 +104,25 @@ void SqrlClient::loop() {
 			}
 		}
 	}
+}
+
+void SqrlClient::clientThread() {
+	SqrlClient *client;
+	while( (client = SqrlClient::getClient()) && !client->stopping ) {
+		client->loop();
+		sqrl_sleep( 100 );
+	}
+	while( !client->callbackQueue.empty() ) {
+		struct CallbackInfo *info = client->callbackQueue.front();
+		client->callbackQueue.pop();
+		delete info;
+	}
+	client->actionMutex.lock();
+	while( client->actions.size() > 0 ) {
+		SqrlAction *action = client->actions.front();
+		delete action;
+	}
+	client->actionMutex.unlock();
 }
 
 void SqrlClient::callSaveSuggested( SqrlUser * user ) {
@@ -170,14 +187,6 @@ void SqrlClient::callAsk( SqrlAction * action, std::string * message, std::strin
 	info->str[1] = new std::string( *firstButton );
 	info->str[2] = new std::string( *secondButton );
 	this->callbackQueue.push( info );
-}
-
-void SqrlClient::clientThread() {
-	SqrlClient *client;
-	while( (client = SqrlClient::getClient()) && ! client->stopping ) {
-		client->loop();
-		sqrl_sleep( 100 );
-	}
 }
 
 SqrlClient::CallbackInfo::CallbackInfo() {

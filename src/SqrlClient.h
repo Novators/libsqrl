@@ -61,6 +61,7 @@ private:
 	std::queue<struct CallbackInfo*> callbackQueue;
 	std::deque<SqrlAction *>actions;
 	std::mutex actionMutex;
+	std::mutex userMutex;
 
 	void loop();
 
