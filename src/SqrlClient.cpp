@@ -3,6 +3,9 @@
 #include "SqrlClient.h"
 #include "SqrlAction.h"
 #include "SqrlUser.h"
+#include "SqrlEntropy.h"
+#include "gcm.h"
+
 
 #define SQRL_CALLBACK_SAVE_SUGGESTED 0
 #define SQRL_CALLBACK_SELECT_USER 1
@@ -14,12 +17,23 @@
 #define SQRL_CALLBACK_PROGRESS 7
 
 SqrlClient *SqrlClient::client = NULL;
+static bool sqrl_is_initialized = false;
+struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
 
 SqrlClient::SqrlClient() {
 	if( SqrlClient::client != NULL ) {
 		// Enforce a single SqrlClient object
 		exit( 1 );
 	}
+	if( !sqrl_is_initialized ) {
+		sqrl_is_initialized = true;
+		SQRL_GLOBAL_MUTICES.user = new std::mutex();
+		SQRL_GLOBAL_MUTICES.site = new std::mutex();
+		gcm_initialize();
+		sodium_init();
+	}
+
+	SqrlEntropy::start();
 	SqrlClient::client = this;
 	this->myThread = new std::thread( SqrlClient::clientThread );
 }
@@ -27,8 +41,9 @@ SqrlClient::SqrlClient() {
 SqrlClient::~SqrlClient() {
 	this->stopping = true;
 	this->myThread->join();
-	SqrlClient::client = NULL;
 	delete this->myThread;
+	SqrlClient::client = NULL;
+	SqrlEntropy::stop();
 }
 
 SqrlClient *SqrlClient::getClient() {
@@ -138,10 +153,10 @@ void SqrlClient::callAuthenticationRequired( SqrlAction * action, Sqrl_Credentia
 	this->callbackQueue.push( info );
 }
 
-void SqrlClient::callSend( SqrlAction * t, std::string *url, std::string * payload ) {
+void SqrlClient::callSend( SqrlAction * action, std::string *url, std::string * payload ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_SEND;
-	info->ptr = t;
+	info->ptr = action;
 	info->str[0] = new std::string( *url );
 	info->str[1] = new std::string( *payload );
 	this->callbackQueue.push( info );

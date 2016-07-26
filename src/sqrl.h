@@ -86,10 +86,6 @@ SQRL_CREDENTIAL_NEW_PASSWORD
 
 typedef unsigned int Sqrl_Tif;
 
-
-
-DLL_PUBLIC int 		sqrl_init();
-DLL_PUBLIC int         sqrl_stop();
 size_t		Sqrl_Version( char *buffer, size_t buffer_len );
 uint16_t Sqrl_Version_Major();
 uint16_t Sqrl_Version_Minor();

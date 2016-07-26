@@ -42,7 +42,6 @@ struct Sqrl_Global_Mutices
 {
 	std::mutex *user;
 	std::mutex *site;
-	std::mutex *action;
 };
 
 struct Sqrl_User_s_callback_data

@@ -3,6 +3,7 @@
 
 #include "sqrl.h"
 #include "Sqrluri.h"
+#include "NullClient.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
@@ -13,7 +14,6 @@ namespace libsqrltest
 	public:
 		TEST_CLASS_INITIALIZE(InitializeSqrl)
 		{
-			sqrl_init();
 			char v[64];
 			Sqrl_Version( v, 64 );
 			std::string str( "UriTests: " );
@@ -28,6 +28,7 @@ namespace libsqrltest
 
 		TEST_METHOD(Uri1)
 		{
+			new NullClient();
 			SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
 			Assert::IsNotNull( uri );
 			Assert::IsTrue(uri->getScheme() == SQRL_SCHEME_SQRL);
@@ -37,10 +38,12 @@ namespace libsqrltest
 			this->testString(uri->getPrefix(), "https://sqrlid.com");
 			this->testString(uri->getSFN(), "SQRLid");
 			uri->release();
+			delete NullClient::getClient();
 		}
 		
 		TEST_METHOD(Uri2)
 		{
+			new NullClient();
 			SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
 			Assert::IsNotNull( uri );
 			Assert::IsTrue(uri->getScheme() == SQRL_SCHEME_SQRL);
@@ -50,10 +53,12 @@ namespace libsqrltest
 			this->testString(uri->getPrefix(), "https://sqrlid.com");
 			this->testString(uri->getSFN(), "SQRLid");
 			uri->release();
+			delete NullClient::getClient();
 		}
 		
 		TEST_METHOD(Uri3)
 		{
+			new NullClient();
 			SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
 			Assert::IsNotNull( uri );
 			Assert::IsTrue(uri->getScheme() == SQRL_SCHEME_SQRL);
@@ -63,10 +68,12 @@ namespace libsqrltest
 			this->testString(uri->getPrefix(), "https://sqrlid.com:8080");
 			this->testString(uri->getSFN(), "SQRLid");
 			uri->release();
+			delete NullClient::getClient();
 		}
 		
 		TEST_METHOD(FileUri)
 		{
+			new NullClient();
 			SqrlUri *uri = SqrlUri::parse("file://test1.sqrl");
 			Assert::IsNotNull( uri );
 			Assert::IsTrue(uri->getScheme() == SQRL_SCHEME_FILE);
@@ -76,23 +83,27 @@ namespace libsqrltest
 			this->testString(uri->getPrefix(), NULL);
 			this->testString(uri->getSFN(), NULL);
 			uri->release();
+			delete NullClient::getClient();
 		}
 		
 		TEST_METHOD(SQRLUriWithoutSFN)
 		{
+			new NullClient();
 			SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com:8080/login?nut=blah");
 			Assert::IsNull( uri );
+			delete NullClient::getClient();
 		}
 		
 		TEST_METHOD(InvalidSQRLUrl)
 		{
+			new NullClient();
 			SqrlUri *uri = SqrlUri::parse("http://google.com");
 			Assert::IsNull( uri );
+			delete NullClient::getClient();
 		}
 
 		TEST_CLASS_CLEANUP(StopSqrl)
 		{
-			sqrl_stop();
 		}
 	};
 

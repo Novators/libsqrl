@@ -8,70 +8,7 @@ For more details, see the LICENSE file included with this package.
 
 #include "sqrl_internal.h"
 #include "version.h"
-#include "sqrl.h"
-#include "SqrlUser.h"
-#include "SqrlAction.h"
-#include "SqrlEntropy.h"
-#include "gcm.h"
 
-
-static bool sqrl_is_initialized = false;
-
-struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
-
-/**
-Initializes the SQRL library.  Must be called once, before any SQRL functions are used.
-*/
-DLL_PUBLIC
-int sqrl_init()
-{
-	if( !sqrl_is_initialized ) {
-		sqrl_is_initialized = true;
-		SqrlEntropy::start();
-		SQRL_GLOBAL_MUTICES.user = new std::mutex();
-		SQRL_GLOBAL_MUTICES.site = new std::mutex();
-		SQRL_GLOBAL_MUTICES.action = new std::mutex();
-		#ifdef DEBUG
-		DEBUG_PRINTF( "libsqrl %s\n", SQRL_LIB_VERSION );
-		#endif
-		gcm_initialize();
-		return sodium_init();
-	}
-	return 0;
-}
-
-/**
-Performs clean-up as a client is closing.  Erases and frees memory used by libsqrl.
-If a User cannot safely be freed, it is hintlocked (encrypted).
-
-\note Do not call any libsqrl functions after \p sqrl_stop()
-
-@return Number of objects that could not safely be removed from memory, so they were encrypted.
-@return -1 if libsqrl has not been initialized with \p sqrl_init()
-*/
-DLL_PUBLIC
-int sqrl_stop()
-{
-	if( sqrl_is_initialized ) {
-		SqrlEntropy::stop();
-        int userCount, siteCount = 0;
-#ifdef DEBUG
-		userCount = SqrlUser::countUsers();
-		DEBUG_PRINTF( "%10s: %d open sites\n", "sqrl_stop", siteCount );
-		DEBUG_PRINTF( "%10s: %d open users\n", "sqrl_stop", userCount );
-        DEBUG_PRINTF( "%10s: Cleaning Up...\n", "sqrl_stop" );
-#endif
-        //sqrl_client_site_maintenance( true );
-        //sqrl_client_user_maintenance( true );
-		userCount = SqrlUser::countUsers();
-        //siteCount = sqrl_site_count();
-#ifdef DEBUG
-        printf( "%10s: %d remain\n", "sqrl_stop", actionCount + userCount + siteCount );
-#endif
-		return userCount + siteCount;
-	}
-	return -1;
-}
 
 void bin2rc( char *buf, uint8_t *bin ) 
 {

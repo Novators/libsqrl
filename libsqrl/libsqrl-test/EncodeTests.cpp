@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include "sqrl.h"
 #include "SqrlBase64.h"
+#include "NullClient.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace std;
@@ -15,7 +16,6 @@ namespace libsqrltest
 	TEST_CLASS( EncodeTests ) {
 public:
 	TEST_CLASS_INITIALIZE( InitializeSqrl ) {
-		sqrl_init();
 		char v[64];
 		Sqrl_Version( v, 64 );
 		std::string str( "EncodeTests: " );
@@ -29,6 +29,7 @@ public:
 	}
 
 	TEST_METHOD( Base64 ) {
+		new NullClient();
 		const int NT = 10;
 		std::string evector[NT] = {
 			"",
@@ -65,11 +66,11 @@ public:
 			Assert::IsTrue( s.length() == evector[i].length() );
 			Assert::IsTrue( 0 == s.compare( evector[i] ) );
 		}
+		delete NullClient::getClient();
 	}
 	
 
 	TEST_CLASS_CLEANUP( StopSqrl ) {
-		sqrl_stop();
 	}
 	};
 }

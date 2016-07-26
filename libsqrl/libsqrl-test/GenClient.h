@@ -1,5 +1,14 @@
 #pragma once
 
+#include "stdafx.h"
+#include "CppUnitTest.h"
+#include "SqrlClient.h"
+#include "SqrlAction.h"
+#include "SqrlActionSave.h"
+
+using namespace Microsoft::VisualStudio::CppUnitTestFramework;
+using namespace std;
+
 class GenClient : public SqrlClient
 {
 	void onSend(

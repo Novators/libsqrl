@@ -8,12 +8,14 @@
 #include "SqrlCrypt.h"
 #include "SqrlEntropy.h"
 #include "SqrlBase64.h"
+#include "NullClient.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace std;
 
 namespace libsqrltest
 {
+
 	void sqrl_hex_encode( std::string *dest, const uint8_t *src, size_t src_len ) {
 		if( !dest ) return;
 		static const char tab[] = "0123456789abcdef";
@@ -32,7 +34,6 @@ namespace libsqrltest
 	TEST_CLASS( CryptoTests ) {
 	public:
 		TEST_CLASS_INITIALIZE( InitializeSqrl ) {
-			sqrl_init();
 			char v[64];
 			Sqrl_Version( v, 64 );
 			std::string str( "CryptoTests: " );
@@ -46,6 +47,7 @@ namespace libsqrltest
 		}
 
 		TEST_METHOD( EnHash ) {
+			new NullClient();
 			FILE *fp = fopen( "enhash-vectors.txt", "r" );
 			if( !fp ) exit( 1 );
 
@@ -71,9 +73,11 @@ namespace libsqrltest
 				delete input, output;
 			}
 			fclose( fp );
+			delete NullClient::getClient();
 		}
 
 		TEST_METHOD( EnScrypt_1i ) {
+			new NullClient();
 			uint8_t emptySalt[32] = {0};
 			uint8_t buf[32];
 			int time;
@@ -81,9 +85,11 @@ namespace libsqrltest
 			std::string str;
 			sqrl_hex_encode( &str, buf, 32 );
 			Assert::IsTrue( str.compare( "a8ea62a6e1bfd20e4275011595307aa302645c1801600ef5cd79bf9d884d911c" ) == 0 );
+			delete NullClient::getClient();
 		}
 
 		TEST_METHOD( EnScrypt_1s ) {
+			new NullClient();
 			uint8_t emptySalt[32] = {0};
 			uint8_t buf[32], buf2[32];
 			int time;
@@ -91,9 +97,11 @@ namespace libsqrltest
 			int i = SqrlCrypt::enScryptMillis( NULL, buf, NULL, 0, NULL, 0, 1000, 9 );
 			time = SqrlCrypt::enScrypt( NULL, buf2, NULL, 0, NULL, 0, i, 9 );
 			Assert::IsTrue( memcmp( buf, buf2, 32 ) == 0 );
+			delete NullClient::getClient();
 		}
 
 		TEST_METHOD( EnScrypt_100i ) {
+			new NullClient();
 			uint8_t emptySalt[32] = {0};
 			uint8_t buf[32];
 			int time;
@@ -101,9 +109,11 @@ namespace libsqrltest
 			std::string str;
 			sqrl_hex_encode( &str, buf, 32 );
 			Assert::IsTrue( str.compare( "45a42a01709a0012a37b7b6874cf16623543409d19e7740ed96741d2e99aab67" ) == 0 );
+			delete NullClient::getClient();
 		}
 
 		TEST_METHOD( EnScrypt_p123i ) {
+			new NullClient();
 			uint8_t emptySalt[32] = {0};
 			char password[] = "password";
 			size_t password_len = 8;
@@ -113,9 +123,11 @@ namespace libsqrltest
 			std::string str;
 			sqrl_hex_encode( &str, buf, 32 );
 			Assert::IsTrue( str.compare("129d96d1e735618517259416a605be7094c2856a53c14ef7d4e4ba8e4ea36aeb" ) == 0 );
+			delete NullClient::getClient();
 		}
 
 		TEST_METHOD( EnScrypt_p123i_salt ) {
+			new NullClient();
 			uint8_t emptySalt[32] = {0};
 			char password[] = "password";
 			size_t password_len = 8;
@@ -125,9 +137,11 @@ namespace libsqrltest
 			std::string str;
 			sqrl_hex_encode( &str, buf, 32 );
 			Assert::IsTrue( str.compare("2f30b9d4e5c48056177ff90a6cc9da04b648a7e8451dfa60da56c148187f6a7d" ) == 0 );
+			delete NullClient::getClient();
 		}
 
 		TEST_METHOD( IdLockKeys ) {
+			new NullClient();
 			uint8_t iuk[32] = {0};
 			uint8_t ilk[32];
 			uint8_t rlk[32] = {0xff};
@@ -177,10 +191,10 @@ namespace libsqrltest
 			printf( "URK: %s\n", buf.data() );
 
 			Assert::IsTrue( SqrlCrypt::verifySignature( msg, sig, vuk ) );
+			delete NullClient::getClient();
 		}
 
 		TEST_CLASS_CLEANUP( StopSqrl ) {
-			sqrl_stop();
 		}
 	};
 }

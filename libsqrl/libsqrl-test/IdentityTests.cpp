@@ -8,18 +8,17 @@
 #include "SqrlUser.h"
 #include "SqrlActionGenerate.h"
 #include "SqrlActionSave.h"
+#include "GenClient.h"
+
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace std;
 
 namespace libsqrltest
 {
-#include "GenClient.h"
-
 	TEST_CLASS( IdentityTests ) {
 public:
 	TEST_CLASS_INITIALIZE( InitializeSqrl ) {
-		sqrl_init();
 		char v[64];
 		Sqrl_Version( v, 64 );
 		std::string str( "GenerateTests: " );
@@ -37,7 +36,6 @@ public:
 	}
 
 	TEST_CLASS_CLEANUP( StopSqrl ) {
-		sqrl_stop();
 	}
 	};
 
