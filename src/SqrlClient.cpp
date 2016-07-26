@@ -18,8 +18,10 @@
 
 SqrlClient *SqrlClient::client = NULL;
 static bool sqrl_is_initialized = false;
+static std::mutex sqrl_client_mutex;
 
 SqrlClient::SqrlClient() {
+	sqrl_client_mutex.lock();
 	if( SqrlClient::client != NULL ) {
 		// Enforce a single SqrlClient object
 		exit( 1 );
@@ -33,14 +35,17 @@ SqrlClient::SqrlClient() {
 	SqrlEntropy::start();
 	SqrlClient::client = this;
 	this->myThread = new std::thread( SqrlClient::clientThread );
+	sqrl_client_mutex.unlock();
 }
 
 SqrlClient::~SqrlClient() {
+	sqrl_client_mutex.lock();
 	this->stopping = true;
 	this->myThread->join();
 	delete this->myThread;
 	SqrlClient::client = NULL;
 	SqrlEntropy::stop();
+	sqrl_client_mutex.unlock();
 }
 
 SqrlClient *SqrlClient::getClient() {

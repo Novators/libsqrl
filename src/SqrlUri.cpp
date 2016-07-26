@@ -148,6 +148,15 @@ static int _is_scheme_char(int c)
 	return (!isalpha(c) && '+' != c && '-' != c && '.' != c) ? 0 : 1;
 }
 
+static void sqrl_lcstr( char *str ) {
+	int i;
+	for( i = 0; str[i] != 0; i++ ) {
+		if( str[i] > 64 && str[i] < 91 ) {
+			str[i] += 32;
+		}
+	}
+}
+
 /**
 Parses a SQRL URL and returns a \p SqrlUri object
 

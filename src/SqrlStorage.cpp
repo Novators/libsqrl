@@ -253,8 +253,9 @@ static bool sqrl_storage_load_from_buffer( struct S4Page *page, std::string *buf
 	block = SqrlBlock::create();
 
 	while( cur + 4 < end ) {
-		uint16_t bl = readint_16((void*)cur._Ptr);
-		uint16_t bt = readint_16((void*)(cur._Ptr + 2));
+		uint8_t *cp = (uint8_t*)cur._Ptr;
+		uint16_t bl = (uint16_t)cp[0] | (((uint16_t)cp[1]) << 8);
+		uint16_t bt = (uint16_t)cp[2] | (((uint16_t)cp[3]) << 8);
 		block->init(bt, bl);
 		if( cur + bl > end ) {
 			printf( "Invalid block Length\n" );
@@ -288,7 +289,7 @@ static bool sqrl_storage_load_from_file( struct S4Page *page, const char *filena
 	std::string buf;
 
 	while( !feof( fp )) {
-		bytesRead = fread( tmp, 1, 256, fp );
+		bytesRead = fread( tmp, 1, 1024, fp );
 		if( bytesRead > 0 ) {
 			buf.append( tmp, bytesRead );
 		}

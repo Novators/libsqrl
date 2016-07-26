@@ -337,6 +337,19 @@ void SqrlUser::hintUnlock( SqrlAction *action,
 	sodium_memzero( this->keys->scratch, KEY_SCRATCH_SIZE );
 }
 
+static void bin2rc( char *buf, uint8_t *bin ) {
+	// bin must be 512+ bits of entropy!
+	int i, j, k;
+	uint64_t *tmp = (uint64_t*)bin;
+	for( i = 0, j = 0; i < 3; i++ ) {
+		for( k = 0; k < 8; k++ ) {
+			buf[j++] = '0' + (tmp[k] % 10);
+			tmp[k] /= 10;
+		}
+	}
+	buf[j] = 0;
+}
+
 bool SqrlUser::_keyGen( SqrlAction *action, int key_type, uint8_t *key )
 {
 	if( !action ) return false;

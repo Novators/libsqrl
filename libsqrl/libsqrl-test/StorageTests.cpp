@@ -32,6 +32,7 @@ namespace libsqrltest
 			Assert::IsNotNull( fn );
 			SqrlStorage *storage = SqrlStorage::from( fn );
 			fn->release();
+			Assert::IsNotNull( storage );
 
 			Assert::IsTrue(storage->hasBlock(SQRL_BLOCK_USER));
 			Assert::IsTrue(storage->hasBlock(SQRL_BLOCK_RESCUE));

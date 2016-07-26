@@ -10,36 +10,6 @@ For more details, see the LICENSE file included with this package.
 #include "version.h"
 
 
-void bin2rc( char *buf, uint8_t *bin ) 
-{
-	// bin must be 512+ bits of entropy!
-	int i, j, k;
-	uint64_t *tmp = (uint64_t*)bin;
-	for( i = 0, j = 0; i < 3; i++ ) {
-		for( k = 0; k < 8; k++ ) {
-			buf[j++] = '0' + (tmp[k] % 10);
-			tmp[k] /= 10;
-		}
-	}
-	buf[j] = 0;
-}
-
-void sqrl_lcstr( char *str )
-{
-	int i;
-	for( i = 0; str[i] != 0; i++ ) {
-		if( str[i] > 64 && str[i] < 91 ) {
-			str[i] += 32;
-		}
-	}
-}
-
-uint16_t readint_16( void *buf )
-{
-	uint8_t *b = (uint8_t*)buf;
-	return (uint16_t)( b[0] | ( b[1] << 8 ));
-}
-
 bool sqrl_parse_key_value( char **strPtr, char **keyPtr, char **valPtr,
     size_t *key_len, size_t *val_len, char *sep )
 {

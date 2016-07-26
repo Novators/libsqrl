@@ -21,7 +21,7 @@ public:
 	TEST_CLASS_INITIALIZE( InitializeSqrl ) {
 		char v[64];
 		Sqrl_Version( v, 64 );
-		std::string str( "GenerateTests: " );
+		std::string str( "IdentityTests: " );
 		str.append( v );
 		Logger::WriteMessage( str.data() );
 	}

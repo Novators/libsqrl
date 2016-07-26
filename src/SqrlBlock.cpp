@@ -147,7 +147,7 @@ uint16_t SqrlBlock::readInt16()
 {
 	if( this->cur + 2 > this->blockLength ) return 0;
 	uint8_t *b = (uint8_t*)(this->data + this->cur);
-	uint16_t r = b[0] | (b[1] << 8);
+	uint16_t r = ((uint16_t)b[0]) | (((uint16_t)b[1]) << 8);
 	this->cur += 2;
 	return r;
 }
@@ -163,7 +163,7 @@ bool SqrlBlock::writeInt16( uint16_t value )
 uint32_t SqrlBlock::readInt32()
 {
 	if( this->cur + 4 > this->blockLength ) return 0;
-	uint32_t r = this->data[this->cur++];
+	uint32_t r = (uint32_t)this->data[this->cur++];
 	r |= ((uint32_t)this->data[this->cur++])<<8;
 	r |= ((uint32_t)this->data[this->cur++])<<16;
 	r |= ((uint32_t)this->data[this->cur++])<<24;
