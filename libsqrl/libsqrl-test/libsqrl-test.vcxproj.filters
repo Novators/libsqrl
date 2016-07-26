@@ -24,6 +24,9 @@
     <ClInclude Include="resource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="GenClient.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
@@ -44,7 +47,7 @@
     <ClCompile Include="EncodeTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="GenerateTests.cpp">
+    <ClCompile Include="IdentityTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

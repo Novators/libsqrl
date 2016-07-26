@@ -101,39 +101,39 @@ void SqrlClient::callSaveSuggested( SqrlUser * user ) {
 	this->callbackQueue.push( info );
 }
 
-void SqrlClient::callSelectUser( SqrlAction * transaction ) {
+void SqrlClient::callSelectUser( SqrlAction * action ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_SELECT_USER;
-	info->ptr = transaction;
+	info->ptr = action;
 	this->callbackQueue.push( info );
 }
 
-void SqrlClient::callSelectAlternateIdentity( SqrlAction * transaction ) {
+void SqrlClient::callSelectAlternateIdentity( SqrlAction * action ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_SELECT_ALT;
-	info->ptr = transaction;
+	info->ptr = action;
 	this->callbackQueue.push( info );
 }
 
-void SqrlClient::callActionComplete( SqrlAction * transaction ) {
+void SqrlClient::callActionComplete( SqrlAction * action ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_ACTION_COMPLETE;
-	info->ptr = transaction;
+	info->ptr = action;
 	this->callbackQueue.push( info );
 }
 
-void SqrlClient::callProgress( SqrlAction * transaction, int progress ) {
+void SqrlClient::callProgress( SqrlAction * action, int progress ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_PROGRESS;
-	info->ptr = transaction;
+	info->ptr = action;
 	info->progress = progress;
 	this->callbackQueue.push( info );
 }
 
-void SqrlClient::callAuthenticationRequired( SqrlAction * transaction, Sqrl_Credential_Type credentialType ) {
+void SqrlClient::callAuthenticationRequired( SqrlAction * action, Sqrl_Credential_Type credentialType ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_AUTH_REQUIRED;
-	info->ptr = transaction;
+	info->ptr = action;
 	info->credentialType = credentialType;
 	this->callbackQueue.push( info );
 }
@@ -147,10 +147,10 @@ void SqrlClient::callSend( SqrlAction * t, std::string *url, std::string * paylo
 	this->callbackQueue.push( info );
 }
 
-void SqrlClient::callAsk( SqrlAction * transaction, std::string * message, std::string * firstButton, std::string * secondButton ) {
+void SqrlClient::callAsk( SqrlAction * action, std::string * message, std::string * firstButton, std::string * secondButton ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_ASK;
-	info->ptr = transaction;
+	info->ptr = action;
 	info->str[0] = new std::string( *message );
 	info->str[1] = new std::string( *firstButton );
 	info->str[2] = new std::string( *secondButton );

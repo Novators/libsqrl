@@ -18,11 +18,11 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlEntropy.h"
 
 SqrlCrypt* SqrlUser::_init_t2( 
-	SqrlAction *transaction, 
+	SqrlAction *action, 
 	SqrlBlock *block,
 	bool forSaving )
 {
-	if (transaction->getUser() != this) return false;
+	if (action->getUser() != this) return false;
 	SqrlCrypt *crypt = new SqrlCrypt();
 	crypt->plain_text = this->scratch();
     crypt->text_len = SQRL_KEY_SIZE;
@@ -38,7 +38,7 @@ SqrlCrypt* SqrlUser::_init_t2(
 		block->write(ent, 16);
 		crypt->nFactor = SQRL_DEFAULT_N_FACTOR;
 		block->writeInt8( SQRL_DEFAULT_N_FACTOR );
-		memcpy( crypt->plain_text, this->key( transaction, KEY_IUK ), SQRL_KEY_SIZE );
+		memcpy( crypt->plain_text, this->key( action, KEY_IUK ), SQRL_KEY_SIZE );
 		crypt->flags = SQRL_ENCRYPT | SQRL_MILLIS;
 		crypt->count = SQRL_RESCUE_ENSCRYPT_SECONDS * SQRL_MILLIS_PER_SECOND;
 	} else {
@@ -61,25 +61,25 @@ SqrlCrypt* SqrlUser::_init_t2(
 	return crypt;
 }
 
-bool SqrlUser::sul_block_2( SqrlAction *transaction, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata )
+bool SqrlUser::sul_block_2( SqrlAction *action, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata )
 {
-	if (transaction->getUser() != this) return false;
+	if (action->getUser() != this) return false;
 	bool retVal = false;
 	if( ! this->hasKey( KEY_RESCUE_CODE )) {
 		return false;
 	}
 	
-	SqrlCrypt *crypt = this->_init_t2( transaction, block, false );
+	SqrlCrypt *crypt = this->_init_t2( action, block, false );
 	if( !crypt ) {
 		goto ERR;
 	}
 
 	crypt->key = this->scratch() + crypt->text_len;
-	char *rc = (char*)this->key( transaction, KEY_RESCUE_CODE );
+	char *rc = (char*)this->key( action, KEY_RESCUE_CODE );
 	block->seek( 21 );
 	crypt->count = block->readInt32();
 	crypt->flags = SQRL_DECRYPT | SQRL_ITERATIONS;
-	if( crypt->genKey( transaction, rc, SQRL_RESCUE_CODE_LENGTH ) ) {
+	if( crypt->genKey( action, rc, SQRL_RESCUE_CODE_LENGTH ) ) {
 		if( crypt->doCrypt() ) {
 			uint8_t *iuk = this->newKey( KEY_IUK );
 			memcpy( iuk, crypt->plain_text, SQRL_KEY_SIZE );
@@ -97,30 +97,30 @@ DONE:
 	return retVal;
 }
 
-bool SqrlUser::sus_block_2( SqrlAction *transaction, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata )
+bool SqrlUser::sus_block_2( SqrlAction *action, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata )
 {
-	if (transaction->getUser() != this) return false;
+	if (action->getUser() != this) return false;
 	bool retVal = true;
 	if( ! this->hasKey( KEY_IUK )
 		|| ! this->hasKey( KEY_RESCUE_CODE )) {
 		return false;
 	}
 	
-	SqrlCrypt *crypt = this->_init_t2( transaction, block, true );
+	SqrlCrypt *crypt = this->_init_t2( action, block, true );
 	if( !crypt ) {
 		goto ERR;
 	}
 
 	crypt->key = this->scratch() + crypt->text_len;
-	char *rc = (char*)this->key( transaction, KEY_RESCUE_CODE );
-	if( !crypt->genKey( transaction, rc, SQRL_RESCUE_CODE_LENGTH ) ) {
+	char *rc = (char*)this->key( action, KEY_RESCUE_CODE );
+	if( !crypt->genKey( action, rc, SQRL_RESCUE_CODE_LENGTH ) ) {
 	}
 	block->seek( 21 );
 	block->writeInt32( crypt->count );
 
 	// Cipher Text
 	crypt->flags = SQRL_ENCRYPT | SQRL_ITERATIONS;
-	uint8_t *iuk = this->key( transaction, KEY_IUK );
+	uint8_t *iuk = this->key( action, KEY_IUK );
 	memcpy( crypt->plain_text, iuk, crypt->text_len );
 	if( crypt->doCrypt() ) {
 		// Save unique id
@@ -142,9 +142,9 @@ DONE:
 	return retVal;
 }
 
-bool SqrlUser::sul_block_3( SqrlAction *transaction, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata )
+bool SqrlUser::sul_block_3( SqrlAction *action, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata )
 {
-	if (transaction->getUser() != this) return false;
+	if (action->getUser() != this) return false;
 	bool retVal = true;
 	int i;
 	SqrlCrypt crypt = SqrlCrypt();
@@ -162,7 +162,7 @@ bool SqrlUser::sul_block_3( SqrlAction *transaction, SqrlBlock *block, struct Sq
 	crypt.plain_text = this->keys->scratch;
 	crypt.iv = crypt.plain_text + crypt.text_len;
 	memset( crypt.iv, 0, 12 );
-	keyPointer = this->key( transaction, KEY_MK );
+	keyPointer = this->key( action, KEY_MK );
 	crypt.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
 	if( !crypt.doCrypt() ) goto ERR;
 
@@ -184,9 +184,9 @@ DONE:
 
 }
 
-bool SqrlUser::sus_block_3( SqrlAction *transaction, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata )
+bool SqrlUser::sus_block_3( SqrlAction *action, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata )
 {
-	if (transaction->getUser() != this) return false;
+	if (action->getUser() != this) return false;
 	bool retVal = true;
 	int i;
 	SqrlCrypt crypt = SqrlCrypt();
@@ -205,7 +205,7 @@ bool SqrlUser::sus_block_3( SqrlAction *transaction, SqrlBlock *block, struct Sq
 	int piuks[] = { KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3 };
 	for( i = 0; i < 4; i++ ) {
 		if( this->hasKey( piuks[i] )) {
-			keyPointer = this->key( transaction, piuks[i] );
+			keyPointer = this->key( action, piuks[i] );
 			memcpy( crypt.plain_text + pt_offset, keyPointer, SQRL_KEY_SIZE );
 		} else {
 			memset( crypt.plain_text + pt_offset, 0, SQRL_KEY_SIZE );
@@ -214,7 +214,7 @@ bool SqrlUser::sus_block_3( SqrlAction *transaction, SqrlBlock *block, struct Sq
 	}
 	crypt.iv = crypt.plain_text + pt_offset;
 	memset( crypt.iv, 0, 12 );
-	keyPointer = this->key( transaction, KEY_MK );
+	keyPointer = this->key( action, KEY_MK );
 	crypt.count = 100;
 	crypt.flags = SQRL_ENCRYPT | SQRL_MILLIS;
 	if( !crypt.doCrypt()) {
@@ -230,9 +230,9 @@ DONE:
 	return retVal;
 }
 
-bool SqrlUser::sul_block_1( SqrlAction *transaction, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata )
+bool SqrlUser::sul_block_1( SqrlAction *action, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata )
 {
-	if (transaction->getUser() != this) return false;
+	if (action->getUser() != this) return false;
 	bool retVal = true;
 	SqrlCrypt crypt = SqrlCrypt();
     crypt.text_len = SQRL_KEY_SIZE * 2;
@@ -273,7 +273,7 @@ bool SqrlUser::sul_block_1( SqrlAction *transaction, SqrlBlock *block, struct Sq
 	// Iteration Count
 	uint8_t *key = crypt.plain_text + crypt.text_len;
 	crypt.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
-	if( crypt.genKey( transaction, this->keys->password, this->keys->password_len ) 
+	if( crypt.genKey( action, this->keys->password, this->keys->password_len ) 
 		&& crypt.doCrypt() ) {
 			key = this->newKey( KEY_MK );
 			memcpy( key, crypt.plain_text, SQRL_KEY_SIZE );
@@ -289,9 +289,9 @@ DONE:
 	return retVal;
 }
 
-bool SqrlUser::sus_block_1( SqrlAction *transaction, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata )
+bool SqrlUser::sus_block_1( SqrlAction *action, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata )
 {
-	if (transaction->getUser() != this) return false;
+	if (action->getUser() != this) return false;
 	bool retVal = true;
 	SqrlCrypt crypt = SqrlCrypt();
 	if( this->getPasswordLength() == 0 ) {
@@ -335,13 +335,13 @@ bool SqrlUser::sus_block_1( SqrlAction *transaction, SqrlBlock *block, struct Sq
 	// Plain Text
 	crypt.plain_text = this->keys->scratch;
 	if( this->hasKey( KEY_MK )) {
-		keyPointer = this->key( transaction, KEY_MK );
+		keyPointer = this->key( action, KEY_MK );
 		memcpy( crypt.plain_text, keyPointer, SQRL_KEY_SIZE );
 	} else {
 		memset( crypt.plain_text, 0, SQRL_KEY_SIZE );
 	}
 	if( this->hasKey( KEY_ILK )) {
-		keyPointer = this->key( transaction, KEY_ILK );
+		keyPointer = this->key( action, KEY_ILK );
 		memcpy( crypt.plain_text + SQRL_KEY_SIZE, keyPointer, SQRL_KEY_SIZE );
 	} else {
 		memset( crypt.plain_text + SQRL_KEY_SIZE, 0, SQRL_KEY_SIZE );
@@ -351,7 +351,7 @@ bool SqrlUser::sus_block_1( SqrlAction *transaction, SqrlBlock *block, struct Sq
 	crypt.key = crypt.plain_text + crypt.text_len;
 	crypt.flags = SQRL_ENCRYPT | SQRL_MILLIS;
 	crypt.count = this->options.enscryptSeconds * SQRL_MILLIS_PER_SECOND;
-	if( !crypt.genKey( transaction, this->keys->password, this->keys->password_len ) ) {
+	if( !crypt.genKey( action, this->keys->password, this->keys->password_len ) ) {
 		goto ERR;
 	}
 	block->seek( 35 );
@@ -374,7 +374,7 @@ DONE:
 
 void SqrlUser::saveCallbackData( struct Sqrl_User_s_callback_data *cbdata )
 {
-	SqrlUser *user = cbdata->transaction->getUser();
+	SqrlUser *user = cbdata->action->getUser();
 	if (!user) return;
 	cbdata->adder = 0;
 	cbdata->multiplier = 1;
@@ -399,10 +399,10 @@ void SqrlUser::saveCallbackData( struct Sqrl_User_s_callback_data *cbdata )
 	}
 }
 
-bool SqrlUser::updateStorage( SqrlAction *transaction )
+bool SqrlUser::updateStorage( SqrlAction *action )
 {
-	if (!transaction) return false;
-	if( transaction->getUser() != this ) {
+	if (!action) return false;
+	if( action->getUser() != this ) {
 		return false;
 	}
 	if( this->storage == NULL ) {
@@ -410,7 +410,7 @@ bool SqrlUser::updateStorage( SqrlAction *transaction )
 	}
 	struct Sqrl_User_s_callback_data cbdata;
 	memset( &cbdata, 0, sizeof( struct Sqrl_User_s_callback_data ));
-	cbdata.transaction = transaction;
+	cbdata.action = action;
 	this->saveCallbackData( &cbdata );
 
 	SqrlBlock *block = SqrlBlock::create();
@@ -419,7 +419,7 @@ bool SqrlUser::updateStorage( SqrlAction *transaction )
 	if( (this->flags & USER_FLAG_T1_CHANGED) == USER_FLAG_T1_CHANGED ||
 		! this->storage->hasBlock( SQRL_BLOCK_USER )) 
 	{
-		if( sus_block_1( transaction, block, cbdata )) {
+		if( sus_block_1( action, block, cbdata )) {
 			this->storage->putBlock(block);
 		}
 	}
@@ -434,7 +434,7 @@ bool SqrlUser::updateStorage( SqrlAction *transaction )
 		} else {
 			cbdata.multiplier = 1;
 		}
-		if( sus_block_2( transaction, block, cbdata )) {
+		if( sus_block_2( action, block, cbdata )) {
 			this->storage->putBlock(block);
 		}
 	}
@@ -442,7 +442,7 @@ bool SqrlUser::updateStorage( SqrlAction *transaction )
 	if( (this->flags & USER_FLAG_T2_CHANGED) == USER_FLAG_T2_CHANGED ||
 		! this->storage->hasBlock( SQRL_BLOCK_PREVIOUS ))
 	{
-		if( sus_block_3( transaction, block, cbdata )) {
+		if( sus_block_3( action, block, cbdata )) {
 			this->storage->putBlock( block );
 		}
 	}
@@ -481,73 +481,73 @@ SqrlUser::SqrlUser( const char *buffer, size_t buffer_len )
 	}
 }
 
-bool SqrlUser::save( SqrlActionSave *transaction )
+bool SqrlUser::save( SqrlActionSave *action )
 {
-	if( !transaction ) return false;
+	if( !action ) return false;
 
-	SqrlUri *uri = transaction->getUri();
+	SqrlUri *uri = action->getUri();
 	if( !uri || (uri->getScheme() != SQRL_SCHEME_FILE )) {
 		return false;
 	}
-	if (transaction->getUser() != this) {
+	if (action->getUser() != this) {
 		return false;
 	}
 	if (uri->getChallengeLength() == 0) {
 		return false;
 	}
 
-	if (this->updateStorage((SqrlAction*)transaction)) {
-		if( this->storage->save( uri, transaction->getExportType(), transaction->getEncodingType())) {
+	if (this->updateStorage((SqrlAction*)action)) {
+		if( this->storage->save( uri, action->getExportType(), action->getEncodingType())) {
 			return true;
 		}
 	}
 	return false;
 }
 
-bool SqrlUser::saveToBuffer( SqrlActionSave *transaction )
+bool SqrlUser::saveToBuffer( SqrlActionSave *action )
 {
-	if( !transaction ) return false;
-	if (transaction->getUser() != this) {
+	if( !action ) return false;
+	if (action->getUser() != this) {
 		return false;
 	}
 	bool retVal = true;
 	struct Sqrl_User_s_callback_data cbdata;
-	cbdata.transaction = transaction;
+	cbdata.action = action;
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
 
 	std::string *buf = NULL;
-	if( this->updateStorage( transaction )) {
-		buf = this->storage->save( transaction->getExportType(), transaction->getEncodingType() );
+	if( this->updateStorage( action )) {
+		buf = this->storage->save( action->getExportType(), action->getEncodingType() );
 		if( buf ) {
-			transaction->setString( buf->data(), buf->length());
+			action->setString( buf->data(), buf->length());
 			delete buf;
 			goto DONE;
 		}
 	}
 
-	transaction->setString(NULL, 0);
+	action->setString(NULL, 0);
 	retVal = false;
 
 DONE:
 	return retVal;
 }
 
-bool SqrlUser::tryLoadPassword( SqrlAction *transaction, bool retry )
+bool SqrlUser::tryLoadPassword( SqrlAction *action, bool retry )
 {
-	if( !transaction ) return false;
-	if (transaction->getUser() != this) {
+	if( !action ) return false;
+	if (action->getUser() != this) {
 		return false;
 	}
 	bool retVal = false;
 	SqrlBlock *block = SqrlBlock::create();
 	struct Sqrl_User_s_callback_data cbdata;
-	cbdata.transaction = transaction;
+	cbdata.action = action;
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
 LOOP:
 	if( ! this->storage->hasBlock( SQRL_BLOCK_USER )) {
-		retVal = this->tryLoadRescue( transaction, retry );
+		retVal = this->tryLoadRescue( action, retry );
 		goto DONE;
 	}
 	if( this->keys->password_len == 0 ) {
@@ -555,13 +555,13 @@ LOOP:
 	}
 
 	this->storage->getBlock( block, SQRL_BLOCK_USER );
-	if( ! sul_block_1( transaction, block, cbdata )) {
+	if( ! sul_block_1( action, block, cbdata )) {
 		goto NEEDAUTH;
 	}
 	if( this->storage->hasBlock( SQRL_BLOCK_PREVIOUS ) &&
 		this->storage->getBlock( block, SQRL_BLOCK_PREVIOUS ))
 	{
-		sul_block_3( transaction, block, cbdata );
+		sul_block_3( action, block, cbdata );
 	}
 	retVal = true;
 	goto DONE;
@@ -569,7 +569,7 @@ LOOP:
 NEEDAUTH:
 	if( retry ) {
 		retry = false;
-		SqrlClient::getClient()->callAuthenticationRequired(transaction, SQRL_CREDENTIAL_PASSWORD);
+		SqrlClient::getClient()->callAuthenticationRequired(action, SQRL_CREDENTIAL_PASSWORD);
 		goto LOOP;
 	}
 
@@ -578,15 +578,15 @@ DONE:
 	return retVal;
 }
 
-bool SqrlUser::tryLoadRescue( SqrlAction *transaction, bool retry )
+bool SqrlUser::tryLoadRescue( SqrlAction *action, bool retry )
 {
-	if( !transaction ) return false;
-	if( transaction->getUser() != this ) {
+	if( !action ) return false;
+	if( action->getUser() != this ) {
 		return false;
 	}
 	bool retVal = false;
 	struct Sqrl_User_s_callback_data cbdata;
-	cbdata.transaction = transaction;
+	cbdata.action = action;
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
 	SqrlBlock *block = SqrlBlock::create();
@@ -600,21 +600,21 @@ LOOP:
 	}
 
 	this->storage->getBlock( block, SQRL_BLOCK_RESCUE );
-	if( ! sul_block_2( transaction, block, cbdata )) {
+	if( ! sul_block_2( action, block, cbdata )) {
 		goto NEEDAUTH;
 	}
-	this->regenKeys( transaction );
+	this->regenKeys( action );
 	if( this->storage->hasBlock( SQRL_BLOCK_PREVIOUS ) &&
 		this->storage->getBlock( block, SQRL_BLOCK_PREVIOUS ))
 	{
-		sul_block_3( transaction, block, cbdata );
+		sul_block_3( action, block, cbdata );
 	}
 	goto DONE;
 
 NEEDAUTH:
 	if( retry ) {
 		retry = false;
-		SqrlClient::getClient()->callAuthenticationRequired( transaction, SQRL_CREDENTIAL_RESCUE_CODE );
+		SqrlClient::getClient()->callAuthenticationRequired( action, SQRL_CREDENTIAL_RESCUE_CODE );
 		goto LOOP;
 	}
 

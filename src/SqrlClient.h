@@ -32,19 +32,19 @@ protected:
 	virtual void onSend(
 		SqrlAction *t, std::string url, std::string payload ) = 0;
 	virtual void onProgress(
-		SqrlAction *transaction, int progress) = 0;
+		SqrlAction *action, int progress) = 0;
 	virtual void onAsk(
-		SqrlAction *transaction,
+		SqrlAction *action,
 		std::string message, std::string firstButton, std::string secondButton ) = 0;
 	virtual void onAuthenticationRequired(
-		SqrlAction *transaction, Sqrl_Credential_Type credentialType) = 0;
-	virtual void onSelectUser(SqrlAction *transaction) = 0;
+		SqrlAction *action, Sqrl_Credential_Type credentialType) = 0;
+	virtual void onSelectUser(SqrlAction *action) = 0;
 	virtual void onSelectAlternateIdentity(
-		SqrlAction *transaction) = 0;
+		SqrlAction *action) = 0;
 	virtual void onSaveSuggested(
 		SqrlUser *user) = 0;
 	virtual void onActionComplete(
-		SqrlAction *transaction) = 0;
+		SqrlAction *action) = 0;
 
 private:
 	struct CallbackInfo
@@ -66,21 +66,21 @@ private:
 
 	void callSaveSuggested(
 		SqrlUser *user );
-	void callSelectUser( SqrlAction *transaction );
+	void callSelectUser( SqrlAction *action );
 	void callSelectAlternateIdentity(
-		SqrlAction *transaction );
+		SqrlAction *action );
 	void callActionComplete(
-		SqrlAction *transaction );
+		SqrlAction *action );
 	void callProgress(
-		SqrlAction *transaction,
+		SqrlAction *action,
 		int progress );
 	void callAuthenticationRequired(
-		SqrlAction *transaction,
+		SqrlAction *action,
 		Sqrl_Credential_Type credentialType );
 	void callSend(
 		SqrlAction *t, std::string *url, std::string *payload );
 	void callAsk(
-		SqrlAction *transaction,
+		SqrlAction *action,
 		std::string *message, std::string *firstButton, std::string *secondButton );
 
 	static void clientThread();

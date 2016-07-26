@@ -85,14 +85,14 @@ public:
 	bool setPassword( const char *password, size_t password_len );
 	size_t getPasswordLength();
 	void hintLock();
-	uint8_t* key( SqrlAction *transaction, int key_type );
+	uint8_t* key( SqrlAction *action, int key_type );
 	uint8_t* scratch();
 	bool hasKey( int key_type );
 	bool isHintLocked();
-	void hintUnlock( SqrlAction *transaction, char *hint, size_t length );
-	bool forceRescue( SqrlAction *transaction );
-	bool rekey( SqrlAction *transaction );
-	bool forceDecrypt( SqrlAction *transaction );
+	void hintUnlock( SqrlAction *action, char *hint, size_t length );
+	bool forceRescue( SqrlAction *action );
+	bool rekey( SqrlAction *action );
+	bool forceDecrypt( SqrlAction *action );
 	void exportAll( const char *uri, Sqrl_Encoding encoding );
 	void exportRescue( const char *uri, Sqrl_Encoding encoding );
 
@@ -117,14 +117,14 @@ private:
 	static int         enscryptCallback( int percent, void *data );
 	void        ensureKeysAllocated();
 	bool        isMemLocked();
-	bool        tryLoadPassword( SqrlAction *transaction, bool retry );
-	bool        tryLoadRescue( SqrlAction *transaction, bool retry );
+	bool        tryLoadPassword( SqrlAction *action, bool retry );
+	bool        tryLoadRescue( SqrlAction *action, bool retry );
 	void        memLock();
 	void        memUnlock();
 	uint8_t*    newKey( int key_type );
-	bool        regenKeys( SqrlAction *transaction );
+	bool        regenKeys( SqrlAction *action );
 	void        removeKey( int key_type );
-	bool        updateStorage( SqrlAction *transaction );
+	bool        updateStorage( SqrlAction *action );
 	void initialize();
 	bool _keyGen( SqrlAction *t, int key_type, uint8_t *key );
 	SqrlCrypt* _init_t2( SqrlAction *t, SqrlBlock *block, bool forSaving );
@@ -136,7 +136,7 @@ private:
 	bool sus_block_1( SqrlAction *t, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata );
 	static void saveCallbackData( struct Sqrl_User_s_callback_data *cbdata );
 	void _load_unique_id();
-	bool save( SqrlActionSave *transaction );
-	bool saveToBuffer( SqrlActionSave *transaction );
+	bool save( SqrlActionSave *action );
+	bool saveToBuffer( SqrlActionSave *action );
 };
 

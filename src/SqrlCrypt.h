@@ -11,11 +11,11 @@
 class DLL_PUBLIC SqrlCrypt
 {
 public:
-	static int enScrypt( SqrlAction *transaction,
+	static int enScrypt( SqrlAction *action,
 		uint8_t *buf, const char *password, size_t password_len,
 		const uint8_t *salt, uint8_t salt_len,
 		uint16_t iterations, uint8_t nFactor = 9 );
-	static int enScryptMillis( SqrlAction *transaction,
+	static int enScryptMillis( SqrlAction *action,
 		uint8_t *buf, const char *password, size_t password_len,
 		const uint8_t *salt, uint8_t salt_len,
 		int millis, uint8_t nFactor = 9 );
@@ -38,7 +38,7 @@ public:
 	static void generateCurvePublicKey( uint8_t *puk, const uint8_t *prk );
 	static int generateSharedSecret( uint8_t *shared, const uint8_t *puk, const uint8_t *prk );
 
-	bool genKey( SqrlAction *transaction, const char *password, size_t password_len );
+	bool genKey( SqrlAction *action, const char *password, size_t password_len );
 	bool doCrypt();
 
 	uint8_t *plain_text = NULL;

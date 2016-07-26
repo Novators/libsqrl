@@ -78,8 +78,8 @@ int SqrlCrypt::decrypt( uint8_t *plainText, const uint8_t *cipherText, size_t te
 
 }
 
-bool SqrlCrypt::genKey( SqrlAction *transaction, const char *password, size_t password_len ) {
-	if( !transaction || !password ) return false;
+bool SqrlCrypt::genKey( SqrlAction *action, const char *password, size_t password_len ) {
+	if( !action || !password ) return false;
 	if( !this->key || this->count == 0 ) return false;
 	size_t salt_len = this->salt ? 16 : 0;
 	uint32_t newCount;
@@ -111,7 +111,7 @@ bool SqrlCrypt::doCrypt() {
 	return true;
 }
 
-int SqrlCrypt::enScrypt( SqrlAction *transaction,
+int SqrlCrypt::enScrypt( SqrlAction *action,
 	uint8_t *buf, const char *password, size_t password_len,
 	const uint8_t *salt, uint8_t salt_len,
 	uint16_t iterations, uint8_t nFactor ) {
@@ -179,7 +179,7 @@ DONE:
 	return retVal == 0 ? (int)endTime : -1;
 }
 
-int SqrlCrypt::enScryptMillis( SqrlAction *transaction,
+int SqrlCrypt::enScryptMillis( SqrlAction *action,
 	uint8_t *buf, const char *password, size_t password_len,
 	const uint8_t *salt, uint8_t salt_len,
 	int millis, uint8_t nFactor ) {

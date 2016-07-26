@@ -30,7 +30,7 @@ int sqrl_init()
 		SqrlEntropy::start();
 		SQRL_GLOBAL_MUTICES.user = new std::mutex();
 		SQRL_GLOBAL_MUTICES.site = new std::mutex();
-		SQRL_GLOBAL_MUTICES.transaction = new std::mutex();
+		SQRL_GLOBAL_MUTICES.action = new std::mutex();
 		#ifdef DEBUG
 		DEBUG_PRINTF( "libsqrl %s\n", SQRL_LIB_VERSION );
 		#endif
@@ -66,7 +66,7 @@ int sqrl_stop()
 		userCount = SqrlUser::countUsers();
         //siteCount = sqrl_site_count();
 #ifdef DEBUG
-        printf( "%10s: %d remain\n", "sqrl_stop", transactionCount + userCount + siteCount );
+        printf( "%10s: %d remain\n", "sqrl_stop", actionCount + userCount + siteCount );
 #endif
 		return userCount + siteCount;
 	}

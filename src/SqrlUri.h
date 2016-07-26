@@ -17,7 +17,7 @@ public:
 
 	Sqrl_Scheme getScheme();
 
-	/** The Challenge is the full, original URL, or the response body from a previous SQRL transaction */
+	/** The Challenge is the full, original URL, or the response body from a previous SQRL action */
 	char *getChallenge();
 	size_t getChallengeLength();
 	void setChallenge(const char *val);
@@ -32,7 +32,7 @@ public:
 	char *getPrefix();
 	size_t getPrefixLength();
 
-	/** The server URL for the next transaction */
+	/** The server URL for the next action */
 	char *getUrl();
 	size_t getUrlLength();
 	void setUrl(const char *val);
