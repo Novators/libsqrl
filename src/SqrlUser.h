@@ -6,6 +6,7 @@
 #include "SqrlStorage.fwd.h"
 #include "SqrlCrypt.fwd.h"
 #include "SqrlActionSave.fwd.h"
+#include "SqrlActionLock.fwd.h"
 
 #define USER_MAX_KEYS 16
 
@@ -57,6 +58,7 @@ class DLL_PUBLIC SqrlUser
 {
 	friend class SqrlActionSave;
 	friend class SqrlActionGenerate;
+	friend class SqrlActionLock;
 
 public:
 	static SqrlUser *create();
@@ -85,7 +87,6 @@ public:
 	bool uniqueIdMatches( const char *unique_id );
 	bool setPassword( const char *password, size_t password_len );
 	size_t getPasswordLength();
-	void hintLock();
 	uint8_t* key( SqrlAction *action, int key_type );
 	uint8_t* scratch();
 	bool hasKey( int key_type );

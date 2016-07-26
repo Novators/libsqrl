@@ -244,58 +244,6 @@ bool SqrlUser::isHintLocked()
 	return true;
 }
 
-void SqrlUser::hintLock()
-{
-	// TODO: Move this to SqrlActionLock
-	if (this->isHintLocked()) return;
-	if( this->keys->password_len == 0 ) {
-		return;
-	}
-	SqrlActionLock *action = new SqrlActionLock( this );
-	struct Sqrl_User_s_callback_data cbdata;
-	cbdata.action = action;
-	cbdata.adder = 0;
-	cbdata.multiplier = 1;
-
-	SqrlCrypt crypt = SqrlCrypt();
-	uint8_t iv[12] = {0};
-	crypt.plain_text = this->keys->keys[0];
-	crypt.text_len = sizeof( struct Sqrl_Keys ) - KEY_SCRATCH_SIZE;
-	crypt.salt = this->keys->scratch;
-	crypt.iv = iv;
-	crypt.tag = this->keys->scratch + 16;
-	crypt.cipher_text = this->keys->scratch + 64;
-	crypt.add = NULL;
-	crypt.add_len = 0;
-	crypt.nFactor = SQRL_DEFAULT_N_FACTOR;
-	crypt.count = this->options.enscryptSeconds * SQRL_MILLIS_PER_SECOND;
-	crypt.flags = SQRL_ENCRYPT | SQRL_MILLIS;
-
-	randombytes_buf( crypt.salt, 16 );
-	uint8_t *key = this->keys->scratch + 32;
-	size_t password_len = this->options.hintLength;
-	if( password_len == 0 || this->keys->password_len < password_len ) {
-		password_len = this->keys->password_len;
-	}
-
-	if( crypt.genKey( action, this->keys->password, password_len ) ) {
-		this->hint_iterations = crypt.count;
-	}
-	if( this->hint_iterations <= 0 ||
-		!crypt.doCrypt()) {
-		// Encryption failed!
-		this->hint_iterations = 0;
-		sodium_memzero( this->keys->scratch, KEY_SCRATCH_SIZE );
-		goto DONE;
-	}
-
-	sodium_memzero( crypt.plain_text, crypt.text_len );
-	sodium_memzero( key, SQRL_KEY_SIZE );
-
-DONE:
-	return;
-}
-
 void SqrlUser::hintUnlock( SqrlAction *action, 
 				char *hint, 
 				size_t length )
