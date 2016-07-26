@@ -7,5 +7,5 @@ class DLL_PUBLIC SqrlActionGenerate : public SqrlIdentityAction
 {
 public:
 	SqrlActionGenerate();
-	void run();
+	int run( int currentState );
 };

@@ -10,6 +10,8 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlAction.h"
 #include "SqrlUri.h"
 #include "SqrlUser.h"
+#include "SqrlClient.h"
+#include <algorithm>
 
 struct Sqrl_Transaction_List {
 	SqrlAction *transaction;
@@ -34,87 +36,55 @@ printf( "%10s: %d\n", tag, _ptcI )
 SqrlAction::SqrlAction()
 : user(NULL),
   uri(NULL),
-  referenceCount(1),
-  runState(0),
-  finished(false),
-  running(false) {
-	struct Sqrl_Transaction_List *list = (struct Sqrl_Transaction_List*)calloc( 1, sizeof( struct Sqrl_Transaction_List ) );
-	list->transaction = this;
-	this->mutex.lock();
-	list->next = SQRL_TRANSACTION_LIST;
-	SQRL_TRANSACTION_LIST = list;
-	this->mutex.unlock();
-}
-
-int SqrlAction::countTransactions()
-{
-	SQRL_GLOBAL_MUTICES.transaction->lock();
-    int i = 0;
-    struct Sqrl_Transaction_List *list = SQRL_TRANSACTION_LIST;
-    while( list ) {
-        i++;
-        list = list->next;
-    }
-	SQRL_GLOBAL_MUTICES.transaction->unlock();
-    return i;
-}
-
-void SqrlAction::hold()
-{
-    struct Sqrl_Transaction_List *l;
-	SQRL_GLOBAL_MUTICES.transaction->lock();
-	l = SQRL_TRANSACTION_LIST;
-    while( l ) {
-        if( l->transaction == this ) {
-			this->mutex.lock();
-            this->referenceCount++;
-			this->mutex.unlock();
-            break;
-        }
-        l = l->next;
-    }
-	SQRL_GLOBAL_MUTICES.transaction->unlock();
-}
-
-SqrlAction *SqrlAction::release()
-{
-	bool freeMe = false;
-    struct Sqrl_Transaction_List *l = NULL, *n = NULL;
-	SQRL_GLOBAL_MUTICES.transaction->lock();
-	n = SQRL_TRANSACTION_LIST;
-    while( n ) {
-        if( n->transaction == this ) {
-			this->mutex.lock();
-            this->referenceCount--;
-            if( this->referenceCount < 1 ) {
-                if( l ) l->next = n->next;
-                else SQRL_TRANSACTION_LIST = n->next;
-                free( n );
-                freeMe = true;
-            }
-			this->mutex.unlock();
-            break;
-        }
-        l = n;
-        n = l->next;
-    }
-	SQRL_GLOBAL_MUTICES.transaction->unlock();
-	if( freeMe ) {
-		this->onRelease();
-		if( this->user ) {
-			this->user->release();
-		}
-		if( this->uri ) this->uri = this->uri->release();
-		free( this );
+  state(0),
+  status(SQRL_ACTION_RUNNING),
+  shouldCancel(false) {
+	SqrlClient *client = SqrlClient::getClient();
+	if( !client ) {
+		exit( 1 );
 	}
-	return NULL;
+	client->actionMutex.lock();
+	client->actions.push_back( this );
+	client->actionMutex.unlock();
+}
+
+SqrlAction::~SqrlAction() {
+	SqrlClient *client = SqrlClient::getClient();
+	client->actionMutex.lock();
+	client->actions.erase( 
+		std::remove_if( 
+			client->actions.begin(),
+			client->actions.end(),
+			[this]( SqrlAction* i ) { return i == this; } ),
+		client->actions.end() );
+	client->actionMutex.unlock();
+
+	this->onRelease();
+	if( this->user ) {
+		this->user->release();
+	}
+	if( this->uri ) {
+		this->uri->release();
+	}
+}
+
+int SqrlAction::retActionComplete( int status ) {
+	this->status = status;
+	SqrlClient::getClient()->callActionComplete( this );
+	return SQRL_ACTION_STATE_DELETE;
+}
+
+bool SqrlAction::exec() {
+	if( this->state == SQRL_ACTION_STATE_DELETE ) {
+		delete this;
+		return false;
+	} else {
+		this->state = this->run( this->state );
+		return true;
+	}
 }
 
 void SqrlAction::onRelease() {
-}
-
-bool SqrlAction::isFinished() {
-	return this->finished;
 }
 
 void SqrlAction::setUser( SqrlUser *u )
@@ -158,4 +128,8 @@ void SqrlAction::authenticate( Sqrl_Credential_Type credentialType, const char *
 	case SQRL_CREDENTIAL_RESCUE_CODE:
 		break;
 	}
+}
+
+void SqrlAction::cancel() {
+	this->shouldCancel = true;
 }

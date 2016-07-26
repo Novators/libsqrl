@@ -6,5 +6,5 @@
 class DLL_PUBLIC SqrlActionRekey : public SqrlIdentityAction
 {
 	SqrlActionRekey();
-	void run();
+	int run( int cs );
 };

@@ -4,36 +4,46 @@
 #include "SqrlUser.fwd.h"
 #include "SqrlClient.fwd.h"
 #include "SqrlUri.fwd.h"
+#include <climits>
+
+#define SQRL_ACTION_RUNNING 0
+#define SQRL_ACTION_SUCCESS 1
+#define SQRL_ACTION_FAIL -1
+#define SQRL_ACTION_CANCELED -2
+
+#define SQRL_ACTION_STATE_DELETE INT_MIN
 
 class DLL_PUBLIC SqrlAction
 {
+	friend class SqrlClient;
 	friend class SqrlUser;
 	friend class SqrlIdentityAction;
 
 public:
-	/* virtual */ void run();
-	bool isFinished();
-	
-	void hold();
-	SqrlAction *release();
-	void setUser(SqrlUser *user);
-	SqrlUser* getUser();
-	static int countTransactions();
-	SqrlUri *getUri();
-	void setUri(SqrlUri *uri);
+	SqrlAction();
+
+	void cancel();
 	void authenticate( Sqrl_Credential_Type credentialType,
 		const char *credential, size_t credentialLength );
-	
+
+	SqrlUser* getUser();
+	void setUser(SqrlUser *user);
+
+	SqrlUri *getUri();
+	void setUri(SqrlUri *uri);
+
 protected:
+	~SqrlAction();
+	virtual int run( int currentState ) = 0;
+
+	int retActionComplete( int status );
+	bool exec();
 	void onRelease();
 
-	SqrlAction();
 	SqrlUser *user;
 	SqrlUri *uri;
-	std::mutex mutex;
-	int referenceCount;
-	int runState;
-	bool finished;
-	bool running;
+	int state;
+	int status;
+	bool shouldCancel;
 };
 

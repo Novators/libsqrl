@@ -294,8 +294,9 @@ bool SqrlUser::sus_block_1( SqrlAction *transaction, SqrlBlock *block, struct Sq
 	if (transaction->getUser() != this) return false;
 	bool retVal = true;
 	SqrlCrypt crypt = SqrlCrypt();
-	SqrlClient::getClient()->callAuthenticationRequired( cbdata.transaction, SQRL_CREDENTIAL_PASSWORD );
-	// TODO: Verify Password obtained
+	if( this->getPasswordLength() == 0 ) {
+		return false;
+	}
 
 	uint8_t *keyPointer;
 	block->init( 1, 125 );

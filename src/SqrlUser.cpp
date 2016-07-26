@@ -29,7 +29,8 @@ int SqrlUser::enscryptCallback( int percent, void *data )
 		if( progress > 100 ) progress = 100;
 		if( progress < 0 ) progress = 0;
 		if( percent == 100 && progress >= 99 ) progress = 100;
-		return SqrlClient::getClient()->onProgress(cbdata->transaction, progress);
+		SqrlClient::getClient()->onProgress(cbdata->transaction, progress);
+		return 0;
 	} else {
 		return 1;
 	}
@@ -255,6 +256,7 @@ bool SqrlUser::isHintLocked()
 
 void SqrlUser::hintLock()
 {
+	// TODO: Move this to SqrlActionLock
 	if (this->isHintLocked()) return;
 	if( this->keys->password_len == 0 ) {
 		return;
@@ -301,7 +303,7 @@ void SqrlUser::hintLock()
 	sodium_memzero( key, SQRL_KEY_SIZE );
 
 DONE:
-	transaction->release();
+	return;
 }
 
 void SqrlUser::hintUnlock( SqrlAction *transaction, 

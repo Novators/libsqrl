@@ -4,47 +4,62 @@
 #include "SqrlUser.h"
 #include "SqrlClient.h"
 
-SqrlActionSave::SqrlActionSave( SqrlUser *user, SqrlUri *uri ) 
+SqrlActionSave::SqrlActionSave( SqrlUser *user, SqrlUri *uri, Sqrl_Export exportType, Sqrl_Encoding encodingType )
 	: SqrlIdentityAction( user ),
 	buffer(NULL),
-	buffer_len(0) {
+	buffer_len(0),
+	exportType(exportType),
+	encodingType(encodingType) {
 	if( uri ) {
 		this->uri = uri->copy();
-		this->exportType = SQRL_EXPORT_ALL;
-		this->encodingType = SQRL_ENCODING_BINARY;
 	} else {
 		this->uri = NULL;
-		this->exportType = SQRL_EXPORT_ALL;
-		this->encodingType = SQRL_ENCODING_BASE64;
 	}
 }
 
-SqrlActionSave::SqrlActionSave( SqrlUser *user, const char *path ) 
+SqrlActionSave::SqrlActionSave( SqrlUser *user, const char *path, Sqrl_Export exportType, Sqrl_Encoding encodingType )
 	: SqrlIdentityAction( user ),
 	buffer(NULL),
-	buffer_len(NULL) {
+	buffer_len(NULL),
+	exportType( exportType ),
+	encodingType( encodingType ) {
 	if( path ) {
 		this->uri = SqrlUri::parse( path );
-		this->exportType = SQRL_EXPORT_ALL;
-		this->encodingType = SQRL_ENCODING_BINARY;
 	} else {
 		this->uri = NULL;
-		this->exportType = SQRL_EXPORT_ALL;
-		this->encodingType = SQRL_ENCODING_BASE64;
 	}
 }
 
-void SqrlActionSave::run() {
-	if( this->running || this->finished || this->runState < 0 ) return;
-	this->running = true;
-	if( this->uri ) {
-		this->runState = this->user->save( this ) ? 1 : -1;
-	} else {
-		this->runState = this->user->saveToBuffer( this ) ? 1 : -1;
+int SqrlActionSave::run( int cs ) {
+	SqrlClient *client = SqrlClient::getClient();
+	if( this->shouldCancel ) {
+		return this->retActionComplete( SQRL_ACTION_CANCELED );
 	}
-	this->finished = true;
-	SqrlClient::getClient()->callActionComplete( this );
-	this->running = false;
+
+	switch( cs ) {
+	case 0:
+		if( !this->user ) {
+			client->callSelectUser( this );
+			return cs;
+		}
+		return cs + 1;
+	case 1:
+		if( this->user->getPasswordLength() == 0 ) {
+			client->callAuthenticationRequired( this, SQRL_CREDENTIAL_NEW_PASSWORD );
+			return cs;
+		}
+		return cs + 1;
+	case 2:
+		if( this->uri ) {
+			this->state = this->user->save( this ) ? 1 : -1;
+		} else {
+			this->state = this->user->saveToBuffer( this ) ? 1 : -1;
+		}
+		return this->retActionComplete( SQRL_ACTION_SUCCESS );
+	default:
+		// Invalid State
+		return this->retActionComplete( SQRL_ACTION_FAIL );
+	}
 }
 
 Sqrl_Export SqrlActionSave::getExportType() {

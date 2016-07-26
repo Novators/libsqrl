@@ -8,5 +8,5 @@ class DLL_PUBLIC SqrlActionChangePassword : public SqrlIdentityAction
 {
 	SqrlActionChangePassword();
 	SqrlActionChangePassword( SqrlUser *user );
-	void run();
+	int run( int cs );
 };

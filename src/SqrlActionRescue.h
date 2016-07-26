@@ -6,5 +6,5 @@
 class DLL_PUBLIC SqrlActionRescue : public SqrlIdentityAction
 {
 	SqrlActionRescue();
-	void run();
+	int run( int cs );
 };

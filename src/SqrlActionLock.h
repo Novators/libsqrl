@@ -8,6 +8,5 @@ class DLL_PUBLIC SqrlActionLock : public SqrlIdentityAction
 	friend class SqrlUser;
 public:
 	SqrlActionLock( SqrlUser *user );
-	void run();
-
+	int run( int cs );
 };

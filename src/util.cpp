@@ -54,24 +54,21 @@ int sqrl_stop()
 {
 	if( sqrl_is_initialized ) {
 		SqrlEntropy::stop();
-        int transactionCount, userCount, siteCount = 0;
+        int userCount, siteCount = 0;
 #ifdef DEBUG
-		transactionCount = SqrlAction::countTransactions();
 		userCount = SqrlUser::countUsers();
 		DEBUG_PRINTF( "%10s: %d open sites\n", "sqrl_stop", siteCount );
-		DEBUG_PRINTF( "%10s: %d open transactions\n", "sqrl_stop", transactionCount );
 		DEBUG_PRINTF( "%10s: %d open users\n", "sqrl_stop", userCount );
         DEBUG_PRINTF( "%10s: Cleaning Up...\n", "sqrl_stop" );
 #endif
         //sqrl_client_site_maintenance( true );
         //sqrl_client_user_maintenance( true );
-        transactionCount = SqrlAction::countTransactions();
 		userCount = SqrlUser::countUsers();
         //siteCount = sqrl_site_count();
 #ifdef DEBUG
         printf( "%10s: %d remain\n", "sqrl_stop", transactionCount + userCount + siteCount );
 #endif
-		return transactionCount + userCount + siteCount;
+		return userCount + siteCount;
 	}
 	return -1;
 }

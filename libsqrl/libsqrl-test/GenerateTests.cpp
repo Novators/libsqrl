@@ -2,6 +2,7 @@
 #include "stdafx.h"
 #include "CppUnitTest.h"
 
+#include <Windows.h>
 #include "sqrl.h"
 #include "SqrlClient.h"
 #include "SqrlUser.h"
@@ -13,26 +14,23 @@ using namespace std;
 
 namespace libsqrltest
 {
+	int completed = 0;
 	class GenClient : public SqrlClient
 	{
 		void onSend(
 			SqrlAction *t,
-			const char *url, size_t url_len,
-			const char *payload, size_t payload_len ) {
+			std::string url, std::string payload ) {
 			Assert::Fail();
 		}
 
-		int onProgress(
+		void onProgress(
 			SqrlAction *transaction,
 			int progress ) {
-			return 0;
 		}
 
 		void onAsk(
 			SqrlAction *transaction,
-			const char *message, size_t message_len,
-			const char *firstButton, size_t firstButton_len,
-			const char *secondButton, size_t secondButton_len ) {
+			std::string message, std::string firstButton, std::string secondButton ) {
 			Assert::Fail();
 		}
 
@@ -56,12 +54,10 @@ namespace libsqrltest
 			Assert::Fail();
 		}
 		void onSaveSuggested( SqrlUser *user ) {
-			SqrlActionSave *save = new SqrlActionSave( user, "file://test2.sqrl" );
-			save->setEncodingType( SQRL_ENCODING_BINARY );
-			save->run();
+			new SqrlActionSave( user, "file://test2.sqrl" );
 		}
 		void onActionComplete( SqrlAction *action ) {
-
+			completed++;
 		}
 	};
 
@@ -78,8 +74,10 @@ public:
 	}
 
 	TEST_METHOD( generateId ) {
-		SqrlActionGenerate *a = new SqrlActionGenerate();
-		a->run();
+		new SqrlActionGenerate();
+		while( completed < 2 ) {
+			Sleep( 100 );
+		}
 	}
 
 	TEST_CLASS_CLEANUP( StopSqrl ) {

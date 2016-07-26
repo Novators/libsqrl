@@ -7,39 +7,35 @@ SqrlActionGenerate::SqrlActionGenerate() : SqrlIdentityAction(NULL) {
 
 }
 
-void SqrlActionGenerate::run() {
-	if( this->running || this->finished || this->runState < 0 ) return;
-	this->running = true;
-	if( !this->user ) {
-		SqrlUser *user = new SqrlUser();
-		this->setUser( user );
-		user->release();
-	}
+int SqrlActionGenerate::run( int cs ) {
 	SqrlClient *client = SqrlClient::getClient();
+	if( this->shouldCancel ) {
+		return this->retActionComplete( SQRL_ACTION_CANCELED );
+	}
 
-	switch( this->runState ) {
+	switch( cs ) {
 	case 0:
+		if( !this->user ) {
+			SqrlUser *user = new SqrlUser();
+			this->setUser( user );
+		}
 		if( !this->user->rekey( this ) ) {
-			this->runState = -1;
-			this->finished = true;
-			break;
+			return this->retActionComplete( SQRL_ACTION_FAIL );
 		}
-		this->runState++;
+		return cs + 1;
 	case 1:
-		client->callAuthenticationRequired( this, SQRL_CREDENTIAL_NEW_PASSWORD );
 		if( this->user->getPasswordLength() == 0 ) {
-			this->runState = -1;
-			this->finished = true;
-			break;
+			client->callAuthenticationRequired( this, SQRL_CREDENTIAL_NEW_PASSWORD );
+			return cs;
 		}
-		this->runState++;
+		return cs + 1;
 	case 2:
 		client->callSaveSuggested( this->user );
-		this->finished = true;
-		break;
-	}
-	this->running = false;
-	if( this->finished ) {
-		client->callActionComplete( this );
+		return cs + 1;
+	case 3:
+		return this->retActionComplete( SQRL_ACTION_SUCCESS );
+	default:
+		// Invalid State
+		return this->retActionComplete( SQRL_ACTION_FAIL );
 	}
 }

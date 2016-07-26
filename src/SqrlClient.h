@@ -1,6 +1,7 @@
 #pragma once
 
 #include "sqrl.h"
+#include <queue>
 
 class DLL_PUBLIC SqrlClient
 {
@@ -24,25 +25,19 @@ public:
 	void updateIdleTime( int idleTime );
 	void screenLocked();
 	void userChanged();
-	void loop();
 
 protected:
 
+	virtual void onLoop();
 	virtual void onSend(
-		SqrlAction *t,
-		const char *url, size_t url_len,
-		const char *payload, size_t payload_len) = 0;
-	virtual int onProgress(
-		SqrlAction *transaction,
-		int progress) = 0;
+		SqrlAction *t, std::string url, std::string payload ) = 0;
+	virtual void onProgress(
+		SqrlAction *transaction, int progress) = 0;
 	virtual void onAsk(
 		SqrlAction *transaction,
-		const char *message, size_t message_len,
-		const char *firstButton, size_t firstButton_len,
-		const char *secondButton, size_t secondButton_len) = 0;
+		std::string message, std::string firstButton, std::string secondButton ) = 0;
 	virtual void onAuthenticationRequired(
-		SqrlAction *transaction,
-		Sqrl_Credential_Type credentialType) = 0;
+		SqrlAction *transaction, Sqrl_Credential_Type credentialType) = 0;
 	virtual void onSelectUser(SqrlAction *transaction) = 0;
 	virtual void onSelectAlternateIdentity(
 		SqrlAction *transaction) = 0;
@@ -52,6 +47,23 @@ protected:
 		SqrlAction *transaction) = 0;
 
 private:
+	struct CallbackInfo
+	{
+		CallbackInfo();
+		~CallbackInfo();
+
+		int cbType;
+		int progress;
+		Sqrl_Credential_Type credentialType;
+		void *ptr;
+		std::string* str[3];
+	};
+	std::queue<struct CallbackInfo*> callbackQueue;
+	std::deque<SqrlAction *>actions;
+	std::mutex actionMutex;
+
+	void loop();
+
 	void callSaveSuggested(
 		SqrlUser *user );
 	void callSelectUser( SqrlAction *transaction );
@@ -59,20 +71,20 @@ private:
 		SqrlAction *transaction );
 	void callActionComplete(
 		SqrlAction *transaction );
-	int callProgress(
+	void callProgress(
 		SqrlAction *transaction,
 		int progress );
 	void callAuthenticationRequired(
 		SqrlAction *transaction,
 		Sqrl_Credential_Type credentialType );
 	void callSend(
-		SqrlAction *t,
-		const char *url, size_t url_len,
-		const char *payload, size_t payload_len );
+		SqrlAction *t, std::string *url, std::string *payload );
 	void callAsk(
 		SqrlAction *transaction,
-		const char *message, size_t message_len,
-		const char *firstButton, size_t firstButton_len,
-		const char *secondButton, size_t secondButton_len );
+		std::string *message, std::string *firstButton, std::string *secondButton );
+
+	static void clientThread();
+	std::thread *myThread;
+	bool stopping = false;
 
 };
