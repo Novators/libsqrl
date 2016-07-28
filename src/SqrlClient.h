@@ -22,11 +22,11 @@ public:
 	~SqrlClient();
 	static SqrlClient *getClient();
 
-	void updateIdleTime( int idleTime );
-	void screenLocked();
-	void userChanged();
-
 protected:
+
+	virtual int getUserIdleSeconds();
+	virtual bool isScreenLocked();
+	virtual bool isUserChanged();
 
 	virtual void onLoop();
 	virtual void onSend(

@@ -43,13 +43,25 @@ SqrlClient::~SqrlClient() {
 	this->stopping = true;
 	this->myThread->join();
 	delete this->myThread;
-	SqrlClient::client = NULL;
 	SqrlEntropy::stop();
+	SqrlClient::client = NULL;
 	sqrl_client_mutex.unlock();
 }
 
 SqrlClient *SqrlClient::getClient() {
 	return SqrlClient::client;
+}
+
+int SqrlClient::getUserIdleSeconds() {
+	return 0;
+}
+
+bool SqrlClient::isScreenLocked() {
+	return false;
+}
+
+bool SqrlClient::isUserChanged() {
+	return false;
 }
 
 void SqrlClient::onLoop() {
@@ -115,7 +127,13 @@ void SqrlClient::clientThread() {
 	SqrlClient *client;
 	while( (client = SqrlClient::getClient()) && !client->stopping ) {
 		client->loop();
-		sqrl_sleep( 100 );
+		if( client->actions.empty() ) {
+			sqrl_sleep( 500 );
+		} else {
+			if( client->callbackQueue.empty() ) {
+				sqrl_sleep( 50 );
+			}
+		}
 	}
 	while( !client->callbackQueue.empty() ) {
 		struct CallbackInfo *info = client->callbackQueue.front();

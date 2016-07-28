@@ -63,19 +63,6 @@ void SqrlUser::ensureKeysAllocated()
 	}
 }
 
-#if defined(DEBUG) && DEBUG_PRINT_USER_COUNT==1
-#define PRINT_USER_COUNT(tag) \
-int _pucI = 0;\
-struct SqrlUserList *_pucC = SQRL_USER_LIST;\
-while( _pucC ) {\
-	_pucI++;\
-	_pucC = _pucC->next;\
-}\
-printf( "%10s: %d\n", tag, _pucI )
-#else
-#define PRINT_USER_COUNT(tag)
-#endif
-
 SqrlUser* SqrlUser::find( const char *unique_id )
 {
 	SqrlClient *client = SqrlClient::getClient();

@@ -9,6 +9,7 @@
 #include "SqrlEntropy.h"
 #include "SqrlBase64.h"
 #include "NullClient.h"
+#include "Windows.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace std;

@@ -20,19 +20,6 @@ struct Sqrl_action_List {
 
 struct Sqrl_action_List *SQRL_action_LIST = NULL;
 
-#if defined(DEBUG) && DEBUG_PRINT_action_COUNT==1
-#define PRINT_action_COUNT(tag) \
-int _ptcI = 0;\
-struct Sqrl_action_List *_ptcC = SQRL_action_LIST;\
-while( _ptcC ) {\
-    _ptcI++;\
-    _ptcC = _ptcC->next;\
-}\
-printf( "%10s: %d\n", tag, _ptcI )
-#else
-#define PRINT_action_COUNT(tag)
-#endif
-
 SqrlAction::SqrlAction()
 : user(NULL),
   uri(NULL),

@@ -7,8 +7,8 @@ For more details, see the LICENSE file included with this package.
 **/
 #pragma once
 
-#define SQRL_LIB_VERSION_MAJOR 1
-#define SQRL_LIB_VERSION_MINOR 1
-#define SQRL_LIB_VERSION_BUILD_DATE 16208
-#define SQRL_LIB_VERSION_REVISION 98
-#define SQRL_LIB_VERSION "1.1.16208.98"
+#define SQRL_LIB_VERSION_MAJOR 0
+#define SQRL_LIB_VERSION_MINOR 3
+#define SQRL_LIB_VERSION_BUILD_DATE 16210
+#define SQRL_LIB_VERSION_REVISION 1
+#define SQRL_LIB_VERSION "0.3.16210.1"
