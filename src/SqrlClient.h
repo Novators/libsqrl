@@ -5,6 +5,7 @@
 
 class DLL_PUBLIC SqrlClient
 {
+	friend class SqrlClientAsync;
 	friend class SqrlAction;
 	friend class SqrlUser;
 	friend class SqrlActionSave;
@@ -23,6 +24,7 @@ public:
 	static SqrlClient *getClient();
 
 protected:
+	void initialize();
 
 	virtual int getUserIdleSeconds();
 	virtual bool isScreenLocked();
@@ -63,7 +65,7 @@ private:
 	std::mutex actionMutex;
 	std::mutex userMutex;
 
-	void loop();
+	bool loop();
 
 	void callSaveSuggested(
 		SqrlUser *user );
@@ -83,9 +85,5 @@ private:
 	void callAsk(
 		SqrlAction *action,
 		std::string *message, std::string *firstButton, std::string *secondButton );
-
-	static void clientThread();
-	std::thread *myThread;
-	bool stopping = false;
 
 };

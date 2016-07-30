@@ -16,6 +16,7 @@
 class DLL_PUBLIC SqrlAction
 {
 	friend class SqrlClient;
+	friend class SqrlClientAsync;
 	friend class SqrlUser;
 	friend class SqrlIdentityAction;
 

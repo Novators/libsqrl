@@ -38,7 +38,7 @@ namespace libsqrltest
 			this->testString(uri->getPrefix(), "https://sqrlid.com");
 			this->testString(uri->getSFN(), "SQRLid");
 			uri->release();
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 		
 		TEST_METHOD(Uri2)
@@ -53,7 +53,7 @@ namespace libsqrltest
 			this->testString(uri->getPrefix(), "https://sqrlid.com");
 			this->testString(uri->getSFN(), "SQRLid");
 			uri->release();
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 		
 		TEST_METHOD(Uri3)
@@ -68,7 +68,7 @@ namespace libsqrltest
 			this->testString(uri->getPrefix(), "https://sqrlid.com:8080");
 			this->testString(uri->getSFN(), "SQRLid");
 			uri->release();
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 		
 		TEST_METHOD(FileUri)
@@ -83,7 +83,7 @@ namespace libsqrltest
 			this->testString(uri->getPrefix(), NULL);
 			this->testString(uri->getSFN(), NULL);
 			uri->release();
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 		
 		TEST_METHOD(SQRLUriWithoutSFN)
@@ -91,7 +91,7 @@ namespace libsqrltest
 			new NullClient();
 			SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com:8080/login?nut=blah");
 			Assert::IsNull( uri );
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 		
 		TEST_METHOD(InvalidSQRLUrl)
@@ -99,7 +99,7 @@ namespace libsqrltest
 			new NullClient();
 			SqrlUri *uri = SqrlUri::parse("http://google.com");
 			Assert::IsNull( uri );
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 
 		TEST_CLASS_CLEANUP(StopSqrl)

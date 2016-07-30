@@ -2,14 +2,14 @@
 
 #include "stdafx.h"
 #include "CppUnitTest.h"
-#include "SqrlClient.h"
+#include "SqrlClientAsync.h"
 #include "SqrlAction.h"
 #include "SqrlActionSave.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace std;
 
-class GenClient : public SqrlClient
+class GenClient : public SqrlClientAsync
 {
 	void onSend(
 		SqrlAction *t,

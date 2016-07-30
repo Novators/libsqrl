@@ -29,7 +29,7 @@ public:
 	}
 
 	TEST_METHOD( Base64 ) {
-		new NullClient();
+		NullClient *client = new NullClient();
 		const int NT = 10;
 		std::string evector[NT] = {
 			"",
@@ -66,7 +66,7 @@ public:
 			Assert::IsTrue( s.length() == evector[i].length() );
 			Assert::IsTrue( 0 == s.compare( evector[i] ) );
 		}
-		delete NullClient::getClient();
+		delete client;
 	}
 	
 

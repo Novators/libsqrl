@@ -21,6 +21,10 @@ static bool sqrl_is_initialized = false;
 static std::mutex sqrl_client_mutex;
 
 SqrlClient::SqrlClient() {
+	this->initialize();
+}
+
+void SqrlClient::initialize() {
 	sqrl_client_mutex.lock();
 	if( SqrlClient::client != NULL ) {
 		// Enforce a single SqrlClient object
@@ -34,15 +38,11 @@ SqrlClient::SqrlClient() {
 
 	SqrlEntropy::start();
 	SqrlClient::client = this;
-	this->myThread = new std::thread( SqrlClient::clientThread );
 	sqrl_client_mutex.unlock();
 }
 
 SqrlClient::~SqrlClient() {
 	sqrl_client_mutex.lock();
-	this->stopping = true;
-	this->myThread->join();
-	delete this->myThread;
 	SqrlEntropy::stop();
 	SqrlClient::client = NULL;
 	sqrl_client_mutex.unlock();
@@ -67,7 +67,7 @@ bool SqrlClient::isUserChanged() {
 void SqrlClient::onLoop() {
 }
 
-void SqrlClient::loop() {
+bool SqrlClient::loop() {
 	this->onLoop();
 	SqrlAction *action;
 	while( !this->callbackQueue.empty() ) {
@@ -121,31 +121,10 @@ void SqrlClient::loop() {
 			}
 		}
 	}
-}
-
-void SqrlClient::clientThread() {
-	SqrlClient *client;
-	while( (client = SqrlClient::getClient()) && !client->stopping ) {
-		client->loop();
-		if( client->actions.empty() ) {
-			sqrl_sleep( 500 );
-		} else {
-			if( client->callbackQueue.empty() ) {
-				sqrl_sleep( 50 );
-			}
-		}
+	if( this->actions.empty() && this->callbackQueue.empty() ) {
+		return false;
 	}
-	while( !client->callbackQueue.empty() ) {
-		struct CallbackInfo *info = client->callbackQueue.front();
-		client->callbackQueue.pop();
-		delete info;
-	}
-	client->actionMutex.lock();
-	while( client->actions.size() > 0 ) {
-		SqrlAction *action = client->actions.front();
-		delete action;
-	}
-	client->actionMutex.unlock();
+	return true;
 }
 
 void SqrlClient::callSaveSuggested( SqrlUser * user ) {

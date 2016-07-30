@@ -74,7 +74,7 @@ namespace libsqrltest
 				delete input, output;
 			}
 			fclose( fp );
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 
 		TEST_METHOD( EnScrypt_1i ) {
@@ -86,7 +86,7 @@ namespace libsqrltest
 			std::string str;
 			sqrl_hex_encode( &str, buf, 32 );
 			Assert::IsTrue( str.compare( "a8ea62a6e1bfd20e4275011595307aa302645c1801600ef5cd79bf9d884d911c" ) == 0 );
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 
 		TEST_METHOD( EnScrypt_1s ) {
@@ -98,7 +98,7 @@ namespace libsqrltest
 			int i = SqrlCrypt::enScryptMillis( NULL, buf, NULL, 0, NULL, 0, 1000, 9 );
 			time = SqrlCrypt::enScrypt( NULL, buf2, NULL, 0, NULL, 0, i, 9 );
 			Assert::IsTrue( memcmp( buf, buf2, 32 ) == 0 );
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 
 		TEST_METHOD( EnScrypt_100i ) {
@@ -110,7 +110,7 @@ namespace libsqrltest
 			std::string str;
 			sqrl_hex_encode( &str, buf, 32 );
 			Assert::IsTrue( str.compare( "45a42a01709a0012a37b7b6874cf16623543409d19e7740ed96741d2e99aab67" ) == 0 );
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 
 		TEST_METHOD( EnScrypt_p123i ) {
@@ -124,7 +124,7 @@ namespace libsqrltest
 			std::string str;
 			sqrl_hex_encode( &str, buf, 32 );
 			Assert::IsTrue( str.compare("129d96d1e735618517259416a605be7094c2856a53c14ef7d4e4ba8e4ea36aeb" ) == 0 );
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 
 		TEST_METHOD( EnScrypt_p123i_salt ) {
@@ -138,7 +138,7 @@ namespace libsqrltest
 			std::string str;
 			sqrl_hex_encode( &str, buf, 32 );
 			Assert::IsTrue( str.compare("2f30b9d4e5c48056177ff90a6cc9da04b648a7e8451dfa60da56c148187f6a7d" ) == 0 );
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 
 		TEST_METHOD( IdLockKeys ) {
@@ -192,7 +192,7 @@ namespace libsqrltest
 			printf( "URK: %s\n", buf.data() );
 
 			Assert::IsTrue( SqrlCrypt::verifySignature( msg, sig, vuk ) );
-			delete NullClient::getClient();
+			delete (NullClient*)NullClient::getClient();
 		}
 
 		TEST_CLASS_CLEANUP( StopSqrl ) {

@@ -2,13 +2,13 @@
 
 #include "stdafx.h"
 #include "CppUnitTest.h"
-#include "SqrlClient.h"
+#include "SqrlClientAsync.h"
 #include "SqrlAction.h"
 
 using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace std;
 
-class NullClient : public SqrlClient
+class NullClient : public SqrlClientAsync
 {
 	void onSend( SqrlAction *t, std::string url, std::string payload ) {
 		Assert::Fail();

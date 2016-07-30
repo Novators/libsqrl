@@ -153,6 +153,9 @@
     <ClCompile Include="..\..\src\SqrlEntropy.cpp">
       <Filter>Source Files\Entropy</Filter>
     </ClCompile>
+    <ClCompile Include="..\..\src\SqrlClientAsync.cpp">
+      <Filter>Source Files\Client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\src\sqrl_internal.h">
@@ -328,6 +331,12 @@
     </ClInclude>
     <ClInclude Include="..\..\src\version.h">
       <Filter>Header Files\Util</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlClientAsync.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
+    </ClInclude>
+    <ClInclude Include="..\..\src\SqrlClientAsync.h">
+      <Filter>Header Files\Client</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>

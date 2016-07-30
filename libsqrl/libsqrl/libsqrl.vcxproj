@@ -220,6 +220,7 @@
       <ExcludedFromBuild Condition="'$(Configuration)|$(Platform)'=='Release|x64'">true</ExcludedFromBuild>
     </ClCompile>
     <ClCompile Include="..\..\src\SqrlClient.cpp" />
+    <ClCompile Include="..\..\src\SqrlClientAsync.cpp" />
     <ClCompile Include="..\..\src\SqrlCrypt.cpp" />
     <ClCompile Include="..\..\src\SqrlEntropy.cpp" />
     <ClCompile Include="..\..\src\SqrlIdentityAction.cpp" />
@@ -267,6 +268,8 @@
     <ClInclude Include="..\..\src\sqrl.h" />
     <ClInclude Include="..\..\src\SqrlClient.fwd.h" />
     <ClInclude Include="..\..\src\SqrlClient.h" />
+    <ClInclude Include="..\..\src\SqrlClientAsync.fwd.h" />
+    <ClInclude Include="..\..\src\SqrlClientAsync.h" />
     <ClInclude Include="..\..\src\SqrlCrypt.fwd.h" />
     <ClInclude Include="..\..\src\SqrlCrypt.h" />
     <ClInclude Include="..\..\src\SqrlEncoder.fwd.h" />
