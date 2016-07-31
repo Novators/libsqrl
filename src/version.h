@@ -10,5 +10,5 @@ For more details, see the LICENSE file included with this package.
 #define SQRL_LIB_VERSION_MAJOR 0
 #define SQRL_LIB_VERSION_MINOR 3
 #define SQRL_LIB_VERSION_BUILD_DATE 16213
-#define SQRL_LIB_VERSION_REVISION 4
-#define SQRL_LIB_VERSION "0.3.16213.4"
+#define SQRL_LIB_VERSION_REVISION 6
+#define SQRL_LIB_VERSION "0.3.16213.6"
