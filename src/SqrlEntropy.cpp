@@ -50,6 +50,8 @@ void SqrlEntropy::update() {
 void
 SqrlEntropy::threadFunction() {
 	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)SqrlEntropy::state;
+	crypto_hash_sha512_init( (crypto_hash_sha512_state*)SqrlEntropy::state );
+	SqrlEntropy::addBracket( NULL );
 
 	while( !SqrlEntropy::stopping ) {
 		SqrlEntropy::update();
@@ -60,6 +62,7 @@ SqrlEntropy::threadFunction() {
 	SqrlEntropy::initialized = false;
 	free( SqrlEntropy::state );
 	SqrlEntropy::state = NULL;
+	SqrlEntropy::mutex->unlock();
 	delete SqrlEntropy::mutex;
 	SqrlEntropy::mutex = NULL;
 	delete SqrlEntropy::thread;
@@ -76,8 +79,6 @@ void SqrlEntropy::start() {
 
 	SqrlEntropy::state = calloc( 1, sizeof( crypto_hash_sha512_state ) );
 	SqrlEntropy::mutex = new std::mutex();
-	crypto_hash_sha512_init( (crypto_hash_sha512_state*)SqrlEntropy::state );
-	SqrlEntropy::addBracket( NULL );
 	SqrlEntropy::thread = new std::thread( SqrlEntropy::threadFunction );
 	SqrlEntropy::thread->detach();
 	while( SqrlEntropy::estimated_entropy == 0 ) {

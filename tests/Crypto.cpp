@@ -15,7 +15,7 @@ using namespace std;
 static void sqrl_hex_encode( std::string *dest, const uint8_t *src, size_t src_len ) {
 	if( !dest ) return;
 	static const char tab[] = "0123456789abcdef";
-	int i;
+	size_t i;
 	char tmp[3] = {0};
 
 	dest->clear();

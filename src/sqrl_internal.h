@@ -10,6 +10,8 @@ For more details, see the LICENSE file included with this package.
 #include "config.h"
 
 #include <stdio.h>
+
+#define SODIUM_STATIC
 #include "sodium.h"
 extern "C" {
 #include "crypto_scrypt.h"
