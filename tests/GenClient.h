@@ -1,20 +1,15 @@
 #pragma once
 
-#include "stdafx.h"
-#include "CppUnitTest.h"
 #include "SqrlClientAsync.h"
 #include "SqrlAction.h"
 #include "SqrlActionSave.h"
-
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
-using namespace std;
 
 class GenClient : public SqrlClientAsync
 {
 	void onSend(
 		SqrlAction *t,
 		std::string url, std::string payload ) {
-		Assert::Fail();
+		REQUIRE( false );
 	}
 
 	void onProgress(
@@ -25,7 +20,7 @@ class GenClient : public SqrlClientAsync
 	void onAsk(
 		SqrlAction *transaction,
 		std::string message, std::string firstButton, std::string secondButton ) {
-		Assert::Fail();
+		REQUIRE( false );
 	}
 
 	void onAuthenticationRequired(
@@ -37,15 +32,15 @@ class GenClient : public SqrlClientAsync
 			transaction->authenticate( credentialType, "password", 8 );
 			break;
 		default:
-			Assert::Fail();
+			REQUIRE( false );
 		}
 	}
 
 	void onSelectUser( SqrlAction *transaction ) {
-		Assert::Fail();
+		REQUIRE( false );
 	}
 	void onSelectAlternateIdentity( SqrlAction *transaction ) {
-		Assert::Fail();
+		REQUIRE( false );
 	}
 	void onSaveSuggested( SqrlUser *user ) {
 		new SqrlActionSave( user, "file://test2.sqrl" );

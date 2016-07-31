@@ -60,7 +60,6 @@
     <ClInclude Include="..\src\entropy_win.h" />
     <ClInclude Include="..\src\gcm.h" />
     <ClInclude Include="..\src\rdrand.h" />
-    <ClInclude Include="..\src\sodium.h" />
     <ClInclude Include="..\src\sqrl.h" />
     <ClInclude Include="..\src\SqrlAction.fwd.h" />
     <ClInclude Include="..\src\SqrlAction.h" />

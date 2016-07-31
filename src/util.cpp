@@ -38,7 +38,9 @@ bool sqrl_parse_key_value( char **strPtr, char **keyPtr, char **valPtr,
 size_t Sqrl_Version( char *buffer, size_t buffer_len ) {
 	static const char *ver = SQRL_LIB_VERSION;
 	size_t len = strlen( ver );
-	strncpy( buffer, ver, buffer_len );
+	if( buffer ) {
+		strncpy( buffer, ver, buffer_len );
+	}
 	return len;
 }
 

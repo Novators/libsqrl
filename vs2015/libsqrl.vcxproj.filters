@@ -60,9 +60,6 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="..\src\util.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\aes.cpp">
       <Filter>Source Files\Common\Crypto</Filter>
     </ClCompile>
@@ -150,6 +147,9 @@
     <ClCompile Include="..\src\SqrlUser_storage.cpp">
       <Filter>Source Files\Client</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\util.cpp">
+      <Filter>Source Files\Common</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\version.h">
@@ -162,9 +162,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\sqrl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\sodium.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\crypto_scrypt.h">

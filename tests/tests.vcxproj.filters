@@ -15,10 +15,7 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="stdafx.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="targetver.h">
+    <ClInclude Include="catch.hpp">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="GenClient.h">
@@ -29,22 +26,22 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="stdafx.cpp">
+    <ClCompile Include="main.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="CryptoTests.cpp">
+    <ClCompile Include="Base64.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="EncodeTests.cpp">
+    <ClCompile Include="Crypto.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="IdentityTests.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="StorageTests.cpp">
+    <ClCompile Include="Identity.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UriTests.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="StorageTests.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

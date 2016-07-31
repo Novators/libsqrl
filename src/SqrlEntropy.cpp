@@ -62,6 +62,8 @@ SqrlEntropy::threadFunction() {
 	SqrlEntropy::state = NULL;
 	delete SqrlEntropy::mutex;
 	SqrlEntropy::mutex = NULL;
+	delete SqrlEntropy::thread;
+	SqrlEntropy::thread = NULL;
 }
 
 void SqrlEntropy::start() {
@@ -78,13 +80,17 @@ void SqrlEntropy::start() {
 	SqrlEntropy::addBracket( NULL );
 	SqrlEntropy::thread = new std::thread( SqrlEntropy::threadFunction );
 	SqrlEntropy::thread->detach();
+	while( SqrlEntropy::estimated_entropy == 0 ) {
+		sqrl_sleep( 5 );
+	}
 }
 
 void SqrlEntropy::stop() {
 	if( !SqrlEntropy::state ) return;
 	SqrlEntropy::stopping = true;
-	delete SqrlEntropy::thread;
-	SqrlEntropy::thread = NULL;
+	while( SqrlEntropy::thread ) {
+		sqrl_sleep( 5 );
+	}
 }
 
 void SqrlEntropy::increment( int amount ) {

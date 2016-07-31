@@ -1,47 +1,44 @@
 #pragma once
 
-#include "stdafx.h"
-#include "CppUnitTest.h"
-#include "SqrlClientAsync.h"
+#include "../src/SqrlClientAsync.h"
 #include "SqrlAction.h"
 
-using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 using namespace std;
 
 class NullClient : public SqrlClientAsync
 {
 	void onSend( SqrlAction *t, std::string url, std::string payload ) {
-		Assert::Fail();
+		REQUIRE( false );
 	}
 
 	void onProgress(
 		SqrlAction *action,
 		int progress ) {
-		Assert::Fail();
+		REQUIRE( false );
 	}
 
 	void onAsk(
 		SqrlAction *action,
 		std::string message, std::string firstButton, std::string secondButton ) {
-		Assert::Fail();
+		REQUIRE( false );
 	}
 
 	void onAuthenticationRequired(
 		SqrlAction *action,
 		Sqrl_Credential_Type credentialType ) {
-		Assert::Fail();
+		REQUIRE( false );
 	}
 
 	void onSelectUser( SqrlAction *action ) {
-		Assert::Fail();
+		REQUIRE( false );
 	}
 	void onSelectAlternateIdentity( SqrlAction *action ) {
-		Assert::Fail();
+		REQUIRE( false );
 	}
 	void onSaveSuggested( SqrlUser *user ) {
-		Assert::Fail();
+		REQUIRE( false );
 	}
 	void onActionComplete( SqrlAction *action ) {
-		Assert::Fail();
+		REQUIRE( false );
 	}
 };
