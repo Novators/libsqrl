@@ -49,7 +49,7 @@ namespace libsqrltest
 
 		TEST_METHOD( EnHash ) {
 			new NullClient();
-			FILE *fp = fopen( "enhash-vectors.txt", "r" );
+			FILE *fp = fopen( "vectors/enhash-vectors.txt", "r" );
 			if( !fp ) exit( 1 );
 
 			char line[256];
