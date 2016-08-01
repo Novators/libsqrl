@@ -154,6 +154,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClInclude Include="BaseServer.h" />
     <ClInclude Include="catch.hpp" />
     <ClInclude Include="GenClient.h" />
     <ClInclude Include="NullClient.h" />
@@ -163,6 +164,7 @@
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="Identity.cpp" />
     <ClCompile Include="main.cpp" />
+    <ClCompile Include="Server.cpp" />
     <ClCompile Include="StorageTests.cpp" />
     <ClCompile Include="UriTests.cpp" />
   </ItemGroup>

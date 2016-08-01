@@ -8,7 +8,17 @@ For more details, see the LICENSE file included with this package.
 
 #include "sqrl_internal.h"
 #include "version.h"
+#include "gcm.h"
 
+static bool sqrl_is_initialized = false;
+
+void SqrlInit() {
+	if( !sqrl_is_initialized ) {
+		gcm_initialize();
+		sodium_init();
+		sqrl_is_initialized = true;
+	}
+}
 
 bool sqrl_parse_key_value( char **strPtr, char **keyPtr, char **valPtr,
     size_t *key_len, size_t *val_len, char *sep )

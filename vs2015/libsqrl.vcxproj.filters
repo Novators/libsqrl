@@ -58,6 +58,12 @@
     <Filter Include="Source Files\Common\Encoding">
       <UniqueIdentifier>{aed1709a-34b6-4ebd-91d0-12cb8fd046ce}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Server">
+      <UniqueIdentifier>{e1581cc0-05f8-4a9b-b56f-f6760adfa202}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Server">
+      <UniqueIdentifier>{88cf327d-2350-4f4e-af7e-b528673ba590}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\aes.cpp">
@@ -149,6 +155,9 @@
     </ClCompile>
     <ClCompile Include="..\src\util.cpp">
       <Filter>Source Files\Common</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SqrlServer.cpp">
+      <Filter>Source Files\Server</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -334,6 +343,12 @@
     </ClInclude>
     <ClInclude Include="..\src\SqrlUser.h">
       <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlServer.h">
+      <Filter>Header Files\Server</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlServer.fwd.h">
+      <Filter>Header Files\Class Forwards</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

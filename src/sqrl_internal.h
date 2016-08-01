@@ -55,6 +55,7 @@ uint64_t sqrl_get_timestamp();
 
 extern struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
 
+void SqrlInit();
 void sqrl_sleep(int sleepMs);
 bool sqrl_parse_key_value(char **strPtr, char **keyPtr, char **valPtr,
 	size_t *key_len, size_t *val_len, char *sep);

@@ -17,7 +17,6 @@
 #define SQRL_CALLBACK_PROGRESS 7
 
 SqrlClient *SqrlClient::client = NULL;
-static bool sqrl_is_initialized = false;
 static std::mutex sqrl_client_mutex;
 
 SqrlClient::SqrlClient() {
@@ -30,11 +29,7 @@ void SqrlClient::initialize() {
 		// Enforce a single SqrlClient object
 		exit( 1 );
 	}
-	if( !sqrl_is_initialized ) {
-		sqrl_is_initialized = true;
-		gcm_initialize();
-		sodium_init();
-	}
+	SqrlInit();
 
 	SqrlEntropy::start();
 	SqrlClient::client = this;
