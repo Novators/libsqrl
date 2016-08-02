@@ -1,4 +1,4 @@
-/** @file uri.c 
+/** @file uri.c
 
 @author Adam Comley
 
@@ -104,7 +104,7 @@ SqrlUri* SqrlUri::copy() {
 	new (nuri) SqrlUri();
 	size_t len;
 
-	if (this->challenge) { 
+	if (this->challenge) {
 		len = strlen( this->challenge ) + 1;
 		nuri->challenge = (char*)malloc(len);
 		strcpy_s(nuri->challenge, len, this->challenge);
@@ -134,7 +134,7 @@ SqrlUri* SqrlUri::copy() {
 
 /*
  * URL Parsing function borrowed (with modifications) from:
- * 
+ *
  * Copyright 2010-2011 Scyphus Solutions Co. Ltd.  All rights reserved.
  *
  * Authors:

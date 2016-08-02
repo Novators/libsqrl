@@ -1,4 +1,12 @@
-#pragma once
+/** @file SqrlIdentityAction.h
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef SQRLIDENTITYACTION_H
+#define SQRLIDENTITYACTION_H
 
 #include "sqrl.h"
 #include "SqrlAction.h"
@@ -15,3 +23,4 @@ public:
 protected:
 	void onRelease();
 };
+#endif // SQRLIDENTITYACTION_H

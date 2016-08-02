@@ -1,4 +1,4 @@
-/** @file client.c 
+/** @file client.c
 
 @author Adam Comley
 
@@ -96,7 +96,7 @@ void sqrl_client_call_action_complete(
 }
 
 /**
-Authenticates the user to libsqrl.  This should only be called in response to 
+Authenticates the user to libsqrl.  This should only be called in response to
 a \p sqrl_ccb_authentication_required request.
 
 \note \p sqrl_client_authenticate WILL securely zero the \p credential string.
@@ -381,10 +381,10 @@ Call \p sqrl_client_receive with the server's response to a \p sqrl_ccb_send cal
 
 @param action The \p Sqrl_action
 @param payload The entire body of the server's response.
-@param payload_len Length of \p payload 
+@param payload_len Length of \p payload
 */
 
-void sqrl_client_receive( 
+void sqrl_client_receive(
 	SqrlAction *action,
 	const char *payload, size_t payload_len )
 {

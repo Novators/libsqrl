@@ -1,4 +1,4 @@
-/** @file server.c 
+/** @file server.c
 
 @author Adam Comley
 
@@ -13,7 +13,7 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlUri.h"
 
 
-bool sqrl_server_init( 
+bool sqrl_server_init(
     Sqrl_Server *server,
     char *uri,
     char *sfn,
@@ -115,9 +115,9 @@ Sqrl_Server *sqrl_server_destroy( Sqrl_Server *server )
 }
 
 
-bool sqrl_server_nut_generate( 
+bool sqrl_server_nut_generate(
     Sqrl_Server *server,
-    Sqrl_Nut *nut, 
+    Sqrl_Nut *nut,
     uint32_t ip )
 {
     if( !server ) return false;
@@ -176,7 +176,7 @@ void sqrl_server_add_mac( Sqrl_Server *server, UT_string *str, char sep )
     sqrl_b64u_encode_append( str, mac, SQRL_SERVER_MAC_LENGTH );
 }
 
-bool sqrl_server_verify_mac( Sqrl_Server *server, UT_string *str ) 
+bool sqrl_server_verify_mac( Sqrl_Server *server, UT_string *str )
 {
     if( !server || !str ) return false;
     size_t len = 0;
@@ -250,7 +250,7 @@ Sqrl_Server_Context *sqrl_server_context_destroy( Sqrl_Server_Context *ctx )
     if( ctx->user ) free( ctx->user );
     int i;
     for( i = 0; i < CONTEXT_KV_COUNT; i++ ) {
-        if( ctx->context_strings[i] ) 
+        if( ctx->context_strings[i] )
             free( ctx->context_strings[i] );
     }
     for( i = 0; i < CLIENT_KV_COUNT; i++ ) {

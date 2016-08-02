@@ -1,4 +1,12 @@
-#pragma once
+/** @file SqrlCrypt.h
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef SQRLCRYPT_H
+#define SQRLCRYPT_H
 
 #include "sqrl.h"
 
@@ -53,3 +61,4 @@ public:
 	uint8_t flags = SQRL_ENCRYPT | SQRL_ITERATIONS;
 	uint8_t *key = NULL;
 };
+#endif // SQRLCRYPT_H

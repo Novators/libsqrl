@@ -1,4 +1,12 @@
-#pragma once
+/** @file SqrlClient.h
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef SQRLCLIENT_H
+#define SQRLCLIENT_H
 
 #include "sqrl.h"
 #ifdef ARDUINO
@@ -13,7 +21,7 @@
 #define SQRL_QUEUE std::deque
 #define SQRL_QUEUE_POP( obj ) obj.front(); obj.pop_front()
 #define SQRL_QUEUE_IS_EMPTY( obj ) obj.empty()
-#define SQRL_QUEUE_PUSH( obj, item ) obj.push_back( item )
+#define SQRL_QUEUE_PUSH( obj, item ) obj.push_front( item )
 #define SQRL_QUEUE_PEEK( obj ) obj.front()
 #endif
 
@@ -103,3 +111,4 @@ private:
 		std::string *message, std::string *firstButton, std::string *secondButton );
 
 };
+#endif // SQRLCLIENT_H

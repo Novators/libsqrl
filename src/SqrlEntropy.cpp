@@ -1,3 +1,10 @@
+/** @file SqrlEntropy.cpp
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
 #include "sqrl_internal.h"
 #include "SqrlEntropy.h"
 #include <mutex>
@@ -42,9 +49,9 @@ void SqrlEntropy::update() {
 	struct sqrl_fast_flux_entropy ffe;
 	sqrl_store_fast_flux_entropy( &ffe );
 	SqrlEntropy::mutex->lock();
-	crypto_hash_sha512_update( 
-		(crypto_hash_sha512_state*)SqrlEntropy::state, 
-		(unsigned char*)&ffe, 
+	crypto_hash_sha512_update(
+		(crypto_hash_sha512_state*)SqrlEntropy::state,
+		(unsigned char*)&ffe,
 		sizeof( struct sqrl_fast_flux_entropy ) );
 	if( ++(SqrlEntropy::estimated_entropy) >= SqrlEntropy::entropy_target ) {
 		SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_SLOW;

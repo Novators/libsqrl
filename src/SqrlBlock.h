@@ -1,4 +1,12 @@
-#pragma once
+/** @file SqrlBlock.h
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef SQRLBLOCK_H
+#define SQRLBLOCK_H
 
 #include <stdint.h>
 #include "sqrl.h"
@@ -43,3 +51,4 @@ private:
 	uint8_t *data;
 };
 
+#endif // SQRLBLOCK_H

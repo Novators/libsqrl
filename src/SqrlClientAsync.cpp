@@ -1,3 +1,10 @@
+/** @file SqrlClientAsync.cpp
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
 #include "sqrl_internal.h"
 
 #include "SqrlClient.h"
@@ -27,15 +34,14 @@ void SqrlClientAsync::clientThread() {
 		}
 	}
 	while( !client->callbackQueue.empty() ) {
-		struct CallbackInfo *info = client->callbackQueue.front();
-		client->callbackQueue.pop();
+		struct CallbackInfo *info = SQRL_QUEUE_POP( client->callbackQueue );
 		delete info;
 	}
 #ifndef ARDUINO
 	client->actionMutex.lock();
 #endif
 	while( client->actions.size() > 0 ) {
-		SqrlAction *action = client->actions.front();
+		SqrlAction *action = SQRL_QUEUE_POP( client->actions );
 		delete action;
 	}
 #ifndef ARDUINO

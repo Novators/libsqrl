@@ -1,4 +1,12 @@
-#pragma once
+/** @file sqrl.h
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef SQRL_H
+#define SQRL_H
 
 #ifndef DLL_PUBLIC
 #define DLL_PUBLIC
@@ -129,3 +137,4 @@ uint16_t Sqrl_Version_Minor();
 uint16_t Sqrl_Version_Build();
 uint16_t Sqrl_Version_Revision();
 
+#endif // SQRL_H

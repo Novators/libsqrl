@@ -1,4 +1,11 @@
-/* client_protocol.c 
+/** @file client_protocol.cpp
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+/* client_protocol.c
 
 @author Adam Comley
 
@@ -26,7 +33,7 @@ For more details, see the LICENSE file included with this package.
 #define SITE_FLAG_VALID_SERVER_STRING 4
 #define SITE_FLAG_VALID_CLIENT_STRING 8
 
-static char kv_strings[SITE_KV_COUNT][SITE_KV_LENGTH+1] = { 
+static char kv_strings[SITE_KV_COUNT][SITE_KV_LENGTH+1] = {
 	"ver", "tif", "qry", "ask", "suk", "nut"};
 
 static int previousKeys[] = {KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3};
@@ -62,7 +69,7 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 	free(str);
 
 	// Generate site private key
-	if( 0 != crypto_auth_hmacsha256( 
+	if( 0 != crypto_auth_hmacsha256(
 		site->keys[SITE_KEY_SEC],
 		(unsigned char*)(utstring_body( host )),
 		utstring_len( host ),
@@ -72,7 +79,7 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 	site->keys[SITE_KEY_LOOKUP][SITE_KEY_SEC] = 1;
 
 	// Generate site public key
-	sqrl_ed_public_key( 
+	sqrl_ed_public_key(
 		site->keys[SITE_KEY_PUB],
 		site->keys[SITE_KEY_SEC] );
 	site->keys[SITE_KEY_LOOKUP][SITE_KEY_PUB] = 1;
@@ -94,10 +101,10 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 
 	if( piuk ) {
 		// Regenerate old MK
-		Sqrl_EnHash( 
-			(uint64_t*)tmp, 
+		Sqrl_EnHash(
+			(uint64_t*)tmp,
 			(uint64_t*)piuk );
-		if( 0 != crypto_auth_hmacsha256( 
+		if( 0 != crypto_auth_hmacsha256(
 			site->keys[SITE_KEY_PSEC],
 			(unsigned char*)(utstring_body( host )),
 			utstring_len( host ),
@@ -105,7 +112,7 @@ bool sqrl_site_set_user_keys( Sqrl_Site *site )
 			goto ERR;
 		}
 		site->keys[SITE_KEY_LOOKUP][SITE_KEY_PSEC] = 1;
-		sqrl_ed_public_key( 
+		sqrl_ed_public_key(
 			site->keys[SITE_KEY_PPUB],
 			site->keys[SITE_KEY_PSEC] );
 		site->keys[SITE_KEY_LOOKUP][SITE_KEY_PPUB] = 1;
@@ -263,7 +270,7 @@ void sqrl_site_parse_result( Sqrl_Site *site, const char *result, size_t result_
 	if( !site || !result || result_len == 0 ) return;
 	int found_keys = 0;
 	int current_key = 0;
-	uint16_t required_keys = 
+	uint16_t required_keys =
 		(1<<SITE_KV_VER) |
 		(1<<SITE_KV_TIF) |
 		(1<<SITE_KV_QRY) |
@@ -314,7 +321,7 @@ bool sqrl_site_has_server_friendly_name( Sqrl_Site *site )
 {
 	bool retVal = false;
 	if( !site ) return false;
-	if( FLAG_CHECK( site->flags, SITE_FLAG_SFN )) 
+	if( FLAG_CHECK( site->flags, SITE_FLAG_SFN ))
 		retVal = true;
 	return retVal;
 }
@@ -347,7 +354,7 @@ UT_string *sqrl_site_domain( Sqrl_Site *site )
 	return ret;
 }
 
-void sqrl_site_encode_client_string( Sqrl_Site *site, UT_string *newStr ) 
+void sqrl_site_encode_client_string( Sqrl_Site *site, UT_string *newStr )
 {
 	if( !site ) return;
 
@@ -427,7 +434,7 @@ void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 	}
 
 	if( site->currentaction == SQRL_action_AUTH_IDENT ) {
-		if( (site->tif & SQRL_TIF_ID_MATCH) == 0 && 
+		if( (site->tif & SQRL_TIF_ID_MATCH) == 0 &&
 			(site->tif & SQRL_TIF_PREVIOUS_ID_MATCH) == 0 ) {
 			// Identity not registered; Generate keys...
 			sqrl_site_create_unlock_keys( site );
@@ -456,7 +463,7 @@ void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 				tiuk );
 
 			site->keys[SITE_KEY_LOOKUP][SITE_KEY_URPK] = 1;
-			sqrl_ed_public_key( 
+			sqrl_ed_public_key(
 				site->keys[SITE_KEY_URPK],
 				site->keys[SITE_KEY_URSK] );
 			if( site->currentaction == SQRL_action_AUTH_IDENT ) {
@@ -477,7 +484,7 @@ Creates the client's body text for sending to the SQRL server
 @param cmd One of: \p SQRL_action_AUTH_QUERY SQRL_action_AUTH_IDENT SQRL_action_AUTH_DISABLE SQRL_action_AUTH_ENABLE
 @return true on success, false on failure
 */
- 
+
 bool sqrl_site_generate_client_body( Sqrl_Site *site )
 {
 	if( !site ) return false;
@@ -554,8 +561,8 @@ successful \p sqrl_site_generate_client_body()
 @param site the \p Sqrl_Site
 @return pointer to a new UT_string object containing the client's body text
 */
- 
-UT_string *sqrl_site_client_body( Sqrl_Site *site ) 
+
+UT_string *sqrl_site_client_body( Sqrl_Site *site )
 {
 	if( !site ) return NULL;
 	UT_string *result, *buffer;
@@ -733,7 +740,7 @@ Sqrl_action_Status sqrl_client_resume_action( SqrlAction *action, const char *re
 		// No existing site... Create a new one.
 		site = sqrl_client_site_create( action );
 	}
-	
+
 	if( !site ) goto ERR;
 	if( !FLAG_CHECK( site->flags, SITE_FLAG_VALID_SERVER_STRING )) {
 #if DEBUG_PRINT_CLIENT_PROTOCOL

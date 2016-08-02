@@ -1,3 +1,10 @@
+/** @file gcm.cpp
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
 /******************************************************************************
 *
 * THIS SOURCE CODE IS HEREBY PLACED INTO THE PUBLIC DOMAIN FOR THE GOOD OF ALL
@@ -226,8 +233,8 @@ int gcm_setkey( gcm_context *ctx,   // pointer to caller-provided gcm context
  *
  *    GCM processing occurs four phases: SETKEY, START, UPDATE and FINISH.
  *
- *  SETKEY: 
- *  
+ *  SETKEY:
+ *
  *   START: Sets the Encryption/Decryption mode.
  *          Accepts the initialization vector and additional data.
  *

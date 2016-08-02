@@ -1,4 +1,4 @@
-/** @file storage.c 
+/** @file storage.c
 
 @author Adam Comley
 
@@ -111,7 +111,7 @@ static bool allocate_block( struct S4Page *page, struct S4Pointer *pointer, uint
 				lastLength = page->index[i].blockLength;
 				continue;
 			}
-			if( lastOffset + lastLength + blockLength 
+			if( lastOffset + lastLength + blockLength
 				<= page->index[i].blockLength ) {
 				SQRL_STORAGE_READ_WRITE( page );
 				page->index[i].offset = lastOffset + lastLength;
@@ -124,7 +124,7 @@ static bool allocate_block( struct S4Page *page, struct S4Pointer *pointer, uint
 				return true;
 			}
 			continue;
-		} else if( lastOffset + lastLength + blockLength 
+		} else if( lastOffset + lastLength + blockLength
 			<= PAGE_DATA_SIZE ) {
 			SQRL_STORAGE_READ_WRITE( page );
 			page->index[i].allocated = 1;
@@ -176,7 +176,7 @@ static bool sqrl_storage_block_put( struct S4Page *page, SqrlBlock *block )
 		if( pointer.index->blockLength <= block->getBlockLength() ) {
 			SQRL_STORAGE_READ_WRITE( pointer.page );
 			if( data->length() > 0 ) {
-				memcpy( &pointer.page->blocks[pointer.index->offset], 
+				memcpy( &pointer.page->blocks[pointer.index->offset],
 						data->data(), data->length() );
 				if( pointer.index->blockLength < data->length() ) {
 					memset( (&pointer.page->blocks[pointer.index->offset]) + data->length(),
@@ -194,7 +194,7 @@ static bool sqrl_storage_block_put( struct S4Page *page, SqrlBlock *block )
 	if( allocate_block( page, &pointer, block->getBlockType(), block->getBlockLength() )) {
 		SQRL_STORAGE_READ_WRITE( pointer.page );
 		if( data->length() > 0 ) {
-			memcpy( &pointer.page->blocks[pointer.index->offset], 
+			memcpy( &pointer.page->blocks[pointer.index->offset],
 					data->data(), data->length() );
 		}
 		SQRL_STORAGE_LOCK( pointer.page );
@@ -300,9 +300,9 @@ static bool sqrl_storage_load_from_file( struct S4Page *page, const char *filena
 	return retVal;
 }
 
-static std::string *sqrl_storage_save_to_string( 
-	struct S4Page *page, 
-	Sqrl_Export etype, 
+static std::string *sqrl_storage_save_to_string(
+	struct S4Page *page,
+	Sqrl_Export etype,
 	Sqrl_Encoding encoding )
 {
 	std::string tmp;

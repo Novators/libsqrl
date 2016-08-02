@@ -1,11 +1,10 @@
-/** @file entropy_win.h 
+/** @file entropy_win.h
 
 @author Adam Comley
 
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
-#pragma once
 
 #include <Windows.h>
 #include <stdlib.h>

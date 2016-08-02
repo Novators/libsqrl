@@ -5,7 +5,6 @@
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
 **/
-#pragma once
 
 #if defined(__linux__)
     #if defined(__ANDROID__)
@@ -15,11 +14,11 @@ For more details, see the LICENSE file included with this package.
     #endif
 #elif !defined(_WIN32) && (defined(__unix__) || defined(__unix) || (defined(__APPLE__) && defined(__MACH__)))
     #include <sys/param.h>
-    #ifdef __APPLE__   
+    #ifdef __APPLE__
         #include "TargetConditionals.h"
-        #if TARGET_OS_IPHONE 
+        #if TARGET_OS_IPHONE
             #define OSTYPE_iOS /* iOS Device */ */
-        #else 
+        #else
             #define OSTYPE_OSX /* OSX */
         #endif
     #elif defined(BSD)

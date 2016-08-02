@@ -1,3 +1,10 @@
+/** @file SqrlClient.cpp
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
 #include "sqrl_internal.h"
 
 #include "SqrlClient.h"
@@ -114,7 +121,7 @@ bool SqrlClient::loop() {
 		}
 		delete info;
 	}
-	SQRL_QUEUE<SqrlAction *> *nq = new SQRL_QUEUE<SqrlAction *>();
+	SQRL_QUEUE<SqrlAction *> nq;
 	if( ! SQRL_QUEUE_IS_EMPTY( this->actions ) ) {
 		action = SQRL_QUEUE_POP( this->actions );
 		if( action ) {
@@ -124,12 +131,16 @@ bool SqrlClient::loop() {
 		}
 	}
 	while( !SQRL_QUEUE_IS_EMPTY( this->actions ) ) {
-		SQRL_QUEUE_PUSH( nq, SQRL_QUEUE_POP( this->actions ) );
+		SqrlAction *action = SQRL_QUEUE_POP( this->actions );
+		SQRL_QUEUE_PUSH( nq, action );
 	}
 #ifndef ARDUINO
 	this->actionMutex.lock();
 #endif
-	delete this->actions;
+	while( !SQRL_QUEUE_IS_EMPTY( nq ) ) {
+		action = SQRL_QUEUE_POP( nq );
+		SQRL_QUEUE_PUSH( this->actions, action );
+	}
 	this->actions = nq;
 #ifndef ARDUNIO
 	this->actionMutex.unlock();
