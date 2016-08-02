@@ -191,6 +191,9 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent />
+    <PreBuildEvent>
+      <Command>python.exe $(SolutionDir)scripts\newVersion.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
     <ClCompile>
@@ -208,6 +211,9 @@
       <SubSystem>Windows</SubSystem>
     </Link>
     <PreBuildEvent />
+    <PreBuildEvent>
+      <Command>python.exe $(SolutionDir)scripts\newVersion.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
     <ClCompile>
@@ -229,6 +235,9 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent />
+    <PreBuildEvent>
+      <Command>python.exe $(SolutionDir)scripts\newVersion.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
     <ClCompile>
@@ -249,6 +258,9 @@
       <OptimizeReferences>true</OptimizeReferences>
     </Link>
     <PreBuildEvent />
+    <PreBuildEvent>
+      <Command>python.exe $(SolutionDir)scripts\newVersion.py</Command>
+    </PreBuildEvent>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
