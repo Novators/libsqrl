@@ -1,7 +1,7 @@
 #pragma once
 
 #include <string>
-#include "SqrlEncoder.fwd.h"
+#include "sqrl.h"
 
 class DLL_PUBLIC SqrlEncoder
 {

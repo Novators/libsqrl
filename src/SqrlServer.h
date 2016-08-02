@@ -1,8 +1,6 @@
 #pragma once
 
 #include "sqrl.h"
-#include "SqrlUri.fwd.h"
-#include "SqrlServer.fwd.h"
 
 #define SQRL_DEFAULT_NUT_LIFE 60
 

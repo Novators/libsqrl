@@ -1,6 +1,6 @@
 #pragma once
 
-#include "SqrlUri.fwd.h"
+#include "sqrl.h"
 
 typedef enum
 {
