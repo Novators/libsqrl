@@ -1,4 +1,12 @@
-#pragma once
+/** @file SqrlStorage.h
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef SQRLSTORAGE_H
+#define SQRLSTORAGE_H
 
 #include <stdint.h>
 #include <string>
@@ -31,3 +39,4 @@ private:
 	~SqrlStorage();
 	void *data;
 };
+#endif // SQRLSTORAGE_H

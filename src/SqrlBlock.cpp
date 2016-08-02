@@ -1,4 +1,4 @@
-/** @file block.c 
+/** @file block.c
 
 @author Adam Comley
 
@@ -88,7 +88,7 @@ bool SqrlBlock::resize(size_t new_size)
 		memset( buf, 0, new_size );
 		memcpy( buf, this->data, this->blockLength );
 	}
-	
+
 	sodium_munlock( this->data, this->blockLength );
 	free( this->data );
 	this->data = (uint8_t*)malloc( new_size );
@@ -177,7 +177,7 @@ bool SqrlBlock::writeInt32( uint32_t value )
 	this->data[this->cur++] = (uint8_t)(value>>8);
 	this->data[this->cur++] = (uint8_t)(value>>16);
 	this->data[this->cur++] = (uint8_t)(value>>24);
-	return true;	
+	return true;
 }
 
 uint8_t SqrlBlock::readInt8()

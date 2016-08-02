@@ -1,11 +1,10 @@
-/** @file sqrl_client.h 
+/** @file sqrl_client.h
 
 @author Adam Comley
 
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
-**/  
-#pragma once
+**/
 
 #ifndef DLL_PUBLIC
 #define DLL_PUBLIC _declspec(dllimport)

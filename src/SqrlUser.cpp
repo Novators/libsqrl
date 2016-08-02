@@ -1,4 +1,4 @@
-/** @file user.c 
+/** @file user.c
 
 @author Adam Comley
 
@@ -192,7 +192,7 @@ END:
 	}
 }
 
-SqrlUser::~SqrlUser() 
+SqrlUser::~SqrlUser()
 {
 	if (this->keys != NULL) {
 		sodium_mprotect_readwrite(this->keys);
@@ -201,7 +201,7 @@ SqrlUser::~SqrlUser()
 	delete this->referenceCountMutex;
 }
 
-bool SqrlUser::isMemLocked() 
+bool SqrlUser::isMemLocked()
 {
 	if( FLAG_CHECK( this->flags, USER_FLAG_MEMLOCKED )) {
 		return true;
@@ -231,8 +231,8 @@ bool SqrlUser::isHintLocked()
 	return true;
 }
 
-void SqrlUser::hintUnlock( SqrlAction *action, 
-				char *hint, 
+void SqrlUser::hintUnlock( SqrlAction *action,
+				char *hint,
 				size_t length )
 {
 	if( hint == NULL || length == 0 ) {

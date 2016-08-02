@@ -1,3 +1,10 @@
+/** @file aes.cpp
+@author Steven M. Gibson
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
 /******************************************************************************
 *
 * THIS SOURCE CODE IS HEREBY PLACED INTO THE PUBLIC DOMAIN FOR THE GOOD OF ALL
@@ -54,7 +61,7 @@ static uint32_t RT3[256];
 
 static uint32_t RCON[10];   // AES round constants
 
-/* 
+/*
  * Platform Endianness Neutralizing Load and Store Macro definitions
  * AES wants platform-neutral Little Endian (LE) byte ordering
  */
@@ -169,7 +176,7 @@ void aes_init_keygen_tables( void )
         MIX(x,y);
         MIX(x,y);
         MIX(x,y);
-        MIX(x,y); 
+        MIX(x,y);
         FSb[i] = (uchar) ( x ^= 0x63 );
 #if AES_DECRYPTION  // whether AES decryption is supported
         RSb[x] = (uchar) i;
@@ -349,7 +356,7 @@ int aes_setkey( aes_context *ctx,   // AES context provided by our caller
     // demand, or ask the developer to simply call "gcm_initialize" once during
     // application startup before threading begins. That's what we choose.
     if( !aes_tables_inited ) return ( 0 );  // fail the call when not inited.
-    
+
     ctx->mode = mode;       // capture the key type we're creating
     ctx->rk = ctx->buf;     // initialize our round key pointer
 

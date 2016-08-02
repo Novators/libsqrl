@@ -1,4 +1,4 @@
-/** @file server_protocol.c 
+/** @file server_protocol.c
 
 @author Adam Comley
 
@@ -18,11 +18,11 @@ static char commands[COMMAND_COUNT][8] = {
     "query", "ident", "disable", "enable", "remove"
 };
 
-static char context_kv_strings[CONTEXT_KV_COUNT][CONTEXT_KV_LENGTH+1] = { 
-    "server", "client", "ids", "pids", "urs" 
+static char context_kv_strings[CONTEXT_KV_COUNT][CONTEXT_KV_LENGTH+1] = {
+    "server", "client", "ids", "pids", "urs"
 };
 
-static char client_kv_strings[CLIENT_KV_COUNT][CLIENT_KV_LENGTH+1] = { 
+static char client_kv_strings[CLIENT_KV_COUNT][CLIENT_KV_LENGTH+1] = {
     "ver", "cmd", "opt", "btn", "idk", "pidk", "suk", "vuk"
 };
 
@@ -83,7 +83,7 @@ bool sqrl_server_verify_server_string(
     return false;
 }
 
-bool sqrl_server_parse_client( 
+bool sqrl_server_parse_client(
     Sqrl_Server_Context *context )
 {
     if( !context ) return false;
@@ -150,7 +150,7 @@ bool sqrl_server_verify_urs( Sqrl_Server_Context *context )
     UT_string *str, *sig;
     utstring_new( str );
     utstring_new( sig );
-    utstring_printf( str, "%s%s", context->context_strings[CONTEXT_KV_CLIENT], context->context_strings[CONTEXT_KV_SERVER] );    
+    utstring_printf( str, "%s%s", context->context_strings[CONTEXT_KV_CLIENT], context->context_strings[CONTEXT_KV_SERVER] );
     sqrl_b64u_decode( sig, context->context_strings[CONTEXT_KV_URS], strlen( context->context_strings[CONTEXT_KV_URS]));
 
     if( SqrlCrypt::verifySignature( str, (uint8_t*)utstring_body( sig ), context->user->vuk )) {
@@ -249,10 +249,10 @@ bool sqrl_server_build_reply( Sqrl_Server_Context *context, UT_string *reply )
     return true;
 }
 
-void sqrl_server_parse_query( 
-    Sqrl_Server_Context *context, 
+void sqrl_server_parse_query(
+    Sqrl_Server_Context *context,
     uint32_t client_ip,
-    const char *query, 
+    const char *query,
     size_t query_len )
 {
     if( !context || !query || query_len == 0 ) return;
@@ -261,7 +261,7 @@ void sqrl_server_parse_query(
     uint16_t required_keys =
         (1<<CONTEXT_KV_SERVER) |
         (1<<CONTEXT_KV_CLIENT) |
-        (1<<CONTEXT_KV_IDS); 
+        (1<<CONTEXT_KV_IDS);
 
     char *str, *key, *val;
     size_t key_len, val_len;
@@ -285,7 +285,7 @@ void sqrl_server_parse_query(
                 context->context_strings[current_key][val_len] = 0;
 #if DEBUG_PRINT_SERVER_PROTOCOL
                 //printf( "%10s: %s\n", context_kv_strings[current_key], context->context_strings[current_key] );
-#endif                
+#endif
                 found_keys |= (1<<current_key);
                 break;
             }
@@ -303,19 +303,19 @@ void sqrl_server_parse_query(
     }
 }
 
-bool sqrl_server_get_user( 
+bool sqrl_server_get_user(
     Sqrl_Server_Context *context,
     char *idk )
 {
     char *blob = (char*)malloc( 512 );
 	char *host = context->server->uri->getSiteKeyString();
     sqrl_scb_user *onUserOp = (sqrl_scb_user*)context->server->onUserOp;
-    if( (onUserOp)( 
+    if( (onUserOp)(
         SQRL_SCB_USER_FIND,
         host,
         idk,
         NULL,
-        blob )) 
+        blob ))
     {
         UT_string *tmp;
         utstring_new( tmp );
@@ -512,7 +512,7 @@ void sqrl_server_handle_query(
                 context->client_strings[CLIENT_KV_VUK] ) {
                 // Create user
                 if( !context->user ) context->user = (Sqrl_Server_User*)malloc( sizeof( Sqrl_Server_User ));
-                context->user->flags = 0; 
+                context->user->flags = 0;
                 utstring_new( tmp );
                 sqrl_b64u_decode( tmp, context->client_strings[CLIENT_KV_IDK], strlen( context->client_strings[CLIENT_KV_IDK]));
                 memcpy( &context->user->idk, utstring_body( tmp ), SQRL_KEY_SIZE );

@@ -1,4 +1,12 @@
-#pragma once
+/** @file SqrlUri.h
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef SQRLURI_H
+#define SQRLURI_H
 
 #include "sqrl.h"
 
@@ -54,3 +62,4 @@ private:
 	char *url;
 	char *sfn;
 };
+#endif // SQRLURI_H

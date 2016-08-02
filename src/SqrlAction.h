@@ -1,4 +1,12 @@
-#pragma once
+/** @file SqrlAction.h
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef SQRLACTION_H
+#define SQRLACTION_H
 
 #include <climits>
 #include "sqrl.h"
@@ -45,3 +53,4 @@ protected:
 	bool shouldCancel;
 };
 
+#endif // SQRLACTION_H

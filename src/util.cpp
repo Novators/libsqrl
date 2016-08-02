@@ -1,4 +1,4 @@
-/** @file util.c -- Various utility functions 
+/** @file util.c -- Various utility functions
 
 @author Adam Comley
 

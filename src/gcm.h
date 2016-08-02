@@ -1,3 +1,12 @@
+/** @file gcm.h
+@author Steven M. Gibson
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef GCM_H
+#define GCM_H
 /******************************************************************************
 *
 * THIS SOURCE CODE IS HEREBY PLACED INTO THE PUBLIC DOMAIN FOR THE GOOD OF ALL
@@ -21,7 +30,6 @@
 * REGARDING ITS FITNESS FOR ANY PARTICULAR PURPOSE. USE IT AT YOUR OWN RISK.
 *
 *******************************************************************************/
-#pragma once
 
 #define GCM_AUTH_FAILURE    0x55555555  // authentication failure
 
@@ -181,3 +189,4 @@ int gcm_finish(gcm_context *ctx,   // pointer to user-provided GCM context
 						*
 						******************************************************************************/
 void gcm_zero_ctx(gcm_context *ctx);
+#endif // GCM_H

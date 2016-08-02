@@ -1,3 +1,10 @@
+/** @file SqrlCrypt.cpp
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
 #include "sqrl_internal.h"
 
 #include "SqrlCrypt.h"
@@ -312,8 +319,8 @@ void SqrlCrypt::sign( const std::string *msg, const uint8_t sk[32], const uint8_
 		secret );
 	sodium_munlock( secret, crypto_sign_SECRETKEYBYTES );
 	//	ed25519_sign(
-	//		(unsigned char*)utstring_body(msg), 
-	//		utstring_len(msg), 
+	//		(unsigned char*)utstring_body(msg),
+	//		utstring_len(msg),
 	//		sk, pk, sig );
 
 }
@@ -323,7 +330,7 @@ bool SqrlCrypt::verifySignature( const std::string *msg, const uint8_t *sig, con
 	if( crypto_sign_verify_detached( sig, (const unsigned char *)msg->data(), msg->length(), pub ) == 0 ) {
 		return true;
 	}
-	//	if( ed25519_sign_open( 
+	//	if( ed25519_sign_open(
 	//		(unsigned char *)utstring_body( msg ),
 	//		utstring_len( msg ), pub, sig) == 0 ) {
 	//		return true;

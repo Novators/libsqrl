@@ -1,3 +1,12 @@
+/** @file aes.h
+@author Steven M. Gibson
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef AES_H
+#define AES_H
 /******************************************************************************
 *
 * THIS SOURCE CODE IS HEREBY PLACED INTO THE PUBLIC DOMAIN FOR THE GOOD OF ALL
@@ -20,7 +29,6 @@
 *
 *******************************************************************************/
 
-#pragma once
 
 /******************************************************************************/
 #define AES_DECRYPTION  1       // whether AES decryption is supported
@@ -75,3 +83,4 @@ int aes_cipher(aes_context *ctx,       // pointer to context
 	const uchar input[16],  // 128-bit block to en/decipher
 	uchar output[16]);     // 128-bit output result block
 							// returns 0 for success
+#endif // AES_H

@@ -1,4 +1,12 @@
-#pragma once
+/** @file SqrlActionLock.h
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef SQRLACTIONLOCK_H
+#define SQRLACTIONLOCK_H
 
 #include "sqrl.h"
 #include "SqrlIdentityAction.h"
@@ -17,3 +25,4 @@ private:
 	uint8_t iv[12] = {0};
 
 };
+#endif // SQRLACTIONLOCK_H

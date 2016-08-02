@@ -1,4 +1,4 @@
-/** @file action.c 
+/** @file action.c
 
 @author Adam Comley
 
@@ -38,8 +38,8 @@ SqrlAction::SqrlAction()
 SqrlAction::~SqrlAction() {
 	SqrlClient *client = SqrlClient::getClient();
 	client->actionMutex.lock();
-	client->actions.erase( 
-		std::remove_if( 
+	client->actions.erase(
+		std::remove_if(
 			client->actions.begin(),
 			client->actions.end(),
 			[this]( SqrlAction* i ) { return i == this; } ),

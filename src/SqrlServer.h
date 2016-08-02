@@ -1,4 +1,12 @@
-#pragma once
+/** @file SqrlServer.h
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef SQRLSERVER_H
+#define SQRLSERVER_H
 
 #include "sqrl.h"
 
@@ -101,3 +109,4 @@ protected:
 	bool decryptNut( Sqrl_Nut *nut );
 
 };
+#endif // SQRLSERVER_H

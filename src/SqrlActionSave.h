@@ -1,4 +1,12 @@
-#pragma once
+/** @file SqrlActionSave.h
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef SQRLACTIONSAVE_H
+#define SQRLACTIONSAVE_H
 
 #include "sqrl.h"
 #include "SqrlIdentityAction.h"
@@ -24,3 +32,4 @@ protected:
 	size_t buffer_len;
 	void onRelease();
 };
+#endif // SQRLACTIONSAVE_H

@@ -1,4 +1,4 @@
-/** @file user_storage.c 
+/** @file user_storage.c
 
 @author Adam Comley
 
@@ -17,8 +17,8 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlActionSave.h"
 #include "SqrlEntropy.h"
 
-SqrlCrypt* SqrlUser::_init_t2( 
-	SqrlAction *action, 
+SqrlCrypt* SqrlUser::_init_t2(
+	SqrlAction *action,
 	SqrlBlock *block,
 	bool forSaving )
 {
@@ -68,7 +68,7 @@ bool SqrlUser::sul_block_2( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 	if( ! this->hasKey( KEY_RESCUE_CODE )) {
 		return false;
 	}
-	
+
 	SqrlCrypt *crypt = this->_init_t2( action, block, false );
 	if( !crypt ) {
 		goto ERR;
@@ -105,7 +105,7 @@ bool SqrlUser::sus_block_2( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 		|| ! this->hasKey( KEY_RESCUE_CODE )) {
 		return false;
 	}
-	
+
 	SqrlCrypt *crypt = this->_init_t2( action, block, true );
 	if( !crypt ) {
 		goto ERR;
@@ -273,7 +273,7 @@ bool SqrlUser::sul_block_1( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 	// Iteration Count
 	uint8_t *key = crypt.plain_text + crypt.text_len;
 	crypt.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
-	if( crypt.genKey( action, this->keys->password, this->keys->password_len ) 
+	if( crypt.genKey( action, this->keys->password, this->keys->password_len )
 		&& crypt.doCrypt() ) {
 			key = this->newKey( KEY_MK );
 			memcpy( key, crypt.plain_text, SQRL_KEY_SIZE );
@@ -417,7 +417,7 @@ bool SqrlUser::updateStorage( SqrlAction *action )
 	bool retVal = true;
 
 	if( (this->flags & USER_FLAG_T1_CHANGED) == USER_FLAG_T1_CHANGED ||
-		! this->storage->hasBlock( SQRL_BLOCK_USER )) 
+		! this->storage->hasBlock( SQRL_BLOCK_USER ))
 	{
 		if( sus_block_1( action, block, cbdata )) {
 			this->storage->putBlock(block);

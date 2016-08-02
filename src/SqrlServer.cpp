@@ -1,3 +1,10 @@
+/** @file SqrlServer.cpp
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
 #include "sqrl_internal.h"
 #include "SqrlServer.h"
 #include "aes.h"
@@ -8,7 +15,7 @@ SqrlServer::SqrlServer(
 	const char *uri,
 	const char *sfn,
 	const char *passcode,
-	size_t passcode_len ) 
+	size_t passcode_len )
 {
 	SqrlInit();
 	memset( this, 0, sizeof( this ) );
@@ -25,7 +32,7 @@ SqrlServer::SqrlServer(
 		} else {
 			this->sfn = new std::string( "Invalid Server Configuration" );
 		}
-	} 
+	}
 
 	if( uri ) {
 		const char *p, *pp;
