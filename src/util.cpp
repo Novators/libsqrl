@@ -20,6 +20,90 @@ void SqrlInit() {
 	}
 }
 
+int sqrl_mlock( void * const addr, size_t len ) {
+	return sodium_mlock( addr, len );
+}
+
+int sqrl_munlock( void * const addr, size_t len ) {
+	return sodium_munlock( addr, len );
+}
+
+int sqrl_mprotect_noaccess( void *ptr) {
+	return sodium_mprotect_noaccess( ptr );
+}
+
+int sqrl_mprotect_readwrite( void *ptr ) {
+	return sodium_mprotect_readwrite( ptr );
+}
+
+int sqrl_mprotect_readonly( void *ptr ) {
+	return sodium_mprotect_readonly( ptr );
+}
+
+void sqrl_randombytes( void *ptr, size_t len ) {
+	randombytes_buf( ptr, len );
+}
+
+uint32_t sqrl_random() {
+	return randombytes_random();
+}
+
+void sqrl_memzero( void *buf, size_t len ) {
+#ifdef ARDUINO
+	size_t i = 0;
+	uint8_t *ptr = (uint8_t*)buf;
+	while( i < len ) {
+		ptr[i] = 0;
+		i++;
+	}
+#else
+	sodium_memzero( buf, len );
+#endif
+}
+
+int sqrl_memcmp( const void * const b1_, const void * const b2_, size_t len ) {
+#ifdef ARDUINO
+	const volatile unsigned char *volatile b1 =
+		(const volatile unsigned char * volatile)b1_;
+	const volatile unsigned char *volatile b2 =
+		(const volatile unsigned char * volatile)b2_;
+	size_t               i;
+	unsigned char        d = (unsigned char)0U;
+
+	for( i = 0U; i < len; i++ ) {
+		d |= b1[i] ^ b2[i];
+	}
+	return (1 & ((d - 1) >> 8)) - 1;
+#else
+	return sodium_memcmp( b1_, b2_, len );
+#endif
+}
+
+void * sqrl_malloc( const size_t size ) {
+#ifdef ARDUINO
+	void *ptr;
+
+	if( (ptr = malloc( size )) == NULL ) {
+		return NULL;
+	}
+	memset( ptr, 0, size );
+
+	return ptr;
+#else
+	return sodium_malloc( size );
+#endif
+}
+
+void sqrl_free( void *ptr, size_t len ) {
+#ifdef ARDUINO
+	sqrl_memzero( ptr, len );
+	free( ptr );
+	return NULL;
+#else
+	sodium_free( ptr );
+#endif
+}
+
 bool sqrl_parse_key_value( char **strPtr, char **keyPtr, char **valPtr,
     size_t *key_len, size_t *val_len, char *sep )
 {

@@ -68,14 +68,14 @@ void SqrlEntropy::addBracket( uint8_t* seed )
 	if (seed) {
 		memcpy(&bracket.seed, seed, crypto_hash_sha512_BYTES);
 	}
-	randombytes_buf(&bracket.random, crypto_hash_sha512_BYTES);
+	sqrl_randombytes(&bracket.random, crypto_hash_sha512_BYTES);
 	if (rdrand_available()) {
 		for (i = 0; i < 32; i++) {
 			rdrand64(&bracket.rdrand[i]);
 		}
 	}
 	else {
-		randombytes_buf(&bracket.rdrand, 256);
+		sqrl_randombytes(&bracket.rdrand, 256);
 	}
 	bracket.processID = GetCurrentProcessId();
 	bracket.threadID = GetCurrentThreadId();

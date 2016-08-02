@@ -92,7 +92,7 @@ ERR:
 	retVal = false;
 
 DONE:
-	sodium_memzero( this->keys->scratch, crypt->text_len + SQRL_KEY_SIZE );
+	sqrl_memzero( this->keys->scratch, crypt->text_len + SQRL_KEY_SIZE );
 	if( crypt ) delete crypt;
 	return retVal;
 }
@@ -137,7 +137,7 @@ ERR:
 	retVal = false;
 
 DONE:
-	sodium_memzero( this->keys->scratch, crypt->text_len + SQRL_KEY_SIZE );
+	sqrl_memzero( this->keys->scratch, crypt->text_len + SQRL_KEY_SIZE );
 	if( crypt ) delete crypt;
 	return retVal;
 }
@@ -179,7 +179,7 @@ ERR:
 	retVal = false;
 
 DONE:
-	sodium_memzero( this->keys->scratch, crypt.text_len );
+	sqrl_memzero( this->keys->scratch, crypt.text_len );
 	return retVal;
 
 }
@@ -226,7 +226,7 @@ ERR:
 	retVal = false;
 
 DONE:
-	sodium_memzero( this->keys->scratch, crypt.text_len );
+	sqrl_memzero( this->keys->scratch, crypt.text_len );
 	return retVal;
 }
 
@@ -285,7 +285,7 @@ ERR:
 	retVal = false;
 
 DONE:
-	sodium_memzero( this->keys->scratch, crypt.text_len + SQRL_KEY_SIZE );
+	sqrl_memzero( this->keys->scratch, crypt.text_len + SQRL_KEY_SIZE );
 	return retVal;
 }
 
@@ -368,7 +368,7 @@ ERR:
 	retVal = false;
 
 DONE:
-	sodium_memzero( this->keys->scratch, crypt.text_len + SQRL_KEY_SIZE );
+	sqrl_memzero( this->keys->scratch, crypt.text_len + SQRL_KEY_SIZE );
 	return retVal;
 }
 

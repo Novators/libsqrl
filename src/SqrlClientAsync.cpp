@@ -31,11 +31,15 @@ void SqrlClientAsync::clientThread() {
 		client->callbackQueue.pop();
 		delete info;
 	}
+#ifndef ARDUINO
 	client->actionMutex.lock();
+#endif
 	while( client->actions.size() > 0 ) {
 		SqrlAction *action = client->actions.front();
 		delete action;
 	}
+#ifndef ARDUINO
 	client->actionMutex.unlock();
+#endif
 }
 

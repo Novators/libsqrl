@@ -1,4 +1,12 @@
-#pragma once
+/** @file SqrlAction.h
+@author Adam Comley
+
+This file is part of libsqrl.  It is released under the MIT license.
+For more details, see the LICENSE file included with this package.
+**/
+
+#ifndef SQRLACTION_H
+#define SQRLACTION_H
 
 #include <climits>
 #include "sqrl.h"
@@ -12,36 +20,37 @@
 
 class DLL_PUBLIC SqrlAction
 {
-	friend class SqrlClient;
-	friend class SqrlClientAsync;
-	friend class SqrlUser;
-	friend class SqrlIdentityAction;
+friend class SqrlClient;
+friend class SqrlClientAsync;
+friend class SqrlUser;
+friend class SqrlIdentityAction;
 
 public:
-	SqrlAction();
+SqrlAction();
 
-	void cancel();
-	void authenticate( Sqrl_Credential_Type credentialType,
-		const char *credential, size_t credentialLength );
+void cancel();
+void authenticate( Sqrl_Credential_Type credentialType,
+const char *credential, size_t credentialLength );
 
-	SqrlUser* getUser();
-	void setUser(SqrlUser *user);
+SqrlUser* getUser();
+void setUser(SqrlUser *user);
 
-	SqrlUri *getUri();
-	void setUri(SqrlUri *uri);
+SqrlUri *getUri();
+void setUri(SqrlUri *uri);
 
 protected:
-	~SqrlAction();
-	virtual int run( int currentState ) = 0;
+~SqrlAction();
+virtual int run( int currentState ) = 0;
 
-	int retActionComplete( int status );
-	bool exec();
-	void onRelease();
+int retActionComplete( int status );
+bool exec();
+void onRelease();
 
-	SqrlUser *user;
-	SqrlUri *uri;
-	int state;
-	int status;
-	bool shouldCancel;
+SqrlUser *user;
+SqrlUri *uri;
+int state;
+int status;
+bool shouldCancel;
 };
 
+#endif // SQRLACTION_H

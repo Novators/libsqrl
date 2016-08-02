@@ -18,9 +18,9 @@ For more details, see the LICENSE file included with this package.
 #define PAGE_DATA_SIZE PAGE_SIZE - (8 * BLOCKS_PER_PAGE) - 10
 
 #define SQRL_CAST_PAGE(a,b) struct S4Page *(a) = (struct S4Page*)(b)
-#define SQRL_STORAGE_LOCK(x) sodium_mprotect_noaccess( (void*)(x) )
-#define SQRL_STORAGE_READ_ONLY(x) sodium_mprotect_readonly( (void*)(x) )
-#define SQRL_STORAGE_READ_WRITE(x) sodium_mprotect_readwrite( (void*)(x) )
+#define SQRL_STORAGE_LOCK(x) sqrl_mprotect_noaccess( (void*)(x) )
+#define SQRL_STORAGE_READ_ONLY(x) sqrl_mprotect_readonly( (void*)(x) )
+#define SQRL_STORAGE_READ_WRITE(x) sqrl_mprotect_readwrite( (void*)(x) )
 
 #pragma pack(push,2)
 struct S4Table {
@@ -49,7 +49,7 @@ struct S4Pointer {
 
 static struct S4Page * sqrl_page_create()
 {
-	struct S4Page *page = (struct S4Page*)sodium_malloc(sizeof(struct S4Page));
+	struct S4Page *page = (struct S4Page*)sqrl_malloc(sizeof(struct S4Page));
 	page->nextPage = NULL;
 	memset(page->index, 0, sizeof(struct S4Table) * BLOCKS_PER_PAGE);
 	SQRL_STORAGE_LOCK(page);
@@ -63,7 +63,7 @@ static struct S4Page * sqrl_page_destroy(struct S4Page *page)
 		if (page->nextPage) {
 			sqrl_page_destroy(page->nextPage);
 		}
-		sodium_free(page);
+		sqrl_free(page, sizeof( struct S4Page ));
 		page = NULL;
 	}
 	return page;
@@ -156,7 +156,7 @@ static bool sqrl_storage_block_remove( struct S4Page *page, uint16_t blockType )
 	if( find_block( page, &pointer, blockType )) {
 		SQRL_STORAGE_READ_WRITE( pointer.page );
 		pointer.index->active = 0;
-		sodium_memzero( pointer.page->blocks + pointer.index->offset, pointer.index->blockLength );
+		sqrl_memzero( pointer.page->blocks + pointer.index->offset, pointer.index->blockLength );
 		SQRL_STORAGE_LOCK( pointer.page );
 		return true;
 	}

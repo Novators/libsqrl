@@ -1,7 +1,5 @@
 #include "sqrl_internal.h"
 #include "SqrlEntropy.h"
-#include "sodium.h"
-#include "rdrand.h"
 #include <mutex>
 
 #define SQRL_ENTROPY_REPEAT_FAST 9
@@ -14,16 +12,22 @@ int SqrlEntropy::entropy_target = SQRL_ENTROPY_TARGET;
 bool SqrlEntropy::initialized = false;
 bool SqrlEntropy::stopping = false;
 int SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_FAST;
+#ifndef ARDUINO
 std::mutex *SqrlEntropy::mutex = NULL;
 std::thread *SqrlEntropy::thread = NULL;
-
+#endif
 
 #if defined(__MACH__)
-#include "entropy_mac.h"
+#include "rdrand.h"
+#include "SqrlEntropy_mac.h"
 #elif defined(_WIN32)
-#include "entropy_win.h"
+#include "rdrand.h"
+#include "SqrlEntropy_Win.h"
+#elif defined(ARDUINO)
+#include "SqrlEntropy_Arduino.h"
 #else
-#include "entropy_linux.h"
+#include "rdrand.h"
+#include "SqrlEntropy_linux.h"
 #endif
 
 struct sqrl_entropy_message
@@ -33,6 +37,7 @@ struct sqrl_entropy_message
 };
 
 void SqrlEntropy::update() {
+#ifndef ARDUINO
 	if( !SqrlEntropy::state ) return;
 	struct sqrl_fast_flux_entropy ffe;
 	sqrl_store_fast_flux_entropy( &ffe );
@@ -45,10 +50,12 @@ void SqrlEntropy::update() {
 		SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_SLOW;
 	}
 	SqrlEntropy::mutex->unlock();
+#endif
 }
 
 void
 SqrlEntropy::threadFunction() {
+#ifndef ARDUINO
 	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)SqrlEntropy::state;
 	crypto_hash_sha512_init( (crypto_hash_sha512_state*)SqrlEntropy::state );
 	SqrlEntropy::addBracket( NULL );
@@ -67,9 +74,13 @@ SqrlEntropy::threadFunction() {
 	SqrlEntropy::mutex = NULL;
 	delete SqrlEntropy::thread;
 	SqrlEntropy::thread = NULL;
+#endif
 }
 
 void SqrlEntropy::start() {
+#ifdef ARDUINO
+	SqrlEntropy::initialized = true;
+#else
 	if( SqrlEntropy::state ) return;
 	SqrlEntropy::initialized = true;
 	SqrlEntropy::stopping = false;
@@ -84,21 +95,26 @@ void SqrlEntropy::start() {
 	while( SqrlEntropy::estimated_entropy == 0 ) {
 		sqrl_sleep( 5 );
 	}
+#endif
 }
 
 void SqrlEntropy::stop() {
+#ifndef ARDUINO
 	if( !SqrlEntropy::state ) return;
 	SqrlEntropy::stopping = true;
 	while( SqrlEntropy::thread ) {
 		sqrl_sleep( 5 );
 	}
+#endif
 }
 
 void SqrlEntropy::increment( int amount ) {
+#ifndef ARDUINO
 	SqrlEntropy::estimated_entropy += amount;
 	if( SqrlEntropy::estimated_entropy >= SqrlEntropy::entropy_target ) {
 		SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_SLOW;
 	}
+#endif
 }
 
 /**
@@ -110,6 +126,9 @@ void SqrlEntropy::increment( int amount ) {
 * @param msg_len The length of \p msg (in bytes)
 */
 void SqrlEntropy::add( uint8_t* msg, size_t msg_len ) {
+#ifdef ARDUINO
+	// Ignore
+#else
 	if( !SqrlEntropy::state ) SqrlEntropy::start();
 	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)SqrlEntropy::state;
 	if( SqrlEntropy::initialized ) {
@@ -131,6 +150,7 @@ void SqrlEntropy::add( uint8_t* msg, size_t msg_len ) {
 		}
 		SqrlEntropy::mutex->unlock();
 	}
+#endif
 }
 
 /**
@@ -142,6 +162,9 @@ void SqrlEntropy::add( uint8_t* msg, size_t msg_len ) {
 */
 
 int SqrlEntropy::get( uint8_t *buf, int desired_entropy, bool blocking ) {
+#ifdef ARDUINO
+	// TODO: Implement SqrlEntropy::get for Arduino
+#else
 	if( !SqrlEntropy::state ) SqrlEntropy::start();
 	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)SqrlEntropy::state;
 
@@ -182,16 +205,20 @@ START:
 	SqrlEntropy::entropy_target = SQRL_ENTROPY_TARGET;
 	SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_FAST;
 	return received_entropy;
+#endif
 }
 
 
 int SqrlEntropy::bytes( uint8_t* buf, int nBytes ) {
+#ifdef ARDUINO
+	// TODO: Implement SqrlEntropy::bytes for Arduino
+#else
 	if( !buf || (nBytes <= 0) ) return 0;
 
 	int desired_entropy = (nBytes > 64) ? (8 * 64) : (8 * nBytes);
 	if( desired_entropy > SQRL_ENTROPY_NEEDED ) desired_entropy = SQRL_ENTROPY_NEEDED;
 	uint8_t tmp[64];
-	sodium_mlock( tmp, 64 );
+	sqrl_mlock( tmp, 64 );
 	SqrlEntropy::get( tmp, desired_entropy, true );
 
 	if( nBytes <= 64 ) {
@@ -200,8 +227,9 @@ int SqrlEntropy::bytes( uint8_t* buf, int nBytes ) {
 		crypto_stream_chacha20( (unsigned char*)buf, nBytes, tmp, (tmp + crypto_stream_chacha20_NONCEBYTES) );
 	}
 
-	sodium_munlock( tmp, 64 );
+	sqrl_munlock( tmp, 64 );
 	return nBytes;
+#endif
 }
 
 
@@ -214,10 +242,14 @@ int SqrlEntropy::bytes( uint8_t* buf, int nBytes ) {
 */
 
 int SqrlEntropy::estimate() {
+#ifdef ARDUINO
+	return INT_MAX;
+#else
 	if( !SqrlEntropy::state ) SqrlEntropy::start();
 	if( SqrlEntropy::initialized ) {
 		return SqrlEntropy::estimated_entropy;
 	}
 	return 0;
+#endif
 }
 

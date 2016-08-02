@@ -17,14 +17,18 @@
 #define SQRL_CALLBACK_PROGRESS 7
 
 SqrlClient *SqrlClient::client = NULL;
+#ifndef ARDUINO
 static std::mutex sqrl_client_mutex;
+#endif
 
 SqrlClient::SqrlClient() {
 	this->initialize();
 }
 
 void SqrlClient::initialize() {
+#ifndef ARDUINO
 	sqrl_client_mutex.lock();
+#endif
 	if( SqrlClient::client != NULL ) {
 		// Enforce a single SqrlClient object
 		exit( 1 );
@@ -33,14 +37,20 @@ void SqrlClient::initialize() {
 
 	SqrlEntropy::start();
 	SqrlClient::client = this;
+#ifndef ARDUINO
 	sqrl_client_mutex.unlock();
+#endif
 }
 
 SqrlClient::~SqrlClient() {
+#ifndef ARDUINO
 	sqrl_client_mutex.lock();
+#endif
 	SqrlEntropy::stop();
 	SqrlClient::client = NULL;
+#ifndef ARDUINO
 	sqrl_client_mutex.unlock();
+#endif
 }
 
 SqrlClient *SqrlClient::getClient() {
@@ -66,8 +76,7 @@ bool SqrlClient::loop() {
 	this->onLoop();
 	SqrlAction *action;
 	while( !this->callbackQueue.empty() ) {
-		struct CallbackInfo *info = this->callbackQueue.front();
-		this->callbackQueue.pop();
+		struct CallbackInfo *info = SQRL_QUEUE_POP( this->callbackQueue );
 
 		switch( info->cbType ) {
 		case SQRL_CALLBACK_SAVE_SUGGESTED:
@@ -105,18 +114,27 @@ bool SqrlClient::loop() {
 		}
 		delete info;
 	}
-	if( this->actions.size() > 0 ) {
-		action = this->actions.front();
+	SQRL_QUEUE<SqrlAction *> *nq = new SQRL_QUEUE<SqrlAction *>();
+	if( ! SQRL_QUEUE_IS_EMPTY( this->actions ) ) {
+		action = SQRL_QUEUE_POP( this->actions );
 		if( action ) {
 			if( action->exec() ) {
-				this->actionMutex.lock();
-				this->actions.pop_front();
-				this->actions.push_back( action );
-				this->actionMutex.unlock();
+				SQRL_QUEUE_PUSH( this->actions, action );
 			}
 		}
 	}
-	if( this->actions.empty() && this->callbackQueue.empty() ) {
+	while( !SQRL_QUEUE_IS_EMPTY( this->actions ) ) {
+		SQRL_QUEUE_PUSH( nq, SQRL_QUEUE_POP( this->actions ) );
+	}
+#ifndef ARDUINO
+	this->actionMutex.lock();
+#endif
+	delete this->actions;
+	this->actions = nq;
+#ifndef ARDUNIO
+	this->actionMutex.unlock();
+#endif
+	if( SQRL_QUEUE_IS_EMPTY( this->actions ) && SQRL_QUEUE_IS_EMPTY( this->callbackQueue ) ) {
 		return false;
 	}
 	return true;
@@ -127,28 +145,28 @@ void SqrlClient::callSaveSuggested( SqrlUser * user ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_SAVE_SUGGESTED;
 	info->ptr = user;
-	this->callbackQueue.push( info );
+	SQRL_QUEUE_PUSH( this->callbackQueue, info );
 }
 
 void SqrlClient::callSelectUser( SqrlAction * action ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_SELECT_USER;
 	info->ptr = action;
-	this->callbackQueue.push( info );
+	SQRL_QUEUE_PUSH( this->callbackQueue, info );
 }
 
 void SqrlClient::callSelectAlternateIdentity( SqrlAction * action ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_SELECT_ALT;
 	info->ptr = action;
-	this->callbackQueue.push( info );
+	SQRL_QUEUE_PUSH( this->callbackQueue, info );
 }
 
 void SqrlClient::callActionComplete( SqrlAction * action ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_ACTION_COMPLETE;
 	info->ptr = action;
-	this->callbackQueue.push( info );
+	SQRL_QUEUE_PUSH( this->callbackQueue, info );
 }
 
 void SqrlClient::callProgress( SqrlAction * action, int progress ) {
@@ -156,7 +174,7 @@ void SqrlClient::callProgress( SqrlAction * action, int progress ) {
 	info->cbType = SQRL_CALLBACK_PROGRESS;
 	info->ptr = action;
 	info->progress = progress;
-	this->callbackQueue.push( info );
+	SQRL_QUEUE_PUSH( this->callbackQueue, info );
 }
 
 void SqrlClient::callAuthenticationRequired( SqrlAction * action, Sqrl_Credential_Type credentialType ) {
@@ -164,7 +182,7 @@ void SqrlClient::callAuthenticationRequired( SqrlAction * action, Sqrl_Credentia
 	info->cbType = SQRL_CALLBACK_AUTH_REQUIRED;
 	info->ptr = action;
 	info->credentialType = credentialType;
-	this->callbackQueue.push( info );
+	SQRL_QUEUE_PUSH( this->callbackQueue, info );
 }
 
 void SqrlClient::callSend( SqrlAction * action, std::string *url, std::string * payload ) {
@@ -173,7 +191,7 @@ void SqrlClient::callSend( SqrlAction * action, std::string *url, std::string * 
 	info->ptr = action;
 	info->str[0] = new std::string( *url );
 	info->str[1] = new std::string( *payload );
-	this->callbackQueue.push( info );
+	SQRL_QUEUE_PUSH( this->callbackQueue, info );
 }
 
 void SqrlClient::callAsk( SqrlAction * action, std::string * message, std::string * firstButton, std::string * secondButton ) {
@@ -183,7 +201,7 @@ void SqrlClient::callAsk( SqrlAction * action, std::string * message, std::strin
 	info->str[0] = new std::string( *message );
 	info->str[1] = new std::string( *firstButton );
 	info->str[2] = new std::string( *secondButton );
-	this->callbackQueue.push( info );
+	SQRL_QUEUE_PUSH( this->callbackQueue, info );
 }
 
 SqrlClient::CallbackInfo::CallbackInfo() {

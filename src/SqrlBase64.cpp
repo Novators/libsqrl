@@ -54,27 +54,27 @@ std::string *SqrlBase64::decode( std::string *dest, const std::string *src, bool
 		dest->clear();
 		dest->reserve( (size_t)(input_length * 3.0 / 4.0) );
 	}
-	size_t i = 0;
 	int charCount = 0;
 	uint32_t tmp = 0, val;
 	char str[4] = {0};
 
 	std::string::const_iterator it = src->cbegin();
+	std::string::const_iterator itend = src->cend();
 
 	while( it < src->cend() ) {
-		if( this->nextValue( &val, it, src->cend() ) ) {
+		if( this->nextValue( &val, it, itend ) ) {
 			tmp = val << 18;
 			charCount++;
 		}
-		if( this->nextValue( &val, it, src->cend() ) ) {
+		if( this->nextValue( &val, it, itend ) ) {
 			tmp |= val << 12;
 			charCount++;
 		}
-		if( this->nextValue( &val, it, src->cend() ) ) {
+		if( this->nextValue( &val, it, itend ) ) {
 			tmp |= val << 6;
 			charCount++;
 		}
-		if( this->nextValue( &val, it, src->cend() ) ) {
+		if( this->nextValue( &val, it, itend ) ) {
 			tmp |= val;
 			charCount++;
 		}

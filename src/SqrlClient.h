@@ -1,7 +1,21 @@
 #pragma once
 
 #include "sqrl.h"
+#ifdef ARDUINO
+#include "QueueList.h"
+#define SQRL_QUEUE QueueList
+#define SQRL_QUEUE_POP( obj ) obj.pop()
+#define SQRL_QUEUE_IS_EMPTY( obj ) obj.isEmpty()
+#define SQRL_QUEUE_PUSH( obj, item ) obj.push( item )
+#define SQRL_QUEUE_PEEK( obj ) obj.peek()
+#else
 #include <queue>
+#define SQRL_QUEUE std::deque
+#define SQRL_QUEUE_POP( obj ) obj.front(); obj.pop_front()
+#define SQRL_QUEUE_IS_EMPTY( obj ) obj.empty()
+#define SQRL_QUEUE_PUSH( obj, item ) obj.push_back( item )
+#define SQRL_QUEUE_PEEK( obj ) obj.front()
+#endif
 
 class DLL_PUBLIC SqrlClient
 {
@@ -60,10 +74,12 @@ private:
 		void *ptr;
 		std::string* str[3];
 	};
-	std::queue<struct CallbackInfo*> callbackQueue;
-	std::deque<SqrlAction *>actions;
+	SQRL_QUEUE<struct CallbackInfo*> callbackQueue;
+	SQRL_QUEUE<SqrlAction *>actions;
+#ifndef ARDUINO
 	std::mutex actionMutex;
 	std::mutex userMutex;
+#endif
 
 	bool loop();
 

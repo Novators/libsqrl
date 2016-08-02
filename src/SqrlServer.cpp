@@ -45,7 +45,7 @@ SqrlServer::SqrlServer(
 	if( passcode ) {
 		crypto_hash_sha256( this->key, (unsigned char*)passcode, passcode_len );
 	} else {
-		randombytes_buf( this->key, 32 );
+		sqrl_randombytes( this->key, 32 );
 	}
 
 	this->nut_expires = SQRL_DEFAULT_NUT_LIFE * 1000000;
@@ -72,7 +72,7 @@ SqrlServer::~SqrlServer() {
 	}
 	if( this->reply ) free( this->reply );
 
-	sodium_memzero( this, sizeof( this ) );
+	sqrl_memzero( this, sizeof( this ) );
 }
 
 bool SqrlServer::createNut( Sqrl_Nut *nut, uint32_t ip ) {
@@ -80,17 +80,17 @@ bool SqrlServer::createNut( Sqrl_Nut *nut, uint32_t ip ) {
 	Sqrl_Nut pt;
 	pt.ip = ip;
 	pt.timestamp = sqrl_get_timestamp();
-	pt.random = randombytes_random();
+	pt.random = sqrl_random();
 
 	aes_context ctx;
 	if( 0 != aes_setkey( &ctx, ENCRYPT, this->key, 16 ) ) {
 		return false;
 	}
 	if( 0 != aes_cipher( &ctx, (unsigned char*)&pt, (unsigned char*)nut ) ) {
-		sodium_memzero( &ctx, sizeof( aes_context ) );
+		sqrl_memzero( &ctx, sizeof( aes_context ) );
 		return false;
 	}
-	sodium_memzero( &ctx, sizeof( aes_context ) );
+	sqrl_memzero( &ctx, sizeof( aes_context ) );
 	return true;
 }
 
@@ -104,10 +104,10 @@ bool SqrlServer::decryptNut( Sqrl_Nut *nut ) {
 		return false;
 	}
 	if( 0 != aes_cipher( &ctx, (unsigned char*)nut, (unsigned char*)&pt ) ) {
-		sodium_memzero( &ctx, sizeof( aes_context ) );
+		sqrl_memzero( &ctx, sizeof( aes_context ) );
 		return false;
 	}
-	sodium_memzero( &ctx, sizeof( aes_context ) );
+	sqrl_memzero( &ctx, sizeof( aes_context ) );
 
 	memcpy( nut, &pt, sizeof( Sqrl_Nut ) );
 	return true;

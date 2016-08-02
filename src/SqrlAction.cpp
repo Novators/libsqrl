@@ -11,7 +11,9 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlUri.h"
 #include "SqrlUser.h"
 #include "SqrlClient.h"
+#ifndef ARDUINO
 #include <algorithm>
+#endif
 
 struct Sqrl_action_List {
 	SqrlAction *action;
@@ -30,21 +32,29 @@ SqrlAction::SqrlAction()
 	if( !client ) {
 		exit( 1 );
 	}
+#ifndef ARDUINO
 	client->actionMutex.lock();
+#endif
 	client->actions.push_back( this );
+#ifndef ARDUINO
 	client->actionMutex.unlock();
+#endif
 }
 
 SqrlAction::~SqrlAction() {
 	SqrlClient *client = SqrlClient::getClient();
+#ifndef ARDUINO
 	client->actionMutex.lock();
-	client->actions.erase( 
+#endif
+	client->actions.erase(
 		std::remove_if( 
 			client->actions.begin(),
 			client->actions.end(),
 			[this]( SqrlAction* i ) { return i == this; } ),
 		client->actions.end() );
+#ifndef ARDUINO
 	client->actionMutex.unlock();
+#endif
 
 	this->onRelease();
 	if( this->user ) {

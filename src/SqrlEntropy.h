@@ -25,6 +25,9 @@ private:
 	static bool initialized;
 	static bool stopping;
 	static int sleeptime;
+#ifndef ARDUINO
 	static std::mutex *mutex;
 	static std::thread *thread;
+#endif
+
 };

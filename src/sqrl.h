@@ -5,9 +5,20 @@
 #endif
 
 #include <stdint.h>
+#include <cstdlib>
+#include <cstring>
+#include <string>
+#if defined(ARDUINO)
+#if ARDUINO >= 100
+#include "arduino.h"
+#else
+#include "WProgram.h"
+#endif
+#else
 #include <thread>
 #include <mutex>
-#include <string>
+#endif
+
 
 class SqrlUser;
 class SqrlEncoder;
