@@ -1,7 +1,6 @@
 #pragma once
 
 #include "sqrl.h"
-#include "SqrlEntropy.fwd.h"
 
 class DLL_PUBLIC SqrlEntropy
 {

@@ -1,7 +1,6 @@
 #pragma once
 
 #include "sqrl.h"
-#include "SqrlAction.fwd.h"
 
 #define SQRL_ENCRYPT 1
 #define SQRL_DECRYPT 0

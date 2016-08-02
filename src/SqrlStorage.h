@@ -2,9 +2,7 @@
 
 #include <stdint.h>
 #include <string>
-#include "SqrlStorage.fwd.h"
-#include "SqrlBlock.fwd.h"
-#include "SqrlUri.fwd.h"
+#include "sqrl.h"
 
 class DLL_PUBLIC SqrlStorage
 {

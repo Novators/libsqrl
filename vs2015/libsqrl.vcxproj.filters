@@ -28,9 +28,6 @@
     <Filter Include="Header Files\Client\Entropy">
       <UniqueIdentifier>{d2d89c5e-9129-4b61-8efc-06c41b46d5c7}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Class Forwards">
-      <UniqueIdentifier>{05bfb333-a541-40f4-93b6-7571615b1ef0}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Common\Encoding">
       <UniqueIdentifier>{baebe398-91df-4540-8f56-a9da06caf327}</UniqueIdentifier>
     </Filter>
@@ -233,35 +230,8 @@
     <ClInclude Include="..\src\rdrand.h">
       <Filter>Header Files\Common\Crypto</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SqrlBase64.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SqrlBase64.h">
       <Filter>Header Files\Common\Encoding</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlBlock.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlClient.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlClientAsync.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlCrypt.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlEncoder.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlEntropy.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlIdentityAction.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlSiteAction.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlBlock.h">
       <Filter>Header Files\Client\Storage</Filter>
@@ -277,51 +247,6 @@
     </ClInclude>
     <ClInclude Include="..\src\SqrlIdentityAction.h">
       <Filter>Header Files\Client\Actions</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlActionChangePassword.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlAction.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlActionDisable.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlActionEnable.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlActionGenerate.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlActionIdent.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlActionLock.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlActionRekey.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlActionRemove.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlActionRescue.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlActionSave.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlStorage.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlUri.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlUrlEncode.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlUser.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlEncoder.h">
       <Filter>Header Files\Common\Encoding</Filter>
@@ -347,8 +272,8 @@
     <ClInclude Include="..\src\SqrlServer.h">
       <Filter>Header Files\Server</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SqrlServer.fwd.h">
-      <Filter>Header Files\Class Forwards</Filter>
+    <ClInclude Include="..\src\SqrlForwardDeclarations.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

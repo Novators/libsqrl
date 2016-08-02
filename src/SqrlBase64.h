@@ -1,7 +1,7 @@
 #pragma once
 
+#include "sqrl.h"
 #include "SqrlEncoder.h"
-#include "SqrlBase64.fwd.h"
 
 class DLL_PUBLIC SqrlBase64 : SqrlEncoder
 {

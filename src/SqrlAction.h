@@ -1,10 +1,7 @@
 #pragma once
 
-#include "SqrlAction.fwd.h"
-#include "SqrlUser.fwd.h"
-#include "SqrlClient.fwd.h"
-#include "SqrlUri.fwd.h"
 #include <climits>
+#include "sqrl.h"
 
 #define SQRL_ACTION_RUNNING 0
 #define SQRL_ACTION_SUCCESS 1

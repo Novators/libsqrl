@@ -9,6 +9,32 @@
 #include <mutex>
 #include <string>
 
+class SqrlUser;
+class SqrlEncoder;
+class SqrlUrlEncode;
+class SqrlUri;
+class SqrlStorage;
+class SqrlSiteAction;
+class SqrlServer;
+class SqrlIdentityAction;
+class SqrlEntropy;
+class SqrlCrypt;
+class SqrlClient;
+class SqrlClient;
+class SqrlBlock;
+class SqrlBase64;
+class SqrlActionSave;
+class SqrlActionRescue;
+class SqrlActionRemove;
+class SqrlActionRekey;
+class SqrlActionLock;
+class SqrlActionIdent;
+class SqrlActionGenerate;
+class SqrlActionEnable;
+class SqrlActionDisable;
+class SqrlActionChangePassword;
+class SqrlAction;
+
 // Buffer sizes for keys, etc...
 #define SQRL_KEY_SIZE 						    32
 #define SQRL_SIG_SIZE 						    64

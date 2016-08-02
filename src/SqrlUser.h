@@ -1,12 +1,6 @@
 #pragma once
 
-#include "SqrlUser.fwd.h"
-#include "SqrlUri.fwd.h"
-#include "SqrlBlock.fwd.h"
-#include "SqrlStorage.fwd.h"
-#include "SqrlCrypt.fwd.h"
-#include "SqrlActionSave.fwd.h"
-#include "SqrlActionLock.fwd.h"
+#include "sqrl.h"
 
 #define USER_MAX_KEYS 16
 
