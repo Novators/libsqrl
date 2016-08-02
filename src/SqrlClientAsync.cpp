@@ -34,14 +34,14 @@ void SqrlClientAsync::clientThread() {
 		}
 	}
 	while( !client->callbackQueue.empty() ) {
-		struct CallbackInfo *info = SQRL_QUEUE_POP( client->callbackQueue );
+		struct CallbackInfo *info = client->callbackQueue.pop();
 		delete info;
 	}
 #ifndef ARDUINO
 	client->actionMutex.lock();
 #endif
-	while( client->actions.size() > 0 ) {
-		SqrlAction *action = SQRL_QUEUE_POP( client->actions );
+	while( !client->actions.empty() ) {
+		SqrlAction *action = client->actions.pop();
 		delete action;
 	}
 #ifndef ARDUINO

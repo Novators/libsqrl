@@ -46,12 +46,7 @@ SqrlAction::~SqrlAction() {
 #ifndef ARDUINO
 	client->actionMutex.lock();
 #endif
-	client->actions.erase(
-		std::remove_if(
-			client->actions.begin(),
-			client->actions.end(),
-			[this]( SqrlAction* i ) { return i == this; } ),
-		client->actions.end() );
+	client->actions.erase( this );
 #ifndef ARDUINO
 	client->actionMutex.unlock();
 #endif

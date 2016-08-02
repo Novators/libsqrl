@@ -278,5 +278,8 @@
     <ClInclude Include="..\src\SqrlEntropy_Win.h">
       <Filter>Header Files\Client\Entropy</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SqrlDeque.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>
