@@ -50,14 +50,14 @@ static void sqrl_add_entropy_bracket(struct sqrl_entropy_pool* pool, uint8_t* se
 	if (seed) {
 		memcpy(&bracket.seed, seed, crypto_hash_sha512_BYTES);
 	}
-	randombytes_buf(&bracket.random, crypto_hash_sha512_BYTES);
+	sqrl_randombytes(&bracket.random, crypto_hash_sha512_BYTES);
 	if (rdrand_available()) {
 		for (i = 0; i < 32; i++) {
 			rdrand64(&bracket.rdrand[i]);
 		}
 	}
 	else {
-		randombytes_buf(&bracket.rdrand, 256);
+		sqrl_randombytes(&bracket.rdrand, 256);
 	}
 	bracket.processId = getpid();
 	bracket.threadId = syscall(SYS_gettid);

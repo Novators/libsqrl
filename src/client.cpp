@@ -8,6 +8,7 @@ For more details, see the LICENSE file included with this package.
 
 #include "sqrl_internal.h"
 #include "sqrl.h"
+#include "SqrlClient.h"
 #include "SqrlUser.h"
 #include "SqrlUri.h"
 #include "SqrlAction.h"

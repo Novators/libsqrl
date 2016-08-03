@@ -13,10 +13,10 @@ For more details, see the LICENSE file included with this package.
 
 SqrlActionSave::SqrlActionSave( SqrlUser *user, SqrlUri *uri, Sqrl_Export exportType, Sqrl_Encoding encodingType )
 	: SqrlIdentityAction( user ),
+	exportType( exportType ),
+	encodingType( encodingType ),
 	buffer(NULL),
-	buffer_len(0),
-	exportType(exportType),
-	encodingType(encodingType) {
+	buffer_len( 0 ) {
 	if( uri ) {
 		this->uri = uri->copy();
 	} else {
@@ -26,10 +26,10 @@ SqrlActionSave::SqrlActionSave( SqrlUser *user, SqrlUri *uri, Sqrl_Export export
 
 SqrlActionSave::SqrlActionSave( SqrlUser *user, const char *path, Sqrl_Export exportType, Sqrl_Encoding encodingType )
 	: SqrlIdentityAction( user ),
-	buffer(NULL),
-	buffer_len(NULL),
 	exportType( exportType ),
-	encodingType( encodingType ) {
+	encodingType( encodingType ),
+	buffer(NULL),
+	buffer_len(0) {
 	if( path ) {
 		this->uri = SqrlUri::parse( path );
 	} else {

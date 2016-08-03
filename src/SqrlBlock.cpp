@@ -67,7 +67,7 @@ bool SqrlBlock::init(uint16_t blockType, uint16_t blockLength)
 	if (blockLength > 0) {
 		this->data = (uint8_t*)malloc(blockLength);
 		if (this->data) {
-			sodium_mlock(this->data, blockLength);
+			sqrl_mlock(this->data, blockLength);
 			return true;
 		}
 	}
@@ -89,10 +89,10 @@ bool SqrlBlock::resize(size_t new_size)
 		memcpy( buf, this->data, this->blockLength );
 	}
 
-	sodium_munlock( this->data, this->blockLength );
+	sqrl_munlock( this->data, this->blockLength );
 	free( this->data );
 	this->data = (uint8_t*)malloc( new_size );
-	sodium_mlock( this->data, new_size );
+	sqrl_mlock( this->data, new_size );
 	this->blockLength = (uint16_t)new_size;
 	if( this->cur >= this->blockLength ) {
 		this->cur = this->blockLength - 1;
@@ -193,15 +193,22 @@ bool SqrlBlock::writeInt8( uint8_t value )
 	return true;
 }
 
-std::string* SqrlBlock::getData(std::string *buf, bool append)
+SQRL_STRING* SqrlBlock::getData(SQRL_STRING *buf, bool append)
 {
 	if( buf ) {
-		if( !append ) buf->clear();
+		if( !append ) SQRL_STRING_CLEAR( buf );
 	} else {
-		if( this->blockLength > 0 )	buf = new std::string();
+		if( this->blockLength > 0 )	buf = new SQRL_STRING();
 	}
 	if (this->blockLength > 0) {
+#ifdef ARDUINO
+		buf->reserve( this->blockLength + buf->length() );
+		for( int i = 0; i < this->blockLength; i++ ) {
+			buf->concat( this->data[i] );
+		}
+#else
 		buf->append( (char*)this->data, this->blockLength );
+#endif
 	} else {
 		return NULL;
 	}

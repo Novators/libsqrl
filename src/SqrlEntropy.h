@@ -9,6 +9,9 @@ For more details, see the LICENSE file included with this package.
 #define SQRLENTROPY_H
 
 #include "sqrl.h"
+#ifdef ARDUINO
+#include <RNG.h>
+#endif
 
 class DLL_PUBLIC SqrlEntropy
 {
@@ -33,7 +36,10 @@ private:
 	static bool initialized;
 	static bool stopping;
 	static int sleeptime;
+#ifndef ARDUINO
 	static std::mutex *mutex;
 	static std::thread *thread;
+#endif
+
 };
 #endif // SQRLENTROPY_H

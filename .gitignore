@@ -14,3 +14,6 @@ build
 /Debug
 /x64
 /*.sqrl
+/SQRLduino/__vm
+/SQRLduino/Release
+/SQRLduino/Debug

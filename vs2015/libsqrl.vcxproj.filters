@@ -215,15 +215,6 @@
     <ClInclude Include="..\src\detect_platform.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\entropy_linux.h">
-      <Filter>Header Files\Client\Entropy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\entropy_mac.h">
-      <Filter>Header Files\Client\Entropy</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\entropy_win.h">
-      <Filter>Header Files\Client\Entropy</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gcm.h">
       <Filter>Header Files\Common\Crypto</Filter>
     </ClInclude>
@@ -272,8 +263,20 @@
     <ClInclude Include="..\src\SqrlServer.h">
       <Filter>Header Files\Server</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SqrlForwardDeclarations.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="..\src\SqrlEntropy_Arduino.h">
+      <Filter>Header Files\Client\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlEntropy_Linux.h">
+      <Filter>Header Files\Client\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlEntropy_Mac.h">
+      <Filter>Header Files\Client\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlEntropy_Win.h">
+      <Filter>Header Files\Client\Entropy</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlDeque.h">
+      <Filter>Header Files\Common</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -13,6 +13,7 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlEntropy.h"
 #include "gcm.h"
 
+template class SqrlDeque<SqrlClient::CallbackInfo *>;
 
 #define SQRL_CALLBACK_SAVE_SUGGESTED 0
 #define SQRL_CALLBACK_SELECT_USER 1
@@ -24,30 +25,40 @@ For more details, see the LICENSE file included with this package.
 #define SQRL_CALLBACK_PROGRESS 7
 
 SqrlClient *SqrlClient::client = NULL;
+#ifndef ARDUINO
 static std::mutex sqrl_client_mutex;
+#endif
 
 SqrlClient::SqrlClient() {
 	this->initialize();
 }
 
 void SqrlClient::initialize() {
+#ifndef ARDUINO
 	sqrl_client_mutex.lock();
+#endif
 	if( SqrlClient::client != NULL ) {
 		// Enforce a single SqrlClient object
-		exit( 1 );
+		exit( 4 );
 	}
 	SqrlInit();
 
 	SqrlEntropy::start();
 	SqrlClient::client = this;
+#ifndef ARDUINO
 	sqrl_client_mutex.unlock();
+#endif
 }
 
 SqrlClient::~SqrlClient() {
+#ifndef ARDUINO
 	sqrl_client_mutex.lock();
+#endif
 	SqrlEntropy::stop();
 	SqrlClient::client = NULL;
+#ifndef ARDUINO
 	sqrl_client_mutex.unlock();
+#endif
 }
 
 SqrlClient *SqrlClient::getClient() {
@@ -73,8 +84,7 @@ bool SqrlClient::loop() {
 	this->onLoop();
 	SqrlAction *action;
 	while( !this->callbackQueue.empty() ) {
-		struct CallbackInfo *info = this->callbackQueue.front();
-		this->callbackQueue.pop();
+		struct CallbackInfo *info = this->callbackQueue.pop();
 
 		switch( info->cbType ) {
 		case SQRL_CALLBACK_SAVE_SUGGESTED:
@@ -112,15 +122,10 @@ bool SqrlClient::loop() {
 		}
 		delete info;
 	}
-	if( this->actions.size() > 0 ) {
-		action = this->actions.front();
-		if( action ) {
-			if( action->exec() ) {
-				this->actionMutex.lock();
-				this->actions.pop_front();
-				this->actions.push_back( action );
-				this->actionMutex.unlock();
-			}
+	if( !this->actions.empty() ) {
+		action = this->actions.pop();
+		if( action->exec() ) {
+			this->actions.push_back( action );
 		}
 	}
 	if( this->actions.empty() && this->callbackQueue.empty() ) {
@@ -174,22 +179,22 @@ void SqrlClient::callAuthenticationRequired( SqrlAction * action, Sqrl_Credentia
 	this->callbackQueue.push( info );
 }
 
-void SqrlClient::callSend( SqrlAction * action, std::string *url, std::string * payload ) {
+void SqrlClient::callSend( SqrlAction * action, SQRL_STRING *url, SQRL_STRING * payload ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_SEND;
 	info->ptr = action;
-	info->str[0] = new std::string( *url );
-	info->str[1] = new std::string( *payload );
+	info->str[0] = new SQRL_STRING( *url );
+	info->str[1] = new SQRL_STRING( *payload );
 	this->callbackQueue.push( info );
 }
 
-void SqrlClient::callAsk( SqrlAction * action, std::string * message, std::string * firstButton, std::string * secondButton ) {
+void SqrlClient::callAsk( SqrlAction * action, SQRL_STRING * message, SQRL_STRING * firstButton, SQRL_STRING * secondButton ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_ASK;
 	info->ptr = action;
-	info->str[0] = new std::string( *message );
-	info->str[1] = new std::string( *firstButton );
-	info->str[2] = new std::string( *secondButton );
+	info->str[0] = new SQRL_STRING( *message );
+	info->str[1] = new SQRL_STRING( *firstButton );
+	info->str[2] = new SQRL_STRING( *secondButton );
 	this->callbackQueue.push( info );
 }
 
@@ -201,7 +206,6 @@ SqrlClient::CallbackInfo::CallbackInfo() {
 	this->str[0] = NULL;
 	this->str[1] = NULL;
 	this->str[2] = NULL;
-
 }
 
 SqrlClient::CallbackInfo::~CallbackInfo() {

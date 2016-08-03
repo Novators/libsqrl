@@ -32,7 +32,7 @@ public:
 	bool        writeInt16(uint16_t value);
 	bool        writeInt32(uint32_t value);
 	bool        writeInt8(uint8_t value);
-	std::string*	getData(std::string *buf, bool append = false);
+	SQRL_STRING*	getData(SQRL_STRING *buf, bool append = false);
 	uint8_t*	getDataPointer(bool atCursor = false);
 	uint16_t	getBlockLength();
 	uint16_t	getBlockType();

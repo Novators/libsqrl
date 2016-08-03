@@ -14,7 +14,7 @@ For more details, see the LICENSE file included with this package.
 class DLL_PUBLIC SqrlUrlEncode : SqrlEncoder
 {
 public:
-	std::string *encode( std::string *dest, const uint8_t *src, size_t src_len, bool append = false );
-	std::string *decode( std::string *dest, const char *src, size_t src_len, bool append = false );
+	SQRL_STRING *encode( SQRL_STRING *dest, const uint8_t *src, size_t src_len, bool append = false );
+	SQRL_STRING *decode( SQRL_STRING *dest, const char *src, size_t src_len, bool append = false );
 };
 #endif // SQRLURLENCODE_H

@@ -56,9 +56,10 @@
     <ClInclude Include="..\src\config.h" />
     <ClInclude Include="..\src\crypto_scrypt.h" />
     <ClInclude Include="..\src\detect_platform.h" />
-    <ClInclude Include="..\src\entropy_linux.h" />
-    <ClInclude Include="..\src\entropy_mac.h" />
-    <ClInclude Include="..\src\entropy_win.h" />
+    <ClInclude Include="..\src\SqrlDeque.h" />
+    <ClInclude Include="..\src\SqrlEntropy_Linux.h" />
+    <ClInclude Include="..\src\SqrlEntropy_Mac.h" />
+    <ClInclude Include="..\src\SqrlEntropy_Win.h" />
     <ClInclude Include="..\src\gcm.h" />
     <ClInclude Include="..\src\rdrand.h" />
     <ClInclude Include="..\src\sqrl.h" />
@@ -80,7 +81,7 @@
     <ClInclude Include="..\src\SqrlCrypt.h" />
     <ClInclude Include="..\src\SqrlEncoder.h" />
     <ClInclude Include="..\src\SqrlEntropy.h" />
-    <ClInclude Include="..\src\SqrlForwardDeclarations.h" />
+    <ClInclude Include="..\src\SqrlEntropy_Arduino.h" />
     <ClInclude Include="..\src\SqrlIdentityAction.h" />
     <ClInclude Include="..\src\SqrlServer.h" />
     <ClInclude Include="..\src\SqrlSiteAction.h" />

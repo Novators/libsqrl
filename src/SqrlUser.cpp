@@ -57,7 +57,7 @@ SqrlUser *SqrlUser::create( SqrlUri *uri ) {
 void SqrlUser::ensureKeysAllocated()
 {
 	if( this->keys == NULL ) {
-		this->keys = (Sqrl_Keys*)sodium_malloc( sizeof( struct Sqrl_Keys ));
+		this->keys = (Sqrl_Keys*)sqrl_malloc( sizeof( struct Sqrl_Keys ));
 		memset( this->keys, 0, sizeof( struct Sqrl_Keys ));
 		FLAG_CLEAR( this->flags, USER_FLAG_MEMLOCKED );
 	}
@@ -65,10 +65,12 @@ void SqrlUser::ensureKeysAllocated()
 
 SqrlUser* SqrlUser::find( const char *unique_id )
 {
-	SqrlClient *client = SqrlClient::getClient();
 	SqrlUser *user = NULL;
 	struct SqrlUserList *l;
+#ifndef ARDUINO
+	SqrlClient *client = SqrlClient::getClient();
 	client->userMutex.lock();
+#endif
 	l = SQRL_USER_LIST;
 	while( l ) {
 		if( l->user && l->user->uniqueIdMatches( unique_id )) {
@@ -78,22 +80,32 @@ SqrlUser* SqrlUser::find( const char *unique_id )
 		}
 		l = l->next;
 	}
+#ifndef ARDUINO
 	client->userMutex.unlock();
+#endif
 	return user;
 }
 
 void SqrlUser::initialize()
 {
+#ifndef ARDUINO
 	SqrlClient *client = SqrlClient::getClient();
+#endif
 	SqrlUser::defaultOptions(&this->options);
 	this->referenceCount = 1;
+#ifndef ARDUINO
 	this->referenceCountMutex = new std::mutex();
+#endif
 	struct SqrlUserList *l = (struct SqrlUserList*)calloc(1, sizeof(struct SqrlUserList));
 	l->user = this;
+#ifndef ARDUINO
 	client->userMutex.lock();
+#endif
 	l->next = SQRL_USER_LIST;
 	SQRL_USER_LIST = l;
+#ifndef ARDUINO
 	client->userMutex.unlock();
+#endif
 }
 
 SqrlUser::SqrlUser()
@@ -103,45 +115,63 @@ SqrlUser::SqrlUser()
 
 int SqrlUser::countUsers()
 {
+#ifndef ARDUINO
 	SqrlClient *client = SqrlClient::getClient();
 	client->userMutex.lock();
-    int i = 0;
+#endif
+	int i = 0;
     struct SqrlUserList *list = SQRL_USER_LIST;
     while( list ) {
         i++;
         list = list->next;
     }
-    client->userMutex.unlock();
-    return i;
+#ifndef ARDUINO
+	client->userMutex.unlock();
+#endif
+	return i;
 }
 
 void SqrlUser::hold()
 {
+#ifndef ARDUINO
 	SqrlClient *client = SqrlClient::getClient();
 	client->userMutex.lock();
+#endif
 	// Make sure the user is still in active memory...
 	struct SqrlUserList *c = SQRL_USER_LIST;
 	while( c ) {
 		if( c->user == this ) {
+#ifdef ARDUINO
+			this->referenceCount++;
+#else
 			this->referenceCountMutex->lock();
 			this->referenceCount++;
 			this->referenceCountMutex->unlock();
+#endif
 			break;
 		}
 		c = c->next;
 	}
+#ifndef ARDUINO
 	client->userMutex.unlock();
+#endif
 }
 
 void SqrlUser::release()
 {
+#ifndef ARDUINO
 	SqrlClient *client = SqrlClient::getClient();
+#endif
 	bool shouldFreeThis = false;
+#ifndef ARDUINO
 	client->userMutex.lock();
+#endif
 	struct SqrlUserList *list = SQRL_USER_LIST;
 	if( list == NULL ) {
 		// Not saved in memory... Go ahead and release it.
+#ifndef ARDUINO
 		client->userMutex.unlock();
+#endif
 		shouldFreeThis = true;
 		goto END;
 	}
@@ -161,18 +191,24 @@ void SqrlUser::release()
 	}
 	if( list == NULL ) {
 		// Not saved in memory... Go ahead and release it.
+#ifndef ARDUINO
 		client->userMutex.unlock();
+#endif
 		shouldFreeThis = true;
 		goto END;
 	}
 	// Release this reference
+#ifndef ARDUINO
 	this->referenceCountMutex->lock();
+#endif
 	this->referenceCount--;
 
 	if( this->referenceCount > 0 ) {
 		// There are other references... Do not delete.
+#ifndef ARDUINO
 		this->referenceCountMutex->unlock();
 		client->userMutex.unlock();
+#endif
 		goto END;
 	}
 	// There were no other references... We can delete this.
@@ -184,7 +220,9 @@ void SqrlUser::release()
 		prev->next = list->next;
 	}
 	free( list );
+#ifndef ARDUINO
 	client->userMutex.unlock();
+#endif
 
 END:
 	if (shouldFreeThis) {
@@ -195,10 +233,12 @@ END:
 SqrlUser::~SqrlUser()
 {
 	if (this->keys != NULL) {
-		sodium_mprotect_readwrite(this->keys);
-		sodium_free(this->keys);
+		sqrl_mprotect_readwrite(this->keys);
+		sqrl_free(this->keys, sizeof( this->keys ));
 	}
+#ifndef ARDUINO
 	delete this->referenceCountMutex;
+#endif
 }
 
 bool SqrlUser::isMemLocked()
@@ -211,17 +251,21 @@ bool SqrlUser::isMemLocked()
 
 void SqrlUser::memLock()
 {
+#ifndef ARDUINO
 	if( this->keys != NULL ) {
-		sodium_mprotect_noaccess( this->keys );
+		sqrl_mprotect_noaccess( this->keys );
 	}
+#endif
 	FLAG_SET( this->flags, USER_FLAG_MEMLOCKED );
 }
 
 void SqrlUser::memUnlock()
 {
+#ifndef ARDUINO
 	if( this->keys != NULL ) {
-		sodium_mprotect_readwrite( this->keys );
+		sqrl_mprotect_readwrite( this->keys );
 	}
+#endif
 	FLAG_CLEAR( this->flags, USER_FLAG_MEMLOCKED );
 }
 
@@ -265,11 +309,11 @@ void SqrlUser::hintUnlock( SqrlAction *action,
 	uint8_t *key = this->keys->scratch + 32;
 	if( !crypt.genKey( action, hint, length ) ||
 		!crypt.doCrypt() ) {
-		sodium_memzero( crypt.plain_text, crypt.text_len );
+		sqrl_memzero( crypt.plain_text, crypt.text_len );
 	}
 	this->hint_iterations = 0;
-	sodium_memzero( key, SQRL_KEY_SIZE );
-	sodium_memzero( this->keys->scratch, KEY_SCRATCH_SIZE );
+	sqrl_memzero( key, SQRL_KEY_SIZE );
+	sqrl_memzero( this->keys->scratch, KEY_SCRATCH_SIZE );
 }
 
 static void bin2rc( char *buf, uint8_t *bin ) {
@@ -338,10 +382,10 @@ bool SqrlUser::_keyGen( SqrlAction *action, int key_type, uint8_t *key )
 		temp[0] = (uint8_t*)malloc( 512 );
 		if( temp[0] ) {
 			memset( key, 0, SQRL_KEY_SIZE );
-			sodium_mlock( temp[0], 512 );
+			sqrl_mlock( temp[0], 512 );
 			SqrlEntropy::get( temp[0], SQRL_ENTROPY_NEEDED );
 			bin2rc( (char*)key, temp[0] );
-			sodium_munlock( temp[0], 512 );
+			sqrl_munlock( temp[0], 512 );
 			free( temp[0] );
 			temp[0] = NULL;
 			retVal = true;
@@ -424,7 +468,7 @@ uint8_t *SqrlUser::newKey( int key_type )
 	}
 	if( offset ) {
 		uint8_t *key = this->keys->keys[offset];
-		sodium_memzero( key, SQRL_KEY_SIZE );
+		sqrl_memzero( key, SQRL_KEY_SIZE );
 		return key;
 	}
 	return NULL;
@@ -501,7 +545,7 @@ void SqrlUser::removeKey( int key_type )
 		}
 	}
 	if( offset > -1 ) {
-		sodium_memzero( this->keys->keys[offset], SQRL_KEY_SIZE );
+		sqrl_memzero( this->keys->keys[offset], SQRL_KEY_SIZE );
 		this->lookup[offset] = 0;
 	}
 }
@@ -563,7 +607,7 @@ bool SqrlUser::setPassword( const char *password, size_t password_len )
 	if( !p || !l ) {
 		return false;
 	}
-	sodium_memzero( p, KEY_PASSWORD_MAX_LEN );
+	sqrl_memzero( p, KEY_PASSWORD_MAX_LEN );
 	if( password_len > KEY_PASSWORD_MAX_LEN ) password_len = KEY_PASSWORD_MAX_LEN;
 	memcpy( p, password, password_len );
 	if( *l > 0 ) {
@@ -657,7 +701,8 @@ void SqrlUser::defaultOptions( Sqrl_User_Options *options ) {
 bool SqrlUser::getUniqueId( char *buffer )
 {
 	if( !buffer ) return false;
-	strncpy_s( buffer, SQRL_UNIQUE_ID_LENGTH + 1, this->uniqueId, SQRL_UNIQUE_ID_LENGTH );
+	memcpy( buffer, this->uniqueId, SQRL_UNIQUE_ID_LENGTH );
+	buffer[SQRL_UNIQUE_ID_LENGTH] = 0;
 	return true;
 }
 

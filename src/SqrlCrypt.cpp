@@ -11,6 +11,12 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlEntropy.h"
 #include "aes.h"
 #include "gcm.h"
+#ifdef ARDUINO
+#include <Crypto.h>
+#include <SHA256.h>
+#include <Ed25519.h>
+#include <Curve25519.h>
+#endif
 
 
 #define ENSCRYPT_R 256
@@ -21,11 +27,24 @@ For more details, see the LICENSE file included with this package.
 int SqrlCrypt::enHash( uint64_t *out, const uint64_t *in ) {
 	uint64_t trans[4];
 	uint64_t tmp[4];
-	sodium_mlock( trans, 32 );
-	sodium_mlock( tmp, 32 );
 	memset( out, 0, 32 );
 	memcpy( tmp, in, 32 );
 	int i;
+#ifdef ARDUINO
+	SHA256 sha = SHA256();
+	for( i = 0; i < 16; i++ ) {
+		sha.update( tmp, 32 );
+		sha.finalize( trans, 32 );
+		sha.reset();
+		out[0] ^= trans[0];
+		out[1] ^= trans[1];
+		out[2] ^= trans[2];
+		out[3] ^= trans[3];
+		memcpy( tmp, trans, 32 );
+	}
+#else
+	sqrl_mlock( trans, 32 );
+	sqrl_mlock( tmp, 32 );
 	for( i = 0; i < 16; i++ ) {
 		crypto_hash_sha256( (unsigned char*)trans, (unsigned char*)tmp, 32 );
 		out[0] ^= trans[0];
@@ -34,8 +53,9 @@ int SqrlCrypt::enHash( uint64_t *out, const uint64_t *in ) {
 		out[3] ^= trans[3];
 		memcpy( tmp, trans, 32 );
 	}
-	sodium_munlock( trans, 32 );
-	sodium_munlock( tmp, 32 );
+	sqrl_munlock( trans, 32 );
+	sqrl_munlock( tmp, 32 );
+#endif
 	return 0;
 }
 
@@ -89,7 +109,7 @@ bool SqrlCrypt::genKey( SqrlAction *action, const char *password, size_t passwor
 	if( !action || !password ) return false;
 	if( !this->key || this->count == 0 ) return false;
 	size_t salt_len = this->salt ? 16 : 0;
-	uint32_t newCount;
+	int newCount;
 	if( (this->flags & SQRL_MILLIS) == SQRL_MILLIS ) {
 		newCount = SqrlCrypt::enScryptMillis( NULL, this->key, password, password_len, this->salt, (uint8_t)salt_len, this->count, this->nFactor );
 		if( newCount == -1 ) return false;
@@ -122,6 +142,12 @@ int SqrlCrypt::enScrypt( SqrlAction *action,
 	uint8_t *buf, const char *password, size_t password_len,
 	const uint8_t *salt, uint8_t salt_len,
 	uint16_t iterations, uint8_t nFactor ) {
+#ifdef ARDUINO
+	SHA256 sha = SHA256();
+	sha.update( password, password_len );
+	sha.finalize( buf, SQRL_KEY_SIZE );
+	return 1;
+#else
 	if( !buf ) return -1;
 	uint64_t N = (((uint64_t)1) << nFactor);
 	uint8_t t[2][32] = {{0}, {0}};
@@ -178,18 +204,25 @@ DONE:
 	//if( cb_ptr ) (*cb_ptr)(100, cb_data);
 
 	if( retVal != 0 ) {
-		sodium_memzero( buf, 32 );
+		sqrl_memzero( buf, 32 );
 	}
 	if( escrypt_free_local( &local ) ) {
 		return -1; /* LCOV_EXCL_LINE */
 	}
 	return retVal == 0 ? (int)endTime : -1;
+#endif
 }
 
 int SqrlCrypt::enScryptMillis( SqrlAction *action,
 	uint8_t *buf, const char *password, size_t password_len,
 	const uint8_t *salt, uint8_t salt_len,
 	int millis, uint8_t nFactor ) {
+#ifdef ARDUINO
+	SHA256 sha = SHA256();
+	sha.update( password, password_len );
+	sha.finalize( buf, SQRL_KEY_SIZE );
+	return 1;
+#else
 	if( !buf ) return -1;
 	uint64_t N = (((uint64_t)1) << nFactor);
 	uint8_t t[2][32] = {{0}, {0}};
@@ -246,22 +279,22 @@ DONE:
 	//if( cb_ptr ) (*cb_ptr)(100, cb_data);
 
 	if( retVal != 0 ) {
-		sodium_memzero( buf, 32 );
+		sqrl_memzero( buf, 32 );
 	}
 	if( escrypt_free_local( &local ) ) {
 		return -1; /* LCOV_EXCL_LINE */
 	}
 	return retVal == 0 ? i : -1;
-
+#endif
 }
 
 void SqrlCrypt::generateIdentityLockKey( uint8_t ilk[SQRL_KEY_SIZE], const uint8_t iuk[SQRL_KEY_SIZE] ) {
 	uint8_t tmp[SQRL_KEY_SIZE];
-	sodium_mlock( tmp, SQRL_KEY_SIZE );
+	sqrl_mlock( tmp, SQRL_KEY_SIZE );
 	memcpy( tmp, iuk, SQRL_KEY_SIZE );
 	SqrlCrypt::generateCurvePrivateKey( tmp );
 	SqrlCrypt::generateCurvePublicKey( ilk, tmp );
-	sodium_munlock( tmp, SQRL_KEY_SIZE );
+	sqrl_munlock( tmp, SQRL_KEY_SIZE );
 }
 
 void SqrlCrypt::generateLocalKey( uint8_t local[SQRL_KEY_SIZE], const uint8_t mk[SQRL_KEY_SIZE] ) {
@@ -283,81 +316,86 @@ void SqrlCrypt::generateServerUnlockKey( uint8_t suk[SQRL_KEY_SIZE], const uint8
 
 void SqrlCrypt::generateVerifyUnlockKey( uint8_t vuk[SQRL_KEY_SIZE], const uint8_t ilk[SQRL_KEY_SIZE], const uint8_t rlk[SQRL_KEY_SIZE] ) {
 	uint8_t tmp[SQRL_KEY_SIZE];
-	sodium_mlock( tmp, SQRL_KEY_SIZE );
+	sqrl_mlock( tmp, SQRL_KEY_SIZE );
 	SqrlCrypt::generateSharedSecret( tmp, ilk, rlk );
 	SqrlCrypt::generatePublicKey( vuk, tmp );
-	sodium_munlock( tmp, SQRL_KEY_SIZE );
+	sqrl_munlock( tmp, SQRL_KEY_SIZE );
 }
 
 void SqrlCrypt::generateUnlockRequestSigningKey( uint8_t ursk[SQRL_KEY_SIZE], const uint8_t suk[SQRL_KEY_SIZE], const uint8_t iuk[SQRL_KEY_SIZE] ) {
 	uint8_t tmp[SQRL_KEY_SIZE];
-	sodium_mlock( tmp, SQRL_KEY_SIZE );
+	sqrl_mlock( tmp, SQRL_KEY_SIZE );
 	memcpy( tmp, iuk, SQRL_KEY_SIZE );
 	SqrlCrypt::generateCurvePrivateKey( tmp );
 	SqrlCrypt::generateSharedSecret( ursk, suk, tmp );
-	sodium_munlock( tmp, SQRL_KEY_SIZE );
+	sqrl_munlock( tmp, SQRL_KEY_SIZE );
 }
 
 
 void SqrlCrypt::generatePublicKey( uint8_t *puk, const uint8_t *prk ) {
+#ifdef ARDUINO
+	Ed25519::derivePublicKey( puk, prk );
+#else
 	uint8_t sk[crypto_sign_SECRETKEYBYTES];
-	sodium_mlock( sk, crypto_sign_SECRETKEYBYTES );
+	sqrl_mlock( sk, crypto_sign_SECRETKEYBYTES );
 	crypto_sign_seed_keypair( puk, sk, prk );
-	sodium_munlock( sk, crypto_sign_SECRETKEYBYTES );
-	//	ed25519_publickey( prk, puk );
+	sqrl_munlock( sk, crypto_sign_SECRETKEYBYTES );
+#endif
 }
 
 
-void SqrlCrypt::sign( const std::string *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] ) {
+void SqrlCrypt::sign( const SQRL_STRING *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] ) {
+#ifdef ARDUINO
+	Ed25519::sign( sig, sk, pk, msg->c_str(), msg->length() );
+#else
 	uint8_t secret[crypto_sign_SECRETKEYBYTES];
-	sodium_mlock( secret, crypto_sign_SECRETKEYBYTES );
+	sqrl_mlock( secret, crypto_sign_SECRETKEYBYTES );
 	memcpy( secret, sk, 32 );
 	memcpy( secret + 32, pk, 32 );
 	crypto_sign_detached(
 		sig, NULL,
 		(const unsigned char*)msg->data(), msg->length(),
 		secret );
-	sodium_munlock( secret, crypto_sign_SECRETKEYBYTES );
-	//	ed25519_sign(
-	//		(unsigned char*)utstring_body(msg),
-	//		utstring_len(msg),
-	//		sk, pk, sig );
-
+	sqrl_munlock( secret, crypto_sign_SECRETKEYBYTES );
+#endif
 }
 
 
-bool SqrlCrypt::verifySignature( const std::string *msg, const uint8_t *sig, const uint8_t *pub ) {
+bool SqrlCrypt::verifySignature( const SQRL_STRING *msg, const uint8_t *sig, const uint8_t *pub ) {
+#ifdef ARDUINO
+	return Ed25519::verify( sig, pub, msg->c_str(), msg->length() );
+#else
 	if( crypto_sign_verify_detached( sig, (const unsigned char *)msg->data(), msg->length(), pub ) == 0 ) {
 		return true;
 	}
-	//	if( ed25519_sign_open(
-	//		(unsigned char *)utstring_body( msg ),
-	//		utstring_len( msg ), pub, sig) == 0 ) {
-	//		return true;
-	//	}
 	return false;
+#endif
 }
 
 
 void SqrlCrypt::generateCurvePrivateKey( uint8_t *key ) {
-	//	key[0]  &= 248;
-	//	key[31] &= 127;
-	//	key[31] |=  64;
-	unsigned char tmp[32];
-	sodium_mlock( tmp, SQRL_KEY_SIZE );
-	crypto_sign_ed25519_sk_to_curve25519( tmp, key );
-	memcpy( key, tmp, 32 );
-	sodium_munlock( tmp, SQRL_KEY_SIZE );
+	key[0] &= 248;
+	key[31] &= 127;
+	key[31] |= 64;
 }
 
 
 void SqrlCrypt::generateCurvePublicKey( uint8_t *puk, const uint8_t *prk ) {
+#ifdef ARDUINO
+	Curve25519::eval( puk, prk, NULL );
+#else
 	crypto_scalarmult_base( puk, prk );
+#endif
 }
 
 
 
 int SqrlCrypt::generateSharedSecret( uint8_t *shared, const uint8_t *puk, const uint8_t *prk ) {
+#ifdef ARDUINO
+	Curve25519::eval( shared, puk, prk );
+	return 0;
+#else
 	return crypto_scalarmult( shared, prk, puk );
+#endif
 }
 

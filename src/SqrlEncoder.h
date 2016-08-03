@@ -8,13 +8,12 @@ For more details, see the LICENSE file included with this package.
 #ifndef SQRLENCODER_H
 #define SQRLENCODER_H
 
-#include <string>
 #include "sqrl.h"
 
 class DLL_PUBLIC SqrlEncoder
 {
 public:
-	virtual std::string *encode( std::string *dest, const std::string *src, bool append = false ) = 0;
-	virtual std::string *decode( std::string *dest, const std::string *src, bool append = false ) = 0;
+	virtual SQRL_STRING *encode( SQRL_STRING *dest, const SQRL_STRING *src, bool append = false ) = 0;
+	virtual SQRL_STRING *decode( SQRL_STRING *dest, const SQRL_STRING *src, bool append = false ) = 0;
 };
 #endif // SQRLENCODER_H

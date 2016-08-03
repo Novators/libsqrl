@@ -55,7 +55,7 @@ int SqrlActionLock::run( int cs ) {
 		crypt.count = this->user->options.enscryptSeconds * SQRL_MILLIS_PER_SECOND;
 		crypt.flags = SQRL_ENCRYPT | SQRL_MILLIS;
 
-		randombytes_buf( crypt.salt, 16 );
+		sqrl_randombytes( crypt.salt, 16 );
 		key = this->user->keys->scratch + 32;
 		password_len = this->user->options.hintLength;
 		if( password_len == 0 || this->user->keys->password_len < password_len ) {
@@ -69,11 +69,11 @@ int SqrlActionLock::run( int cs ) {
 			!crypt.doCrypt() ) {
 			// Encryption failed!
 			this->user->hint_iterations = 0;
-			sodium_memzero( this->user->keys->scratch, KEY_SCRATCH_SIZE );
+			sqrl_memzero( this->user->keys->scratch, KEY_SCRATCH_SIZE );
 			return this->retActionComplete( SQRL_ACTION_FAIL );
 		}
-		sodium_memzero( crypt.plain_text, crypt.text_len );
-		sodium_memzero( key, SQRL_KEY_SIZE );
+		sqrl_memzero( crypt.plain_text, crypt.text_len );
+		sqrl_memzero( key, SQRL_KEY_SIZE );
 		return this->retActionComplete( SQRL_ACTION_SUCCESS );
 	default:
 		return this->retActionComplete( SQRL_ACTION_FAIL );

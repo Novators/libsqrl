@@ -8,15 +8,16 @@ For more details, see the LICENSE file included with this package.
 
 #include "config.h"
 
+#include "sqrl.h"
 #include <stdio.h>
 
+#ifndef ARDUINO
 #define SODIUM_STATIC
 #include "sodium.h"
 extern "C" {
 #include "crypto_scrypt.h"
 }
-
-#include "sqrl.h"
+#endif
 
 #define SQRL_VERSION_STRING "1"
 #define SQRL_KNOWN_VERSIONS_COUNT 1
@@ -57,3 +58,15 @@ void SqrlInit();
 void sqrl_sleep(int sleepMs);
 bool sqrl_parse_key_value(char **strPtr, char **keyPtr, char **valPtr,
 	size_t *key_len, size_t *val_len, char *sep);
+
+void sqrl_free( void *ptr, size_t len );
+void * sqrl_malloc( const size_t size );
+int sqrl_memcmp( const void * const b1_, const void * const b2_, size_t len );
+void sqrl_memzero( void *buf, size_t len );
+int sqrl_mlock( void *addr, size_t len );
+int sqrl_munlock( void * const addr, size_t len );
+int sqrl_mprotect_noaccess( void *ptr );
+int sqrl_mprotect_readonly( void *ptr );
+int sqrl_mprotect_readwrite( void *ptr );
+uint32_t sqrl_random();
+void sqrl_randombytes( void *ptr, size_t len );

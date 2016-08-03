@@ -1,0 +1,154 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="14.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{C5F80730-F44F-4478-BDAE-6634EFC2CA88}</ProjectGuid>
+    <RootNamespace>SQRLduino</RootNamespace>
+    <ProjectName>SQRLduino</ProjectName>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>
+    </PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>Application</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>
+    </PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup />
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>%(AdditionalIncludeDirectories);$(SolutionDir)src</AdditionalIncludeDirectories>
+      <ForcedIncludeFiles>%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
+      <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>reorder;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <ForcedIncludeFiles>C:\Users\adam\Source\Repos\libsqrl\SQRLduino\__vm\.SQRLduino.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
+      <WholeProgramOptimization>false</WholeProgramOptimization>
+      <PreprocessorDefinitions>__HARDWARE_MK20dx256__;__HARDWARE_MK20DX256__;__MK20DX256__;TEENSYDUINO=129;ARDUINO=10609;F_CPU={build.fcpu};{build.usbtype};LAYOUT_{build.keylayout};__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <AdditionalIncludeDirectories>C:\Users\adam\Documents\Arduino\libraries\Crypto;C:\Users\adam\Documents\Arduino\libraries\Crypto\utility;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\kuffluyd.fdf\Micro Platforms\default\debuggers;C:\Users\adam\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\utils;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy/../tools/arm/bin/..\arm-none-eabi\include;C:\Users\adam\Source\Repos\libsqrl\SQRLduino;C:\Program Files (x86)\Arduino\hardware\hardware\include;C:\Program Files (x86)\Arduino\hardware\Arduino\include;C:\Users\adam\Source\Repos\libsqrl\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>reorder;%(DisableSpecificWarnings)</DisableSpecificWarnings>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <None Include="SQRLduino.ino">
+      <FileType>CppCode</FileType>
+    </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="..\src\aes.h" />
+    <ClInclude Include="..\src\config.h" />
+    <ClInclude Include="..\src\detect_platform.h" />
+    <ClInclude Include="..\src\gcm.h" />
+    <ClInclude Include="..\src\sqrl.h" />
+    <ClInclude Include="..\src\SqrlAction.h" />
+    <ClInclude Include="..\src\SqrlActionChangePassword.h" />
+    <ClInclude Include="..\src\SqrlActionDisable.h" />
+    <ClInclude Include="..\src\SqrlActionEnable.h" />
+    <ClInclude Include="..\src\SqrlActionGenerate.h" />
+    <ClInclude Include="..\src\SqrlActionIdent.h" />
+    <ClInclude Include="..\src\SqrlActionLock.h" />
+    <ClInclude Include="..\src\SqrlActionRekey.h" />
+    <ClInclude Include="..\src\SqrlActionRemove.h" />
+    <ClInclude Include="..\src\SqrlActionRescue.h" />
+    <ClInclude Include="..\src\SqrlActionSave.h" />
+    <ClInclude Include="..\src\SqrlBase64.h" />
+    <ClInclude Include="..\src\SqrlBlock.h" />
+    <ClInclude Include="..\src\SqrlClient.h" />
+    <ClInclude Include="..\src\SqrlCrypt.h" />
+    <ClInclude Include="..\src\SqrlEncoder.h" />
+    <ClInclude Include="..\src\SqrlEntropy.h" />
+    <ClInclude Include="..\src\SqrlEntropy_Arduino.h" />
+    <ClInclude Include="..\src\SqrlIdentityAction.h" />
+    <ClInclude Include="..\src\SqrlSiteAction.h" />
+    <ClInclude Include="..\src\SqrlStorage.h" />
+    <ClInclude Include="..\src\SqrlUri.h" />
+    <ClInclude Include="..\src\SqrlUrlEncode.h" />
+    <ClInclude Include="..\src\SqrlUser.h" />
+    <ClInclude Include="..\src\sqrl_internal.h" />
+    <ClInclude Include="..\src\sqrl_server.h" />
+    <ClInclude Include="..\src\version.h" />
+    <ClInclude Include="__vm\.SQRLduino.vsarduino.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="src\_micro-api\libraries\SQRLduinoLib\library.properties" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="..\src\aes.cpp" />
+    <ClCompile Include="..\src\gcm.cpp" />
+    <ClCompile Include="..\src\platform.cpp" />
+    <ClCompile Include="..\src\SqrlAction.cpp" />
+    <ClCompile Include="..\src\SqrlActionChangePassword.cpp" />
+    <ClCompile Include="..\src\SqrlActionDisable.cpp" />
+    <ClCompile Include="..\src\SqrlActionEnable.cpp" />
+    <ClCompile Include="..\src\SqrlActionGenerate.cpp" />
+    <ClCompile Include="..\src\SqrlActionIdent.cpp" />
+    <ClCompile Include="..\src\SqrlActionLock.cpp" />
+    <ClCompile Include="..\src\SqrlActionRekey.cpp" />
+    <ClCompile Include="..\src\SqrlActionRemove.cpp" />
+    <ClCompile Include="..\src\SqrlActionRescue.cpp" />
+    <ClCompile Include="..\src\SqrlActionSave.cpp" />
+    <ClCompile Include="..\src\SqrlBase64.cpp" />
+    <ClCompile Include="..\src\SqrlBlock.cpp" />
+    <ClCompile Include="..\src\SqrlClient.cpp" />
+    <ClCompile Include="..\src\SqrlCrypt.cpp" />
+    <ClCompile Include="..\src\SqrlEntropy.cpp" />
+    <ClCompile Include="..\src\SqrlIdentityAction.cpp" />
+    <ClCompile Include="..\src\SqrlSiteAction.cpp" />
+    <ClCompile Include="..\src\SqrlStorage.cpp" />
+    <ClCompile Include="..\src\SqrlUri.cpp" />
+    <ClCompile Include="..\src\SqrlUrlEncode.cpp" />
+    <ClCompile Include="..\src\SqrlUser.cpp" />
+    <ClCompile Include="..\src\SqrlUser_storage.cpp" />
+    <ClCompile Include="..\src\util.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>
