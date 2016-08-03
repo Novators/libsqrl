@@ -36,7 +36,7 @@ for line in fileinput.input("../README.md", inplace=True):
     if fileinput.filelineno() == 1:
         print "# libsqrl " + nvString
     else:
-        print line.strip()
+        print line.rstrip()
 
 for line in fileinput.input("../src/version.h", inplace=True):
     if line.startswith( "#define SQRL_LIB_VERSION_MAJOR" ):
@@ -50,5 +50,10 @@ for line in fileinput.input("../src/version.h", inplace=True):
     elif line.startswith( "#define SQRL_LIB_VERSION" ):
         print '#define SQRL_LIB_VERSION "' + nvString + '"'
     else:
-        print line.strip()
+        print line.rstrip()
     
+for line in fileinput.input( "../SQRLduino/src/_micro-api/libraries/SQRLduinoLib/library.properties", inplace=True ):
+    if line.startswith( "version=" ):
+        print "version=" + nvString
+    else:
+        print line.rstrip()
