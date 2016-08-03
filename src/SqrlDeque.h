@@ -12,14 +12,14 @@ template <class T>
 class DLL_PUBLIC SqrlDeque
 {
 private:
-	template <class T>
+	template <class T2>
 	struct item
 	{
-		item( T newItem ) {
+		item( T2 newItem ) {
 			this->myItem = newItem;
 			this->next = NULL;
 		}
-		T myItem;
+		T2 myItem;
 		item *next;
 	};
 	struct item<T> *list;

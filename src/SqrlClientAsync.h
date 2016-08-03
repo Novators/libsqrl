@@ -10,7 +10,6 @@ For more details, see the LICENSE file included with this package.
 
 #include "sqrl.h"
 #include "SqrlClient.h"
-#include <queue>
 
 class DLL_PUBLIC SqrlClientAsync : public SqrlClient
 {

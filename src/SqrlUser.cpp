@@ -65,10 +65,10 @@ void SqrlUser::ensureKeysAllocated()
 
 SqrlUser* SqrlUser::find( const char *unique_id )
 {
-	SqrlClient *client = SqrlClient::getClient();
 	SqrlUser *user = NULL;
 	struct SqrlUserList *l;
 #ifndef ARDUINO
+	SqrlClient *client = SqrlClient::getClient();
 	client->userMutex.lock();
 #endif
 	l = SQRL_USER_LIST;
@@ -88,7 +88,9 @@ SqrlUser* SqrlUser::find( const char *unique_id )
 
 void SqrlUser::initialize()
 {
+#ifndef ARDUINO
 	SqrlClient *client = SqrlClient::getClient();
+#endif
 	SqrlUser::defaultOptions(&this->options);
 	this->referenceCount = 1;
 #ifndef ARDUINO
@@ -113,8 +115,8 @@ SqrlUser::SqrlUser()
 
 int SqrlUser::countUsers()
 {
-	SqrlClient *client = SqrlClient::getClient();
 #ifndef ARDUINO
+	SqrlClient *client = SqrlClient::getClient();
 	client->userMutex.lock();
 #endif
 	int i = 0;
@@ -131,17 +133,21 @@ int SqrlUser::countUsers()
 
 void SqrlUser::hold()
 {
-	SqrlClient *client = SqrlClient::getClient();
 #ifndef ARDUINO
+	SqrlClient *client = SqrlClient::getClient();
 	client->userMutex.lock();
 #endif
 	// Make sure the user is still in active memory...
 	struct SqrlUserList *c = SQRL_USER_LIST;
 	while( c ) {
 		if( c->user == this ) {
+#ifdef ARDUINO
+			this->referenceCount++;
+#else
 			this->referenceCountMutex->lock();
 			this->referenceCount++;
 			this->referenceCountMutex->unlock();
+#endif
 			break;
 		}
 		c = c->next;
@@ -153,7 +159,9 @@ void SqrlUser::hold()
 
 void SqrlUser::release()
 {
+#ifndef ARDUINO
 	SqrlClient *client = SqrlClient::getClient();
+#endif
 	bool shouldFreeThis = false;
 #ifndef ARDUINO
 	client->userMutex.lock();
@@ -190,13 +198,15 @@ void SqrlUser::release()
 		goto END;
 	}
 	// Release this reference
+#ifndef ARDUINO
 	this->referenceCountMutex->lock();
+#endif
 	this->referenceCount--;
 
 	if( this->referenceCount > 0 ) {
 		// There are other references... Do not delete.
-		this->referenceCountMutex->unlock();
 #ifndef ARDUINO
+		this->referenceCountMutex->unlock();
 		client->userMutex.unlock();
 #endif
 		goto END;
@@ -226,7 +236,9 @@ SqrlUser::~SqrlUser()
 		sqrl_mprotect_readwrite(this->keys);
 		sqrl_free(this->keys, sizeof( this->keys ));
 	}
+#ifndef ARDUINO
 	delete this->referenceCountMutex;
+#endif
 }
 
 bool SqrlUser::isMemLocked()
@@ -689,7 +701,8 @@ void SqrlUser::defaultOptions( Sqrl_User_Options *options ) {
 bool SqrlUser::getUniqueId( char *buffer )
 {
 	if( !buffer ) return false;
-	strncpy_s( buffer, SQRL_UNIQUE_ID_LENGTH + 1, this->uniqueId, SQRL_UNIQUE_ID_LENGTH );
+	memcpy( buffer, this->uniqueId, SQRL_UNIQUE_ID_LENGTH );
+	buffer[SQRL_UNIQUE_ID_LENGTH] = 0;
 	return true;
 }
 

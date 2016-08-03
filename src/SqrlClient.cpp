@@ -39,7 +39,7 @@ void SqrlClient::initialize() {
 #endif
 	if( SqrlClient::client != NULL ) {
 		// Enforce a single SqrlClient object
-		exit( 1 );
+		exit( 4 );
 	}
 	SqrlInit();
 
@@ -179,22 +179,22 @@ void SqrlClient::callAuthenticationRequired( SqrlAction * action, Sqrl_Credentia
 	this->callbackQueue.push( info );
 }
 
-void SqrlClient::callSend( SqrlAction * action, std::string *url, std::string * payload ) {
+void SqrlClient::callSend( SqrlAction * action, SQRL_STRING *url, SQRL_STRING * payload ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_SEND;
 	info->ptr = action;
-	info->str[0] = new std::string( *url );
-	info->str[1] = new std::string( *payload );
+	info->str[0] = new SQRL_STRING( *url );
+	info->str[1] = new SQRL_STRING( *payload );
 	this->callbackQueue.push( info );
 }
 
-void SqrlClient::callAsk( SqrlAction * action, std::string * message, std::string * firstButton, std::string * secondButton ) {
+void SqrlClient::callAsk( SqrlAction * action, SQRL_STRING * message, SQRL_STRING * firstButton, SQRL_STRING * secondButton ) {
 	struct CallbackInfo *info = new struct CallbackInfo();
 	info->cbType = SQRL_CALLBACK_ASK;
 	info->ptr = action;
-	info->str[0] = new std::string( *message );
-	info->str[1] = new std::string( *firstButton );
-	info->str[2] = new std::string( *secondButton );
+	info->str[0] = new SQRL_STRING( *message );
+	info->str[1] = new SQRL_STRING( *firstButton );
+	info->str[2] = new SQRL_STRING( *secondButton );
 	this->callbackQueue.push( info );
 }
 

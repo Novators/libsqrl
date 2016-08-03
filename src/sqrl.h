@@ -15,14 +15,22 @@ For more details, see the LICENSE file included with this package.
 #include <stdint.h>
 #include <cstdlib>
 #include <cstring>
-#include <string>
 #if defined(ARDUINO)
 #if ARDUINO >= 100
 #include "arduino.h"
 #else
 #include "WProgram.h"
 #endif
+#define SQRL_STRING String
+#define SQRL_STRING_CLEAR( str ) ((str)->remove(0))
+#define SQRL_STRING_DATA( str ) ((str)->c_str())
+#define SQRL_STRING_APPEND_BYTES( str, buf, len ) for( size_t SSAB_i = 0; SSAB_i < (len); SSAB_i++ ) { (str)->concat( (char)(buf)[SSAB_i]); }
 #else
+#include <string>
+#define SQRL_STRING std::string
+#define SQRL_STRING_CLEAR( str ) ((str)->clear())
+#define SQRL_STRING_DATA( str ) ((str)->data())
+#define SQRL_STRING_APPEND_BYTES( str, buf, len ) ((str)->append( (buf), (len)))
 #include <thread>
 #include <mutex>
 #endif

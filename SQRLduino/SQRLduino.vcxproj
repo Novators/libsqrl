@@ -51,6 +51,7 @@
       <ForcedIncludeFiles>%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <IgnoreStandardIncludePath>true</IgnoreStandardIncludePath>
       <PreprocessorDefinitions>%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <DisableSpecificWarnings>reorder;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -66,7 +67,8 @@
       <ForcedIncludeFiles>C:\Users\adam\Source\Repos\libsqrl\SQRLduino\__vm\.SQRLduino.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <WholeProgramOptimization>false</WholeProgramOptimization>
       <PreprocessorDefinitions>__HARDWARE_MK20dx256__;__HARDWARE_MK20DX256__;__MK20DX256__;TEENSYDUINO=129;ARDUINO=10609;F_CPU={build.fcpu};{build.usbtype};LAYOUT_{build.keylayout};__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
-      <AdditionalIncludeDirectories>C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\kuffluyd.fdf\Micro Platforms\default\debuggers;C:\Users\adam\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\utils;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy/../tools/arm/bin/..\arm-none-eabi\include;C:\Users\adam\Source\Repos\libsqrl\SQRLduino;C:\Program Files (x86)\Arduino\hardware\hardware\include;C:\Program Files (x86)\Arduino\hardware\Arduino\include;C:\Users\adam\Source\Repos\libsqrl\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalIncludeDirectories>C:\Users\adam\Documents\Arduino\libraries\Crypto;C:\Users\adam\Documents\Arduino\libraries\Crypto\utility;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\kuffluyd.fdf\Micro Platforms\default\debuggers;C:\Users\adam\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\utils;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy/../tools/arm/bin/..\arm-none-eabi\include;C:\Users\adam\Source\Repos\libsqrl\SQRLduino;C:\Program Files (x86)\Arduino\hardware\hardware\include;C:\Program Files (x86)\Arduino\hardware\Arduino\include;C:\Users\adam\Source\Repos\libsqrl\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <DisableSpecificWarnings>reorder;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
@@ -84,7 +86,6 @@
     <ClInclude Include="..\src\config.h" />
     <ClInclude Include="..\src\detect_platform.h" />
     <ClInclude Include="..\src\gcm.h" />
-    <ClInclude Include="..\src\rdrand.h" />
     <ClInclude Include="..\src\sqrl.h" />
     <ClInclude Include="..\src\SqrlAction.h" />
     <ClInclude Include="..\src\SqrlActionChangePassword.h" />
@@ -100,17 +101,11 @@
     <ClInclude Include="..\src\SqrlBase64.h" />
     <ClInclude Include="..\src\SqrlBlock.h" />
     <ClInclude Include="..\src\SqrlClient.h" />
-    <ClInclude Include="..\src\SqrlClientAsync.h" />
     <ClInclude Include="..\src\SqrlCrypt.h" />
     <ClInclude Include="..\src\SqrlEncoder.h" />
     <ClInclude Include="..\src\SqrlEntropy.h" />
     <ClInclude Include="..\src\SqrlEntropy_Arduino.h" />
-    <ClInclude Include="..\src\SqrlEntropy_Linux.h" />
-    <ClInclude Include="..\src\SqrlEntropy_Mac.h" />
-    <ClInclude Include="..\src\SqrlEntropy_Win.h" />
-    <ClInclude Include="..\src\SqrlForwardDeclarations.h" />
     <ClInclude Include="..\src\SqrlIdentityAction.h" />
-    <ClInclude Include="..\src\SqrlServer.h" />
     <ClInclude Include="..\src\SqrlSiteAction.h" />
     <ClInclude Include="..\src\SqrlStorage.h" />
     <ClInclude Include="..\src\SqrlUri.h" />
@@ -119,7 +114,6 @@
     <ClInclude Include="..\src\sqrl_internal.h" />
     <ClInclude Include="..\src\sqrl_server.h" />
     <ClInclude Include="..\src\version.h" />
-    <ClInclude Include="QueueList.h" />
     <ClInclude Include="__vm\.SQRLduino.vsarduino.h" />
   </ItemGroup>
   <ItemGroup>
@@ -143,11 +137,9 @@
     <ClCompile Include="..\src\SqrlBase64.cpp" />
     <ClCompile Include="..\src\SqrlBlock.cpp" />
     <ClCompile Include="..\src\SqrlClient.cpp" />
-    <ClCompile Include="..\src\SqrlClientAsync.cpp" />
     <ClCompile Include="..\src\SqrlCrypt.cpp" />
     <ClCompile Include="..\src\SqrlEntropy.cpp" />
     <ClCompile Include="..\src\SqrlIdentityAction.cpp" />
-    <ClCompile Include="..\src\SqrlServer.cpp" />
     <ClCompile Include="..\src\SqrlSiteAction.cpp" />
     <ClCompile Include="..\src\SqrlStorage.cpp" />
     <ClCompile Include="..\src\SqrlUri.cpp" />

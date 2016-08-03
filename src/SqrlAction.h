@@ -44,7 +44,7 @@ virtual int run( int currentState ) = 0;
 
 int retActionComplete( int status );
 bool exec();
-void onRelease();
+virtual void onRelease();
 
 SqrlUser *user;
 SqrlUri *uri;

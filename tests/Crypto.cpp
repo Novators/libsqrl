@@ -38,7 +38,7 @@ TEST_CASE( "EnHash" ) {
 		Sleep( 5 );
 	}
 	FILE *fp = fopen( "data/vectors/enhash-vectors.txt", "r" );
-	if( !fp ) exit( 1 );
+	if( !fp ) exit( 2 );
 
 	char line[256];
 	size_t len = 0;

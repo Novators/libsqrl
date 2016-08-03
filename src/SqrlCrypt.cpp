@@ -11,6 +11,12 @@ For more details, see the LICENSE file included with this package.
 #include "SqrlEntropy.h"
 #include "aes.h"
 #include "gcm.h"
+#ifdef ARDUINO
+#include <Crypto.h>
+#include <SHA256.h>
+#include <Ed25519.h>
+#include <Curve25519.h>
+#endif
 
 
 #define ENSCRYPT_R 256
@@ -21,11 +27,24 @@ For more details, see the LICENSE file included with this package.
 int SqrlCrypt::enHash( uint64_t *out, const uint64_t *in ) {
 	uint64_t trans[4];
 	uint64_t tmp[4];
-	sqrl_mlock( trans, 32 );
-	sqrl_mlock( tmp, 32 );
 	memset( out, 0, 32 );
 	memcpy( tmp, in, 32 );
 	int i;
+#ifdef ARDUINO
+	SHA256 sha = SHA256();
+	for( i = 0; i < 16; i++ ) {
+		sha.update( tmp, 32 );
+		sha.finalize( trans, 32 );
+		sha.reset();
+		out[0] ^= trans[0];
+		out[1] ^= trans[1];
+		out[2] ^= trans[2];
+		out[3] ^= trans[3];
+		memcpy( tmp, trans, 32 );
+	}
+#else
+	sqrl_mlock( trans, 32 );
+	sqrl_mlock( tmp, 32 );
 	for( i = 0; i < 16; i++ ) {
 		crypto_hash_sha256( (unsigned char*)trans, (unsigned char*)tmp, 32 );
 		out[0] ^= trans[0];
@@ -36,6 +55,7 @@ int SqrlCrypt::enHash( uint64_t *out, const uint64_t *in ) {
 	}
 	sqrl_munlock( trans, 32 );
 	sqrl_munlock( tmp, 32 );
+#endif
 	return 0;
 }
 
@@ -89,7 +109,7 @@ bool SqrlCrypt::genKey( SqrlAction *action, const char *password, size_t passwor
 	if( !action || !password ) return false;
 	if( !this->key || this->count == 0 ) return false;
 	size_t salt_len = this->salt ? 16 : 0;
-	uint32_t newCount;
+	int newCount;
 	if( (this->flags & SQRL_MILLIS) == SQRL_MILLIS ) {
 		newCount = SqrlCrypt::enScryptMillis( NULL, this->key, password, password_len, this->salt, (uint8_t)salt_len, this->count, this->nFactor );
 		if( newCount == -1 ) return false;
@@ -123,7 +143,10 @@ int SqrlCrypt::enScrypt( SqrlAction *action,
 	const uint8_t *salt, uint8_t salt_len,
 	uint16_t iterations, uint8_t nFactor ) {
 #ifdef ARDUINO
-	crypto_hash_sha256( (unsigned char*)buf, (const unsigned char*)password, password_len );
+	SHA256 sha = SHA256();
+	sha.update( password, password_len );
+	sha.finalize( buf, SQRL_KEY_SIZE );
+	return 1;
 #else
 	if( !buf ) return -1;
 	uint64_t N = (((uint64_t)1) << nFactor);
@@ -195,7 +218,10 @@ int SqrlCrypt::enScryptMillis( SqrlAction *action,
 	const uint8_t *salt, uint8_t salt_len,
 	int millis, uint8_t nFactor ) {
 #ifdef ARDUINO
-	crypto_hash_sha256( (unsigned char*)buf, (const unsigned char*)password, password_len );
+	SHA256 sha = SHA256();
+	sha.update( password, password_len );
+	sha.finalize( buf, SQRL_KEY_SIZE );
+	return 1;
 #else
 	if( !buf ) return -1;
 	uint64_t N = (((uint64_t)1) << nFactor);
@@ -318,9 +344,9 @@ void SqrlCrypt::generatePublicKey( uint8_t *puk, const uint8_t *prk ) {
 }
 
 
-void SqrlCrypt::sign( const std::string *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] ) {
+void SqrlCrypt::sign( const SQRL_STRING *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] ) {
 #ifdef ARDUINO
-	Ed25519::sign( sig, sk, pk, utstring_body( msg ), utstring_len( msg ) );
+	Ed25519::sign( sig, sk, pk, msg->c_str(), msg->length() );
 #else
 	uint8_t secret[crypto_sign_SECRETKEYBYTES];
 	sqrl_mlock( secret, crypto_sign_SECRETKEYBYTES );
@@ -335,9 +361,9 @@ void SqrlCrypt::sign( const std::string *msg, const uint8_t sk[32], const uint8_
 }
 
 
-bool SqrlCrypt::verifySignature( const std::string *msg, const uint8_t *sig, const uint8_t *pub ) {
+bool SqrlCrypt::verifySignature( const SQRL_STRING *msg, const uint8_t *sig, const uint8_t *pub ) {
 #ifdef ARDUINO
-	return Ed25519::verify( sig, pub, utstring_body( msg ), utstring_len( msg ) );
+	return Ed25519::verify( sig, pub, msg->c_str(), msg->length() );
 #else
 	if( crypto_sign_verify_detached( sig, (const unsigned char *)msg->data(), msg->length(), pub ) == 0 ) {
 		return true;

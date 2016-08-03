@@ -8,6 +8,9 @@ For more details, see the LICENSE file included with this package.
 #ifndef SQRLENTROPY_ARDUINO_H
 #define SQRLENTROPY_ARDUINO_H
 
+struct sqrl_fast_flux_entropy {};
+
 void SqrlEntropy::addBracket( uint8_t* seed ) {
+	RNG.stir( seed, 32 );
 }
 #endif // SQRLENTROPY_ARDUINO_H

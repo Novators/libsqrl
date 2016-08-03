@@ -31,8 +31,8 @@ public:
 	void setChallenge(const char *val);
 
 	/** The Hostname (fqdn), and any extension defined by the server.  Used in creating Site Specific Keys */
-	char *getSiteKeyString();
-	size_t getSiteKeyStringLength();
+	char *getSiteKey();
+	size_t getSiteKeyLength();
 
 	/** The prefix URL.  Combined with a server's qry= parameter, defines where the client should connect for the next loop.
 	* Typically, the FQDN, followed by an optional extension.
@@ -57,7 +57,7 @@ private:
 	~SqrlUri();
 	Sqrl_Scheme scheme;
 	char *challenge;
-	char *host;
+	char *siteKey;
 	char *prefix;
 	char *url;
 	char *sfn;

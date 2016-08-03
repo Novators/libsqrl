@@ -18,7 +18,7 @@ static void testString( char *a, const char *b ) {
 
 TEST_CASE("LoadFile")
 {
-	new NullClient();
+	NullClient * client = new NullClient();
 	bool bError = false;
 	SqrlUri *fn = SqrlUri::parse( "file://data/test1.sqrl" );
 	REQUIRE( fn );
@@ -34,7 +34,7 @@ TEST_CASE("LoadFile")
 	REQUIRE( 0 == buf->compare( "SQRLDATAfQABAC0AwDR2aKohNUWypIv-Y6TeUWbko_arcPwMB9alpAkEAAAA8QAEAQ8A7uDRpBDxqJZxwUkB4y9-p5XWvAbgVMK02lvnSA_-EBHjLarjoHYdb-UEVW2rC4z2URyOcxpCeQXfGpZQyuZ3dSGiuIFI1eLFX-xnsRsRBdtJAAIAoiMr93uN8ylhOHzwlPmfVAkUAAAATne7wOsRjUo1A8xs7V4K2kDpdKqpHsmHZpN-6eyOcLfD_Gul4vRyrMC2pn7UBaV9lAADAAQSHK1PlkUshvEqNeCLibmJgQvveUFrPbg4bNuk47FAj5dUgaa_fQoD_KMi17Z3jDF-1fCqoqY3GRwxaW-DzYtEIORB2AsRJUgZWviZe8anbLUP5dKt1r0LyDpTCTcNmzPvfbq8y-7J7r3OH7PlKOpGrAAs2Cw1GFb3l6hDPDa5gDKs90AGiXwgqUD7_7qMBA") );
 	storage->release();
 	delete(buf);
-	delete (NullClient*)NullClient::getClient();
+	delete client;
 }
 
 

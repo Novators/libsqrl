@@ -6,8 +6,11 @@ For more details, see the LICENSE file included with this package.
 **/
 
 #include "sqrl_internal.h"
+#include "sqrl.h"
 #include "SqrlEntropy.h"
+#ifndef ARDUINO
 #include <mutex>
+#endif
 
 #define SQRL_ENTROPY_REPEAT_FAST 9
 #define SQRL_ENTROPY_REPEAT_SLOW 190
@@ -44,7 +47,10 @@ struct sqrl_entropy_message
 };
 
 void SqrlEntropy::update() {
-#ifndef ARDUINO
+#ifdef ARDUINO
+	RNG.loop();
+	SqrlEntropy::increment( 1 );
+#else
 	if( !SqrlEntropy::state ) return;
 	struct sqrl_fast_flux_entropy ffe;
 	sqrl_store_fast_flux_entropy( &ffe );
@@ -87,6 +93,12 @@ SqrlEntropy::threadFunction() {
 void SqrlEntropy::start() {
 #ifdef ARDUINO
 	SqrlEntropy::initialized = true;
+	size_t len = Sqrl_Version( NULL, 0 );
+	char *buf = (char*)malloc( len + 1 );
+	Sqrl_Version( buf, len );
+	// TODO: EEPROM address?
+	RNG.begin( buf, 0 );
+	free( buf );
 #else
 	if( SqrlEntropy::state ) return;
 	SqrlEntropy::initialized = true;
@@ -116,8 +128,8 @@ void SqrlEntropy::stop() {
 }
 
 void SqrlEntropy::increment( int amount ) {
-#ifndef ARDUINO
 	SqrlEntropy::estimated_entropy += amount;
+#ifndef ARDUINO
 	if( SqrlEntropy::estimated_entropy >= SqrlEntropy::entropy_target ) {
 		SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_SLOW;
 	}
@@ -134,7 +146,8 @@ void SqrlEntropy::increment( int amount ) {
 */
 void SqrlEntropy::add( uint8_t* msg, size_t msg_len ) {
 #ifdef ARDUINO
-	// Ignore
+	RNG.stir( msg, msg_len );
+	SqrlEntropy::increment( 1 + ((int)msg_len / 64) );
 #else
 	if( !SqrlEntropy::state ) SqrlEntropy::start();
 	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)SqrlEntropy::state;
@@ -169,11 +182,10 @@ void SqrlEntropy::add( uint8_t* msg, size_t msg_len ) {
 */
 
 int SqrlEntropy::get( uint8_t *buf, int desired_entropy, bool blocking ) {
-#ifdef ARDUINO
-	// TODO: Implement SqrlEntropy::get for Arduino
-#else
-	if( !SqrlEntropy::state ) SqrlEntropy::start();
+	if( !SqrlEntropy::initialized ) SqrlEntropy::start();
+#ifndef ARDUINO
 	struct sqrl_entropy_pool *pool = (struct sqrl_entropy_pool*)SqrlEntropy::state;
+#endif
 
 	int received_entropy = 0;
 START:
@@ -181,17 +193,30 @@ START:
 	SqrlEntropy::entropy_target = desired_entropy;
 	if( blocking ) {
 		while( SqrlEntropy::estimated_entropy < desired_entropy ) {
+#ifdef ARDUINO
+			SqrlEntropy::update();
+#else
 			sqrl_sleep( SQRL_ENTROPY_REPEAT_SLOW );
+#endif
 		}
 	} else {
+#ifdef ARDUINO
+		SqrlEntropy::update();
+#else
 		if( SqrlEntropy::estimated_entropy < desired_entropy ) {
 			SqrlEntropy::entropy_target = desired_entropy;
 			SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_FAST;
 		}
+#endif
 		return 0;
 	}
 	if( SqrlEntropy::initialized &&
 		SqrlEntropy::estimated_entropy >= desired_entropy ) {
+#ifdef ARDUINO
+		RNG.rand( buf, 64 );
+		received_entropy = SqrlEntropy::estimated_entropy;
+		SqrlEntropy::estimated_entropy = 0;
+#else
 		SqrlEntropy::mutex->lock();
 		if( SqrlEntropy::initialized &&
 			SqrlEntropy::estimated_entropy >= desired_entropy ) {
@@ -206,24 +231,29 @@ START:
 			goto START;
 		}
 		SqrlEntropy::mutex->unlock();
+#endif
 	} else {
 		goto START;
 	}
 	SqrlEntropy::entropy_target = SQRL_ENTROPY_TARGET;
 	SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_FAST;
 	return received_entropy;
-#endif
 }
 
 
 int SqrlEntropy::bytes( uint8_t* buf, int nBytes ) {
-#ifdef ARDUINO
-	// TODO: Implement SqrlEntropy::bytes for Arduino
-#else
 	if( !buf || (nBytes <= 0) ) return 0;
 
 	int desired_entropy = (nBytes > 64) ? (8 * 64) : (8 * nBytes);
 	if( desired_entropy > SQRL_ENTROPY_NEEDED ) desired_entropy = SQRL_ENTROPY_NEEDED;
+#ifdef ARDUINO
+	while( SqrlEntropy::estimated_entropy < desired_entropy ) {
+		SqrlEntropy::update();
+	}
+	RNG.rand( buf, nBytes );
+	SqrlEntropy::estimated_entropy = 0;
+	SqrlEntropy::update();
+#else
 	uint8_t tmp[64];
 	sqrl_mlock( tmp, 64 );
 	SqrlEntropy::get( tmp, desired_entropy, true );
@@ -235,8 +265,8 @@ int SqrlEntropy::bytes( uint8_t* buf, int nBytes ) {
 	}
 
 	sqrl_munlock( tmp, 64 );
-	return nBytes;
 #endif
+	return nBytes;
 }
 
 
@@ -249,14 +279,10 @@ int SqrlEntropy::bytes( uint8_t* buf, int nBytes ) {
 */
 
 int SqrlEntropy::estimate() {
-#ifdef ARDUINO
-	return INT_MAX;
-#else
 	if( !SqrlEntropy::state ) SqrlEntropy::start();
 	if( SqrlEntropy::initialized ) {
 		return SqrlEntropy::estimated_entropy;
 	}
 	return 0;
-#endif
 }
 

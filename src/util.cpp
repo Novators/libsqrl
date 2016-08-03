@@ -9,43 +9,78 @@ For more details, see the LICENSE file included with this package.
 #include "sqrl_internal.h"
 #include "version.h"
 #include "gcm.h"
+#ifdef ARDUINO
+#include <RNG.h>
+#endif
 
 static bool sqrl_is_initialized = false;
 
 void SqrlInit() {
 	if( !sqrl_is_initialized ) {
 		gcm_initialize();
+#ifndef ARDUINO
 		sodium_init();
+#endif
 		sqrl_is_initialized = true;
 	}
 }
 
 int sqrl_mlock( void * const addr, size_t len ) {
+#ifndef ARDUINO
 	return sodium_mlock( addr, len );
+#else
+	return 0;
+#endif
 }
 
 int sqrl_munlock( void * const addr, size_t len ) {
+#ifndef ARDUINO
 	return sodium_munlock( addr, len );
+#else
+	return 0;
+#endif
 }
 
 int sqrl_mprotect_noaccess( void *ptr) {
+#ifndef ARDUINO
 	return sodium_mprotect_noaccess( ptr );
+#else
+	return 0;
+#endif
 }
 
 int sqrl_mprotect_readwrite( void *ptr ) {
+#ifndef ARDUINO
 	return sodium_mprotect_readwrite( ptr );
+#else
+	return 0;
+#endif
 }
 
 int sqrl_mprotect_readonly( void *ptr ) {
+#ifndef ARDUINO
 	return sodium_mprotect_readonly( ptr );
+#else
+	return 0;
+#endif
 }
 
 void sqrl_randombytes( void *ptr, size_t len ) {
+#ifdef ARDUINO
+	RNG.rand( (uint8_t*)ptr, len );
+#else
 	randombytes_buf( ptr, len );
+#endif
 }
 
 uint32_t sqrl_random() {
+#ifdef ARDUINO
+	uint32_t ret = 0;
+	RNG.rand( (uint8_t*)&ret, 4 );
+	return ret;
+#else
 	return randombytes_random();
+#endif
 }
 
 void sqrl_memzero( void *buf, size_t len ) {
@@ -98,7 +133,6 @@ void sqrl_free( void *ptr, size_t len ) {
 #ifdef ARDUINO
 	sqrl_memzero( ptr, len );
 	free( ptr );
-	return NULL;
 #else
 	sodium_free( ptr );
 #endif

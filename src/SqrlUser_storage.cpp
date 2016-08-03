@@ -22,7 +22,7 @@ SqrlCrypt* SqrlUser::_init_t2(
 	SqrlBlock *block,
 	bool forSaving )
 {
-	if (action->getUser() != this) return false;
+	if (action->getUser() != this) return NULL;
 	SqrlCrypt *crypt = new SqrlCrypt();
 	crypt->plain_text = this->scratch();
     crypt->text_len = SQRL_KEY_SIZE;
@@ -69,13 +69,14 @@ bool SqrlUser::sul_block_2( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 		return false;
 	}
 
+	char *rc;
 	SqrlCrypt *crypt = this->_init_t2( action, block, false );
 	if( !crypt ) {
 		goto ERR;
 	}
 
 	crypt->key = this->scratch() + crypt->text_len;
-	char *rc = (char*)this->key( action, KEY_RESCUE_CODE );
+	rc = (char*)this->key( action, KEY_RESCUE_CODE );
 	block->seek( 21 );
 	crypt->count = block->readInt32();
 	crypt->flags = SQRL_DECRYPT | SQRL_ITERATIONS;
@@ -101,6 +102,8 @@ bool SqrlUser::sus_block_2( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 {
 	if (action->getUser() != this) return false;
 	bool retVal = true;
+	uint8_t *iuk;
+	char *rc;
 	if( ! this->hasKey( KEY_IUK )
 		|| ! this->hasKey( KEY_RESCUE_CODE )) {
 		return false;
@@ -112,7 +115,7 @@ bool SqrlUser::sus_block_2( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 	}
 
 	crypt->key = this->scratch() + crypt->text_len;
-	char *rc = (char*)this->key( action, KEY_RESCUE_CODE );
+	rc = (char*)this->key( action, KEY_RESCUE_CODE );
 	if( !crypt->genKey( action, rc, SQRL_RESCUE_CODE_LENGTH ) ) {
 	}
 	block->seek( 21 );
@@ -120,15 +123,16 @@ bool SqrlUser::sus_block_2( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 
 	// Cipher Text
 	crypt->flags = SQRL_ENCRYPT | SQRL_ITERATIONS;
-	uint8_t *iuk = this->key( action, KEY_IUK );
+	iuk = this->key( action, KEY_IUK );
 	memcpy( crypt->plain_text, iuk, crypt->text_len );
 	if( crypt->doCrypt() ) {
 		// Save unique id
-		std::string str;
-		std::string tstr;
-		tstr.append( (char*)crypt->cipher_text, SQRL_KEY_SIZE );
+		SQRL_STRING str;
+		SQRL_STRING tstr;
+		SQRL_STRING_APPEND_BYTES( &tstr, (char*)crypt->cipher_text, SQRL_KEY_SIZE );
 		SqrlBase64().encode( &str, &tstr );
-		strcpy_s( this->uniqueId, str.data() );
+		memcpy( this->uniqueId, SQRL_STRING_DATA( &str ), str.length() );
+		this->uniqueId[str.length()] = 0;
 
 		goto DONE;
 	}
@@ -146,7 +150,9 @@ bool SqrlUser::sul_block_3( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 {
 	if (action->getUser() != this) return false;
 	bool retVal = true;
-	int i;
+	int i, pt_offset = 0;
+	int piuks[] = {KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3};
+
 	SqrlCrypt crypt = SqrlCrypt();
 	uint8_t *keyPointer;
 	block->seek(0);
@@ -166,8 +172,6 @@ bool SqrlUser::sul_block_3( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 	crypt.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
 	if( !crypt.doCrypt() ) goto ERR;
 
-	int pt_offset = 0;
-	int piuks[] = { KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3 };
 	for( i = 0; i < 4; i++ ) {
 		keyPointer = this->newKey( piuks[i] );
 		memcpy( keyPointer, crypt.plain_text + pt_offset, SQRL_KEY_SIZE );
@@ -234,6 +238,7 @@ bool SqrlUser::sul_block_1( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 {
 	if (action->getUser() != this) return false;
 	bool retVal = true;
+	uint8_t *key;
 	SqrlCrypt crypt = SqrlCrypt();
     crypt.text_len = SQRL_KEY_SIZE * 2;
 
@@ -271,7 +276,7 @@ bool SqrlUser::sul_block_1( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 	crypt.plain_text = this->keys->scratch;
 
 	// Iteration Count
-	uint8_t *key = crypt.plain_text + crypt.text_len;
+	key = crypt.plain_text + crypt.text_len;
 	crypt.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
 	if( crypt.genKey( action, this->keys->password, this->keys->password_len )
 		&& crypt.doCrypt() ) {
@@ -473,8 +478,9 @@ SqrlUser::SqrlUser( SqrlUri *uri )
 SqrlUser::SqrlUser( const char *buffer, size_t buffer_len )
 {
 	this->initialize();
-	std::string buf;
-	buf.append( buffer, buffer_len );
+	SQRL_STRING buf;
+	buf.reserve( buffer_len + 1 );
+	SQRL_STRING_APPEND_BYTES( &buf, buffer, buffer_len );
 	this->storage = SqrlStorage::from( &buf );
 	if( this->storage ) {
 		this->_load_unique_id();
@@ -516,11 +522,11 @@ bool SqrlUser::saveToBuffer( SqrlActionSave *action )
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
 
-	std::string *buf = NULL;
+	SQRL_STRING *buf = NULL;
 	if( this->updateStorage( action )) {
 		buf = this->storage->save( action->getExportType(), action->getEncodingType() );
 		if( buf ) {
-			action->setString( buf->data(), buf->length());
+			action->setString( SQRL_STRING_DATA( buf ), buf->length());
 			delete buf;
 			goto DONE;
 		}

@@ -34,9 +34,6 @@
     <ClInclude Include="..\src\gcm.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\rdrand.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\sqrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -88,9 +85,6 @@
     <ClInclude Include="..\src\SqrlClient.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SqrlClientAsync.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SqrlCrypt.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -103,22 +97,7 @@
     <ClInclude Include="..\src\SqrlEntropy_Arduino.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SqrlEntropy_Linux.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlEntropy_Mac.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlEntropy_Win.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlForwardDeclarations.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SqrlIdentityAction.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlSiteAction.h">
@@ -137,9 +116,6 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="..\src\version.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="QueueList.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -195,9 +171,6 @@
     <ClCompile Include="..\src\SqrlClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SqrlClientAsync.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SqrlCrypt.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -205,9 +178,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SqrlIdentityAction.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\SqrlServer.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SqrlSiteAction.cpp">

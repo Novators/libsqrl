@@ -19,7 +19,7 @@ TEST_CASE("Uri1")
 	SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
 	REQUIRE( uri );
 	REQUIRE( uri->getScheme() == SQRL_SCHEME_SQRL );
-	testString(uri->getSiteKeyString(), "sqrlid.com/login");
+	testString(uri->getSiteKey(), "sqrlid.com/login");
 	testString(uri->getChallenge(), "sqrl://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
 	testString(uri->getUrl(), "https://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
 	testString(uri->getPrefix(), "https://sqrlid.com");
@@ -34,7 +34,7 @@ TEST_CASE("Uri2")
 	SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
 	REQUIRE( uri );
 	REQUIRE( uri->getScheme() == SQRL_SCHEME_SQRL );
-	testString(uri->getSiteKeyString(), "sqrlid.com");
+	testString(uri->getSiteKey(), "sqrlid.com");
 	testString(uri->getChallenge(), "sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
 	testString(uri->getUrl(), "https://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
 	testString(uri->getPrefix(), "https://sqrlid.com");
@@ -49,7 +49,7 @@ TEST_CASE("Uri3")
 	SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
 	REQUIRE( uri );
 	REQUIRE( uri->getScheme() == SQRL_SCHEME_SQRL );
-	testString(uri->getSiteKeyString(), "sqrlid.com");
+	testString(uri->getSiteKey(), "sqrlid.com");
 	testString(uri->getChallenge(), "sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
 	testString(uri->getUrl(), "https://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
 	testString(uri->getPrefix(), "https://sqrlid.com:8080");
@@ -64,7 +64,7 @@ TEST_CASE("FileUri")
 	SqrlUri *uri = SqrlUri::parse("file://test1.sqrl");
 	REQUIRE( uri );
 	REQUIRE( uri->getScheme() == SQRL_SCHEME_FILE );
-	REQUIRE( uri->getSiteKeyStringLength() == 0 );
+	REQUIRE( uri->getSiteKeyLength() == 0 );
 	testString(uri->getUrl(), "file://test1.sqrl");
 	testString(uri->getChallenge(), "test1.sqrl");
 	testString(uri->getPrefix(), NULL);

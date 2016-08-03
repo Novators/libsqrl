@@ -30,7 +30,7 @@ SqrlAction::SqrlAction()
   shouldCancel(false) {
 	SqrlClient *client = SqrlClient::getClient();
 	if( !client ) {
-		exit( 1 );
+		exit( 3 );
 	}
 #ifndef ARDUINO
 	client->actionMutex.lock();

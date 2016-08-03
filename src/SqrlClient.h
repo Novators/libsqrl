@@ -40,12 +40,12 @@ protected:
 
 	virtual void onLoop();
 	virtual void onSend(
-		SqrlAction *t, std::string url, std::string payload ) = 0;
+		SqrlAction *t, SQRL_STRING url, SQRL_STRING payload ) = 0;
 	virtual void onProgress(
 		SqrlAction *action, int progress) = 0;
 	virtual void onAsk(
 		SqrlAction *action,
-		std::string message, std::string firstButton, std::string secondButton ) = 0;
+		SQRL_STRING message, SQRL_STRING firstButton, SQRL_STRING secondButton ) = 0;
 	virtual void onAuthenticationRequired(
 		SqrlAction *action, Sqrl_Credential_Type credentialType) = 0;
 	virtual void onSelectUser(SqrlAction *action) = 0;
@@ -65,7 +65,7 @@ protected:
 		int progress;
 		Sqrl_Credential_Type credentialType;
 		void *ptr;
-		std::string* str[3];
+		SQRL_STRING* str[3];
 	};
 
 private:
@@ -92,10 +92,10 @@ private:
 		SqrlAction *action,
 		Sqrl_Credential_Type credentialType );
 	void callSend(
-		SqrlAction *t, std::string *url, std::string *payload );
+		SqrlAction *t, SQRL_STRING *url, SQRL_STRING *payload );
 	void callAsk(
 		SqrlAction *action,
-		std::string *message, std::string *firstButton, std::string *secondButton );
+		SQRL_STRING *message, SQRL_STRING *firstButton, SQRL_STRING *secondButton );
 
 };
 

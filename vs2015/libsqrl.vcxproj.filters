@@ -263,9 +263,6 @@
     <ClInclude Include="..\src\SqrlServer.h">
       <Filter>Header Files\Server</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SqrlForwardDeclarations.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SqrlEntropy_Arduino.h">
       <Filter>Header Files\Client\Entropy</Filter>
     </ClInclude>
