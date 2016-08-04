@@ -1,8 +1,9 @@
-/** @file SqrlActionRemove.h
-@author Adam Comley
-
-This file is part of libsqrl.  It is released under the MIT license.
-For more details, see the LICENSE file included with this package.
+/** \file SqrlActionRemove.h
+ *
+ * \author Adam Comley
+ *
+ * This file is part of libsqrl.  It is released under the MIT license.
+ * For more details, see the LICENSE file included with this package.
 **/
 
 #ifndef SQRLACTIONREMOVE_H

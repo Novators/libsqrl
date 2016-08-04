@@ -170,9 +170,6 @@
     <ClInclude Include="..\src\sqrl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\crypto_scrypt.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SqrlAction.h">
       <Filter>Header Files\Client\Actions</Filter>
     </ClInclude>

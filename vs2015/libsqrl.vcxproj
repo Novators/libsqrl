@@ -54,7 +54,6 @@
   <ItemGroup>
     <ClInclude Include="..\src\aes.h" />
     <ClInclude Include="..\src\config.h" />
-    <ClInclude Include="..\src\crypto_scrypt.h" />
     <ClInclude Include="..\src\detect_platform.h" />
     <ClInclude Include="..\src\SqrlDeque.h" />
     <ClInclude Include="..\src\SqrlEntropy_Linux.h" />

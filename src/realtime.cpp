@@ -1,17 +1,10 @@
-/** @file realtime.c
+/** \file realtime.cpp
  *
- * EnScrypt, a Scrypt based password hashing library.
- *
- * The code in this file is based on a work by:
- *
- * * Author:  David Robert Nadeau
- * * Site:    http://NadeauSoftware.com/
- * * License: Creative Commons Attribution 3.0 Unported License
- *            http://creativecommons.org/licenses/by/3.0/deed.en_US
- *
- * This derived work is released under the same license as the original.
- *
- **/
+ * \author Adam Comley
+ * 
+ * This file is part of libsqrl.  It is released under the MIT license.
+ * For more details, see the LICENSE file included with this package.
+**/
 
 #include "sqrl_internal.h"
 

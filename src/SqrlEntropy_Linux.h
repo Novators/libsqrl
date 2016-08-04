@@ -1,9 +1,9 @@
-/** @file entropy_linux.h
-
-@author Adam Comley
-
-This file is part of libsqrl.  It is released under the MIT license.
-For more details, see the LICENSE file included with this package.
+/** \file SqrlEntropy_Linux.h
+ *
+ * \author Adam Comley
+ *
+ * This file is part of libsqrl.  It is released under the MIT license.
+ * For more details, see the LICENSE file included with this package.
 **/
 
 #include <stdlib.h>

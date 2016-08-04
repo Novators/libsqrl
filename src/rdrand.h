@@ -1,7 +1,9 @@
-/** @file rdrand.h
-
-This file is part of libsqrl.  It is released under the MIT license.
-For more details, see the LICENSE file included with this package.
+/** \file rdrand.h
+ *
+ * \author Adam Comley
+ * 
+ * This file is part of libsqrl.  It is released under the MIT license.
+ * For more details, see the LICENSE file included with this package.
 **/
 
 #include <stdint.h>

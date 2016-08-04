@@ -1,8 +1,9 @@
-/** @file SqrlIdentityAction.h
-@author Adam Comley
-
-This file is part of libsqrl.  It is released under the MIT license.
-For more details, see the LICENSE file included with this package.
+/** \file SqrlIdentityAction.h
+ *
+ * \author Adam Comley
+ *
+ * This file is part of libsqrl.  It is released under the MIT license.
+ * For more details, see the LICENSE file included with this package.
 **/
 
 #ifndef SQRLIDENTITYACTION_H
