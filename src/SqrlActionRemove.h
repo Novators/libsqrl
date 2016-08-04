@@ -10,9 +10,9 @@
 #define SQRLACTIONREMOVE_H
 
 #include "sqrl.h"
-#include "SqrlAction.h"
+#include "SqrlSiteAction.h"
 
-class DLL_PUBLIC SqrlActionRemove : public SqrlAction
+class DLL_PUBLIC SqrlActionRemove : public SqrlSiteAction
 {
 
 };

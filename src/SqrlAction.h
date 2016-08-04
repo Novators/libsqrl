@@ -30,12 +30,12 @@
 ///   - Starting a new SqrlAction:
 ///     - Call '''new SqrlAction();''' to start a SqrlAction.  Disregard the pointer.  
 ///     - Do not use SqrlActions as global or local variables.
-/// 	 - Ending a SqrlAction:  
-/// 	   - Do not attempt to delete a SqrlAction.  Instead, call SqrlAction::cancel(). It will   
-/// 	     stop cleanly and be deleted by libsqrl.  
-/// 	 - Interacting with a SqrlAction:  
-/// 	   - Once a SqrlAction is created, all further interaction with it will be through the  
-/// 	     SqrlClient and it's callbacks.</remarks>
+/// 	- Ending a SqrlAction:  
+/// 	  - Do not attempt to delete a SqrlAction.  Instead, call SqrlAction::cancel(). It will   
+/// 	    stop cleanly and be deleted by libsqrl.  
+/// 	- Interacting with a SqrlAction:  
+/// 	  - Once a SqrlAction is created, all further interaction with it will be through the  
+/// 	    SqrlClient and it's callbacks.</remarks>
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 class DLL_PUBLIC SqrlAction
 {
