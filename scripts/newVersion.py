@@ -57,3 +57,10 @@ for line in fileinput.input( "../SQRLduino/src/_micro-api/libraries/SQRLduinoLib
         print "version=" + nvString
     else:
         print line.rstrip()
+
+for line in fileinput.input( "../doc/Doxyfile", inplace=True):
+    if line.startswith( "PROJECT_NUMBER" ) :
+        print "PROJECT_NUMBER         = " + nvString
+    else:
+        print line.rstrip()
+
