@@ -26,8 +26,9 @@ SqrlClientAsync::~SqrlClientAsync() {
 }
 
 void SqrlClientAsync::clientThread() {
-	SqrlClientAsync *client;
-	while( (client = (SqrlClientAsync*)SqrlClient::getClient()) && !client->stopping ) {
+	SqrlClientAsync *client = (SqrlClientAsync*)SqrlClient::getClient();
+	if( !client ) return;
+	while( !client->stopping ) {
 		if( client->loop() ) {
 			sqrl_sleep( 50 );
 		} else {

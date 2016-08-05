@@ -94,8 +94,12 @@ ERR:
 	retVal = false;
 
 DONE:
-	sqrl_memzero( this->keys->scratch, crypt->text_len + SQRL_KEY_SIZE );
-	if( crypt ) delete crypt;
+	if( crypt ) {
+		sqrl_memzero( this->keys->scratch, crypt->text_len + SQRL_KEY_SIZE );
+		delete crypt;
+	} else {
+		sqrl_memzero( this->keys->scratch, KEY_SCRATCH_SIZE );
+	}
 	return retVal;
 }
 
@@ -142,8 +146,12 @@ ERR:
 	retVal = false;
 
 DONE:
-	sqrl_memzero( this->keys->scratch, crypt->text_len + SQRL_KEY_SIZE );
-	if( crypt ) delete crypt;
+	if( crypt ) {
+		sqrl_memzero( this->keys->scratch, crypt->text_len + SQRL_KEY_SIZE );
+		delete crypt;
+	} else {
+		sqrl_memzero( this->keys->scratch, KEY_SCRATCH_SIZE );
+	}
 	return retVal;
 }
 

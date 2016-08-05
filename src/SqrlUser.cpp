@@ -98,15 +98,17 @@ void SqrlUser::initialize()
 	this->referenceCountMutex = new std::mutex();
 #endif
 	struct SqrlUserList *l = (struct SqrlUserList*)calloc(1, sizeof(struct SqrlUserList));
-	l->user = this;
+	if( l ) {
+		l->user = this;
 #ifndef ARDUINO
-	client->userMutex.lock();
+		client->userMutex.lock();
 #endif
-	l->next = SQRL_USER_LIST;
-	SQRL_USER_LIST = l;
+		l->next = SQRL_USER_LIST;
+		SQRL_USER_LIST = l;
 #ifndef ARDUINO
-	client->userMutex.unlock();
+		client->userMutex.unlock();
 #endif
+	}
 }
 
 SqrlUser::SqrlUser()

@@ -21,8 +21,10 @@ void SqrlSiteAction::setAltIdentity( const char *alt ) {
 	if( alt ) {
 		size_t len = strlen( alt );
 		this->altIdentity = (char*)malloc( len + 1 );
-		memcpy( this->altIdentity, alt, len );
-		this->altIdentity[len] = 0;
+		if( this->altIdentity ) {
+			memcpy( this->altIdentity, alt, len );
+			this->altIdentity[len] = 0;
+		}
 	}
 }
 

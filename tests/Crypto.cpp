@@ -42,7 +42,7 @@ TEST_CASE( "EnHash" ) {
 
 	char line[256];
 	size_t len = 0;
-	std::string *input, *output;
+	std::string input, output;
 	std::string tmp, tmp2;
 	uint8_t out[SQRL_KEY_SIZE];
 	SqrlBase64 b64 = SqrlBase64();
@@ -52,14 +52,13 @@ TEST_CASE( "EnHash" ) {
 		ln++;
 		tmp.append( line, 43 );
 		tmp2.append( line + 43, 43 );
-		input = b64.decode( NULL, &tmp );
-		output = b64.decode( NULL, &tmp2 );
-		SqrlCrypt::enHash( (uint64_t*)out, (uint64_t*)(input->data()) );
-		REQUIRE( 32 == output->length() );
-		REQUIRE( 0 == memcmp( out, output->data(), 32 ) );
+		b64.decode( &input, &tmp );
+		b64.decode( &output, &tmp2 );
+		SqrlCrypt::enHash( (uint64_t*)out, (uint64_t*)(input.data()) );
+		REQUIRE( 32 == output.length() );
+		REQUIRE( 0 == memcmp( out, output.data(), 32 ) );
 		tmp.clear();
 		tmp2.clear();
-		delete input, output;
 	}
 	fclose( fp );
 	delete client;

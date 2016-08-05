@@ -92,12 +92,14 @@ bool SqrlBlock::resize(size_t new_size)
 	sqrl_munlock( this->data, this->blockLength );
 	free( this->data );
 	this->data = (uint8_t*)malloc( new_size );
-	sqrl_mlock( this->data, new_size );
-	this->blockLength = (uint16_t)new_size;
-	if( this->cur >= this->blockLength ) {
-		this->cur = this->blockLength - 1;
+	if( this->data ) {
+		sqrl_mlock( this->data, new_size );
+		this->blockLength = (uint16_t)new_size;
+		if( this->cur >= this->blockLength ) {
+			this->cur = this->blockLength - 1;
+		}
+		memcpy( this->data, buf, new_size );
 	}
-	memcpy( this->data, buf, new_size );
 	memset( buf, 0, new_size );
 	free( buf );
 	return false;

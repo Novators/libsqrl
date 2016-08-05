@@ -19,8 +19,10 @@ char* SqrlUri::getChallenge() {
 	if (this->challenge == NULL) return NULL;
 	size_t len = strlen( this->challenge );
 	char *ret = (char*)malloc(len + 1);
-	memcpy( ret, this->challenge, len );
-	ret[len] = 0;
+	if( ret ) {
+		memcpy( ret, this->challenge, len );
+		ret[len] = 0;
+	}
 	return ret;
 }
 void SqrlUri::setChallenge(const char *val) {
@@ -29,8 +31,10 @@ void SqrlUri::setChallenge(const char *val) {
 	if (val) {
 		size_t len = strlen( val );
 		this->challenge = (char*)malloc(len + 1);
-		memcpy( this->challenge, val, len );
-		this->challenge[len] = 0;
+		if( this->challenge ) {
+			memcpy( this->challenge, val, len );
+			this->challenge[len] = 0;
+		}
 	}
 }
 void SqrlUri::setUrl(const char *val) {
@@ -39,40 +43,50 @@ void SqrlUri::setUrl(const char *val) {
 	if (val) {
 		size_t len = strlen( val );
 		this->url = (char*)malloc(len + 1);
-		memcpy(this->url, val, len);
-		this->url[len] = 0;
+		if( this->url ) {
+			memcpy( this->url, val, len );
+			this->url[len] = 0;
+		}
 	}
 }
 char* SqrlUri::getSiteKey() {
 	if (this->siteKey == NULL) return NULL;
 	size_t len = strlen( this->siteKey );
 	char *ret = (char*)malloc(len + 1);
-	memcpy(ret, this->siteKey, len);
-	ret[len] = 0;
+	if( ret ) {
+		memcpy( ret, this->siteKey, len );
+		ret[len] = 0;
+	}
 	return ret;
 }
 char* SqrlUri::getPrefix() {
 	if (this->prefix == NULL) return NULL;
 	size_t len = strlen( this->prefix );
 	char *ret = (char*)malloc(len + 1);
-	memcpy(ret, this->prefix, len);
-	ret[len] = 0;
+	if( ret ) {
+		memcpy( ret, this->prefix, len );
+		ret[len] = 0;
+	}
 	return ret;
 }
 char* SqrlUri::getUrl() {
 	if (this->url == NULL) return NULL;
 	size_t len = strlen( this->url );
 	char *ret = (char*)malloc(len + 1);
-	memcpy(ret, this->url, len);
-	ret[len] = 0;
+	if( ret ) {
+		memcpy( ret, this->url, len );
+		ret[len] = 0;
+	}
 	return ret;
 }
 char* SqrlUri::getSFN() {
 	if (this->sfn == NULL) return NULL;
 	size_t len = strlen( this->sfn );
 	char *ret = (char*)malloc(len + 1);
-	memcpy(ret, this->sfn, len);
-	ret[len] = 0;
+	if( ret ) {
+		memcpy( ret, this->sfn, len );
+		ret[len] = 0;
+	}
 	return ret;
 }
 size_t SqrlUri::getChallengeLength() {
@@ -108,22 +122,24 @@ SqrlUri::SqrlUri()
 
 SqrlUri* SqrlUri::copy() {
 	SqrlUri *nuri = (SqrlUri*)malloc( sizeof( SqrlUri ) );
-	new (nuri) SqrlUri();
+	if( nuri ) {
+		new (nuri) SqrlUri();
 
-	if (this->challenge) {
-		nuri->challenge = this->getChallenge();
-	}
-	if (this->siteKey) {
-		nuri->siteKey = this->getSiteKey();
-	}
-	if (this->prefix) {
-		nuri->prefix = this->getPrefix();
-	}
-	if (this->url) {
-		nuri->url = this->getUrl();
-	}
-	if (this->sfn) {
-		nuri->sfn = this->getSFN();
+		if( this->challenge ) {
+			nuri->challenge = this->getChallenge();
+		}
+		if( this->siteKey ) {
+			nuri->siteKey = this->getSiteKey();
+		}
+		if( this->prefix ) {
+			nuri->prefix = this->getPrefix();
+		}
+		if( this->url ) {
+			nuri->url = this->getUrl();
+		}
+		if( this->sfn ) {
+			nuri->sfn = this->getSFN();
+		}
 	}
 	return nuri;
 }
@@ -396,10 +412,12 @@ SQRL:
 	case SQRL_SCHEME_FILE:
 		len = strlen( uri );
 		theUri->url = (char*)malloc(len+1);
+		if( !theUri->url ) goto ERR;
 		memcpy(theUri->url, uri, len);
 		theUri->url[len] = 0;
 		len -= 7;
 		theUri->challenge = (char*)malloc(len+1);
+		if( !theUri->challenge ) goto ERR;
 		memcpy(theUri->challenge, uri + 7, len);
 		theUri->challenge[len] = 0;
 		goto END;

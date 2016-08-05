@@ -115,9 +115,11 @@ void SqrlActionSave::setString( const char *buf, size_t len ) {
 	this->buffer_len = 0;
 	if( buf && len > 0 ) {
 		this->buffer = (char*)malloc( len + 1 );
-		memcpy( this->buffer, buf, len );
-		this->buffer[len] = 0;
-		this->buffer_len = len;
+		if( this->buffer ) {
+			memcpy( this->buffer, buf, len );
+			this->buffer[len] = 0;
+			this->buffer_len = len;
+		}
 	}
 }
 
