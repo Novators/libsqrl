@@ -275,5 +275,8 @@
     <ClInclude Include="..\src\SqrlDeque.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
+    <ClInclude Include="..\src\SqrlString.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -21,20 +21,20 @@
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 /// <summary>An Action, typically initiated by the user and managed by the SqrlClient.</summary>
-/// 
+///
 /// <remarks>
 /// For Implementers:
 ///   - Children of SqrlAction must override the run() method, to process the requested action.
-/// 
+///
 /// For Consumers:
 ///   - Starting a new SqrlAction:
-///     - Call '''new SqrlAction();''' to start a SqrlAction.  Disregard the pointer.  
+///     - Call '''new SqrlAction();''' to start a SqrlAction.  Disregard the pointer.
 ///     - Do not use SqrlActions as global or local variables.
-/// 	- Ending a SqrlAction:  
-/// 	  - Do not attempt to delete a SqrlAction.  Instead, call SqrlAction::cancel(). It will   
-/// 	    stop cleanly and be deleted by libsqrl.  
-/// 	- Interacting with a SqrlAction:  
-/// 	  - Once a SqrlAction is created, all further interaction with it will be through the  
+/// 	- Ending a SqrlAction:
+/// 	  - Do not attempt to delete a SqrlAction.  Instead, call SqrlAction::cancel(). It will
+/// 	    stop cleanly and be deleted by libsqrl.
+/// 	- Interacting with a SqrlAction:
+/// 	  - Once a SqrlAction is created, all further interaction with it will be through the
 /// 	    SqrlClient and it's callbacks.</remarks>
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 class DLL_PUBLIC SqrlAction
@@ -93,7 +93,7 @@ protected:
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>Steps through this SqrlAction's state machine. Called by the SqrlClient.</summary>
-	/// 
+	///
 	/// <remarks>
 	/// This should complete the required action in a series of fast steps.  It should never block.
 	/// We recommend using state machine logic within this function.</remarks>

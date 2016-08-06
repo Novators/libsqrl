@@ -1,7 +1,7 @@
 /** \file SqrlActionSave.cpp
  *
  * \author Adam Comley
- * 
+ *
  * This file is part of libsqrl.  It is released under the MIT license.
  * For more details, see the LICENSE file included with this package.
 **/
@@ -32,7 +32,8 @@ SqrlActionSave::SqrlActionSave( SqrlUser *user, const char *path, Sqrl_Export ex
 	buffer(NULL),
 	buffer_len(0) {
 	if( path ) {
-		this->uri = SqrlUri::parse( path );
+		SqrlString ps = SqrlString( path );
+		this->uri = SqrlUri::parse( &ps );
 	} else {
 		this->uri = NULL;
 	}

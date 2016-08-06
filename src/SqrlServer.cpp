@@ -1,7 +1,7 @@
 /** \file SqrlServer.cpp
  *
  * \author Adam Comley
- * 
+ *
  * This file is part of libsqrl.  It is released under the MIT license.
  * For more details, see the LICENSE file included with this package.
 **/
@@ -20,10 +20,11 @@ SqrlServer::SqrlServer(
 {
 	SqrlInit();
 	memset( this, 0, sizeof( class SqrlServer ) );
+	SqrlString ssuri = SqrlString( uri );
 	if( sfn ) {
 		this->sfn = new SQRL_STRING( sfn );
 	} else {
-		SqrlUri *tmpUri = SqrlUri::parse( uri );
+		SqrlUri *tmpUri = SqrlUri::parse( &ssuri );
 		if( tmpUri ) {
 			char *tmp;
 			tmp = tmpUri->getSiteKey();
@@ -44,9 +45,10 @@ SqrlServer::SqrlServer(
 			SQRL_STRING str = SQRL_STRING( uri, p - uri );
 			b64.encode( &str, this->sfn, true );
 			SQRL_STRING fullUri = str.append( pp );
-			this->uri = SqrlUri::parse( fullUri.data() );
+			SqrlString ssfu = SqrlString( fullUri.data() );
+			this->uri = SqrlUri::parse( &ssfu );
 		} else {
-			this->uri = SqrlUri::parse( uri );
+			this->uri = SqrlUri::parse( &ssuri );
 		}
 	}
 

@@ -1,7 +1,7 @@
 /** \file SqrlUri.h
  *
  * \author Adam Comley
- * 
+ *
  * This file is part of libsqrl.  It is released under the MIT license.
  * For more details, see the LICENSE file included with this package.
 **/
@@ -10,6 +10,7 @@
 #define SQRLURI_H
 
 #include "sqrl.h"
+#include "SqrlString.h"
 
 typedef enum
 {
@@ -21,7 +22,7 @@ typedef enum
 class DLL_PUBLIC SqrlUri
 {
 public:
-	static SqrlUri *parse( const char *source );
+	static SqrlUri *parse( SqrlString *source );
 	SqrlUri *release();
 
 	Sqrl_Scheme getScheme();

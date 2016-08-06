@@ -16,11 +16,11 @@
 /// \class SqrlActionGenerate
 ///
 /// \brief Generates a new user identity.
-/// 	   
+///
 /// 	   Callbacks Used:
 /// 	     - SqrlClient::onAuthenticationRequired: SQRL_CREDENTIAL_NEW_PASSWORD: (new password)
-/// 	     - SqrlClient::onSaveSuggested: When successfully completed.    
-/// 	   
+/// 	     - SqrlClient::onSaveSuggested: When successfully completed.
+///
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 class DLL_PUBLIC SqrlActionGenerate : public SqrlIdentityAction
 {

@@ -2,6 +2,7 @@
 #include "BaseServer.h"
 #include "NullClient.h"
 
+/*
 TEST_CASE( "Server Link MAC" ) {
 	BaseServer srv = BaseServer( "sqrl://test.sqrlid.com/sqrl?nut=_LIBSQRL_NUT_&sfn=_LIBSQRL_SFN_", "SQRLid", "test", 4 );
 	std::string *str = srv.createLink( 0 );
@@ -10,3 +11,4 @@ TEST_CASE( "Server Link MAC" ) {
 	REQUIRE( !srv.tryVerifyMAC( str ) );
 	delete str;
 }
+*/

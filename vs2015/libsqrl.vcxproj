@@ -85,6 +85,7 @@
     <ClInclude Include="..\src\SqrlServer.h" />
     <ClInclude Include="..\src\SqrlSiteAction.h" />
     <ClInclude Include="..\src\SqrlStorage.h" />
+    <ClInclude Include="..\src\SqrlString.h" />
     <ClInclude Include="..\src\SqrlUri.h" />
     <ClInclude Include="..\src\SqrlUrlEncode.h" />
     <ClInclude Include="..\src\SqrlUser.h" />

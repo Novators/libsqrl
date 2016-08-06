@@ -1,7 +1,7 @@
 /** \file SqrlUri.cpp
  *
  * \author Adam Comley
- * 
+ *
  * This file is part of libsqrl.  It is released under the MIT license.
  * For more details, see the LICENSE file included with this package.
 **/
@@ -177,7 +177,7 @@ Parses a SQRL URL and returns a \p SqrlUri object
 @param theUrl NULL terminated SQRL URL string
 @return A new \p SqrlUri object
 */
-SqrlUri *SqrlUri::parse( const char *source ) {
+SqrlUri *SqrlUri::parse( SqrlString *source ) {
 	SqrlUri *theUri = (SqrlUri*)malloc( sizeof( SqrlUri ) );
 	new (theUri) SqrlUri();
 
@@ -202,12 +202,9 @@ SqrlUri *SqrlUri::parse( const char *source ) {
 	size_t ul;
 
 	SQRL_STRING *prefix = NULL;
-	len = strlen( source );
-	char *uri = (char*)malloc( len + 1 );
-	memcpy( uri, source, len );
-	uri[len] = 0;
+	SqrlString uri = SqrlString( source );
 
-	curstr = uri;
+	curstr = uri.string();
 
 	/*
 	* <scheme>:<scheme-specific-part>
@@ -402,32 +399,32 @@ SqrlUri *SqrlUri::parse( const char *source ) {
 SQRL:
 	switch (theUri->scheme) {
 	case SQRL_SCHEME_SQRL:
-		len = strlen( uri );
+		len = uri.length();
 		theUri->url = (char*)malloc(len+2);
-		memcpy( theUri->url + 1, uri, len );
+		memcpy( theUri->url + 1, uri.string(), len );
 		memcpy(theUri->url, "https", 5);
 		theUri->url[len+1] = 0;
 		prefix = new SQRL_STRING( "https://" );
 		break;
 	case SQRL_SCHEME_FILE:
-		len = strlen( uri );
+		len = uri.length();
 		theUri->url = (char*)malloc(len+1);
 		if( !theUri->url ) goto ERR;
-		memcpy(theUri->url, uri, len);
+		memcpy(theUri->url, uri.string(), len);
 		theUri->url[len] = 0;
 		len -= 7;
 		theUri->challenge = (char*)malloc(len+1);
 		if( !theUri->challenge ) goto ERR;
-		memcpy(theUri->challenge, uri + 7, len);
+		memcpy(theUri->challenge, uri.string() + 7, len);
 		theUri->challenge[len] = 0;
 		goto END;
 	default:
 		goto ERR;
 	}
-	len = strlen( source );
+	len = source->length();
 	theUri->challenge = (char*)malloc(len+1);
 	if (theUri->challenge == NULL || theUri->url == NULL) goto ERR;
-	memcpy(theUri->challenge, source, len);
+	memcpy(theUri->challenge, source->string(), len);
 	theUri->challenge[len] = 0;
 
 	hl = strlen(host);
@@ -511,7 +508,6 @@ END:
 	if (password) free(password);
 	if (path) free(path);
 	if (prefix) delete prefix;
-	if (uri) free(uri);
 	return theUri;
 }
 

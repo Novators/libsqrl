@@ -1,7 +1,8 @@
 #include "catch.hpp"
 
 #include "sqrl.h"
-#include "Sqrluri.h"
+#include "SqrlUri.h"
+#include "SqrlString.h"
 #include "NullClient.h"
 
 static void testString(char *a, const char *b) {
@@ -16,7 +17,8 @@ static void testString(char *a, const char *b) {
 TEST_CASE("Uri1")
 {
 	new NullClient();
-	SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk");
+	SqrlString str( "sqrl://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk" );
+	SqrlUri *uri = SqrlUri::parse( &str );
 	REQUIRE( uri );
 	REQUIRE( uri->getScheme() == SQRL_SCHEME_SQRL );
 	testString(uri->getSiteKey(), "sqrlid.com/login");
@@ -31,7 +33,8 @@ TEST_CASE("Uri1")
 TEST_CASE("Uri2")
 {
 	new NullClient();
-	SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk");
+	SqrlString str( "sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk" );
+	SqrlUri *uri = SqrlUri::parse( &str );
 	REQUIRE( uri );
 	REQUIRE( uri->getScheme() == SQRL_SCHEME_SQRL );
 	testString(uri->getSiteKey(), "sqrlid.com");
@@ -46,7 +49,8 @@ TEST_CASE("Uri2")
 TEST_CASE("Uri3")
 {
 	new NullClient();
-	SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah");
+	SqrlString str( "sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah" );
+	SqrlUri *uri = SqrlUri::parse( &str );
 	REQUIRE( uri );
 	REQUIRE( uri->getScheme() == SQRL_SCHEME_SQRL );
 	testString(uri->getSiteKey(), "sqrlid.com");
@@ -61,7 +65,8 @@ TEST_CASE("Uri3")
 TEST_CASE("FileUri")
 {
 	new NullClient();
-	SqrlUri *uri = SqrlUri::parse("file://test1.sqrl");
+	SqrlString str( "file://test1.sqrl" );
+	SqrlUri *uri = SqrlUri::parse( &str );
 	REQUIRE( uri );
 	REQUIRE( uri->getScheme() == SQRL_SCHEME_FILE );
 	REQUIRE( uri->getSiteKeyLength() == 0 );
@@ -76,7 +81,8 @@ TEST_CASE("FileUri")
 TEST_CASE("SQRLUriWithoutSFN")
 {
 	new NullClient();
-	SqrlUri *uri = SqrlUri::parse("sqrl://sqrlid.com:8080/login?nut=blah");
+	SqrlString str( "sqrl://sqrlid.com:8080/login?nut=blah" );
+	SqrlUri *uri = SqrlUri::parse( &str );
 	REQUIRE( ! uri );
 	delete (NullClient*)NullClient::getClient();
 }
@@ -84,7 +90,8 @@ TEST_CASE("SQRLUriWithoutSFN")
 TEST_CASE("InvalidSQRLUrl")
 {
 	new NullClient();
-	SqrlUri *uri = SqrlUri::parse("http://google.com");
+	SqrlString str( "http://google.com" );
+	SqrlUri *uri = SqrlUri::parse( &str );
 	REQUIRE( ! uri );
 	delete (NullClient*)NullClient::getClient();
 }

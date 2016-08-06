@@ -4,6 +4,7 @@
 #include "Sqrlstorage.h"
 #include "SqrlUri.h"
 #include "SqrlBlock.h"
+#include "SqrlString.h"
 #include "NullClient.h"
 
 static void testString( char *a, const char *b ) {
@@ -20,7 +21,8 @@ TEST_CASE("LoadFile")
 {
 	NullClient * client = new NullClient();
 	bool bError = false;
-	SqrlUri *fn = SqrlUri::parse( "file://data/test1.sqrl" );
+	SqrlString filename( "file://data/test1.sqrl" );
+	SqrlUri *fn = SqrlUri::parse( &filename );
 	REQUIRE( fn );
 	SqrlStorage *storage = SqrlStorage::from( fn );
 	fn->release();

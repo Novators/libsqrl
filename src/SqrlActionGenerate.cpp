@@ -1,7 +1,7 @@
 /** \file SqrlActionGenerate.cpp
  *
  * \author Adam Comley
- * 
+ *
  * This file is part of libsqrl.  It is released under the MIT license.
  * For more details, see the LICENSE file included with this package.
 **/
@@ -18,7 +18,7 @@ SqrlActionGenerate::SqrlActionGenerate() : SqrlIdentityAction(NULL) {
 int SqrlActionGenerate::run( int cs ) {
 	SqrlClient *client = SqrlClient::getClient();
 	if( this->shouldCancel ) {
-		return this->retActionComplete( SQRL_ACTION_CANCELED );
+		COMPLETE( SQRL_ACTION_CANCELED)
 	}
 
 	switch( cs ) {
@@ -27,23 +27,24 @@ int SqrlActionGenerate::run( int cs ) {
 			SqrlUser *user = new SqrlUser();
 			this->setUser( user );
 		}
-		if( !this->user->rekey( this ) ) {
-			return this->retActionComplete( SQRL_ACTION_FAIL );
-		}
-		return cs + 1;
+		NEXT_STATE( cs )
 	case 1:
+		if( !this->user->rekey( this ) ) {
+			COMPLETE( SQRL_ACTION_FAIL )
+		}
+		NEXT_STATE( cs )
+	case 2:
 		if( this->user->getPasswordLength() == 0 ) {
 			client->callAuthenticationRequired( this, SQRL_CREDENTIAL_NEW_PASSWORD );
-			return cs;
+			SAME_STATE( cs )
 		}
-		return cs + 1;
-	case 2:
-		client->callSaveSuggested( this->user );
-		return cs + 1;
+		NEXT_STATE( cs )
 	case 3:
-		return this->retActionComplete( SQRL_ACTION_SUCCESS );
+		client->callSaveSuggested( this->user );
+		NEXT_STATE( cs )
+	case 4:
+		COMPLETE( SQRL_ACTION_SUCCESS )
 	default:
-		// Invalid State
-		return this->retActionComplete( SQRL_ACTION_FAIL );
+		COMPLETE( SQRL_ACTION_FAIL )
 	}
 }

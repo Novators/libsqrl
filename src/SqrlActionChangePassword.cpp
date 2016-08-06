@@ -1,7 +1,7 @@
 /** \file SqrlActionChangePassword.cpp
  *
  * \author Adam Comley
- * 
+ *
  * This file is part of libsqrl.  It is released under the MIT license.
  * For more details, see the LICENSE file included with this package.
 **/
@@ -12,35 +12,40 @@
 #include "SqrlClient.h"
 #include "SqrlUser.h"
 
-SqrlActionChangePassword::SqrlActionChangePassword() : SqrlIdentityAction( NULL ) {
+SqrlActionChangePassword::SqrlActionChangePassword() : SqrlIdentityAction( NULL ) {}
 
-}
-
-SqrlActionChangePassword::SqrlActionChangePassword( SqrlUser *user ) : SqrlIdentityAction( user ) {
-
-}
+SqrlActionChangePassword::SqrlActionChangePassword( SqrlUser *user ) : SqrlIdentityAction( user ) {}
 
 int SqrlActionChangePassword::run( int cs ) {
 	SqrlClient *client = SqrlClient::getClient();
 	if( this->shouldCancel ) {
-		return this->retActionComplete( SQRL_ACTION_CANCELED );
+		COMPLETE( SQRL_ACTION_CANCELED );
 	}
 
-	switch( this->state ) {
+	switch( cs ) {
 	case 0:
+		// Ensure that a User is selected; call client::callSelectUser() if not.
 		if( !this->user ) {
 			client->callSelectUser( this );
+			SAME_STATE( cs )
 		}
-		return cs;
+		NEXT_STATE( cs )
 	case 1:
+		// Decrypt the user identity, requesting authentication if needed.
+		// TODO: forceDecrypt should be a SqrlAction ?
 		if( !this->user->forceDecrypt( this ) ) {
-			return this->retActionComplete( SQRL_ACTION_FAIL );
+			COMPLETE( SQRL_ACTION_FAIL )
 		}
-		return cs + 1;
+		NEXT_STATE( cs )
 	case 2:
+		// Request a new Password
 		client->callAuthenticationRequired( this, SQRL_CREDENTIAL_NEW_PASSWORD );
-		return this->retActionComplete( SQRL_ACTION_SUCCESS );
+		NEXT_STATE( cs )
+	case 3:
+		// Suggest saving the modified identity.
+		client->callSaveSuggested( this->user );
+		COMPLETE( SQRL_ACTION_SUCCESS );
 	default:
-		return this->retActionComplete( SQRL_ACTION_FAIL );
+		COMPLETE( SQRL_ACTION_FAIL );
 	}
 }

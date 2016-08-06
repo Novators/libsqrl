@@ -1,7 +1,7 @@
 /** \file sqrl_internal.h
  *
  * \author Adam Comley
- * 
+ *
  * This file is part of libsqrl.  It is released under the MIT license.
  * For more details, see the LICENSE file included with this package.
 **/
@@ -38,6 +38,13 @@ extern "C" {
 #define FLAG_SET(f,v) f |= v
 #define FLAG_CLEAR(f,v) f &= ~(v)
 #define FLAG_CHECK(f,v) (v == (f & v))
+
+#define NEXT_STATE(cs) return (cs) + 1;
+#define SAME_STATE(cs) return (cs);
+#define TO_STATE( s ) return (s);
+#define COMPLETE( st ) this->status = (st); \
+SqrlClient::getClient()->callActionComplete( this ); \
+return SQRL_ACTION_STATE_DELETE;
 
 struct Sqrl_User_s_callback_data
 {
