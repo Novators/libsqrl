@@ -66,22 +66,22 @@ bool SqrlUser::sul_block_2( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 {
 	if (action->getUser() != this) return false;
 	bool retVal = false;
+	SqrlString *rc = NULL;
 	if( ! this->hasKey( KEY_RESCUE_CODE )) {
 		return false;
 	}
 
-	char *rc;
 	SqrlCrypt *crypt = this->_init_t2( action, block, false );
 	if( !crypt ) {
 		goto ERR;
 	}
 
 	crypt->key = this->scratch() + crypt->text_len;
-	rc = (char*)this->key( action, KEY_RESCUE_CODE );
 	block->seek( 21 );
 	crypt->count = block->readInt32();
 	crypt->flags = SQRL_DECRYPT | SQRL_ITERATIONS;
-	if( crypt->genKey( action, rc, SQRL_RESCUE_CODE_LENGTH ) ) {
+	rc = new SqrlString( this->key( action, KEY_RESCUE_CODE ), SQRL_RESCUE_CODE_LENGTH );
+	if( crypt->genKey( action, rc ) ) {
 		if( crypt->doCrypt() ) {
 			uint8_t *iuk = this->newKey( KEY_IUK );
 			memcpy( iuk, crypt->plain_text, SQRL_KEY_SIZE );
@@ -94,6 +94,7 @@ ERR:
 	retVal = false;
 
 DONE:
+	if( rc ) delete rc;
 	if( crypt ) {
 		sqrl_memzero( this->keys->scratch, crypt->text_len + SQRL_KEY_SIZE );
 		delete crypt;
@@ -108,7 +109,7 @@ bool SqrlUser::sus_block_2( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 	if (action->getUser() != this) return false;
 	bool retVal = true;
 	uint8_t *iuk;
-	char *rc;
+	SqrlString *rc = NULL;
 	if( ! this->hasKey( KEY_IUK )
 		|| ! this->hasKey( KEY_RESCUE_CODE )) {
 		return false;
@@ -120,9 +121,12 @@ bool SqrlUser::sus_block_2( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 	}
 
 	crypt->key = this->scratch() + crypt->text_len;
-	rc = (char*)this->key( action, KEY_RESCUE_CODE );
-	if( !crypt->genKey( action, rc, SQRL_RESCUE_CODE_LENGTH ) ) {
+	rc = new SqrlString( this->key( action, KEY_RESCUE_CODE ), SQRL_RESCUE_CODE_LENGTH );
+	if( !crypt->genKey( action, rc ) ) {
+		delete rc;
+		goto ERR;
 	}
+	delete rc;
 	block->seek( 21 );
 	block->writeInt32( crypt->count );
 
@@ -247,6 +251,7 @@ bool SqrlUser::sul_block_1( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 	if (action->getUser() != this) return false;
 	bool retVal = true;
 	uint8_t *key;
+	SqrlString *pw = NULL;
 	SqrlCrypt crypt = SqrlCrypt();
     crypt.text_len = SQRL_KEY_SIZE * 2;
 
@@ -286,7 +291,8 @@ bool SqrlUser::sul_block_1( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 	// Iteration Count
 	key = crypt.plain_text + crypt.text_len;
 	crypt.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
-	if( crypt.genKey( action, this->keys->password, this->keys->password_len )
+	pw = new SqrlString( this->keys->password, this->keys->password_len );
+	if( crypt.genKey( action, pw )
 		&& crypt.doCrypt() ) {
 			key = this->newKey( KEY_MK );
 			memcpy( key, crypt.plain_text, SQRL_KEY_SIZE );
@@ -298,6 +304,7 @@ ERR:
 	retVal = false;
 
 DONE:
+	if( pw ) delete pw;
 	sqrl_memzero( this->keys->scratch, crypt.text_len + SQRL_KEY_SIZE );
 	return retVal;
 }
@@ -364,7 +371,8 @@ bool SqrlUser::sus_block_1( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 	crypt.key = crypt.plain_text + crypt.text_len;
 	crypt.flags = SQRL_ENCRYPT | SQRL_MILLIS;
 	crypt.count = this->options.enscryptSeconds * SQRL_MILLIS_PER_SECOND;
-	if( !crypt.genKey( action, this->keys->password, this->keys->password_len ) ) {
+	SqrlString pw( this->keys->password, this->keys->password_len );
+	if( !crypt.genKey( action, &pw ) ) {
 		goto ERR;
 	}
 	block->seek( 35 );

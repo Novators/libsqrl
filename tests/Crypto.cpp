@@ -7,6 +7,7 @@
 #include "SqrlCrypt.h"
 #include "SqrlEntropy.h"
 #include "SqrlBase64.h"
+#include "SqrlEnScrypt.h"
 #include "NullClient.h"
 #include "Windows.h"
 
@@ -76,28 +77,37 @@ TEST_CASE( "EnScrypt -- 1 iteration" ) {
 	while( NullClient::getClient() == NULL ) {
 		Sleep( 5 );
 	}
-	uint8_t emptySalt[32] = {0};
-	uint8_t buf[32];
-	int time;
-	time = SqrlCrypt::enScrypt( NULL, buf, NULL, 0, NULL, 0, 1, 9 );
+	SqrlEnScrypt es = SqrlEnScrypt( NULL, NULL, NULL, 1 );
+	while( !es.isFinished() ) {
+		es.update();
+	}
+	REQUIRE( es.isSuccessful() );
+	SqrlString *buf = es.getResult();
 	SqrlString str;
-	sqrl_hex_encode( &str, buf, 32 );
+	sqrl_hex_encode( &str, buf->cdata(), 32 );
 	REQUIRE( str.compare( "a8ea62a6e1bfd20e4275011595307aa302645c1801600ef5cd79bf9d884d911c" ) == 0 );
 	delete client;
 }
 
-TEST_CASE( "EnScrypt -- 1 second" ) {
+TEST_CASE( "EnScrypt -- 1 + 1 second" ) {
 	NullClient *client = new NullClient();
 	while( NullClient::getClient() == NULL ) {
 		Sleep( 5 );
 	}
-	uint8_t emptySalt[32] = {0};
-	uint8_t buf[32], buf2[32];
-	int time;
-	time = SqrlCrypt::enScrypt( NULL, buf, NULL, 0, NULL, 0, 1, 9 );
-	int i = SqrlCrypt::enScryptMillis( NULL, buf, NULL, 0, NULL, 0, 1000, 9 );
-	time = SqrlCrypt::enScrypt( NULL, buf2, NULL, 0, NULL, 0, i, 9 );
-	REQUIRE( memcmp( buf, buf2, 32 ) == 0 );
+	SqrlEnScrypt es = SqrlEnScrypt( NULL, NULL, NULL, 1000, false );
+	while( !es.isFinished() ) {
+		es.update();
+	}
+	REQUIRE( es.isSuccessful() );
+	uint16_t iterations = es.getIterations();
+	SqrlString *buf = es.getResult();
+	SqrlEnScrypt es2 = SqrlEnScrypt( NULL, NULL, NULL, iterations );
+	while( !es2.isFinished() ) {
+		es2.update();
+	}
+	REQUIRE( es2.isSuccessful() );
+	SqrlString *buf2 = es2.getResult();
+	REQUIRE( buf->compare( buf2 ) == 0 );
 	delete client;
 }
 
@@ -106,12 +116,15 @@ TEST_CASE( "EnScrypt 100 iterations" ) {
 	while( NullClient::getClient() == NULL ) {
 		Sleep( 5 );
 	}
-	uint8_t emptySalt[32] = {0};
-	uint8_t buf[32];
-	int time;
-	time = SqrlCrypt::enScrypt( NULL, buf, NULL, 0, NULL, 0, 100, 9 );
+	SqrlEnScrypt es = SqrlEnScrypt( NULL, NULL, NULL, 100 );
+	while( !es.isFinished() ) {
+		es.update();
+	}
+	REQUIRE( es.isSuccessful() );
+
+	SqrlString *buf = es.getResult();
 	SqrlString str;
-	sqrl_hex_encode( &str, buf, 32 );
+	sqrl_hex_encode( &str, buf->cdata(), 32 );
 	REQUIRE( str.compare( "45a42a01709a0012a37b7b6874cf16623543409d19e7740ed96741d2e99aab67" ) == 0 );
 	delete client;
 }
@@ -121,14 +134,15 @@ TEST_CASE( "EnScrypt password, 123 iterations" ) {
 	while( NullClient::getClient() == NULL ) {
 		Sleep( 5 );
 	}
-	uint8_t emptySalt[32] = {0};
-	char password[] = "password";
-	size_t password_len = 8;
-	uint8_t buf[32];
-	int time;
-	time = SqrlCrypt::enScrypt( NULL, buf, password, password_len, NULL, 0, 123, 9 );
+	SqrlString pw( "password" );
+	SqrlEnScrypt es = SqrlEnScrypt( NULL, &pw, NULL, 123 );
+	while( !es.isFinished() ) {
+		es.update();
+	}
+	REQUIRE( es.isSuccessful() );
+	SqrlString *buf = es.getResult();
 	SqrlString str;
-	sqrl_hex_encode( &str, buf, 32 );
+	sqrl_hex_encode( &str, buf->cdata(), 32 );
 	REQUIRE( str.compare( "129d96d1e735618517259416a605be7094c2856a53c14ef7d4e4ba8e4ea36aeb" ) == 0 );
 	delete client;
 }
@@ -138,14 +152,17 @@ TEST_CASE( "EnScrypt password, salt, 123 iterations" ) {
 	while( NullClient::getClient() == NULL ) {
 		Sleep( 5 );
 	}
-	uint8_t emptySalt[32] = {0};
-	char password[] = "password";
-	size_t password_len = 8;
-	uint8_t buf[32];
-	int time;
-	time = SqrlCrypt::enScrypt( NULL, buf, password, password_len, emptySalt, 32, 123, 9 );
+	SqrlString pw( "password" );
+	SqrlString salt( 32 );
+	salt.append( (char)0, 32 );
+	SqrlEnScrypt es = SqrlEnScrypt( NULL, &pw, &salt, 123 );
+	while( !es.isFinished() ) {
+		es.update();
+	}
+	REQUIRE( es.isSuccessful() );
+	SqrlString *buf = es.getResult();
 	SqrlString str;
-	sqrl_hex_encode( &str, buf, 32 );
+	sqrl_hex_encode( &str, buf->cdata(), 32 );
 	REQUIRE( str.compare( "2f30b9d4e5c48056177ff90a6cc9da04b648a7e8451dfa60da56c148187f6a7d" ) == 0 );
 	delete client;
 }

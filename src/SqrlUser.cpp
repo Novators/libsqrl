@@ -248,11 +248,9 @@ bool SqrlUser::isHintLocked()
 	return true;
 }
 
-void SqrlUser::hintUnlock( SqrlAction *action,
-				char *hint,
-				size_t length )
+void SqrlUser::hintUnlock( SqrlAction *action, SqrlString *hint )
 {
-	if( hint == NULL || length == 0 ) {
+	if( hint == NULL || hint->length() == 0 ) {
 		SqrlClient::getClient()->callAuthenticationRequired(action, SQRL_CREDENTIAL_HINT);
 		return;
 	}
@@ -280,7 +278,7 @@ void SqrlUser::hintUnlock( SqrlAction *action,
 	crypt.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
 
 	uint8_t *key = this->keys->scratch + 32;
-	if( !crypt.genKey( action, hint, length ) ||
+	if( !crypt.genKey( action, hint ) ||
 		!crypt.doCrypt() ) {
 		sqrl_memzero( crypt.plain_text, crypt.text_len );
 	}

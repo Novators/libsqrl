@@ -9,6 +9,7 @@
 #include "sqrl_internal.h"
 
 #include "SqrlCrypt.h"
+#include "SqrlEnScrypt.h"
 #include "SqrlEntropy.h"
 #include "aes.h"
 #include "gcm.h"
@@ -106,20 +107,31 @@ int SqrlCrypt::decrypt( uint8_t *plainText, const uint8_t *cipherText, size_t te
 
 }
 
-bool SqrlCrypt::genKey( SqrlAction *action, const char *password, size_t password_len ) {
+bool SqrlCrypt::genKey( SqrlAction *action, const SqrlString *password ) {
 	if( !action || !password ) return false;
 	if( !this->key || this->count == 0 ) return false;
 	size_t salt_len = this->salt ? 16 : 0;
-	int newCount;
+	SqrlString salt( this->salt, salt_len );
 	if( (this->flags & SQRL_MILLIS) == SQRL_MILLIS ) {
-		newCount = SqrlCrypt::enScryptMillis( NULL, this->key, password, password_len, this->salt, (uint8_t)salt_len, this->count, this->nFactor );
-		if( newCount == -1 ) return false;
-		this->count = newCount;
+		SqrlEnScrypt es( NULL, password, &salt, this->count, false, this->nFactor );
+		while( !es.isFinished() ) {
+			es.update();
+		}
+		if( !es.isSuccessful() ) return false;
+		SqrlString *key = es.getResult();
+		memcpy( this->key, key->cdata(), SQRL_KEY_SIZE );
+		this->count = es.getIterations();
 		this->flags &= ~SQRL_MILLIS;
 		this->flags |= SQRL_ITERATIONS;
 	} else {
-		newCount = SqrlCrypt::enScrypt( NULL, this->key, password, password_len, this->salt, (uint8_t)salt_len, this->count, this->nFactor );
-		if( newCount == -1 ) return false;
+		SqrlEnScrypt es( NULL, password, &salt, this->count, true, this->nFactor );
+		while( !es.isFinished() ) {
+			es.update();
+		}
+		if( !es.isSuccessful() ) return false;
+		SqrlString *key = es.getResult();
+		memcpy( this->key, key->cdata(), SQRL_KEY_SIZE );
+		this->count = es.getIterations();
 	}
 	return true;
 }
@@ -137,156 +149,6 @@ bool SqrlCrypt::doCrypt() {
 		}
 	}
 	return true;
-}
-
-int SqrlCrypt::enScrypt( SqrlAction *action,
-	uint8_t *buf, const char *password, size_t password_len,
-	const uint8_t *salt, uint8_t salt_len,
-	uint16_t iterations, uint8_t nFactor ) {
-#ifdef ARDUINO
-	SHA256 sha = SHA256();
-	sha.update( password, password_len );
-	sha.finalize( buf, SQRL_KEY_SIZE );
-	return 1;
-#else
-	if( !buf ) return -1;
-	uint64_t N = (((uint64_t)1) << nFactor);
-	uint8_t t[2][32] = {{0}, {0}};
-	double startTime, endTime;
-	int i = 1, p = 0, lp = -1;
-
-	escrypt_kdf_t   escrypt_kdf;
-	escrypt_local_t local;
-	int             retVal;
-
-	if( escrypt_init_local( &local ) ) {
-		return -1; /* LCOV_EXCL_LINE */
-	}
-	escrypt_kdf = sodium_runtime_has_sse2() ? escrypt_kdf_sse : escrypt_kdf_nosse;
-
-	startTime = sqrl_get_real_time();
-
-	retVal = escrypt_kdf( &local, (uint8_t*)password, password_len, salt, salt_len, N, ENSCRYPT_R, ENSCRYPT_P, t[1], 32 );
-	if( retVal != 0 ) {
-		goto DONE;
-	}
-	memcpy( buf, t[1], 32 );
-	while( i < iterations ) {
-		/*
-		if( cb_ptr ) {
-			if( lp != (p = (int)((double)i / iterations * 100)) ) {
-				if( 0 == (*cb_ptr)(p, cb_data) ) {
-					retVal = -1;
-					break;
-				}
-				lp = p;
-			}
-		}
-		*/
-		if( i & 1 ) {
-			retVal = escrypt_kdf( &local, (uint8_t*)password, password_len, t[1], 32, N, ENSCRYPT_R, ENSCRYPT_P, t[0], 32 );
-			((uint64_t*)buf)[0] ^= ((uint64_t*)t[0])[0];
-			((uint64_t*)buf)[1] ^= ((uint64_t*)t[0])[1];
-			((uint64_t*)buf)[2] ^= ((uint64_t*)t[0])[2];
-			((uint64_t*)buf)[3] ^= ((uint64_t*)t[0])[3];
-		} else {
-			retVal = escrypt_kdf( &local, (uint8_t*)password, password_len, t[0], 32, N, ENSCRYPT_R, ENSCRYPT_P, t[1], 32 );
-			((uint64_t*)buf)[0] ^= ((uint64_t*)t[1])[0];
-			((uint64_t*)buf)[1] ^= ((uint64_t*)t[1])[1];
-			((uint64_t*)buf)[2] ^= ((uint64_t*)t[1])[2];
-			((uint64_t*)buf)[3] ^= ((uint64_t*)t[1])[3];
-		}
-		i++;
-		if( retVal != 0 ) goto DONE;
-	}
-
-DONE:
-	endTime = (sqrl_get_real_time() - startTime) * 1000;
-	//if( cb_ptr ) (*cb_ptr)(100, cb_data);
-
-	if( retVal != 0 ) {
-		sqrl_memzero( buf, 32 );
-	}
-	if( escrypt_free_local( &local ) ) {
-		return -1; /* LCOV_EXCL_LINE */
-	}
-	return retVal == 0 ? (int)endTime : -1;
-#endif
-}
-
-int SqrlCrypt::enScryptMillis( SqrlAction *action,
-	uint8_t *buf, const char *password, size_t password_len,
-	const uint8_t *salt, uint8_t salt_len,
-	int millis, uint8_t nFactor ) {
-#ifdef ARDUINO
-	SHA256 sha = SHA256();
-	sha.update( password, password_len );
-	sha.finalize( buf, SQRL_KEY_SIZE );
-	return 1;
-#else
-	if( !buf ) return -1;
-	uint64_t N = (((uint64_t)1) << nFactor);
-	uint8_t t[2][32] = {{0}, {0}};
-	int i = 1;
-	int p = 0, lp = -1;
-	double startTime, elapsed = 0.0;
-
-	escrypt_kdf_t   escrypt_kdf;
-	escrypt_local_t local;
-	int             retVal;
-
-	if( escrypt_init_local( &local ) ) {
-		return -1; /* LCOV_EXCL_LINE */
-	}
-	escrypt_kdf = sodium_runtime_has_sse2() ? escrypt_kdf_sse : escrypt_kdf_nosse;
-
-	startTime = sqrl_get_real_time();
-	retVal = escrypt_kdf( &local, (uint8_t*)password, password_len, salt, salt_len, N, ENSCRYPT_R, ENSCRYPT_P, t[1], 32 );
-	if( retVal != 0 ) {
-		goto DONE;
-	}
-	memcpy( buf, t[1], 32 );
-	while( elapsed < millis ) {
-		/*
-		if( cb_ptr ) {
-			if( lp != (p = (int)(elapsed / millis * 100)) ) {
-				if( 0 == (*cb_ptr)(p, cb_data) ) {
-					retVal = -1;
-					break;
-				}
-				lp = p;
-			}
-		}
-		*/
-		if( 0 != (((int)i) & 1) ) {
-			retVal = escrypt_kdf( &local, (uint8_t*)password, password_len, t[1], 32, N, ENSCRYPT_R, ENSCRYPT_P, t[0], 32 );
-			((uint64_t*)buf)[0] ^= ((uint64_t*)t[0])[0];
-			((uint64_t*)buf)[1] ^= ((uint64_t*)t[0])[1];
-			((uint64_t*)buf)[2] ^= ((uint64_t*)t[0])[2];
-			((uint64_t*)buf)[3] ^= ((uint64_t*)t[0])[3];
-		} else {
-			retVal = escrypt_kdf( &local, (uint8_t*)password, password_len, t[0], 32, N, ENSCRYPT_R, ENSCRYPT_P, t[1], 32 );
-			((uint64_t*)buf)[0] ^= ((uint64_t*)t[1])[0];
-			((uint64_t*)buf)[1] ^= ((uint64_t*)t[1])[1];
-			((uint64_t*)buf)[2] ^= ((uint64_t*)t[1])[2];
-			((uint64_t*)buf)[3] ^= ((uint64_t*)t[1])[3];
-		}
-		if( retVal != 0 ) goto DONE;
-		i++;
-		elapsed = (sqrl_get_real_time() - startTime) * 1000;
-	}
-
-DONE:
-	//if( cb_ptr ) (*cb_ptr)(100, cb_data);
-
-	if( retVal != 0 ) {
-		sqrl_memzero( buf, 32 );
-	}
-	if( escrypt_free_local( &local ) ) {
-		return -1; /* LCOV_EXCL_LINE */
-	}
-	return retVal == 0 ? i : -1;
-#endif
 }
 
 void SqrlCrypt::generateIdentityLockKey( uint8_t ilk[SQRL_KEY_SIZE], const uint8_t iuk[SQRL_KEY_SIZE] ) {

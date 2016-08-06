@@ -40,6 +40,7 @@
     <ClCompile Include="..\src\SqrlClient.cpp" />
     <ClCompile Include="..\src\SqrlClientAsync.cpp" />
     <ClCompile Include="..\src\SqrlCrypt.cpp" />
+    <ClCompile Include="..\src\SqrlEnScrypt.cpp" />
     <ClCompile Include="..\src\SqrlEntropy.cpp" />
     <ClCompile Include="..\src\SqrlIdentityAction.cpp" />
     <ClCompile Include="..\src\SqrlServer.cpp" />
@@ -56,6 +57,7 @@
     <ClInclude Include="..\src\config.h" />
     <ClInclude Include="..\src\detect_platform.h" />
     <ClInclude Include="..\src\SqrlDeque.h" />
+    <ClInclude Include="..\src\SqrlEnScrypt.h" />
     <ClInclude Include="..\src\SqrlEntropy_Linux.h" />
     <ClInclude Include="..\src\SqrlEntropy_Mac.h" />
     <ClInclude Include="..\src\SqrlEntropy_Win.h" />

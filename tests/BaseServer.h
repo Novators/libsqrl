@@ -10,7 +10,7 @@ public:
 
 	}
 
-	bool tryVerifyMAC( std::string *str ) {
+	bool tryVerifyMAC( SqrlString *str ) {
 		return this->verifyMAC( str );
 	}
 

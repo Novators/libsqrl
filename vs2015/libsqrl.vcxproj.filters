@@ -156,6 +156,9 @@
     <ClCompile Include="..\src\SqrlServer.cpp">
       <Filter>Source Files\Server</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SqrlEnScrypt.cpp">
+      <Filter>Source Files\Common\Crypto</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\version.h">
@@ -277,6 +280,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SqrlString.h">
       <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlEnScrypt.h">
+      <Filter>Header Files\Common\Crypto</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

@@ -20,6 +20,7 @@ int SqrlActionLock::run( int cs ) {
 	size_t password_len;
 	uint8_t *key = NULL;
 	SqrlClient *client = SqrlClient::getClient();
+	SqrlString *pw = NULL;
 	if( this->shouldCancel ) {
 		return this->retActionComplete( SQRL_ACTION_CANCELED );
 	}
@@ -63,9 +64,11 @@ int SqrlActionLock::run( int cs ) {
 			password_len = this->user->keys->password_len;
 		}
 
-		if( crypt.genKey( this, this->user->keys->password, password_len ) ) {
+		pw = new SqrlString( this->user->keys->password, password_len );
+		if( crypt.genKey( this, pw ) ) {
 			this->user->hint_iterations = crypt.count;
 		}
+		delete pw;
 		if( this->user->hint_iterations <= 0 ||
 			!crypt.doCrypt() ) {
 			// Encryption failed!

@@ -96,7 +96,7 @@ public:
 	uint8_t* scratch();
 	bool hasKey( int key_type );
 	bool isHintLocked();
-	void hintUnlock( SqrlAction *action, char *hint, size_t length );
+	void hintUnlock( SqrlAction *action, SqrlString *hint );
 	bool forceRescue( SqrlAction *action );
 	bool rekey( SqrlAction *action );
 	bool forceDecrypt( SqrlAction *action );

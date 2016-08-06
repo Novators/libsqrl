@@ -245,6 +245,22 @@ public:
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Appends a char to end of the SqrlString 'cnt' times.</summary>
+	///
+	/// <param name="in"> The character to append.</param>
+	/// <param name="cnt">The number of times to append 'in'.</param>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	void append( char in, size_t cnt ) {
+		if( cnt == 0 ) return;
+		size_t newLen = this->length() + cnt;
+		this->reserve( newLen );
+		if( this->myCapacity >= newLen ) {
+			memset( this->myDend, (int)in, cnt );
+			this->myDend = (char*)this->myData + newLen;
+		}
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>Appends a char to the end of the SqrlString.</summary>
 	///
 	/// <param name="ch">The char to append.</param>
