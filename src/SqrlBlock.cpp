@@ -195,22 +195,15 @@ bool SqrlBlock::writeInt8( uint8_t value )
 	return true;
 }
 
-SQRL_STRING* SqrlBlock::getData(SQRL_STRING *buf, bool append)
+SqrlString* SqrlBlock::getData(SqrlString *buf, bool append)
 {
 	if( buf ) {
-		if( !append ) SQRL_STRING_CLEAR( buf );
+		if( !append ) buf->clear();
 	} else {
-		if( this->blockLength > 0 )	buf = new SQRL_STRING();
+		if( this->blockLength > 0 )	buf = new SqrlString();
 	}
 	if (this->blockLength > 0) {
-#ifdef ARDUINO
-		buf->reserve( this->blockLength + buf->length() );
-		for( int i = 0; i < this->blockLength; i++ ) {
-			buf->concat( this->data[i] );
-		}
-#else
-		buf->append( (char*)this->data, this->blockLength );
-#endif
+		buf->append( (uint8_t*)this->data, this->blockLength );
 	} else {
 		return NULL;
 	}

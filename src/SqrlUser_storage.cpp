@@ -132,11 +132,10 @@ bool SqrlUser::sus_block_2( SqrlAction *action, SqrlBlock *block, struct Sqrl_Us
 	memcpy( crypt->plain_text, iuk, crypt->text_len );
 	if( crypt->doCrypt() ) {
 		// Save unique id
-		SQRL_STRING str;
-		SQRL_STRING tstr;
-		SQRL_STRING_APPEND_BYTES( &tstr, (char*)crypt->cipher_text, SQRL_KEY_SIZE );
+		SqrlString str;
+		SqrlString tstr( (char*)crypt->cipher_text, SQRL_KEY_SIZE );
 		SqrlBase64().encode( &str, &tstr );
-		memcpy( this->uniqueId, SQRL_STRING_DATA( &str ), str.length() );
+		memcpy( this->uniqueId, str.cdata(), str.length() );
 		this->uniqueId[str.length()] = 0;
 
 		goto DONE;
@@ -487,9 +486,7 @@ SqrlUser::SqrlUser( SqrlUri *uri )
 SqrlUser::SqrlUser( const char *buffer, size_t buffer_len )
 {
 	this->initialize();
-	SQRL_STRING buf;
-	buf.reserve( buffer_len + 1 );
-	SQRL_STRING_APPEND_BYTES( &buf, buffer, buffer_len );
+	SqrlString buf( buffer, buffer_len );
 	this->storage = SqrlStorage::from( &buf );
 	if( this->storage ) {
 		this->_load_unique_id();
@@ -531,11 +528,11 @@ bool SqrlUser::saveToBuffer( SqrlActionSave *action )
 	cbdata.adder = 0;
 	cbdata.multiplier = 1;
 
-	SQRL_STRING *buf = NULL;
+	SqrlString *buf = NULL;
 	if( this->updateStorage( action )) {
 		buf = this->storage->save( action->getExportType(), action->getEncodingType() );
 		if( buf ) {
-			action->setString( SQRL_STRING_DATA( buf ), buf->length());
+			action->setString( buf->cstring(), buf->length());
 			delete buf;
 			goto DONE;
 		}

@@ -10,6 +10,7 @@
 #define SQRLCRYPT_H
 
 #include "sqrl.h"
+#include "SqrlString.h"
 
 #define SQRL_ENCRYPT 1
 #define SQRL_DECRYPT 0
@@ -40,8 +41,8 @@ public:
 	static void generateVerifyUnlockKey( uint8_t vuk[SQRL_KEY_SIZE], const uint8_t ilk[SQRL_KEY_SIZE], const uint8_t rlk[SQRL_KEY_SIZE] );
 	static void generateUnlockRequestSigningKey( uint8_t ursk[SQRL_KEY_SIZE], const uint8_t suk[SQRL_KEY_SIZE], const uint8_t iuk[SQRL_KEY_SIZE] );
 	static void generatePublicKey( uint8_t *puk, const uint8_t *prk );
-	static void sign( const SQRL_STRING *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] );
-	static bool verifySignature( const SQRL_STRING *msg, const uint8_t *sig, const uint8_t *pub );
+	static void sign( const SqrlString *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] );
+	static bool verifySignature( const SqrlString *msg, const uint8_t *sig, const uint8_t *pub );
 	static void generateCurvePrivateKey( uint8_t *key );
 	static void generateCurvePublicKey( uint8_t *puk, const uint8_t *prk );
 	static int generateSharedSecret( uint8_t *shared, const uint8_t *puk, const uint8_t *prk );

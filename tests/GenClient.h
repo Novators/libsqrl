@@ -8,7 +8,7 @@ class GenClient : public SqrlClientAsync
 {
 	void onSend(
 		SqrlAction *t,
-		std::string url, std::string payload ) {
+		SqrlString url, SqrlString payload ) {
 		REQUIRE( false );
 	}
 
@@ -19,7 +19,7 @@ class GenClient : public SqrlClientAsync
 
 	void onAsk(
 		SqrlAction *transaction,
-		std::string message, std::string firstButton, std::string secondButton ) {
+		SqrlString message, SqrlString firstButton, SqrlString secondButton ) {
 		REQUIRE( false );
 	}
 

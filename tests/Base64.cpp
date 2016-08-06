@@ -10,7 +10,7 @@ static void testString( char *a, const char *b ) {
 TEST_CASE( "Base64" ) {
 	NullClient *client = new NullClient();
 	const int NT = 10;
-	std::string evector[NT] = {
+	SqrlString evector[NT] = {
 		"",
 		"f",
 		"fo",
@@ -18,10 +18,23 @@ TEST_CASE( "Base64" ) {
 		"foob",
 		"fooba",
 		"foobar",
-		"\x49\x00\x02"s,
-		"\x00\x08\xa4"s,
-		"\x49\x00\x02\x00\x08\xa4"s};
-	std::string dvector[NT] = {
+		"",
+		"",
+		""};
+	evector[7].push_back( (char)0x049 );
+	evector[7].push_back( (char)0x00 );
+	evector[7].push_back( (char)0x02 );
+	evector[8].push_back( (char)0x00 );
+	evector[8].push_back( (char)0x08 );
+	evector[8].push_back( (char)0xa4 );
+	evector[9].push_back( (char)0x49 );
+	evector[9].push_back( (char)0x00 );
+	evector[9].push_back( (char)0x02 );
+	evector[9].push_back( (char)0x00 );
+	evector[9].push_back( (char)0x08 );
+	evector[9].push_back( (char)0xa4 );
+
+	SqrlString dvector[NT] = {
 		"",
 		"Zg",
 		"Zm8",
@@ -32,17 +45,17 @@ TEST_CASE( "Base64" ) {
 		"SQAC",
 		"AAik",
 		"SQACAAik"};
-	std::string s;
+	SqrlString s;
 	int i;
 	SqrlBase64 b64 = SqrlBase64();
 
 	for( i = 0; i < NT; i++ ) {
 		b64.encode( &s, &(evector[i]) );
 		REQUIRE( s.length() == dvector[i].length() );
-		REQUIRE( 0 == s.compare( dvector[i] ) );
+		REQUIRE( 0 == s.compare( &dvector[i] ) );
 		b64.decode( &s, &dvector[i] );
 		REQUIRE( s.length() == evector[i].length() );
-		REQUIRE( 0 == s.compare( evector[i] ) );
+		REQUIRE( 0 == s.compare( &evector[i] ) );
 	}
 	delete client;
 }

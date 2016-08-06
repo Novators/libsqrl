@@ -15,7 +15,7 @@
 class DLL_PUBLIC SqrlUrlEncode : SqrlEncoder
 {
 public:
-	SQRL_STRING *encode( SQRL_STRING *dest, const uint8_t *src, size_t src_len, bool append = false );
-	SQRL_STRING *decode( SQRL_STRING *dest, const char *src, size_t src_len, bool append = false );
+	SqrlString *encode( SqrlString *dest, const uint8_t *src, size_t src_len, bool append = false );
+	SqrlString *decode( SqrlString *dest, const char *src, size_t src_len, bool append = false );
 };
 #endif // SQRLURLENCODE_H

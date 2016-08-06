@@ -9,7 +9,7 @@
 #include "sqrl_internal.h"
 #include "SqrlBase64.h"
 
-SQRL_STRING *SqrlBase64::encode( SQRL_STRING *dest, const SQRL_STRING *src, bool append ) {
+SqrlString *SqrlBase64::encode( SqrlString *dest, const SqrlString *src, bool append ) {
 	static const char B64_ENC_TABLE[64] = {
 		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',
 		'I', 'J', 'K', 'L', 'M', 'N', 'O', 'P',
@@ -21,64 +21,41 @@ SQRL_STRING *SqrlBase64::encode( SQRL_STRING *dest, const SQRL_STRING *src, bool
 		'4', '5', '6', '7', '8', '9', '-', '_'
 	};
 	size_t src_len = src->length();
-	if( !dest ) dest = new SQRL_STRING();
+	if( !dest ) dest = new SqrlString();
 	if( append ) {
 		dest->reserve( dest->length() + (size_t)(src_len * 4.0 / 3.0) );
 	} else {
-		SQRL_STRING_CLEAR( dest );
+		dest->clear();
 		dest->reserve( (size_t)(src_len * 4.0 / 3.0) );
 	}
 	size_t i = 0;
 	uint32_t tmp;
 
-#ifdef ARDUINO
-	char str[5];
-	str[4] = 0;
-	char const *cur = src->c_str();
-	char const *end = cur + src->length();
-
-	while( cur != end ) {
-		tmp = ((cur++)[0] & 0xFF) << 16;
-		if( cur != end ) tmp |= ((cur++)[0] & 0xFF) << 8;
-		if( cur != end ) tmp |= ((cur++)[0] & 0xFF);
-
-		str[0] = B64_ENC_TABLE[(tmp >> 18) & 0x3F];
-		str[1] = B64_ENC_TABLE[(tmp >> 12) & 0x3F];
-		str[2] = B64_ENC_TABLE[(tmp >> 6) & 0x3F];
-		str[3] = B64_ENC_TABLE[tmp & 0x3F];
-		dest->concat( str );
-	}
-	i = (src_len % 3);
-	if( i ) i = 3 - i;
-	while( i && dest->length() ) {
-		dest->remove( dest->length() - 1 );
-		i--;
-	}
-#else
 	char str[4];
-	SQRL_STRING::const_iterator it = src->cbegin();
-	while( it != src->cend() ) {
+	const uint8_t *it = src->cdata();
+	const uint8_t *end = src->cdend();
+
+	while( it != end ) {
 		tmp = (*it++ & 0xFF) << 16;
-		if( it != src->cend() ) tmp |= (*it++ & 0xFF) << 8;
-		if( it != src->cend() ) tmp |= (*it++ & 0xFF);
+		if( it != end ) tmp |= (*it++ & 0xFF) << 8;
+		if( it != end ) tmp |= (*it++ & 0xFF);
 
 		str[0] = B64_ENC_TABLE[(tmp >> 18) & 0x3F];
 		str[1] = B64_ENC_TABLE[(tmp >> 12) & 0x3F];
 		str[2] = B64_ENC_TABLE[(tmp >> 6) & 0x3F];
 		str[3] = B64_ENC_TABLE[tmp & 0x3F];
-		dest->append( str, 4 );
+		dest->append( (uint8_t*)str, 4 );
 	}
 	i = (src_len % 3);
 	if( i ) i = 3 - i;
 	while( i && dest->length() ) {
-		dest->pop_back();
+		dest->popb_back();
 		i--;
 	}
-#endif
 	return dest;
 }
 
-SQRL_STRING *SqrlBase64::decode( SQRL_STRING *dest, const SQRL_STRING *src, bool append ) {
+SqrlString *SqrlBase64::decode( SqrlString *dest, const SqrlString *src, bool append ) {
 	static const char B64_DEC_TABLE[256] = {
 		/*   0 */	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
 		/*  16 */	'\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00', '\x00',
@@ -99,60 +76,23 @@ SQRL_STRING *SqrlBase64::decode( SQRL_STRING *dest, const SQRL_STRING *src, bool
 	};
 
 	size_t input_length = src->length();
-	if( !dest ) dest = new SQRL_STRING();
+	if( !dest ) dest = new SqrlString();
 	if( append ) {
 		dest->reserve( dest->length() + (size_t)(input_length *3.0 / 4.0) );
 	} else {
-		SQRL_STRING_CLEAR( dest );
+		dest->clear();
 		dest->reserve( (size_t)(input_length * 3.0 / 4.0) );
 	}
 	int shift, charCount = 0;
 	uint32_t tmp = 0, val;
 	char str[4] = {0};
 
-#ifdef ARDUINO
-	char const *cur = src->c_str();
-	char const *end = cur + src->length();
-
-	while( cur < end ) {
+	const char *it = src->cstring();
+	const char *end = src->cstrend();
+	while( it < end ) {
 		shift = 18;
 		tmp = 0;
-		while( cur < end ) {
-			if( cur[0] == 'A' ) { // Legitimate 0x00
-				val = B64_DEC_TABLE[(int)(cur[0])];
-				++cur;
-			} else if( B64_DEC_TABLE[(uint8_t)(cur[0])] != 0 ) { // Legitimate character
-				val = B64_DEC_TABLE[(int)(cur[0])];
-				++cur;
-			} else {
-				++cur;
-				continue;
-			}
-			tmp |= (val << shift);
-			charCount++;
-			if( shift == 0 ) {
-				break;
-			}
-			shift -= 6;
-		}
-		str[0] = (char)((tmp >> 16) & 0xFF);
-		str[1] = (char)((tmp >> 8) & 0xFF);
-		str[2] = (char)(tmp & 0xFF);
-		dest->concat( str );
-	}
-	charCount = (charCount % 4);
-	if( charCount ) charCount = 4 - charCount;
-	while( charCount && dest->length() ) {
-		dest->remove( dest->length() - 1 );
-		charCount--;
-	}
-#else
-	SQRL_STRING::const_iterator it = src->cbegin();
-	SQRL_STRING::const_iterator itend = src->cend();
-	while( it < src->cend() ) {
-		shift = 18;
-		tmp = 0;
-		while( it < src->cend() ) {
+		while( it < end ) {
 			if( (it)[0] == 'A' ) { // Legitimate 0x00
 				val = B64_DEC_TABLE[(int)(it[0])];
 				++it;
@@ -173,15 +113,14 @@ SQRL_STRING *SqrlBase64::decode( SQRL_STRING *dest, const SQRL_STRING *src, bool
 		str[0] = (char)((tmp >> 16) & 0xFF);
 		str[1] = (char)((tmp >> 8) & 0xFF);
 		str[2] = (char)(tmp & 0xFF);
-		dest->append( str, 3 );
+		dest->append( (uint8_t*)str, 3 );
 	}
 	charCount = (charCount % 4);
 	if( charCount ) charCount = 4 - charCount;
 	while( charCount && dest->length() ) {
-		dest->pop_back();
+		dest->popb_back();
 		charCount--;
 	}
-#endif
 	return dest;
 }
 

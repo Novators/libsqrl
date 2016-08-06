@@ -10,6 +10,7 @@
 #define SQRLSERVER_H
 
 #include "sqrl.h"
+#include "SqrlString.h"
 
 #define SQRL_DEFAULT_NUT_LIFE 60
 
@@ -70,23 +71,23 @@ public:
 	SqrlServer( const char *uri, const char *sfn, const char *passcode, size_t passcode_len );
 	~SqrlServer();
 
-	SQRL_STRING *createLink( uint32_t ip );
+	SqrlString *createLink( uint32_t ip );
 	void handleQuery(
 		uint32_t client_ip,
 		const char *query,
 		size_t query_len );
 
 protected:
-	virtual bool onUserFind( const SQRL_STRING *host, const SQRL_STRING *idk, const SQRL_STRING *pidk ) = 0;
-	virtual bool onUserCreate( const SQRL_STRING *host, const SQRL_STRING *idk, const SQRL_STRING *pidk ) = 0;
-	virtual bool onUserUpdate( const SQRL_STRING *host, const SQRL_STRING *idk, const SQRL_STRING *pidk ) = 0;
-	virtual bool onUserDelete( const SQRL_STRING *host, const SQRL_STRING *idk, const SQRL_STRING *pidk ) = 0;
-	virtual bool onUserRekeyed( const SQRL_STRING *host, const SQRL_STRING *idk, const SQRL_STRING *pidk ) = 0;
-	virtual bool onUserIdentified( const SQRL_STRING *host, const SQRL_STRING *idk, const SQRL_STRING *pidk ) = 0;
-	virtual void onSend( const SQRL_STRING *reply ) = 0;
+	virtual bool onUserFind( const SqrlString *host, const SqrlString *idk, const SqrlString *pidk ) = 0;
+	virtual bool onUserCreate( const SqrlString *host, const SqrlString *idk, const SqrlString *pidk ) = 0;
+	virtual bool onUserUpdate( const SqrlString *host, const SqrlString *idk, const SqrlString *pidk ) = 0;
+	virtual bool onUserDelete( const SqrlString *host, const SqrlString *idk, const SqrlString *pidk ) = 0;
+	virtual bool onUserRekeyed( const SqrlString *host, const SqrlString *idk, const SqrlString *pidk ) = 0;
+	virtual bool onUserIdentified( const SqrlString *host, const SqrlString *idk, const SqrlString *pidk ) = 0;
+	virtual void onSend( const SqrlString *reply ) = 0;
 
 	SqrlUri *uri;
-	SQRL_STRING *sfn;
+	SqrlString *sfn;
 	uint8_t key[32];
 	uint64_t nut_expires;
 
@@ -104,8 +105,8 @@ protected:
 	uint8_t vuk[SQRL_KEY_SIZE];
 	uint16_t userFlags;
 
-	void addMAC( SQRL_STRING *str, char sep );
-	bool verifyMAC( SQRL_STRING *str );
+	void addMAC( SqrlString *str, char sep );
+	bool verifyMAC( SqrlString *str );
 	bool createNut(	Sqrl_Nut *nut, uint32_t ip );
 	bool decryptNut( Sqrl_Nut *nut );
 

@@ -31,7 +31,7 @@ TEST_CASE("LoadFile")
 	REQUIRE( storage->hasBlock(SQRL_BLOCK_USER) );
 	REQUIRE( storage->hasBlock(SQRL_BLOCK_RESCUE) );
 	REQUIRE( ! storage->hasBlock(5) );
-	std::string *buf = storage->save( SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
+	SqrlString *buf = storage->save( SQRL_EXPORT_ALL, SQRL_ENCODING_BASE64 );
 	REQUIRE( buf );
 	REQUIRE( 0 == buf->compare( "SQRLDATAfQABAC0AwDR2aKohNUWypIv-Y6TeUWbko_arcPwMB9alpAkEAAAA8QAEAQ8A7uDRpBDxqJZxwUkB4y9-p5XWvAbgVMK02lvnSA_-EBHjLarjoHYdb-UEVW2rC4z2URyOcxpCeQXfGpZQyuZ3dSGiuIFI1eLFX-xnsRsRBdtJAAIAoiMr93uN8ylhOHzwlPmfVAkUAAAATne7wOsRjUo1A8xs7V4K2kDpdKqpHsmHZpN-6eyOcLfD_Gul4vRyrMC2pn7UBaV9lAADAAQSHK1PlkUshvEqNeCLibmJgQvveUFrPbg4bNuk47FAj5dUgaa_fQoD_KMi17Z3jDF-1fCqoqY3GRwxaW-DzYtEIORB2AsRJUgZWviZe8anbLUP5dKt1r0LyDpTCTcNmzPvfbq8y-7J7r3OH7PlKOpGrAAs2Cw1GFb3l6hDPDa5gDKs90AGiXwgqUD7_7qMBA") );
 	storage->release();
@@ -52,7 +52,7 @@ TEST_CASE("BlockSizeAndType") {
 	for( l = 0; l < 512; l++ ) {
 		t = (rand() % 65535);
 		block->init( t, l );
-		std::string *data = block->getData( NULL );
+		SqrlString *data = block->getData( NULL );
 		if( l == 0 ) {
 			REQUIRE( ! data );
 		}
@@ -74,7 +74,7 @@ TEST_CASE("BlockSizeAndType") {
 TEST_CASE("BlockRandomAccess") {
 	new NullClient();
 	char *testString = "Bender is Great!";
-	std::string *str = NULL;
+	SqrlString *str = NULL;
 	SqrlBlock *block = SqrlBlock::create();
 	block->init( 1, (uint16_t)strlen( testString ) + 2 );
 	block->write( (uint8_t*)testString, strlen( testString ) );

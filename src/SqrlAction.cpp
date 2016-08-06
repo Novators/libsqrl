@@ -12,9 +12,6 @@
 #include "SqrlUri.h"
 #include "SqrlUser.h"
 #include "SqrlClient.h"
-#ifndef ARDUINO
-#include <algorithm>
-#endif
 
 struct Sqrl_action_List {
 	SqrlAction *action;
@@ -33,24 +30,16 @@ SqrlAction::SqrlAction()
 	if( !client ) {
 		exit( 3 );
 	}
-#ifndef ARDUINO
-	client->actionMutex.lock();
-#endif
+	SQRL_MUTEX_LOCK( &client->actionMutex )
 	client->actions.push_back( this );
-#ifndef ARDUINO
-	client->actionMutex.unlock();
-#endif
+	SQRL_MUTEX_UNLOCK( &client->actionMutex )
 }
 
 SqrlAction::~SqrlAction() {
 	SqrlClient *client = SqrlClient::getClient();
-#ifndef ARDUINO
-	client->actionMutex.lock();
-#endif
-	client->actions.erase( this );
-#ifndef ARDUINO
-	client->actionMutex.unlock();
-#endif
+	SQRL_MUTEX_LOCK( &client->actionMutex )
+		client->actions.erase( this );
+	SQRL_MUTEX_UNLOCK( &client->actionMutex )
 
 	this->onRelease();
 	if( this->user ) {

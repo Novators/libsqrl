@@ -10,6 +10,7 @@
 #define SQRLCLIENT_H
 
 #include "sqrl.h"
+#include "SqrlString.h"
 #include "SqrlDeque.h"
 
 class DLL_PUBLIC SqrlClient
@@ -41,12 +42,12 @@ protected:
 
 	virtual void onLoop();
 	virtual void onSend(
-		SqrlAction *t, SQRL_STRING url, SQRL_STRING payload ) = 0;
+		SqrlAction *t, SqrlString url, SqrlString payload ) = 0;
 	virtual void onProgress(
 		SqrlAction *action, int progress) = 0;
 	virtual void onAsk(
 		SqrlAction *action,
-		SQRL_STRING message, SQRL_STRING firstButton, SQRL_STRING secondButton ) = 0;
+		SqrlString message, SqrlString firstButton, SqrlString secondButton ) = 0;
 	virtual void onAuthenticationRequired(
 		SqrlAction *action, Sqrl_Credential_Type credentialType) = 0;
 	virtual void onSelectUser(SqrlAction *action) = 0;
@@ -66,7 +67,7 @@ protected:
 		int progress;
 		Sqrl_Credential_Type credentialType;
 		void *ptr;
-		SQRL_STRING* str[3];
+		SqrlString* str[3];
 	};
 
 private:
@@ -93,10 +94,10 @@ private:
 		SqrlAction *action,
 		Sqrl_Credential_Type credentialType );
 	void callSend(
-		SqrlAction *t, SQRL_STRING *url, SQRL_STRING *payload );
+		SqrlAction *t, SqrlString *url, SqrlString *payload );
 	void callAsk(
 		SqrlAction *action,
-		SQRL_STRING *message, SQRL_STRING *firstButton, SQRL_STRING *secondButton );
+		SqrlString *message, SqrlString *firstButton, SqrlString *secondButton );
 
 };
 

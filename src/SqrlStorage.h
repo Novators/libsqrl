@@ -11,12 +11,13 @@
 
 #include <stdint.h>
 #include "sqrl.h"
+#include "SqrlString.h"
 
 class DLL_PUBLIC SqrlStorage
 {
 public:
 	static SqrlStorage *empty();
-	static SqrlStorage *from( SQRL_STRING *buffer );
+	static SqrlStorage *from( SqrlString *buffer );
 	static SqrlStorage *from( SqrlUri *uri );
 
 	SqrlStorage *release();
@@ -26,10 +27,10 @@ public:
 	bool putBlock(SqrlBlock *block);
 	bool removeBlock(uint16_t blockType);
 
-	bool load(SQRL_STRING *buffer);
+	bool load(SqrlString *buffer);
 	bool load(SqrlUri *uri);
 
-	SQRL_STRING *save(Sqrl_Export etype, Sqrl_Encoding encoding);
+	SqrlString *save(Sqrl_Export etype, Sqrl_Encoding encoding);
 	bool save(SqrlUri *uri, Sqrl_Export etype, Sqrl_Encoding encoding);
 
 	void getUniqueId(char *unique_id);

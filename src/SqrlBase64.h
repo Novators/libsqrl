@@ -15,7 +15,7 @@
 class DLL_PUBLIC SqrlBase64 : SqrlEncoder
 {
 public:
-	SQRL_STRING *encode( SQRL_STRING *dest, const SQRL_STRING *src, bool append = false );
-	SQRL_STRING *decode( SQRL_STRING *dest, const SQRL_STRING *src, bool append = false );
+	SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false );
+	SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false );
 };
 #endif // SQRLBASE64_H

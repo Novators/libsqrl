@@ -10,11 +10,12 @@
 #define SQRLENCODER_H
 
 #include "sqrl.h"
+#include "SqrlString.h"
 
 class DLL_PUBLIC SqrlEncoder
 {
 public:
-	virtual SQRL_STRING *encode( SQRL_STRING *dest, const SQRL_STRING *src, bool append = false ) = 0;
-	virtual SQRL_STRING *decode( SQRL_STRING *dest, const SQRL_STRING *src, bool append = false ) = 0;
+	virtual SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false ) = 0;
+	virtual SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false ) = 0;
 };
 #endif // SQRLENCODER_H

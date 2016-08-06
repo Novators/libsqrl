@@ -167,7 +167,7 @@ static bool sqrl_storage_block_put( struct S4Page *page, SqrlBlock *block )
 {
 	if( !page || !block ) return false;
 	struct S4Pointer pointer;
-	SQRL_STRING *data = block->getData( NULL );
+	SqrlString *data = block->getData( NULL );
 	if( !data ) {
 		return false;
 	}
@@ -177,7 +177,7 @@ static bool sqrl_storage_block_put( struct S4Page *page, SqrlBlock *block )
 			SQRL_STORAGE_READ_WRITE( pointer.page );
 			if( data->length() > 0 ) {
 				memcpy( &pointer.page->blocks[pointer.index->offset],
-						SQRL_STRING_DATA( data ), data->length() );
+						data->cdata(), data->length() );
 				if( pointer.index->blockLength < data->length() ) {
 					memset( (&pointer.page->blocks[pointer.index->offset]) + data->length(),
 						0, data->length() - pointer.index->blockLength );
@@ -195,7 +195,7 @@ static bool sqrl_storage_block_put( struct S4Page *page, SqrlBlock *block )
 		SQRL_STORAGE_READ_WRITE( pointer.page );
 		if( data->length() > 0 ) {
 			memcpy( &pointer.page->blocks[pointer.index->offset],
-					SQRL_STRING_DATA( data ), data->length() );
+					data->cdata(), data->length() );
 		}
 		SQRL_STORAGE_LOCK( pointer.page );
 		delete data;
@@ -233,66 +233,34 @@ static bool sqrl_storage_block_get( struct S4Page *page, SqrlBlock *block, uint1
 	return false;
 }
 
-static bool sqrl_storage_load_from_buffer( struct S4Page *page, SQRL_STRING *buffer )
+static bool sqrl_storage_load_from_buffer( struct S4Page *page, SqrlString *buffer )
 {
 	bool retVal = true;
 	SqrlBlock *block = NULL;
-	SQRL_STRING buf;
 
-#ifdef ARDUINO
-	if( buffer->substring( 0, 8) == "sqrldata" ) {
-		buf = buffer->substring( 8 );
+	if( buffer->compare( 0, 8, "sqrldata" ) == 0 ) {
+		buffer->erase( 0, 8 );
 	} else {
-		if( buffer->substring( 0, 8 ) == "SQRL_DATA" ) {
-			buffer->remove( 0, 8 );
+		if( buffer->compare( 0, 8, "SQRLDATA" ) == 0 ) {
+			SqrlString buf( buffer );
+			buf.erase( 0, 8 );
+			SqrlBase64().decode( buffer, &buf );
 		}
-		SqrlBase64().decode( &buf, buffer, true );
 	}
 
-	char const *cur = buf.c_str();
-	char const *end = cur + buf.length();
+	const uint8_t * cur = buffer->cdata();
+	const uint8_t * end = buffer->cdend();
 	block = SqrlBlock::create();
 
 	while( cur + 4 < end ) {
 		uint16_t bl = (uint16_t)cur[0] | (((uint16_t)cur[1]) << 8);
 		uint16_t bt = (uint16_t)cur[2] | (((uint16_t)cur[3]) << 8);
-		block->init( bt, bl );
-		if( cur + bl > end ) {
-			printf( "Invalid block Length\n" );
-			goto ERR;
-		}
-		block->write( (uint8_t*)cur, bl );
-		if( sqrl_storage_block_put( page, block ) ) {
-			cur += bl;
-			continue;
-		}
-		goto ERR;
-	}
-	goto DONE;
-#else
-	if( buffer->compare( 0, 8, "sqrldata" ) == 0 ) {
-		buf = buffer->substr( 8 );
-	} else {
-		if( buffer->compare( 0, 8, "SQRLDATA" ) == 0 ) {
-			buffer->erase( 0, 8 );
-		}
-		SqrlBase64().decode( &buf, buffer, true );
-	}
-
-	SQRL_STRING::const_iterator cur = buf.cbegin();
-	SQRL_STRING::const_iterator end = buf.cend();
-	block = SqrlBlock::create();
-
-	while( cur + 4 < end ) {
-		uint8_t *cp = (uint8_t*)cur._Ptr;
-		uint16_t bl = (uint16_t)cp[0] | (((uint16_t)cp[1]) << 8);
-		uint16_t bt = (uint16_t)cp[2] | (((uint16_t)cp[3]) << 8);
 		block->init(bt, bl);
 		if( cur + bl > end ) {
 			printf( "Invalid block Length\n" );
 			goto ERR;
 		}
-		block->write((uint8_t*)cur._Ptr, bl);
+		block->write((uint8_t*)cur, bl);
 		if( sqrl_storage_block_put( page, block )) {
 			cur += bl;
 			continue;
@@ -300,7 +268,6 @@ static bool sqrl_storage_load_from_buffer( struct S4Page *page, SQRL_STRING *buf
 		goto ERR;
 	}
 	goto DONE;
-#endif
 
 ERR:
 	retVal = false;
@@ -321,7 +288,7 @@ static bool sqrl_storage_load_from_file( struct S4Page *page, const char *filena
 	FILE *fp = fopen( filename, "rb" );
 	if( !fp ) return false;
 
-	SQRL_STRING buf;
+	SqrlString buf = SqrlString();
 
 	while( !feof( fp )) {
 		bytesRead = fread( tmp, 1, 1024, fp );
@@ -336,13 +303,13 @@ static bool sqrl_storage_load_from_file( struct S4Page *page, const char *filena
 #endif
 }
 
-static SQRL_STRING *sqrl_storage_save_to_string(
+static SqrlString *sqrl_storage_save_to_string(
 	struct S4Page *page,
 	Sqrl_Export etype,
 	Sqrl_Encoding encoding )
 {
-	SQRL_STRING tmp;
-	SQRL_STRING *buf = new SQRL_STRING();
+	SqrlString tmp;
+	SqrlString *buf = new SqrlString();
 	int i;
 
 	if( etype == SQRL_EXPORT_RESCUE ) {
@@ -360,7 +327,7 @@ static SQRL_STRING *sqrl_storage_save_to_string(
 			SQRL_STORAGE_READ_ONLY( page );
 			for( i = 0; i < BLOCKS_PER_PAGE; i++ ) {
 				if( page->index[i].active ) {
-					SQRL_STRING_APPEND_BYTES( &tmp, (char*)(page->blocks + page->index[i].offset), page->index[i].blockLength );
+					tmp.append((char*)(page->blocks + page->index[i].offset), page->index[i].blockLength );
 				}
 			}
 			nextPage = page->nextPage;
@@ -374,7 +341,7 @@ static SQRL_STRING *sqrl_storage_save_to_string(
 		SqrlBase64().encode( buf, &tmp, true );
 	} else {
 		buf->append( "sqrldata" );
-		buf->append( tmp );
+		buf->append( &tmp );
 	}
 	return buf;
 }
@@ -385,13 +352,13 @@ static int sqrl_storage_save_to_file( struct S4Page *page, const char *filename,
 	return 0;
 #else
 	int retVal;
-	SQRL_STRING *buf = sqrl_storage_save_to_string( page, etype, encoding );
+	SqrlString *buf = sqrl_storage_save_to_string( page, etype, encoding );
 	FILE *fp = fopen( filename, "wb" );
 	if( !fp ) {
 		delete buf;
 		return -1;
 	}
-	retVal = (int)fwrite( SQRL_STRING_DATA( buf ), 1, buf->length(), fp );
+	retVal = (int)fwrite( buf->cdata(), 1, buf->length(), fp );
 	fclose(fp);
 	if( retVal != (int)buf->length()) retVal = -1;
 	delete buf;
@@ -408,14 +375,14 @@ static void sqrl_storage_unique_id(struct S4Page *page, char *unique_id )
 		sqrl_storage_block_get( page, block, SQRL_BLOCK_RESCUE )))
 	{
 		if( block->getBlockLength() == 73 ) {
-			SQRL_STRING buf;
-			SQRL_STRING tstr;
+			SqrlString buf;
+			SqrlString tstr;
 			uint8_t tmp[SQRL_KEY_SIZE];
 			block->seek(25);
 			block->read(tmp, SQRL_KEY_SIZE);
-			SQRL_STRING_APPEND_BYTES( &tstr, (char*)tmp, SQRL_KEY_SIZE );
+			tstr.append( (char*)tmp, SQRL_KEY_SIZE );
 			SqrlBase64().encode( &buf, &tstr );
-			memcpy( unique_id, SQRL_STRING_DATA( &buf ), buf.length() );
+			memcpy( unique_id, buf.cdata(), buf.length() );
 			return;
 		}
 	}
@@ -432,7 +399,7 @@ SqrlStorage *SqrlStorage::empty() {
 	return storage;
 }
 
-SqrlStorage *SqrlStorage::from( SQRL_STRING *buffer ) {
+SqrlStorage *SqrlStorage::from( SqrlString *buffer ) {
 	SqrlStorage *storage = (SqrlStorage*)malloc( sizeof( SqrlStorage ) );
 	new (storage) SqrlStorage();
 	if( storage->load( buffer ) ) {
@@ -494,7 +461,7 @@ bool SqrlStorage::removeBlock(uint16_t blockType)
 	return sqrl_storage_block_remove(page, blockType);
 }
 
-bool SqrlStorage::load(SQRL_STRING *buffer)
+bool SqrlStorage::load(SqrlString *buffer)
 {
 	SQRL_CAST_PAGE(page, this->data);
 	return sqrl_storage_load_from_buffer(page, buffer);
@@ -510,7 +477,7 @@ bool SqrlStorage::load(SqrlUri *uri)
 	return ret;
 }
 
-SQRL_STRING *SqrlStorage::save(Sqrl_Export etype, Sqrl_Encoding encoding)
+SqrlString *SqrlStorage::save(Sqrl_Export etype, Sqrl_Encoding encoding)
 {
 	SQRL_CAST_PAGE(page, this->data);
 	return sqrl_storage_save_to_string(page, etype, encoding);

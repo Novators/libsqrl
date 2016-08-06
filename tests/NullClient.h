@@ -7,7 +7,7 @@ using namespace std;
 
 class NullClient : public SqrlClientAsync
 {
-	void onSend( SqrlAction *t, std::string url, std::string payload ) {
+	void onSend( SqrlAction *t, SqrlString url, SqrlString payload ) {
 		REQUIRE( false );
 	}
 
@@ -19,7 +19,7 @@ class NullClient : public SqrlClientAsync
 
 	void onAsk(
 		SqrlAction *action,
-		std::string message, std::string firstButton, std::string secondButton ) {
+		SqrlString message, SqrlString firstButton, SqrlString secondButton ) {
 		REQUIRE( false );
 	}
 

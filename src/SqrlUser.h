@@ -10,6 +10,8 @@
 #define SQRLUSER_H
 
 #include "sqrl.h"
+#include "SqrlString.h"
+
 
 #define USER_MAX_KEYS 16
 
@@ -109,7 +111,7 @@ private:
 	uint32_t hint_iterations;
 	Sqrl_User_Options options;
 #ifndef ARDUINO
-	std::mutex *referenceCountMutex;
+	std::mutex referenceCountMutex;
 #endif
 	int referenceCount;
 	SqrlStorage *storage;

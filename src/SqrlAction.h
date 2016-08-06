@@ -89,7 +89,7 @@ public:
 	void setUri( SqrlUri *uri );
 
 protected:
-	~SqrlAction();
+	virtual ~SqrlAction();
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>Steps through this SqrlAction's state machine. Called by the SqrlClient.</summary>

@@ -22,17 +22,17 @@ SqrlServer::SqrlServer(
 	memset( this, 0, sizeof( class SqrlServer ) );
 	SqrlString ssuri = SqrlString( uri );
 	if( sfn ) {
-		this->sfn = new SQRL_STRING( sfn );
+		this->sfn = new SqrlString( sfn );
 	} else {
 		SqrlUri *tmpUri = SqrlUri::parse( &ssuri );
 		if( tmpUri ) {
 			char *tmp;
 			tmp = tmpUri->getSiteKey();
-			this->sfn = new SQRL_STRING( tmp );
+			this->sfn = new SqrlString( tmp );
 			free( tmp );
 			tmpUri->release();
 		} else {
-			this->sfn = new SQRL_STRING( "Invalid Server Configuration" );
+			this->sfn = new SqrlString( "Invalid Server Configuration" );
 		}
 	}
 
@@ -42,11 +42,10 @@ SqrlServer::SqrlServer(
 		if( p ) {
 			SqrlBase64 b64 = SqrlBase64();
 			pp = p + strlen( SQRL_SERVER_TOKEN_SFN );
-			SQRL_STRING str = SQRL_STRING( uri, p - uri );
+			SqrlString str = SqrlString( (uint8_t*)uri, p - uri );
 			b64.encode( &str, this->sfn, true );
-			SQRL_STRING fullUri = str.append( pp );
-			SqrlString ssfu = SqrlString( fullUri.data() );
-			this->uri = SqrlUri::parse( &ssfu );
+			str.append( pp );
+			this->uri = SqrlUri::parse( &str );
 		} else {
 			this->uri = SqrlUri::parse( &ssuri );
 		}
@@ -123,25 +122,25 @@ bool SqrlServer::decryptNut( Sqrl_Nut *nut ) {
 	return true;
 }
 
-void SqrlServer::addMAC( SQRL_STRING *str, char sep ) {
+void SqrlServer::addMAC( SqrlString *str, char sep ) {
 	if( !str ) return;
 	uint8_t mac[crypto_auth_BYTES];
 
 	crypto_auth( mac, (unsigned char *)str->data(), str->length(), this->key );
 	if( sep > 0 ) {
-		str->append( 1, sep );
+		str->push_back( sep );
 		str->append( "mac=" );
 	} else {
 		str->append( "mac=" );
 	}
-	SQRL_STRING m = SQRL_STRING( (char*)mac, SQRL_SERVER_MAC_LENGTH );
+	SqrlString m = SqrlString( mac, SQRL_SERVER_MAC_LENGTH );
 	SqrlBase64().encode( str, &m, true );
 }
 
-bool SqrlServer::verifyMAC( SQRL_STRING *str ) {
+bool SqrlServer::verifyMAC( SqrlString *str ) {
 	if( !str ) return false;
 	size_t len = 0;
-	const char *cstr = str->data();
+	const char *cstr = str->cstring();
 
 	const char *m = strstr( cstr, "&mac=" );
 	if( m ) {
@@ -157,7 +156,7 @@ bool SqrlServer::verifyMAC( SQRL_STRING *str ) {
 	if( m ) {
 		uint8_t mac[crypto_auth_BYTES];
 		crypto_auth( mac, (unsigned char *)cstr, len, this->key );
-		SQRL_STRING *v = SqrlBase64().decode( NULL, &(SQRL_STRING( m )) );
+		SqrlString *v = SqrlBase64().decode( NULL, &(SqrlString( m )) );
 		if( v ) {
 			if( 0 == memcmp( mac, v->data(), SQRL_SERVER_MAC_LENGTH ) ) {
 				delete v;
@@ -169,16 +168,17 @@ bool SqrlServer::verifyMAC( SQRL_STRING *str ) {
 	return false;
 }
 
-SQRL_STRING *SqrlServer::createLink( uint32_t ip ) {
-	SQRL_STRING *retVal = NULL;
+SqrlString *SqrlServer::createLink( uint32_t ip ) {
+	SqrlString *retVal = NULL;
 	Sqrl_Nut nut;
 	if( this->createNut( &nut, ip ) ) {
 		char *challenge = this->uri->getChallenge();
 		char *p, *pp;
 		p = strstr( challenge, SQRL_SERVER_TOKEN_NUT );
 		if( p ) {
-			retVal = new SQRL_STRING( challenge, p - challenge );
-			SqrlBase64().encode( retVal, &SQRL_STRING( (char*)(&nut), sizeof( Sqrl_Nut ) ), true );
+			retVal = new SqrlString( challenge, p - challenge );
+			SqrlString nutString( (uint8_t*)&nut, sizeof( Sqrl_Nut ) );
+			SqrlBase64().encode( retVal, &nutString, true );
 			pp = p + strlen( SQRL_SERVER_TOKEN_NUT );
 			retVal->append( pp );
 			this->addMAC( retVal, '&' );

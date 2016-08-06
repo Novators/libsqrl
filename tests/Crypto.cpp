@@ -12,7 +12,7 @@
 
 using namespace std;
 
-static void sqrl_hex_encode( std::string *dest, const uint8_t *src, size_t src_len ) {
+static void sqrl_hex_encode( SqrlString *dest, const uint8_t *src, size_t src_len ) {
 	if( !dest ) return;
 	static const char tab[] = "0123456789abcdef";
 	size_t i;
@@ -42,8 +42,8 @@ TEST_CASE( "EnHash" ) {
 
 	char line[256];
 	size_t len = 0;
-	std::string input, output;
-	std::string tmp, tmp2;
+	SqrlString input((size_t)0), output((size_t)0);
+	SqrlString tmp((size_t)0), tmp2((size_t)0);
 	uint8_t out[SQRL_KEY_SIZE];
 	SqrlBase64 b64 = SqrlBase64();
 
@@ -56,6 +56,13 @@ TEST_CASE( "EnHash" ) {
 		b64.decode( &output, &tmp2 );
 		SqrlCrypt::enHash( (uint64_t*)out, (uint64_t*)(input.data()) );
 		REQUIRE( 32 == output.length() );
+		/*
+		tmp2.clear();
+		tmp2.append( out, 32 );
+		b64.encode( &tmp, &tmp2 );
+		b64.encode( &tmp2, &output );
+		printf( "%s == %s\n", tmp.cstring(), tmp2.cstring() );
+		*/
 		REQUIRE( 0 == memcmp( out, output.data(), 32 ) );
 		tmp.clear();
 		tmp2.clear();
@@ -73,7 +80,7 @@ TEST_CASE( "EnScrypt -- 1 iteration" ) {
 	uint8_t buf[32];
 	int time;
 	time = SqrlCrypt::enScrypt( NULL, buf, NULL, 0, NULL, 0, 1, 9 );
-	std::string str;
+	SqrlString str;
 	sqrl_hex_encode( &str, buf, 32 );
 	REQUIRE( str.compare( "a8ea62a6e1bfd20e4275011595307aa302645c1801600ef5cd79bf9d884d911c" ) == 0 );
 	delete client;
@@ -103,7 +110,7 @@ TEST_CASE( "EnScrypt 100 iterations" ) {
 	uint8_t buf[32];
 	int time;
 	time = SqrlCrypt::enScrypt( NULL, buf, NULL, 0, NULL, 0, 100, 9 );
-	std::string str;
+	SqrlString str;
 	sqrl_hex_encode( &str, buf, 32 );
 	REQUIRE( str.compare( "45a42a01709a0012a37b7b6874cf16623543409d19e7740ed96741d2e99aab67" ) == 0 );
 	delete client;
@@ -120,7 +127,7 @@ TEST_CASE( "EnScrypt password, 123 iterations" ) {
 	uint8_t buf[32];
 	int time;
 	time = SqrlCrypt::enScrypt( NULL, buf, password, password_len, NULL, 0, 123, 9 );
-	std::string str;
+	SqrlString str;
 	sqrl_hex_encode( &str, buf, 32 );
 	REQUIRE( str.compare( "129d96d1e735618517259416a605be7094c2856a53c14ef7d4e4ba8e4ea36aeb" ) == 0 );
 	delete client;
@@ -137,7 +144,7 @@ TEST_CASE( "EnScrypt password, salt, 123 iterations" ) {
 	uint8_t buf[32];
 	int time;
 	time = SqrlCrypt::enScrypt( NULL, buf, password, password_len, emptySalt, 32, 123, 9 );
-	std::string str;
+	SqrlString str;
 	sqrl_hex_encode( &str, buf, 32 );
 	REQUIRE( str.compare( "2f30b9d4e5c48056177ff90a6cc9da04b648a7e8451dfa60da56c148187f6a7d" ) == 0 );
 	delete client;
@@ -163,12 +170,12 @@ TEST_CASE( "Identity Lock Keys" ) {
 	SqrlCrypt::generateVerifyUnlockKey( vuk, ilk, rlk );
 	SqrlCrypt::generateUnlockRequestSigningKey( ursk, suk, iuk );
 
-	std::string *msg = new std::string( "This is a test message!" );
+	SqrlString *msg = new SqrlString( "This is a test message!" );
 	SqrlCrypt::generatePublicKey( tmp, ursk );
 	SqrlCrypt::sign( msg, ursk, tmp, sig );
 
-	std::string buf;
-	std::string ts;
+	SqrlString buf;
+	SqrlString ts;
 	ts.append( (char*)iuk, SQRL_KEY_SIZE );
 	b64.encode( &buf, &ts );
 	ts.clear();

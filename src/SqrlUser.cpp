@@ -70,8 +70,8 @@ SqrlUser* SqrlUser::find( const char *unique_id )
 	struct SqrlUserList *l;
 #ifndef ARDUINO
 	SqrlClient *client = SqrlClient::getClient();
-	client->userMutex.lock();
 #endif
+	SQRL_MUTEX_LOCK( &client->userMutex )
 	l = SQRL_USER_LIST;
 	while( l ) {
 		if( l->user && l->user->uniqueIdMatches( unique_id )) {
@@ -81,9 +81,7 @@ SqrlUser* SqrlUser::find( const char *unique_id )
 		}
 		l = l->next;
 	}
-#ifndef ARDUINO
-	client->userMutex.unlock();
-#endif
+	SQRL_MUTEX_UNLOCK( &client->userMutex )
 	return user;
 }
 
@@ -94,20 +92,13 @@ void SqrlUser::initialize()
 #endif
 	SqrlUser::defaultOptions(&this->options);
 	this->referenceCount = 1;
-#ifndef ARDUINO
-	this->referenceCountMutex = new std::mutex();
-#endif
 	struct SqrlUserList *l = (struct SqrlUserList*)calloc(1, sizeof(struct SqrlUserList));
 	if( l ) {
 		l->user = this;
-#ifndef ARDUINO
-		client->userMutex.lock();
-#endif
+		SQRL_MUTEX_LOCK( &client->userMutex )
 		l->next = SQRL_USER_LIST;
 		SQRL_USER_LIST = l;
-#ifndef ARDUINO
-		client->userMutex.unlock();
-#endif
+		SQRL_MUTEX_UNLOCK( &client->userMutex )
 	}
 }
 
@@ -120,17 +111,15 @@ int SqrlUser::countUsers()
 {
 #ifndef ARDUINO
 	SqrlClient *client = SqrlClient::getClient();
-	client->userMutex.lock();
 #endif
+	SQRL_MUTEX_LOCK( &client->userMutex )
 	int i = 0;
     struct SqrlUserList *list = SQRL_USER_LIST;
     while( list ) {
         i++;
         list = list->next;
     }
-#ifndef ARDUINO
-	client->userMutex.unlock();
-#endif
+	SQRL_MUTEX_UNLOCK( &client->userMutex )
 	return i;
 }
 
@@ -144,13 +133,9 @@ void SqrlUser::hold()
 	struct SqrlUserList *c = SQRL_USER_LIST;
 	while( c ) {
 		if( c->user == this ) {
-#ifdef ARDUINO
+			SQRL_MUTEX_LOCK( &this->referenceCountMutex )
 			this->referenceCount++;
-#else
-			this->referenceCountMutex->lock();
-			this->referenceCount++;
-			this->referenceCountMutex->unlock();
-#endif
+			SQRL_MUTEX_UNLOCK( &this->referenceCountMutex )
 			break;
 		}
 		c = c->next;
@@ -166,15 +151,11 @@ void SqrlUser::release()
 	SqrlClient *client = SqrlClient::getClient();
 #endif
 	bool shouldFreeThis = false;
-#ifndef ARDUINO
-	client->userMutex.lock();
-#endif
+	SQRL_MUTEX_LOCK( &client->userMutex )
 	struct SqrlUserList *list = SQRL_USER_LIST;
 	if( list == NULL ) {
 		// Not saved in memory... Go ahead and release it.
-#ifndef ARDUINO
-		client->userMutex.unlock();
-#endif
+		SQRL_MUTEX_UNLOCK( &client->userMutex )
 		shouldFreeThis = true;
 		goto END;
 	}
@@ -194,24 +175,18 @@ void SqrlUser::release()
 	}
 	if( list == NULL ) {
 		// Not saved in memory... Go ahead and release it.
-#ifndef ARDUINO
-		client->userMutex.unlock();
-#endif
+		SQRL_MUTEX_LOCK( &client->userMutex )
 		shouldFreeThis = true;
 		goto END;
 	}
 	// Release this reference
-#ifndef ARDUINO
-	this->referenceCountMutex->lock();
-#endif
+	SQRL_MUTEX_LOCK( &this->referenceCountMutex )
 	this->referenceCount--;
 
 	if( this->referenceCount > 0 ) {
 		// There are other references... Do not delete.
-#ifndef ARDUINO
-		this->referenceCountMutex->unlock();
-		client->userMutex.unlock();
-#endif
+		SQRL_MUTEX_UNLOCK( &this->referenceCountMutex )
+		SQRL_MUTEX_UNLOCK( &client->userMutex )
 		goto END;
 	}
 	// There were no other references... We can delete this.
@@ -223,9 +198,7 @@ void SqrlUser::release()
 		prev->next = list->next;
 	}
 	free( list );
-#ifndef ARDUINO
-	client->userMutex.unlock();
-#endif
+	SQRL_MUTEX_UNLOCK( &client->userMutex )
 
 END:
 	if (shouldFreeThis) {
@@ -239,9 +212,6 @@ SqrlUser::~SqrlUser()
 		sqrl_mprotect_readwrite(this->keys);
 		sqrl_free(this->keys, sizeof( this->keys ));
 	}
-#ifndef ARDUINO
-	delete this->referenceCountMutex;
-#endif
 }
 
 bool SqrlUser::isMemLocked()

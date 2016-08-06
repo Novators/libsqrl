@@ -31,8 +31,18 @@ public:
 	///
 	/// <param name="in">A C-style NULL terminated string.</param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	SqrlString( const char *in ) {
-		this->concat( in );
+	SqrlString( const char *in ) : SqrlString() {
+		this->append( in );
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Constructor.</summary>
+	///
+	/// <param name="in"> An array of characters.</param>
+	/// <param name="len">The length of the array.</param>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	SqrlString( const char *in, size_t len ) : SqrlString() {
+		this->append( in, len );
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -41,8 +51,8 @@ public:
 	/// <param name="in"> Pointer to an array of bytes.</param>
 	/// <param name="len">Length of the array..</param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	SqrlString( const uint8_t *in, size_t len ) {
-		this->concat( in, len );
+	SqrlString( const uint8_t *in, size_t len ) : SqrlString() {
+		this->append( in, len );
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -50,7 +60,7 @@ public:
 	///
 	/// <param name="len">Length to reserve.</param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	SqrlString( size_t len ) {
+	SqrlString( size_t len ) : SqrlString() {
 		this->reserve( len );
 	}
 
@@ -59,11 +69,12 @@ public:
 	///
 	/// <param name="in">[in] If non-null, pointer to a SqrlString to copy.</param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	SqrlString( SqrlString *in ) {
+	SqrlString( const SqrlString *in ) : SqrlString() {
 		if( !in ) return;
-		this->concat( in );
+		this->append( in );
 	}
-	~SqrlString() {
+	
+	virtual ~SqrlString() {
 		this->deallocate();
 	}
 
@@ -72,7 +83,7 @@ public:
 	///
 	/// <returns>A size_t.</returns>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	size_t length() {
+	size_t length() const {
 		if( !this->myData ) return 0;
 		return (char*)this->myDend - (char*)this->myData;
 	}
@@ -82,7 +93,7 @@ public:
 	///
 	/// <returns>A size_t.</returns>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	size_t capacity() {
+	size_t capacity() const {
 		return this->myCapacity;
 	}
 
@@ -107,6 +118,23 @@ public:
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Gets the string as a const pointer.</summary>
+	///
+	/// <returns>null if it fails, else a pointer to a const char.</returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	const char *cstring() const {
+		return (char*) this->myData;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Gets the end of the string as a const pointer.</summary>
+	///
+	/// <returns>null if it fails, else a pointer to a const char.</returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	const char *cstrend() const {
+		return (char*)this->myDend;
+	}
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>Gets the data.</summary>
 	///
 	/// <returns>null if it fails, else a pointer to an array of uint8_t.</returns>
@@ -125,6 +153,24 @@ public:
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Gets the data as a const pointer.</summary>
+	///
+	/// <returns>null if it fails, else a pointer to a const uint8_t.</returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	const uint8_t *cdata() const {
+		return (uint8_t*) this->myData;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Gets the end of the data as a const pointer.</summary>
+	///
+	/// <returns>null if it fails, else a pointer to a const uint8_t.</returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	const uint8_t *cdend() const {
+		return (uint8_t*) this->myDend;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>Reserves enough memory to contain a string of the given length.</summary>
 	///
 	/// <param name="len">The length.</param>
@@ -136,34 +182,42 @@ public:
 		size_t chunks = len / SQRLSTRING_CHUNK_SIZE;
 		if( len % SQRLSTRING_CHUNK_SIZE != 0 ) chunks++;
 		if( this->myData ) {
-			this->allocate( chunks * SQRLSTRING_CHUNK_SIZE );
-		} else {
 			this->reallocate( chunks * SQRLSTRING_CHUNK_SIZE );
+		} else {
+			this->allocate( chunks * SQRLSTRING_CHUNK_SIZE );
 		}
 		return this->myCapacity;
 	}
 
+	/// <summary>Clears this SqrlString.</summary>
+	void clear() {
+		if( this->myData ) {
+			memset( this->myData, 0, this->length() );
+			this->myDend = this->myData;
+		}
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// <summary>Concatenates the given string.</summary>
+	/// <summary>Appends the given string.</summary>
 	///
 	/// <param name="string">[in] A SqrlString to append to the end of this SqrlString.  It is not modified.</param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	void concat( SqrlString *string ) {
+	void append( const SqrlString *string ) {
 		if( !string ) return;
 		size_t newLen = this->length() + string->length();
 		this->reserve( newLen );
 		if( this->myCapacity >= newLen ) {
-			memcpy( this->myDend, string->data(), string->length() );
+			memcpy( this->myDend, string->cdata(), string->length() );
 			this->myDend = (char*)this->myData + newLen;
 		}
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// <summary>Concatenates the given string.</summary>
+	/// <summary>Appends the given string.</summary>
 	///
-	/// <param name="in">Pointer to NULL terminated string to concatenate.</param>
+	/// <param name="in">Pointer to NULL terminated string to Append.</param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	void concat( const char *in ) {
+	void append( const char *in ) {
 		if( !in ) return;
 		size_t inlen = strlen( in );
 		size_t newLen = this->length() + inlen;
@@ -175,12 +229,12 @@ public:
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	/// <summary>Concatenates bytes onto the end of the SqrlString.</summary>
+	/// <summary>Appends bytes onto the end of the SqrlString.</summary>
 	///
-	/// <param name="in"> Pointer to an array of bytes to concatenate.</param>
+	/// <param name="in"> Pointer to an array of bytes to Append.</param>
 	/// <param name="len">The length of the byte array.</param>
 	////////////////////////////////////////////////////////////////////////////////////////////////////
-	void concat( const uint8_t *in, size_t len ) {
+	void append( const void *in, size_t len ) {
 		if( !in ) return;
 		size_t newLen = this->length() + len;
 		this->reserve( newLen );
@@ -199,6 +253,7 @@ public:
 		this->reserve( this->length() + 1 );
 		*((char*)this->myDend) = ch;
 		this->myDend = (char*) this->myDend + 1;
+		*((char*)this->myDend) = 0;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -210,6 +265,7 @@ public:
 		this->reserve( this->length() + 1 );
 		*((uint8_t*)this->myDend) = byte;
 		this->myDend = (uint8_t*) this->myDend + 1;
+		*((uint8_t*)this->myDend) = 0;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -238,6 +294,111 @@ public:
 		*back = 0;
 		this->myDend = back;
 		return ret;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Compares this SqrlString to another to determine their relative ordering.</summary>
+	///
+	/// <param name="str">The constant SqrlString * to compare to this SqrlString.</param>
+	///
+	/// <returns>Negative if this SqrlString is less than str, 0 if they are equal, 
+	/// 		 or positive if it is greater.</returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	int compare( const SqrlString *str ) const {
+		size_t ml = this->length();
+		size_t sl = str->length();
+		size_t cl = ml < sl ? ml : sl;
+		int ret = memcmp( this->myData, str->cdata(), cl );
+		if( ret != 0 || ml == sl ) {
+			return ret;
+		}
+		cl++;
+		return ml < sl ? (int)cl * -1 : (int)cl;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Compares this SqrlString to a C-style string to determine their relative ordering.</summary>
+	///
+	/// <param name="cstr">The constant character * to compare to this SqrlString.</param>
+	///
+	/// <returns>Negative if this SqrlString is less than cstr, 0 if they are equal, or positive if it is greater.</returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	int compare( const char *cstr ) const {
+		size_t ml = this->length();
+		size_t sl = strlen( cstr );
+		size_t cl = ml < sl ? ml : sl;
+		int ret = memcmp( this->myData, cstr, cl );
+		if( ret != 0 || ml == sl ) {
+			return ret;
+		}
+		cl++;
+		return ml < sl ? (int)cl * -1 : (int)cl;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Compares this SqrlString to a byte array to determine their relative ordering.</summary>
+	///
+	/// <param name="buf">   Constant void * to be compared.</param>
+	/// <param name="buflen">Size of buf.</param>
+	///
+	/// <returns>Negative if this SqrlString is less than 'buf', 0 if they are equal, 
+	/// 		 or positive if it is greater.</returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	int compare( const void *buf, size_t buflen ) const {
+		size_t ml = this->length();
+		size_t cl = ml < buflen ? ml : buflen;
+		int ret = memcmp( this->myData, buf, cl );
+		if( ret != 0 || ml == buflen ) {
+			return ret;
+		}
+		cl++;
+		return ml < buflen ? (int)cl * -1 : (int)cl;
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Compares a portion of the SqrlString to a byte array to determine their
+	/// 		 relative ordering.</summary>
+	///
+	/// <param name="start">Starting offset.</param>
+	/// <param name="end">  Ending offset.</param>
+	/// <param name="buf">  Constant void * to be compared.</param>
+	///
+	/// <returns>Negative if the substring is less than 'buf', 0 if they are equal, or positive if it is
+	/// greater.</returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	int compare( size_t start, size_t end, const void *buf ) const {
+		if( end < start ) return 1;
+		size_t ml = this->length();
+		if( end > ml ) return 1;
+		size_t cl = end - start;
+		return memcmp( this->cdata() + start, buf, cl );
+	}
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Erases a range of bytes from this SqrlString.</summary>
+	///
+	/// <param name="rangeStart">The range start.</param>
+	/// <param name="rangeEnd">  The range end.</param>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	void erase( size_t rangeStart, size_t rangeEnd ) {
+		size_t len = this->length();
+		if( rangeStart > rangeEnd || rangeEnd >= len ) return;
+		size_t rlen = rangeEnd - rangeStart;
+		if( rlen == 0 ) return;
+		uint8_t *src = this->data() + rangeEnd;
+		uint8_t *dst = this->data() + rangeStart;
+		uint8_t *end = this->dend();
+		while( src + rlen < end ) {
+			memcpy( dst, src, rlen );
+			dst += rlen;
+			src += rlen;
+		}
+		if( src < end ) {
+			memcpy( dst, src, end - src );
+		}
+		uint8_t *er = this->dend() - rlen;
+		memset( er, 0, rlen );
+		this->myDend = this->data() + this->length() - rlen;
 	}
 
 protected:
@@ -269,7 +430,6 @@ protected:
 		if( len <= this->myCapacity ) return;
 		size_t oldLen = this->length();
 		void * oldData = this->myData;
-		void * oldDend = (this->myData ? this->myDend : NULL);
 		this->myData = malloc( len + 1 );
 		if( this->myData ) {
 			this->myCapacity = len;

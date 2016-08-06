@@ -201,7 +201,7 @@ SqrlUri *SqrlUri::parse( SqrlString *source ) {
 	long pl;
 	size_t ul;
 
-	SQRL_STRING *prefix = NULL;
+	SqrlString *prefix = NULL;
 	SqrlString uri = SqrlString( source );
 
 	curstr = uri.string();
@@ -404,7 +404,7 @@ SQRL:
 		memcpy( theUri->url + 1, uri.string(), len );
 		memcpy(theUri->url, "https", 5);
 		theUri->url[len+1] = 0;
-		prefix = new SQRL_STRING( "https://" );
+		prefix = new SqrlString( "https://" );
 		break;
 	case SQRL_SCHEME_FILE:
 		len = uri.length();
@@ -447,13 +447,13 @@ SQRL:
 		char *utsfnsrcsrc = (char*)malloc( pl + 1 );
 		memcpy( utsfnsrcsrc, pp, pl );
 		utsfnsrcsrc[pl] = 0;
-		SQRL_STRING *utsfnsrc = new SQRL_STRING( utsfnsrcsrc );
+		SqrlString *utsfnsrc = new SqrlString( utsfnsrcsrc );
 		free( utsfnsrcsrc );
 		if( utsfnsrc ) {
-			SQRL_STRING *utsfn = SqrlBase64().decode( NULL, utsfnsrc );
+			SqrlString *utsfn = SqrlBase64().decode( NULL, utsfnsrc );
 			if( utsfn ) {
 				theUri->sfn = (char*)calloc( 1, utsfn->length() + 1 );
-				memcpy( theUri->sfn, SQRL_STRING_DATA( utsfn ), utsfn->length() );
+				memcpy( theUri->sfn, utsfn->cdata(), utsfn->length() );
 				delete utsfn;
 			}
 			delete utsfnsrc;
@@ -470,19 +470,10 @@ SQRL:
 	if (theUri->siteKey == NULL) goto ERR;
 	memcpy( theUri->siteKey, host, hl );
 	theUri->siteKey[ul] = 0;
-#ifdef ARDUINO
-	prefix->concat( host );
-#else
 	prefix->append( host );
-#endif
 	if (port) {
-#ifdef ARDUINO
-		prefix->concat( ':' );
-		prefix->concat( port );
-#else
 		prefix->append( ":" );
 		prefix->append( port );
-#endif
 	}
 	if (pl) {
 		theUri->siteKey[hl] = '/';
@@ -491,7 +482,7 @@ SQRL:
 	len = prefix->length();
 	theUri->prefix = (char*)malloc(len + 1);
 	if (theUri->prefix == NULL) goto ERR;
-	memcpy(theUri->prefix, SQRL_STRING_DATA( prefix ), len);
+	memcpy(theUri->prefix, prefix->cdata(), len);
 	theUri->prefix[len] = 0;
 	goto END;
 

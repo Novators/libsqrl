@@ -345,9 +345,9 @@ void SqrlCrypt::generatePublicKey( uint8_t *puk, const uint8_t *prk ) {
 }
 
 
-void SqrlCrypt::sign( const SQRL_STRING *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] ) {
+void SqrlCrypt::sign( const SqrlString *msg, const uint8_t sk[32], const uint8_t pk[32], uint8_t sig[64] ) {
 #ifdef ARDUINO
-	Ed25519::sign( sig, sk, pk, msg->c_str(), msg->length() );
+	Ed25519::sign( sig, sk, pk, msg->cstring(), msg->length() );
 #else
 	uint8_t secret[crypto_sign_SECRETKEYBYTES];
 	sqrl_mlock( secret, crypto_sign_SECRETKEYBYTES );
@@ -355,18 +355,18 @@ void SqrlCrypt::sign( const SQRL_STRING *msg, const uint8_t sk[32], const uint8_
 	memcpy( secret + 32, pk, 32 );
 	crypto_sign_detached(
 		sig, NULL,
-		(const unsigned char*)msg->data(), msg->length(),
+		(const unsigned char*)msg->cdata(), msg->length(),
 		secret );
 	sqrl_munlock( secret, crypto_sign_SECRETKEYBYTES );
 #endif
 }
 
 
-bool SqrlCrypt::verifySignature( const SQRL_STRING *msg, const uint8_t *sig, const uint8_t *pub ) {
+bool SqrlCrypt::verifySignature( const SqrlString *msg, const uint8_t *sig, const uint8_t *pub ) {
 #ifdef ARDUINO
-	return Ed25519::verify( sig, pub, msg->c_str(), msg->length() );
+	return Ed25519::verify( sig, pub, msg->cstring(), msg->length() );
 #else
-	if( crypto_sign_verify_detached( sig, (const unsigned char *)msg->data(), msg->length(), pub ) == 0 ) {
+	if( crypto_sign_verify_detached( sig, (const unsigned char *)msg->cdata(), msg->length(), pub ) == 0 ) {
 		return true;
 	}
 	return false;

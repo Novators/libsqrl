@@ -39,15 +39,11 @@ void SqrlClientAsync::clientThread() {
 		struct CallbackInfo *info = client->callbackQueue.pop();
 		delete info;
 	}
-#ifndef ARDUINO
-	client->actionMutex.lock();
-#endif
+	SQRL_MUTEX_LOCK( &client->actionMutex )
 	while( !client->actions.empty() ) {
 		SqrlAction *action = client->actions.pop();
 		delete action;
 	}
-#ifndef ARDUINO
-	client->actionMutex.unlock();
-#endif
+	SQRL_MUTEX_UNLOCK( &client->actionMutex )
 }
 
