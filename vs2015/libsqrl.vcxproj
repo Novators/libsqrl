@@ -35,6 +35,8 @@
     <ClCompile Include="..\src\SqrlActionRemove.cpp" />
     <ClCompile Include="..\src\SqrlActionRescue.cpp" />
     <ClCompile Include="..\src\SqrlActionSave.cpp" />
+    <ClCompile Include="..\src\SqrlBase56.cpp" />
+    <ClCompile Include="..\src\SqrlBase56Check.cpp" />
     <ClCompile Include="..\src\SqrlBase64.cpp" />
     <ClCompile Include="..\src\SqrlBlock.cpp" />
     <ClCompile Include="..\src\SqrlClient.cpp" />
@@ -56,6 +58,9 @@
     <ClInclude Include="..\src\aes.h" />
     <ClInclude Include="..\src\config.h" />
     <ClInclude Include="..\src\detect_platform.h" />
+    <ClInclude Include="..\src\SqrlBase56.h" />
+    <ClInclude Include="..\src\SqrlBase56Check.h" />
+    <ClInclude Include="..\src\SqrlBigInt.h" />
     <ClInclude Include="..\src\SqrlDeque.h" />
     <ClInclude Include="..\src\SqrlEnScrypt.h" />
     <ClInclude Include="..\src\SqrlEntropy_Linux.h" />

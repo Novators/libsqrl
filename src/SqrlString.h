@@ -8,6 +8,8 @@
 #ifndef SQRLSTRING_H
 #define SQRLSTRING_H
 
+#include "sqrl.h"
+
 #define SQRLSTRING_CHUNK_SIZE 16
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -170,6 +172,47 @@ public:
 		return (uint8_t*) this->myDend;
 	}
 
+	SqrlString *substring( SqrlString *dest, size_t offset, size_t length ) const {
+		if( offset >= this->length() ) {
+			return NULL;
+		}
+		if( offset + length > this->length() ) {
+			length = this->length() - offset;
+		}
+		if( dest ) {
+			dest->clear();
+			dest->reserve( length );
+		} else {
+			dest = new SqrlString( length );
+		}
+		dest->append( this->cdata() + offset, length );
+		return dest;
+	}
+
+	char *find( char needle ) {
+		char *it = this->string();
+		char *end = this->strend();
+		while( it != end ) {
+			if( *it == needle ) {
+				return it;
+			}
+			it++;
+		}
+		return NULL;
+	}
+
+	uint8_t *find( uint8_t needle ) {
+		uint8_t *it = this->data();
+		uint8_t *end = this->dend();
+		while( it != end ) {
+			if( *it == needle ) {
+				return it;
+			}
+		}
+		return NULL;
+	}
+
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>Reserves enough memory to contain a string of the given length.</summary>
 	///
@@ -258,6 +301,22 @@ public:
 			memset( this->myDend, (int)in, cnt );
 			this->myDend = (char*)this->myData + newLen;
 		}
+	}
+
+	void insert( size_t offset, uint8_t byte ) {
+		if( offset >= this->length() ) {
+			this->push_back( byte );
+			return;
+		}
+		this->reserve( this->length() + 1 );
+		uint8_t *it = this->dend() - 1;
+		uint8_t *end = this->data() + offset;
+		while( it != end ) {
+			it[1] = it[0];
+			it--;
+		}
+		it[1] = it[0];
+		it[0] = byte;
 	}
 
 	////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -390,6 +449,21 @@ public:
 		return memcmp( this->cdata() + start, buf, cl );
 	}
 
+	/// <summary>Reverses this SqrlString.</summary>
+	void reverse() {
+		if( this->length() == 0 ) return;
+		uint8_t tmp;
+		uint8_t *front = this->data();
+		uint8_t *back = this->dend() - 1;
+		while( front < back ) {
+			tmp = *front;
+			*front = *back;
+			*back = tmp;
+			front++;
+			back--;
+		}
+	}
+
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>Erases a range of bytes from this SqrlString.</summary>
 	///
@@ -398,7 +472,7 @@ public:
 	////////////////////////////////////////////////////////////////////////////////////////////////////
 	void erase( size_t rangeStart, size_t rangeEnd ) {
 		size_t len = this->length();
-		if( rangeStart > rangeEnd || rangeEnd >= len ) return;
+		if( rangeStart > rangeEnd || rangeEnd > len ) return;
 		size_t rlen = rangeEnd - rangeStart;
 		if( rlen == 0 ) return;
 		uint8_t *src = this->data() + rangeEnd;

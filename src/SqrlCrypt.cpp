@@ -61,6 +61,8 @@ int SqrlCrypt::enHash( uint64_t *out, const uint64_t *in ) {
 	return 0;
 }
 
+
+
 int SqrlCrypt::encrypt( uint8_t *cipherText, const uint8_t *plainText, size_t textLength,
 	const uint8_t *key, const uint8_t *iv, const uint8_t *add, size_t add_len, uint8_t *tag ) {
 	gcm_context ctx;

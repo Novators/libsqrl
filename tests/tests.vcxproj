@@ -160,7 +160,7 @@
     <ClInclude Include="NullClient.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Base64.cpp" />
+    <ClCompile Include="Encoding.cpp" />
     <ClCompile Include="Crypto.cpp" />
     <ClCompile Include="Identity.cpp" />
     <ClCompile Include="main.cpp" />

@@ -159,6 +159,12 @@
     <ClCompile Include="..\src\SqrlEnScrypt.cpp">
       <Filter>Source Files\Common\Crypto</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SqrlBase56.cpp">
+      <Filter>Source Files\Common\Encoding</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SqrlBase56Check.cpp">
+      <Filter>Source Files\Common\Encoding</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\version.h">
@@ -283,6 +289,15 @@
     </ClInclude>
     <ClInclude Include="..\src\SqrlEnScrypt.h">
       <Filter>Header Files\Common\Crypto</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlBigInt.h">
+      <Filter>Header Files\Common</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlBase56.h">
+      <Filter>Header Files\Common\Encoding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlBase56Check.h">
+      <Filter>Header Files\Common\Encoding</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
