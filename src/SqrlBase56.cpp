@@ -27,7 +27,6 @@ SqrlString *SqrlBase56::encode( SqrlString *dest, const SqrlString *src, bool ap
 	}
 
 	SqrlBigInt s( src->length() );
-	SqrlString d( src->length() );
 	s.append( (char)0xFF, src->length() );
 	size_t cnt = 0;
 	while( s.length() != 0 ) {
@@ -35,16 +34,13 @@ SqrlString *SqrlBase56::encode( SqrlString *dest, const SqrlString *src, bool ap
 		cnt++;
 	}
 	s.append( src );
-	s.reverse();
 	uint8_t rem = 0;
 
 	while( cnt > 0 ) {
 		rem = s.divideBy( 56 );
-		d.push_back( this->alphabet[rem] );
+		dest->push_back( this->alphabet[rem] );
 		cnt--;
 	}
-	d.reverse();
-	dest->append( &d );
 	return dest;
 }
 
@@ -56,11 +52,13 @@ SqrlString *SqrlBase56::decode( SqrlString *dest, const SqrlString *src, bool ap
 	if( !append ) {
 		dest->clear();
 	}
+	SqrlString s = SqrlString( src );
+	s.reverse();
 	SqrlBigInt num = SqrlBigInt();
 	const char *ch;
 	uint8_t dp;
 
-	for( const uint8_t *it = src->cdata(); it != src->cdend(); it++ ) {
+	for( const uint8_t *it = s.cdata(); it != s.cdend(); it++ ) {
 		ch = strchr( this->alphabet, *it );
 		if( ch ) {
 			dp = (uint8_t)(ch - this->alphabet);

@@ -172,6 +172,15 @@ public:
 		return (uint8_t*) this->myDend;
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Gets a substring of this SqrlString.</summary>
+	///
+	/// <param name="dest">  [out] If non-null, destination for the substring.</param>
+	/// <param name="offset">The offset to begin at.</param>
+	/// <param name="length">The length of the substring.</param>
+	///
+	/// <returns>null if it fails, else a pointer to a SqrlString.</returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	SqrlString *substring( SqrlString *dest, size_t offset, size_t length ) const {
 		if( offset >= this->length() ) {
 			return NULL;
@@ -189,6 +198,13 @@ public:
 		return dest;
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Searches for the first match for the given character.</summary>
+	///
+	/// <param name="needle">The char to search for.</param>
+	///
+	/// <returns>null if it fails, else a pointer to a char.</returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	char *find( char needle ) {
 		char *it = this->string();
 		char *end = this->strend();
@@ -201,6 +217,13 @@ public:
 		return NULL;
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Searches for the first match for the given byte.</summary>
+	///
+	/// <param name="needle">The byte to search for.</param>
+	///
+	/// <returns>null if it fails, else a pointer to an uint8_t.</returns>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	uint8_t *find( uint8_t needle ) {
 		uint8_t *it = this->data();
 		uint8_t *end = this->dend();
@@ -303,6 +326,12 @@ public:
 		}
 	}
 
+	////////////////////////////////////////////////////////////////////////////////////////////////////
+	/// <summary>Inserts a byte at the specified offset.</summary>
+	///
+	/// <param name="offset">The offset.</param>
+	/// <param name="byte">  The byte.</param>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	void insert( size_t offset, uint8_t byte ) {
 		if( offset >= this->length() ) {
 			this->push_back( byte );

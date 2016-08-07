@@ -11,17 +11,25 @@ static void testString( char *a, const char *b ) {
 
 TEST_CASE( "Base56Identity" ) {
 	NullClient *client = new NullClient();
-	SqrlString idString = SqrlString( "BshNAeZhhDpEhC73C5TQ4wBFGtdiHMUv43LZW5MLFBM6iuGbk3eyiGFz4aXQ9m87MquKZBvaSTJ6HU9MtiaQmixN9MstQQmwPrNUaFdCEBZ" );
-//	SqrlString idString = SqrlString( "bMaynykbH7ee56McJVfnzqmCCiMw3iu6hbMC9JiWLyMKKiYnAFF5Ygfsw6wx2hUb9W8B7bAW4zbdsfcvhYidGrwviEbRxLrdaZwB5iMXV5F" );
+	SqrlString idString = SqrlString( "bMaynykbH7ee56McJVfnzqmCCiMw3iu6hbMC9JiWLyMKKiYnAFF5Ygfsw6wx2hUb9W8B7bAW4zbdsfcvhYidGrwviEbRxLrdaZwB5iMXV5F" );
 	SqrlString decoded = SqrlString();
+	SqrlString encoded = SqrlString();
+	SqrlString ss = SqrlString();
+	SqrlString cmpStr = SqrlString();
+	cmpStr.append( (char)0x49, 1 );
+	cmpStr.append( (char)0x00, 1 );
+	cmpStr.append( (char)0x02, 1 );
+	cmpStr.append( (char)0x00, 1 );
+
 	SqrlBase56Check b56 = SqrlBase56Check();
 
 	REQUIRE( b56.decode( &decoded, &idString ) );
-	printf( "Decoded Identity:\n" );
-	for( const char *it = decoded.cstring(); it != decoded.cstrend(); it++ ) {
-		printf( "%02X", *it );
-	}
-	printf( "\n\n" );
+
+	decoded.substring( &ss, 0, 4 );
+
+	REQUIRE( 0 == ss.compare( &cmpStr ));
+	REQUIRE( b56.encode( &encoded, &decoded ) );
+	REQUIRE( 0 == encoded.compare( &idString ) );
 	delete client;
 }
 

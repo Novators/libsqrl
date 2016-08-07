@@ -38,7 +38,7 @@ SqrlString *SqrlBase56Check::encode( SqrlString *dest, const SqrlString *src, bo
 		dest->append( &line );
 		lineCount++;
 	}
-	return NULL;
+	return dest;
 }
 
 SqrlString *SqrlBase56Check::decode( SqrlString *dest, const SqrlString *src, bool append ) {
@@ -55,7 +55,6 @@ SqrlString *SqrlBase56Check::decode( SqrlString *dest, const SqrlString *src, bo
 		sha.clear();
 		sha.append( (char)0, 32 );
 		crypto_hash_sha256( (unsigned char*)sha.data(), (unsigned char*)line.data(), line.length() );
-		sha.reverse();
 		uint8_t rem = sha.divideBy( 56 );
 		if( checkChar != this->alphabet[rem] ) {
 			isError = true;

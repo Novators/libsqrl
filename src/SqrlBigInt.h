@@ -81,6 +81,7 @@ public:
 			return 0;
 		}
 		// TODO: Optimize BigInt division
+		this->reverse();
 		uint8_t *it = this->data();
 		uint8_t *end = this->dend();
 		uint16_t rem = 0;
@@ -94,6 +95,7 @@ public:
 			it++;
 		}
 		this->stripLeadingZeros();
+		this->reverse();
 		return (uint8_t)rem;
 	}
 
