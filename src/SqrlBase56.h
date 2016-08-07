@@ -15,12 +15,11 @@
 class DLL_PUBLIC SqrlBase56 : SqrlEncoder
 {
 public:
-	SqrlBase56();
 	virtual SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false );
 	virtual SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false );
 
 protected:
-	const char *alphabet = NULL;
+	const char *alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz";
 
 };
 #endif // SQRLBASE56_H

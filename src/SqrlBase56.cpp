@@ -10,13 +10,6 @@
 #include "SqrlBase56.h"
 #include "SqrlBigInt.h"
 
-//static char BASE56_TABLE[] = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz";
-//static char BASE56_TABLE[] = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-
-SqrlBase56::SqrlBase56() {
-	this->alphabet = "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz";
-}
-
 SqrlString *SqrlBase56::encode( SqrlString *dest, const SqrlString *src, bool append ) {
 	if( !src ) return NULL;
 	if( !dest ) {
