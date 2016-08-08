@@ -1,5 +1,4 @@
 #include "catch.hpp"
-#include "NullClient.h"
 #include "SqrlBase64.h"
 #include "SqrlBase56.h"
 #include "SqrlBase56Check.h"
@@ -10,7 +9,6 @@ static void testString( char *a, const char *b ) {
 }
 
 TEST_CASE( "Base56Identity" ) {
-	NullClient *client = new NullClient();
 	SqrlString idString = SqrlString( "bMaynykbH7ee56McJVfnzqmCCiMw3iu6hbMC9JiWLyMKKiYnAFF5Ygfsw6wx2hUb9W8B7bAW4zbdsfcvhYidGrwviEbRxLrdaZwB5iMXV5F" );
 	SqrlString decoded = SqrlString();
 	SqrlString encoded = SqrlString();
@@ -30,11 +28,9 @@ TEST_CASE( "Base56Identity" ) {
 	REQUIRE( 0 == ss.compare( &cmpStr ));
 	REQUIRE( b56.encode( &encoded, &decoded ) );
 	REQUIRE( 0 == encoded.compare( &idString ) );
-	delete client;
 }
 
 TEST_CASE( "Base56Check" ) {
-	NullClient *client = new NullClient();
 	const int NT = 7;
 	SqrlString evector[NT] = {
 		"",
@@ -61,11 +57,9 @@ TEST_CASE( "Base56Check" ) {
 	uint8_t lineCount = 0;
 	REQUIRE( b56.decode( &d, &e ) );
 	REQUIRE( d.compare( &lString ) == 0 );
-	delete client;
 }
 
 TEST_CASE( "Base56" ) {
-	NullClient *client = new NullClient();
 	const int NT = 7;
 	SqrlString evector[NT] = {
 		"",
@@ -86,12 +80,9 @@ TEST_CASE( "Base56" ) {
 		b56.decode( &d, &e );
 		REQUIRE( d.compare( &(evector[i]) ) == 0 );
 	}
-
-	delete client;
 }
 
 TEST_CASE( "Base64" ) {
-	NullClient *client = new NullClient();
 	const int NT = 10;
 	SqrlString evector[NT] = {
 		"",
@@ -140,5 +131,4 @@ TEST_CASE( "Base64" ) {
 		REQUIRE( s.length() == evector[i].length() );
 		REQUIRE( 0 == s.compare( &evector[i] ) );
 	}
-	delete client;
 }

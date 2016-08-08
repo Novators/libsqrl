@@ -7,6 +7,7 @@
 #include "SqrlCrypt.h"
 #include "SqrlEntropy.h"
 #include "SqrlBase64.h"
+#include "SqrlBigInt.h"
 #include "SqrlEnScrypt.h"
 #include "NullClient.h"
 #include "Windows.h"
@@ -31,6 +32,21 @@ static void sqrl_hex_encode( SqrlString *dest, const uint8_t *src, size_t src_le
 static void testString( char *a, const char *b ) {
 	REQUIRE( 0 == strcmp( a, b ) );
 	if( a ) free( a );
+}
+
+TEST_CASE( "SqrlBigInt" ) {
+	SqrlBigInt a = SqrlBigInt();
+	a.push_back( (uint8_t)0x01 );
+	a.push_back( (uint8_t)0x02 );
+	a.push_back( (uint8_t)0x03 );
+	a.push_back( (uint8_t)0x04 );
+
+	SqrlBigInt b = SqrlBigInt( a );
+	uint8_t rem = b.divideBy( 2 );
+	REQUIRE( rem == 1 );
+	b.multiplyBy( 2 );
+	b.add( rem );
+	REQUIRE( 0 == a.compare( &b ) );
 }
 
 TEST_CASE( "EnHash" ) {

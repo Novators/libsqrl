@@ -29,9 +29,13 @@ SqrlString *SqrlBase56::encode( SqrlString *dest, const SqrlString *src, bool ap
 	s.append( src );
 	uint8_t rem = 0;
 
-	while( cnt > 0 ) {
+	while( s.length() && cnt ) {
 		rem = s.divideBy( 56 );
 		dest->push_back( this->alphabet[rem] );
+		cnt--;
+	}
+	while( cnt ) {
+		dest->push_back( this->alphabet[0] );
 		cnt--;
 	}
 	return dest;
