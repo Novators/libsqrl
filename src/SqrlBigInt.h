@@ -102,20 +102,19 @@ namespace libsqrl
             if( divisor == 0 ) return 0;               // Cannot divide by zero.
             if( this->length() == 0 ) return divisor;  // Dividing zero by anything is 0 remainder divisor.
 
-            uint16_t rem = 0;                          // Holds the remainder of most recent divison.
-            uint16_t t;                                // Temporary variable.
+            uint16_t t = 0;                            // Temporary variable.
 
             uint8_t *it = this->dend();	               // Starting *after* the end of the string.
             uint8_t *end = this->data();               // And ending when the first byte has been processed:
             do {
                 it--;                                  // Move to the previous byte.
-                t = (uint16_t)*it + (rem << 8);        // Add this byte and remainder from previous operation.
-                rem = t % divisor;                     // Calculate new remainder,
-                *it = (uint8_t)(t / divisor);          // and replace the byte with the result of division.
+                t = (uint16_t)*it | (t << 8);          // Shift remainder 8 bits left, and add current byte.
+                *it = (uint8_t)(t / divisor);          // Divide by divisor and store result.
+                t = (t % divisor);                     // Carry remainder.
             } while( it != end );                      // Repeat until we've processed the first byte.
 
             this->stripTrailingZeros();                // Remove any trailing zeros.
-            return (uint8_t)rem;                       // Return the remainder (modulus).
+            return (uint8_t)t;                         // Return the remainder (modulus).
         }
     };
 }
