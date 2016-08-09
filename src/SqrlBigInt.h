@@ -58,7 +58,8 @@ namespace libsqrl
 				*it = (uint8_t)t;                  // Store result byte,
 				carry = t >> 8;                    // and carry any overflow to next operation.
 				t = 0;                             // Reset temporary variable for next operation.
-			} while( it != end );                  // Have we processed the first byte in buffer?
+			} while( carry && it != end );         // If we have processed the first byte in buffer,
+			                                       // or we no longer have a carry byte, we're done.
 
 			if( carry ) {                          // If there is still a carry,
 				this->insert( 0, (uint8_t)carry ); // Store it as a new byte at beginning of buffer.

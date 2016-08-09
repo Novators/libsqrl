@@ -188,7 +188,6 @@ TEST_CASE( "Identity Lock Keys", "[crypto]" ) {
 	uint8_t vuk[32];
 	uint8_t ursk[32];
 	uint8_t tmp[32];
-	SqrlBase64 b64 = SqrlBase64();
 
 	uint8_t sig[SQRL_SIG_SIZE];
 	SqrlEntropy::bytes( iuk, 32 );
@@ -202,26 +201,6 @@ TEST_CASE( "Identity Lock Keys", "[crypto]" ) {
 	SqrlString *msg = new SqrlString( "This is a test message!" );
 	SqrlCrypt::generatePublicKey( tmp, ursk );
 	SqrlCrypt::sign( msg, ursk, tmp, sig );
-
-	SqrlString buf;
-	SqrlString ts;
-	ts.append( (char*)iuk, SQRL_KEY_SIZE );
-	b64.encode( &buf, &ts );
-	ts.clear();
-	ts.append( (char*)ilk, SQRL_KEY_SIZE );
-	b64.encode( &buf, &ts );
-	ts.clear();
-	ts.append( (char*)rlk, SQRL_KEY_SIZE );
-	b64.encode( &buf, &ts );
-	ts.clear();
-	ts.append( (char*)suk, SQRL_KEY_SIZE );
-	b64.encode( &buf, &ts );
-	ts.clear();
-	ts.append( (char*)vuk, SQRL_KEY_SIZE );
-	b64.encode( &buf, &ts );
-	ts.clear();
-	ts.append( (char*)ursk, SQRL_KEY_SIZE );
-	b64.encode( &buf, &ts );
 
 	REQUIRE( SqrlCrypt::verifySignature( msg, sig, vuk ) );
 	delete client;
