@@ -10,7 +10,7 @@ static void testString( char *a, const char *b ) {
 	if( a ) free( a );
 }
 
-TEST_CASE( "Base56Identity" ) {
+TEST_CASE( "Base56Identity", "[encode]" ) {
 	SqrlString idString = SqrlString( "bMaynykbH7ee56McJVfnzqmCCiMw3iu6hbMC9JiWLyMKKiYnAFF5Ygfsw6wx2hUb9W8B7bAW4zbdsfcvhYidGrwviEbRxLrdaZwB5iMXV5F" );
 	SqrlString decoded = SqrlString();
 	SqrlString encoded = SqrlString();
@@ -32,7 +32,7 @@ TEST_CASE( "Base56Identity" ) {
 	REQUIRE( 0 == encoded.compare( &idString ) );
 }
 
-TEST_CASE( "Base56Check" ) {
+TEST_CASE( "Base56Check", "[encode]" ) {
 	const int NT = 7;
 	SqrlString evector[NT] = {
 		"",
@@ -61,7 +61,7 @@ TEST_CASE( "Base56Check" ) {
 	REQUIRE( d.compare( &lString ) == 0 );
 }
 
-TEST_CASE( "Base56" ) {
+TEST_CASE( "Base56", "[encode]" ) {
 	const int NT = 7;
 	SqrlString evector[NT] = {
 		"",
@@ -84,7 +84,7 @@ TEST_CASE( "Base56" ) {
 	}
 }
 
-TEST_CASE( "Base64" ) {
+TEST_CASE( "Base64", "[encode]" ) {
 	const int NT = 10;
 	SqrlString evector[NT] = {
 		"",

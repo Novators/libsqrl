@@ -12,7 +12,7 @@
 
 using namespace libsqrl;
 
-TEST_CASE( "GenerateIdentity" ) {
+TEST_CASE( "GenerateIdentity", "[identity]" ) {
 	GenClient *client = new GenClient();
 	new SqrlActionGenerate();
 	while( client->completed < 2 ) {

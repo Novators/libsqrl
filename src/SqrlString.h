@@ -570,9 +570,9 @@ namespace libsqrl
 			this->myCapacity = 0;
 		}
 
-		void * myData;
-		void * myDend;
-		size_t myCapacity;
+		void * myData = NULL;
+		void * myDend = NULL;
+		size_t myCapacity = 0;
 	};
 }
 #endif // SQRLSTRING_H

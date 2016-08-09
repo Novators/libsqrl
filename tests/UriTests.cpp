@@ -16,7 +16,7 @@ static void testString(char *a, const char *b) {
 	}
 }
 
-TEST_CASE("Uri1")
+TEST_CASE("Uri1", "[uri]")
 {
 	new NullClient();
 	SqrlString str( "sqrl://sqrlid.com/login?x=6&nut=blah&sfn=U1FSTGlk" );
@@ -32,7 +32,7 @@ TEST_CASE("Uri1")
 	delete (NullClient*)NullClient::getClient();
 }
 		
-TEST_CASE("Uri2")
+TEST_CASE("Uri2", "[uri]" )
 {
 	new NullClient();
 	SqrlString str( "sqrl://sqrlid.com/login?nut=blah&sfn=U1FSTGlk" );
@@ -48,7 +48,7 @@ TEST_CASE("Uri2")
 	delete (NullClient*)NullClient::getClient();
 }
 		
-TEST_CASE("Uri3")
+TEST_CASE("Uri3", "[uri]" )
 {
 	new NullClient();
 	SqrlString str( "sqrl://sqrlid.com:8080/login?sfn=U1FSTGlk&nut=blah" );
@@ -64,7 +64,7 @@ TEST_CASE("Uri3")
 	delete (NullClient*)NullClient::getClient();
 }
 		
-TEST_CASE("FileUri")
+TEST_CASE("FileUri", "[uri]" )
 {
 	new NullClient();
 	SqrlString str( "file://test1.sqrl" );
@@ -80,7 +80,7 @@ TEST_CASE("FileUri")
 	delete (NullClient*)NullClient::getClient();
 }
 		
-TEST_CASE("SQRLUriWithoutSFN")
+TEST_CASE("SQRLUriWithoutSFN", "[uri]" )
 {
 	new NullClient();
 	SqrlString str( "sqrl://sqrlid.com:8080/login?nut=blah" );
@@ -89,7 +89,7 @@ TEST_CASE("SQRLUriWithoutSFN")
 	delete (NullClient*)NullClient::getClient();
 }
 		
-TEST_CASE("InvalidSQRLUrl")
+TEST_CASE("InvalidSQRLUrl", "[uri]" )
 {
 	new NullClient();
 	SqrlString str( "http://google.com" );

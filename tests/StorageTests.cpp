@@ -19,7 +19,7 @@ static void testString( char *a, const char *b ) {
 }
 
 
-TEST_CASE("LoadFile")
+TEST_CASE("LoadFile", "[storage]")
 {
 	NullClient * client = new NullClient();
 	bool bError = false;
@@ -42,7 +42,7 @@ TEST_CASE("LoadFile")
 }
 
 
-TEST_CASE("BlockSizeAndType") {
+TEST_CASE("BlockSizeAndType", "[storage]" ) {
 	new NullClient();
 	uint16_t t, l;
 	SqrlBlock *block = SqrlBlock::create();
@@ -73,7 +73,7 @@ TEST_CASE("BlockSizeAndType") {
 	delete (NullClient*)NullClient::getClient();
 }
 
-TEST_CASE("BlockRandomAccess") {
+TEST_CASE("BlockRandomAccess", "[storage]" ) {
 	new NullClient();
 	char *testString = "Bender is Great!";
 	SqrlString *str = NULL;

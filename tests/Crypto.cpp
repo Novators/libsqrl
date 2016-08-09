@@ -35,22 +35,24 @@ static void testString( char *a, const char *b ) {
 	if( a ) free( a );
 }
 
-TEST_CASE( "SqrlBigInt" ) {
+TEST_CASE( "SqrlBigInt", "[crypto]" ) {
 	SqrlBigInt a = SqrlBigInt();
 	a.push_back( (uint8_t)0x01 );
 	a.push_back( (uint8_t)0x02 );
 	a.push_back( (uint8_t)0x03 );
 	a.push_back( (uint8_t)0x04 );
 
-	SqrlBigInt b = SqrlBigInt( a );
-	uint8_t rem = b.divideBy( 2 );
-	REQUIRE( rem == 1 );
+	SqrlBigInt b = SqrlBigInt( &a );
+	b.reverse();                      // Because SQRL's divideBy() works backwards...
+	uint8_t rem = b.divideBy( 2 );    // We wrap it in reverse() to make it mathematically
+	b.reverse();                      // correct (and work with multiplyBy() and add())
+	REQUIRE( rem == 0 );
 	b.multiplyBy( 2 );
 	b.add( rem );
 	REQUIRE( 0 == a.compare( &b ) );
 }
 
-TEST_CASE( "EnHash" ) {
+TEST_CASE( "EnHash", "[crypto]" ) {
 	NullClient *client = new NullClient();
 	while( NullClient::getClient() == NULL ) {
 		Sleep( 5 );
@@ -82,7 +84,7 @@ TEST_CASE( "EnHash" ) {
 	delete client;
 }
 
-TEST_CASE( "EnScrypt -- 1 iteration" ) {
+TEST_CASE( "EnScrypt -- 1 iteration", "[enscrypt]" ) {
 	NullClient *client = new NullClient();
 	while( NullClient::getClient() == NULL ) {
 		Sleep( 5 );
@@ -99,7 +101,7 @@ TEST_CASE( "EnScrypt -- 1 iteration" ) {
 	delete client;
 }
 
-TEST_CASE( "EnScrypt -- 1 + 1 second" ) {
+TEST_CASE( "EnScrypt -- 1 + 1 second", "[enscrypt]" ) {
 	NullClient *client = new NullClient();
 	while( NullClient::getClient() == NULL ) {
 		Sleep( 5 );
@@ -121,7 +123,7 @@ TEST_CASE( "EnScrypt -- 1 + 1 second" ) {
 	delete client;
 }
 
-TEST_CASE( "EnScrypt 100 iterations" ) {
+TEST_CASE( "EnScrypt 100 iterations", "[.][enscrypt]" ) {
 	NullClient *client = new NullClient();
 	while( NullClient::getClient() == NULL ) {
 		Sleep( 5 );
@@ -139,7 +141,7 @@ TEST_CASE( "EnScrypt 100 iterations" ) {
 	delete client;
 }
 
-TEST_CASE( "EnScrypt password, 123 iterations" ) {
+TEST_CASE( "EnScrypt password, 123 iterations", "[.][enscrypt]" ) {
 	NullClient *client = new NullClient();
 	while( NullClient::getClient() == NULL ) {
 		Sleep( 5 );
@@ -157,7 +159,7 @@ TEST_CASE( "EnScrypt password, 123 iterations" ) {
 	delete client;
 }
 
-TEST_CASE( "EnScrypt password, salt, 123 iterations" ) {
+TEST_CASE( "EnScrypt password, salt, 123 iterations", "[.][enscrypt]" ) {
 	NullClient *client = new NullClient();
 	while( NullClient::getClient() == NULL ) {
 		Sleep( 5 );
@@ -177,7 +179,7 @@ TEST_CASE( "EnScrypt password, salt, 123 iterations" ) {
 	delete client;
 }
 
-TEST_CASE( "Identity Lock Keys" ) {
+TEST_CASE( "Identity Lock Keys", "[crypto]" ) {
 	NullClient *client = new NullClient();
 	uint8_t iuk[32] = {0};
 	uint8_t ilk[32];

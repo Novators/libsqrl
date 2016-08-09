@@ -13,8 +13,11 @@
 
 namespace libsqrl
 {
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	/// <summary>A partial implementation of big integer arithmetic, using SqrlString as the data.
-/// 		 This is SQRL specific, in that it only supports single byte operands.</summary>
+	/// 		 This is SQRL specific, in that it only supports single byte operands, and the divide
+	/// 		 operation works in reverse.</summary>
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 	class SqrlBigInt : public SqrlString
 	{
 	private:
