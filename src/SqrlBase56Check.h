@@ -13,11 +13,14 @@
 #include "SqrlEncoder.h"
 #include "SqrlBase56.h"
 
-class DLL_PUBLIC SqrlBase56Check : SqrlBase56
+namespace libsqrl
 {
-public:
+	class DLL_PUBLIC SqrlBase56Check : SqrlBase56
+	{
+	public:
 
-	SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false );
-	SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false );
-};
+		SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false );
+		SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false );
+	};
+}
 #endif // SQRLBASE56CHECK_H

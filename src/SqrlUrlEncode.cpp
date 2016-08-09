@@ -9,6 +9,9 @@
 #include "sqrl_internal.h"
 #include "SqrlUrlEncode.h"
 
+using libsqrl::SqrlString;
+using libsqrl::SqrlUrlEncode;
+
 SqrlString *SqrlUrlEncode::encode( SqrlString *dest, const uint8_t *src, size_t src_len, bool append ) {
 	static const char hex[] = "0123456789ABCDEF";
 	if( !dest ) {

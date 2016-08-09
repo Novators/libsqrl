@@ -4,6 +4,8 @@
 #include "SqrlAction.h"
 #include "SqrlActionSave.h"
 
+using namespace libsqrl;
+
 class GenClient : public SqrlClientAsync
 {
 	void onSend(

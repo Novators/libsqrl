@@ -9,6 +9,8 @@
 #include "sqrl_internal.h"
 #include "SqrlSiteAction.h"
 
+using libsqrl::SqrlSiteAction;
+
 char *SqrlSiteAction::getAltIdentity() {
 	return this->altIdentity;
 }

@@ -72,9 +72,6 @@
     <ClCompile Include="..\src\rdrand.cpp">
       <Filter>Source Files\Common\Crypto</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\platform.cpp">
-      <Filter>Source Files\Common</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\realtime.cpp">
       <Filter>Source Files\Common</Filter>
     </ClCompile>

@@ -22,43 +22,49 @@
 #else
 #include "WProgram.h"
 #endif
-#define SQRL_MUTEX_LOCK(p) ;
-#define SQRL_MUTEX_UNLOCK(p) ;
 #else
 #include <thread>
 #include <mutex>
+#endif
+
+namespace libsqrl
+{
+#if defined(ARDUINO)
+#define SQRL_MUTEX_LOCK(p) ;
+#define SQRL_MUTEX_UNLOCK(p) ;
+#else
 #define SQRL_MUTEX_LOCK(p) (p)->lock();
 #define SQRL_MUTEX_UNLOCK(p) (p)->unlock();
 #endif
 
 
-class SqrlUser;
-class SqrlEncoder;
-class SqrlUrlEncode;
-class SqrlUri;
-class SqrlStorage;
-class SqrlSiteAction;
-class SqrlServer;
-class SqrlIdentityAction;
-class SqrlEntropy;
-class SqrlCrypt;
-class SqrlClient;
-class SqrlClient;
-class SqrlBlock;
-class SqrlBase64;
-class SqrlActionSave;
-class SqrlActionRescue;
-class SqrlActionRemove;
-class SqrlActionRekey;
-class SqrlActionLock;
-class SqrlActionIdent;
-class SqrlActionGenerate;
-class SqrlActionEnable;
-class SqrlActionDisable;
-class SqrlActionChangePassword;
-class SqrlAction;
+	class SqrlUser;
+	class SqrlEncoder;
+	class SqrlUrlEncode;
+	class SqrlUri;
+	class SqrlStorage;
+	class SqrlSiteAction;
+	class SqrlServer;
+	class SqrlIdentityAction;
+	class SqrlEntropy;
+	class SqrlCrypt;
+	class SqrlClient;
+	class SqrlClient;
+	class SqrlBlock;
+	class SqrlBase64;
+	class SqrlActionSave;
+	class SqrlActionRescue;
+	class SqrlActionRemove;
+	class SqrlActionRekey;
+	class SqrlActionLock;
+	class SqrlActionIdent;
+	class SqrlActionGenerate;
+	class SqrlActionEnable;
+	class SqrlActionDisable;
+	class SqrlActionChangePassword;
+	class SqrlAction;
 
-// Buffer sizes for keys, etc...
+	// Buffer sizes for keys, etc...
 #define SQRL_KEY_SIZE 						    32
 #define SQRL_SIG_SIZE 						    64
 
@@ -107,38 +113,40 @@ class SqrlAction;
 #define SQRL_MILLIS_PER_SECOND				  1000
 #define SQRL_HINT_ENSCRYPT_MILLISECONDS 	  1000
 
-typedef enum
-{
-	SQRL_ENCODING_BINARY = 0,
-	SQRL_ENCODING_BASE64
-} Sqrl_Encoding;
+	typedef enum
+	{
+		SQRL_ENCODING_BINARY = 0,
+		SQRL_ENCODING_BASE64
+	} Sqrl_Encoding;
 
-typedef enum
-{
-	SQRL_EXPORT_ALL = 0,
-	SQRL_EXPORT_RESCUE
-} Sqrl_Export;
+	typedef enum
+	{
+		SQRL_EXPORT_ALL = 0,
+		SQRL_EXPORT_RESCUE
+	} Sqrl_Export;
 
-typedef enum {
-SQRL_BUTTON_CANCEL = 0,
-SQRL_BUTTON_FIRST = 1,
-SQRL_BUTTON_SECOND = 2,
-SQRL_BUTTON_OK = 3
-} Sqrl_Button;
+	typedef enum
+	{
+		SQRL_BUTTON_CANCEL = 0,
+		SQRL_BUTTON_FIRST = 1,
+		SQRL_BUTTON_SECOND = 2,
+		SQRL_BUTTON_OK = 3
+	} Sqrl_Button;
 
-typedef enum {
-SQRL_CREDENTIAL_PASSWORD,
-SQRL_CREDENTIAL_HINT,
-SQRL_CREDENTIAL_RESCUE_CODE,
-SQRL_CREDENTIAL_NEW_PASSWORD
-} Sqrl_Credential_Type;
+	typedef enum
+	{
+		SQRL_CREDENTIAL_PASSWORD,
+		SQRL_CREDENTIAL_HINT,
+		SQRL_CREDENTIAL_RESCUE_CODE,
+		SQRL_CREDENTIAL_NEW_PASSWORD
+	} Sqrl_Credential_Type;
 
-typedef unsigned int Sqrl_Tif;
+	typedef unsigned int Sqrl_Tif;
 
-size_t		Sqrl_Version( char *buffer, size_t buffer_len );
-uint16_t Sqrl_Version_Major();
-uint16_t Sqrl_Version_Minor();
-uint16_t Sqrl_Version_Build();
-uint16_t Sqrl_Version_Revision();
-
+	size_t		Sqrl_Version( char *buffer, size_t buffer_len );
+	uint16_t Sqrl_Version_Major();
+	uint16_t Sqrl_Version_Minor();
+	uint16_t Sqrl_Version_Build();
+	uint16_t Sqrl_Version_Revision();
+}
 #endif // SQRL_H

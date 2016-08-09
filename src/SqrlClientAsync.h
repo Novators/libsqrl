@@ -12,18 +12,21 @@
 #include "sqrl.h"
 #include "SqrlClient.h"
 
-class DLL_PUBLIC SqrlClientAsync : public SqrlClient
+namespace libsqrl
 {
-public:
-	SqrlClientAsync();
-	~SqrlClientAsync();
+	class DLL_PUBLIC SqrlClientAsync : public SqrlClient
+	{
+	public:
+		SqrlClientAsync();
+		~SqrlClientAsync();
 
-protected:
+	protected:
 
-private:
-	static void clientThread();
-	std::thread *myThread;
-	bool stopping = false;
+	private:
+		static void clientThread();
+		std::thread *myThread;
+		bool stopping = false;
 
-};
+	};
+}
 #endif // SQRLCLIENTASYNC_H

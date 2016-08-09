@@ -10,6 +10,9 @@
 #include "sqrl_internal.h"
 #include "SqrlBlock.h"
 
+using libsqrl::SqrlBlock;
+using libsqrl::SqrlString;
+
 SqrlBlock *SqrlBlock::create() {
 	SqrlBlock *b = (SqrlBlock*)malloc( sizeof( SqrlBlock ) );
 	new (b) SqrlBlock;

@@ -9,6 +9,9 @@
 #include "sqrl_internal.h"
 #include "SqrlBase64.h"
 
+using libsqrl::SqrlString;
+using libsqrl::SqrlBase64;
+
 SqrlString *SqrlBase64::encode( SqrlString *dest, const SqrlString *src, bool append ) {
 	static const char B64_ENC_TABLE[64] = {
 		'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H',

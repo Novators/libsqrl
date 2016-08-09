@@ -4,6 +4,7 @@
 #include "SqrlAction.h"
 
 using namespace std;
+using namespace libsqrl;
 
 class NullClient : public SqrlClientAsync
 {

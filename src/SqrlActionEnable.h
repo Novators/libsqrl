@@ -12,8 +12,11 @@
 #include "sqrl.h"
 #include "SqrlSiteAction.h"
 
-class DLL_PUBLIC SqrlActionEnable : public SqrlSiteAction
+namespace libsqrl
 {
+	class DLL_PUBLIC SqrlActionEnable : public SqrlSiteAction
+	{
 
-};
+	};
+}
 #endif // SQRLACTIONENABLE_H

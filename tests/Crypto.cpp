@@ -13,6 +13,7 @@
 #include "Windows.h"
 
 using namespace std;
+using namespace libsqrl;
 
 static void sqrl_hex_encode( SqrlString *dest, const uint8_t *src, size_t src_len ) {
 	if( !dest ) return;
@@ -73,13 +74,6 @@ TEST_CASE( "EnHash" ) {
 		b64.decode( &output, &tmp2 );
 		SqrlCrypt::enHash( (uint64_t*)out, (uint64_t*)(input.data()) );
 		REQUIRE( 32 == output.length() );
-		/*
-		tmp2.clear();
-		tmp2.append( out, 32 );
-		b64.encode( &tmp, &tmp2 );
-		b64.encode( &tmp2, &output );
-		printf( "%s == %s\n", tmp.cstring(), tmp2.cstring() );
-		*/
 		REQUIRE( 0 == memcmp( out, output.data(), 32 ) );
 		tmp.clear();
 		tmp2.clear();

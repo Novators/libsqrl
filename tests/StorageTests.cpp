@@ -7,6 +7,8 @@
 #include "SqrlString.h"
 #include "NullClient.h"
 
+using namespace libsqrl;
+
 static void testString( char *a, const char *b ) {
 	if( !a ) {
 		REQUIRE( ! b );

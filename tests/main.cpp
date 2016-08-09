@@ -4,6 +4,7 @@
 #include <iostream>
 
 using namespace std;
+using namespace libsqrl;
 
 int main( int argc, char* const argv[] ) {
 	// global setup...

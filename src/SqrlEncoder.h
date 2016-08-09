@@ -12,10 +12,13 @@
 #include "sqrl.h"
 #include "SqrlString.h"
 
-class DLL_PUBLIC SqrlEncoder
+namespace libsqrl
 {
-public:
-	virtual SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false ) = 0;
-	virtual SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false ) = 0;
-};
+	class DLL_PUBLIC SqrlEncoder
+	{
+	public:
+		virtual SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false ) = 0;
+		virtual SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false ) = 0;
+	};
+}
 #endif // SQRLENCODER_H

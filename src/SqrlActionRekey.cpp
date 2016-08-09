@@ -12,6 +12,8 @@
 #include "SqrlUser.h"
 #include "SqrlClient.h"
 
+using libsqrl::SqrlActionRekey;
+
 SqrlActionRekey::SqrlActionRekey() : SqrlIdentityAction( NULL ) {
 
 }

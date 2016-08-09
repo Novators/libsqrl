@@ -21,7 +21,6 @@
   <ItemGroup>
     <ClCompile Include="..\src\aes.cpp" />
     <ClCompile Include="..\src\gcm.cpp" />
-    <ClCompile Include="..\src\platform.cpp" />
     <ClCompile Include="..\src\rdrand.cpp" />
     <ClCompile Include="..\src\realtime.cpp" />
     <ClCompile Include="..\src\SqrlAction.cpp" />

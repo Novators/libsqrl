@@ -12,7 +12,10 @@
 #include "sqrl.h"
 #include "SqrlIdentityAction.h"
 
-////////////////////////////////////////////////////////////////////////////////////////////////////
+namespace libsqrl
+{
+
+	////////////////////////////////////////////////////////////////////////////////////////////////////
 /// \class SqrlActionGenerate
 ///
 /// \brief Generates a new user identity.
@@ -22,10 +25,11 @@
 /// 	     - SqrlClient::onSaveSuggested: When successfully completed.
 ///
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-class DLL_PUBLIC SqrlActionGenerate : public SqrlIdentityAction
-{
-public:
-	SqrlActionGenerate();
-	int run( int currentState );
-};
+	class DLL_PUBLIC SqrlActionGenerate : public SqrlIdentityAction
+	{
+	public:
+		SqrlActionGenerate();
+		int run( int currentState );
+	};
+}
 #endif // SQRLACTIONGENERATE_H

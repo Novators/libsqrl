@@ -11,6 +11,9 @@
 #include "SqrlBase56Check.h"
 #include "SqrlBigInt.h"
 
+using libsqrl::SqrlString;
+using libsqrl::SqrlBase56Check;
+
 SqrlString *SqrlBase56Check::encode( SqrlString *dest, const SqrlString *src, bool append ) {
 	if( !src ) return NULL;
 	if( !dest ) {

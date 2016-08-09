@@ -10,6 +10,9 @@
 #include "SqrlBase56.h"
 #include "SqrlBigInt.h"
 
+using libsqrl::SqrlString;
+using libsqrl::SqrlBase56;
+
 SqrlString *SqrlBase56::encode( SqrlString *dest, const SqrlString *src, bool append ) {
 	if( !src ) return NULL;
 	if( !dest ) {

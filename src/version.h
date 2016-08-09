@@ -6,8 +6,11 @@
  * For more details, see the LICENSE file included with this package.
 **/
 
+namespace libsqrl
+{
 #define SQRL_LIB_VERSION_MAJOR 0
 #define SQRL_LIB_VERSION_MINOR 3
-#define SQRL_LIB_VERSION_BUILD_DATE 16221
-#define SQRL_LIB_VERSION_REVISION 28
-#define SQRL_LIB_VERSION "0.3.16221.28"
+#define SQRL_LIB_VERSION_BUILD_DATE 16222
+#define SQRL_LIB_VERSION_REVISION 13
+#define SQRL_LIB_VERSION "0.3.16222.13"
+}

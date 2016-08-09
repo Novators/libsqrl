@@ -2,6 +2,8 @@
 
 #include "SqrlServer.h"
 
+using namespace libsqrl;
+
 class BaseServer : public SqrlServer
 {
 public:

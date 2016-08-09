@@ -10,6 +10,7 @@
 #include "SqrlEntropy.h"
 #include "GenClient.h"
 
+using namespace libsqrl;
 
 TEST_CASE( "GenerateIdentity" ) {
 	GenClient *client = new GenClient();

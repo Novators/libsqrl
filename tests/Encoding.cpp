@@ -3,6 +3,8 @@
 #include "SqrlBase56.h"
 #include "SqrlBase56Check.h"
 
+using namespace libsqrl;
+
 static void testString( char *a, const char *b ) {
 	REQUIRE( strcmp( a, b ) == 0 );
 	if( a ) free( a );

@@ -12,8 +12,11 @@
 #include "sqrl.h"
 #include "SqrlSiteAction.h"
 
-class DLL_PUBLIC SqrlActionRemove : public SqrlSiteAction
+namespace libsqrl
 {
+	class DLL_PUBLIC SqrlActionRemove : public SqrlSiteAction
+	{
 
-};
+	};
+}
 #endif // SQRLACTIONREMOVE_H
