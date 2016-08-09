@@ -47,21 +47,20 @@ namespace libsqrl
                 this->append( (char)operand, 1 );      // just store the operand.
                 return;
             }
-            uint16_t carry = operand;                  // Carry byte, initialized with operand.
-            uint16_t t;                                // Temporary variable.
+            uint16_t t = operand;                      // Temporary variable, initialized with operand.
             
             uint8_t *it = this->dend();                // Starting *after* the last byte in the buffer,
             uint8_t *end = this->data();               // and ending when the first byte has been processed:
             do {
                 it--;                                  // Move to the previous byte in buffer.
-                t = *it + carry;                       // Add the byte and any carry value.
+                t += *it;                              // Add the byte and any carry value.
                 *it = (uint8_t)t;                      // Store result byte,
-                carry = t >> 8;                        // and carry any overflow to next operation.
-            } while( carry && it != end );             // If we have processed the first byte in buffer,
+                t = t >> 8;                            // and carry any overflow to next operation.
+            } while( t && it != end );                 // If we have processed the first byte in buffer,
                                                        // or we no longer have a carry byte, we're done.
 
-            if( carry ) {                              // If there is still a carry,
-                this->insert( 0, (uint8_t)carry );     // Store it as a new byte at beginning of buffer.
+            if( t ) {                                  // If there is still a carry,
+                this->insert( 0, (uint8_t)t );         // Store it as a new byte at beginning of buffer.
             }
         }
 
