@@ -14,60 +14,60 @@ using libsqrl::SqrlString;
 using libsqrl::SqrlBase56;
 
 SqrlString *SqrlBase56::encode( SqrlString *dest, const SqrlString *src, bool append ) {
-	if( !src ) return NULL;
-	if( !dest ) {
-		dest = new SqrlString();
-	} 
-	if( ! append ) {
-		dest->clear();
-	}
+    if( !src ) return NULL;
+    if( !dest ) {
+        dest = new SqrlString();
+    }
+    if( !append ) {
+        dest->clear();
+    }
 
-	SqrlBigInt s( src->length() );
-	s.append( (char)0xFF, src->length() );
-	size_t cnt = 0;
-	while( s.length() != 0 ) {
-		s.divideBy( 56 );
-		cnt++;
-	}
-	s.append( src );
-	uint8_t rem = 0;
+    SqrlBigInt s( src->length() );
+    s.append( (char)0xFF, src->length() );
+    size_t cnt = 0;
+    while( s.length() != 0 ) {
+        s.divideBy( 56 );
+        cnt++;
+    }
+    s.append( src );
+    uint8_t rem = 0;
 
-	while( s.length() && cnt ) {
-		rem = s.divideBy( 56 );
-		dest->push_back( this->alphabet[rem] );
-		cnt--;
-	}
-	while( cnt ) {
-		dest->push_back( this->alphabet[0] );
-		cnt--;
-	}
-	return dest;
+    while( s.length() && cnt ) {
+        rem = s.divideBy( 56 );
+        dest->push_back( this->alphabet[rem] );
+        cnt--;
+    }
+    while( cnt ) {
+        dest->push_back( this->alphabet[0] );
+        cnt--;
+    }
+    return dest;
 }
 
 SqrlString *SqrlBase56::decode( SqrlString *dest, const SqrlString *src, bool append ) {
-	if( !src ) return NULL;
-	if( !dest ) {
-		dest = new SqrlString();
-	}
-	if( !append ) {
-		dest->clear();
-	}
-	SqrlString s = SqrlString( src );
-	s.reverse();
-	SqrlBigInt num = SqrlBigInt();
-	const char *ch;
-	uint8_t dp;
+    if( !src ) return NULL;
+    if( !dest ) {
+        dest = new SqrlString();
+    }
+    if( !append ) {
+        dest->clear();
+    }
+    SqrlString s = SqrlString( src );
+    s.reverse();
+    SqrlBigInt num = SqrlBigInt();
+    const char *ch;
+    uint8_t dp;
 
-	for( const uint8_t *it = s.cdata(); it != s.cdend(); it++ ) {
-		ch = strchr( this->alphabet, *it );
-		if( ch ) {
-			dp = (uint8_t)(ch - this->alphabet);
-			num.multiplyBy( 56 );
-			num.add( dp );
-		}
-	}
-	num.reverse();
-	dest->append( &num );
-	return dest;
+    for( const uint8_t *it = s.cdata(); it != s.cdend(); it++ ) {
+        ch = strchr( this->alphabet, *it );
+        if( ch ) {
+            dp = (uint8_t)(ch - this->alphabet);
+            num.multiplyBy( 56 );
+            num.add( dp );
+        }
+    }
+    num.reverse();
+    dest->append( &num );
+    return dest;
 }
 

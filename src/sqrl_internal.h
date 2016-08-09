@@ -36,7 +36,7 @@ namespace libsqrl
 #define SITE_KEY_URSK 7
 #define SITE_KEY_URPK 8
 
-	// Site information saved for 5 minutes (600 seconds) past last action
+    // Site information saved for 5 minutes (600 seconds) past last action
 #define SQRL_CLIENT_SITE_TIMEOUT 600
 
 #define FLAG_SET(f,v) f |= v
@@ -50,36 +50,36 @@ namespace libsqrl
 SqrlClient::getClient()->callActionComplete( this ); \
 return SQRL_ACTION_STATE_DELETE;
 
-	struct Sqrl_User_s_callback_data
-	{
-		SqrlAction *action;
-		int adder;
-		double multiplier;
-		int t1;
-		int t2;
-		int total;
-	};
+    struct Sqrl_User_s_callback_data
+    {
+        SqrlAction *action;
+        int adder;
+        double multiplier;
+        int t1;
+        int t2;
+        int total;
+    };
 
-	double sqrl_get_real_time();
-	uint64_t sqrl_get_timestamp();
+    double sqrl_get_real_time();
+    uint64_t sqrl_get_timestamp();
 
-	extern struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
+    extern struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
 
-	void SqrlInit();
-	void sqrl_sleep( int sleepMs );
-	bool sqrl_parse_key_value( char **strPtr, char **keyPtr, char **valPtr,
-		size_t *key_len, size_t *val_len, char *sep );
+    void SqrlInit();
+    void sqrl_sleep( int sleepMs );
+    bool sqrl_parse_key_value( char **strPtr, char **keyPtr, char **valPtr,
+        size_t *key_len, size_t *val_len, char *sep );
 
-	void sqrl_free( void *ptr, size_t len );
-	void * sqrl_malloc( const size_t size );
-	int sqrl_memcmp( const void * const b1_, const void * const b2_, size_t len );
-	void sqrl_memzero( void *buf, size_t len );
-	int sqrl_mlock( void *addr, size_t len );
-	int sqrl_munlock( void * const addr, size_t len );
-	int sqrl_mprotect_noaccess( void *ptr );
-	int sqrl_mprotect_readonly( void *ptr );
-	int sqrl_mprotect_readwrite( void *ptr );
-	uint32_t sqrl_random();
-	void sqrl_randombytes( void *ptr, size_t len );
+    void sqrl_free( void *ptr, size_t len );
+    void * sqrl_malloc( const size_t size );
+    int sqrl_memcmp( const void * const b1_, const void * const b2_, size_t len );
+    void sqrl_memzero( void *buf, size_t len );
+    int sqrl_mlock( void *addr, size_t len );
+    int sqrl_munlock( void * const addr, size_t len );
+    int sqrl_mprotect_noaccess( void *ptr );
+    int sqrl_mprotect_readonly( void *ptr );
+    int sqrl_mprotect_readwrite( void *ptr );
+    uint32_t sqrl_random();
+    void sqrl_randombytes( void *ptr, size_t len );
 }
 #endif // SQRL_INTERNAL_H

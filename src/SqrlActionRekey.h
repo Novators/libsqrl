@@ -14,10 +14,10 @@
 
 namespace libsqrl
 {
-	class DLL_PUBLIC SqrlActionRekey : public SqrlIdentityAction
-	{
-		SqrlActionRekey();
-		int run( int cs );
-	};
+    class DLL_PUBLIC SqrlActionRekey : public SqrlIdentityAction
+    {
+        SqrlActionRekey();
+        int run( int cs );
+    };
 }
 #endif // SQRLACTIONREKEY_H

@@ -15,12 +15,12 @@
 
 namespace libsqrl
 {
-	class DLL_PUBLIC SqrlBase56Check : SqrlBase56
-	{
-	public:
+    class DLL_PUBLIC SqrlBase56Check : SqrlBase56
+    {
+    public:
 
-		SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false );
-		SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false );
-	};
+        SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false );
+        SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false );
+    };
 }
 #endif // SQRLBASE56CHECK_H

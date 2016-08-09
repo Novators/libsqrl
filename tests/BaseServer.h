@@ -7,43 +7,43 @@ using namespace libsqrl;
 class BaseServer : public SqrlServer
 {
 public:
-	BaseServer( const char *uri, const char *sfn, const char *passcode, size_t passcode_len ) 
-		: SqrlServer( uri, sfn, passcode, passcode_len ) {
+    BaseServer( const char *uri, const char *sfn, const char *passcode, size_t passcode_len )
+        : SqrlServer( uri, sfn, passcode, passcode_len ) {
 
-	}
+    }
 
-	bool tryVerifyMAC( SqrlString *str ) {
-		return this->verifyMAC( str );
-	}
+    bool tryVerifyMAC( SqrlString *str ) {
+        return this->verifyMAC( str );
+    }
 
 protected:
-	bool onUserFind( const std::string *host, const std::string *idk, const std::string *pidk ) {
-		return true;
-	}
+    bool onUserFind( const std::string *host, const std::string *idk, const std::string *pidk ) {
+        return true;
+    }
 
-	bool onUserCreate( const std::string *host, const std::string *idk, const std::string *pidk ) {
-		return true;
-	}
+    bool onUserCreate( const std::string *host, const std::string *idk, const std::string *pidk ) {
+        return true;
+    }
 
-	bool onUserUpdate( const std::string *host, const std::string *idk, const std::string *pidk ) {
-		return true;
-	}
+    bool onUserUpdate( const std::string *host, const std::string *idk, const std::string *pidk ) {
+        return true;
+    }
 
-	bool onUserDelete( const std::string *host, const std::string *idk, const std::string *pidk ) {
-		return true;
-	}
+    bool onUserDelete( const std::string *host, const std::string *idk, const std::string *pidk ) {
+        return true;
+    }
 
-	bool onUserRekeyed( const std::string *host, const std::string *idk, const std::string *pidk ) {
-		return true;
-	}
+    bool onUserRekeyed( const std::string *host, const std::string *idk, const std::string *pidk ) {
+        return true;
+    }
 
-	bool onUserIdentified( const std::string *host, const std::string *idk, const std::string *pidk ) {
-		return true;
-	}
+    bool onUserIdentified( const std::string *host, const std::string *idk, const std::string *pidk ) {
+        return true;
+    }
 
-	void onSend( const std::string *reply ) {
-		printf( "srv -> client: %s\n", reply->data() );
-	}
+    void onSend( const std::string *reply ) {
+        printf( "srv -> client: %s\n", reply->data() );
+    }
 
 };
 

@@ -14,9 +14,9 @@
 
 namespace libsqrl
 {
-	class DLL_PUBLIC SqrlActionIdent : public SqrlSiteAction
-	{
+    class DLL_PUBLIC SqrlActionIdent : public SqrlSiteAction
+    {
 
-	};
+    };
 }
 #endif // SQRLACTIONIDENT_H

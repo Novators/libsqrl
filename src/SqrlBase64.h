@@ -14,11 +14,11 @@
 
 namespace libsqrl
 {
-	class DLL_PUBLIC SqrlBase64 : SqrlEncoder
-	{
-	public:
-		SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false );
-		SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false );
-	};
+    class DLL_PUBLIC SqrlBase64 : SqrlEncoder
+    {
+    public:
+        SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false );
+        SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false );
+    };
 }
 #endif // SQRLBASE64_H

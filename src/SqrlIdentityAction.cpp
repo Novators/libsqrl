@@ -11,11 +11,11 @@
 
 namespace libsqrl
 {
-	SqrlIdentityAction::SqrlIdentityAction( SqrlUser *user ) : SqrlAction() {
-		this->setUser( user );
-	}
+    SqrlIdentityAction::SqrlIdentityAction( SqrlUser *user ) : SqrlAction() {
+        this->setUser( user );
+    }
 
-	void SqrlIdentityAction::onRelease() {
-		SqrlAction::onRelease();
-	}
+    void SqrlIdentityAction::onRelease() {
+        SqrlAction::onRelease();
+    }
 }

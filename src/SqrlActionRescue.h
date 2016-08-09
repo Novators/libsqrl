@@ -14,10 +14,10 @@
 
 namespace libsqrl
 {
-	class DLL_PUBLIC SqrlActionRescue : public SqrlIdentityAction
-	{
-		SqrlActionRescue();
-		int run( int cs );
-	};
+    class DLL_PUBLIC SqrlActionRescue : public SqrlIdentityAction
+    {
+        SqrlActionRescue();
+        int run( int cs );
+    };
 }
 #endif // SQRLACTIONRESCUE_H

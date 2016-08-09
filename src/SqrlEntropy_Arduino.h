@@ -11,10 +11,10 @@
 
 namespace libsqrl
 {
-	struct sqrl_fast_flux_entropy {};
+    struct sqrl_fast_flux_entropy {};
 
-	void SqrlEntropy::addBracket( uint8_t* seed ) {
-		RNG.stir( seed, 32 );
-	}
+    void SqrlEntropy::addBracket( uint8_t* seed ) {
+        RNG.stir( seed, 32 );
+    }
 }
 #endif // SQRLENTROPY_ARDUINO_H

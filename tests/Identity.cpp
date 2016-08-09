@@ -13,10 +13,10 @@
 using namespace libsqrl;
 
 TEST_CASE( "GenerateIdentity", "[identity]" ) {
-	GenClient *client = new GenClient();
-	new SqrlActionGenerate();
-	while( client->completed < 2 ) {
-		Sleep( 100 );
-	}
-	delete client;
+    GenClient *client = new GenClient();
+    new SqrlActionGenerate();
+    while( client->completed < 2 ) {
+        Sleep( 100 );
+    }
+    delete client;
 }

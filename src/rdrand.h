@@ -11,8 +11,8 @@
 
 namespace libsqrl
 {
-	void rdrand16( uint16_t *val );
-	void rdrand32( uint32_t *val );
-	void rdrand64( uint64_t *val );
-	bool rdrand_available( void );
+    void rdrand16( uint16_t *val );
+    void rdrand32( uint32_t *val );
+    void rdrand64( uint64_t *val );
+    bool rdrand_available( void );
 }

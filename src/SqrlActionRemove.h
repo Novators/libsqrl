@@ -14,9 +14,9 @@
 
 namespace libsqrl
 {
-	class DLL_PUBLIC SqrlActionRemove : public SqrlSiteAction
-	{
+    class DLL_PUBLIC SqrlActionRemove : public SqrlSiteAction
+    {
 
-	};
+    };
 }
 #endif // SQRLACTIONREMOVE_H

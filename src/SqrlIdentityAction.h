@@ -14,17 +14,17 @@
 
 namespace libsqrl
 {
-	class DLL_PUBLIC SqrlIdentityAction : public SqrlAction
-	{
-		friend class SqrlUser;
-		friend class SqrlActionSave;
+    class DLL_PUBLIC SqrlIdentityAction : public SqrlAction
+    {
+        friend class SqrlUser;
+        friend class SqrlActionSave;
 
-	public:
-		SqrlIdentityAction( SqrlUser *user );
+    public:
+        SqrlIdentityAction( SqrlUser *user );
 
 
-	protected:
-		void onRelease();
-	};
+    protected:
+        void onRelease();
+    };
 }
 #endif // SQRLIDENTITYACTION_H

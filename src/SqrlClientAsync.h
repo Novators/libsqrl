@@ -14,19 +14,19 @@
 
 namespace libsqrl
 {
-	class DLL_PUBLIC SqrlClientAsync : public SqrlClient
-	{
-	public:
-		SqrlClientAsync();
-		~SqrlClientAsync();
+    class DLL_PUBLIC SqrlClientAsync : public SqrlClient
+    {
+    public:
+        SqrlClientAsync();
+        ~SqrlClientAsync();
 
-	protected:
+    protected:
 
-	private:
-		static void clientThread();
-		std::thread *myThread;
-		bool stopping = false;
+    private:
+        static void clientThread();
+        std::thread *myThread;
+        bool stopping = false;
 
-	};
+    };
 }
 #endif // SQRLCLIENTASYNC_H
