@@ -71,10 +71,14 @@ namespace libsqrl
         if( this->result ) {
             delete this->result;
         }
+        if( this->password ) {
+            delete this->password;
+        }
         if( this->local ) {
             escrypt_free_local( (escrypt_local_t*)this->local );
+            free( this->local );
+            this->local = NULL;
         }
-
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -185,6 +189,7 @@ namespace libsqrl
         if( escrypt_free_local( (escrypt_local_t*)this->local ) ) {
             this->didError = true;
         }
+        if( this->local ) free( this->local );
         this->local = NULL;
         if( this->didError ) {
             if( this->result ) {

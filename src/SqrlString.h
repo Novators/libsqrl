@@ -12,7 +12,7 @@
 
 namespace libsqrl
 {
-#define SQRLSTRING_CHUNK_SIZE 16
+#define SQRLSTRING_CHUNK_SIZE 8
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     /// <summary>Represents a char or byte string.</summary>
@@ -245,7 +245,7 @@ namespace libsqrl
         ///
         /// <returns>The actual amount of memory reserved.</returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        size_t reserve( size_t len ) {
+        virtual size_t reserve( size_t len ) {
             if( len <= this->myCapacity ) return this->myCapacity;
             size_t chunks = len / SQRLSTRING_CHUNK_SIZE;
             if( len % SQRLSTRING_CHUNK_SIZE != 0 ) chunks++;
@@ -272,12 +272,13 @@ namespace libsqrl
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         void append( const SqrlString *string ) {
             if( !string ) return;
-            size_t newLen = this->length() + string->length();
-            this->reserve( newLen );
-            if( this->myCapacity >= newLen ) {
-                memcpy( this->myDend, string->cdata(), string->length() );
-                this->myDend = (char*)this->myData + newLen;
-            }
+            size_t len = string->length();
+            if( len == 0 ) return;
+            size_t cap = this->reserve( this->length() + len );
+            size_t cpy = cap - this->length();
+            if( len < cpy ) cpy = len;
+            memcpy( this->myDend, string->cdata(), cpy );
+            this->myDend = (char*)this->myDend + cpy;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -287,13 +288,13 @@ namespace libsqrl
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         void append( const char *in ) {
             if( !in ) return;
-            size_t inlen = strlen( in );
-            size_t newLen = this->length() + inlen;
-            this->reserve( newLen );
-            if( this->myCapacity >= newLen ) {
-                memcpy( this->myDend, in, inlen );
-                this->myDend = (char*)this->myData + newLen;
-            }
+            size_t len = strlen( in );
+            if( len == 0 ) return;
+            size_t cap = this->reserve( this->length() + len );
+            size_t cpy = cap - this->length();
+            if( len < cpy ) cpy = len;
+            memcpy( this->myDend, in, cpy );
+            this->myDend = (char*)this->myDend + cpy;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -304,12 +305,12 @@ namespace libsqrl
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         void append( const void *in, size_t len ) {
             if( !in ) return;
-            size_t newLen = this->length() + len;
-            this->reserve( newLen );
-            if( this->myCapacity >= newLen ) {
-                memcpy( this->myDend, in, len );
-                this->myDend = (char*)this->myData + newLen;
-            }
+            if( len == 0 ) return;
+            size_t cap = this->reserve( this->length() + len );
+            size_t cpy = cap - this->length();
+            if( len < cpy ) cpy = len;
+            memcpy( this->myDend, in, cpy );
+            this->myDend = (char*)this->myDend + cpy;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -320,12 +321,11 @@ namespace libsqrl
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         void append( char in, size_t cnt ) {
             if( cnt == 0 ) return;
-            size_t newLen = this->length() + cnt;
-            this->reserve( newLen );
-            if( this->myCapacity >= newLen ) {
-                memset( this->myDend, (int)in, cnt );
-                this->myDend = (char*)this->myData + newLen;
-            }
+            size_t cap = this->reserve( this->length() + cnt );
+            size_t cpy = cap - this->length();
+            if( cnt < cpy ) cpy = cnt;
+            memset( this->myDend, (int)in, cpy );
+            this->myDend = (char*)this->myDend + cpy;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -339,7 +339,10 @@ namespace libsqrl
                 this->push_back( byte );
                 return;
             }
-            this->reserve( this->length() + 1 );
+            size_t len = this->length() + 1;
+            while( this->reserve( len ) < len ) {
+                this->popb_back();
+            }
             uint8_t *it = this->dend() - 1;
             uint8_t *end = this->data() + offset;
             while( it != end ) {
@@ -357,7 +360,8 @@ namespace libsqrl
         /// <param name="ch">The char to append.</param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         void push_back( char ch ) {
-            this->reserve( this->length() + 1 );
+            size_t len = this->length() + 1;
+            if( this->reserve( len ) < len ) return;
             *((char*)this->myDend) = ch;
             this->myDend = (char*) this->myDend + 1;
             *((char*)this->myDend) = 0;
@@ -369,7 +373,8 @@ namespace libsqrl
         /// <param name="byte">The byte to append.</param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         void push_back( uint8_t byte ) {
-            this->reserve( this->length() + 1 );
+            size_t len = this->length() + 1;
+            if( this->reserve( len ) < len ) return;
             *((uint8_t*)this->myDend) = byte;
             this->myDend = (uint8_t*) this->myDend + 1;
             *((uint8_t*)this->myDend) = 0;

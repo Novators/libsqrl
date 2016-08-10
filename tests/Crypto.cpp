@@ -198,10 +198,10 @@ TEST_CASE( "Identity Lock Keys", "[crypto]" ) {
     SqrlCrypt::generateVerifyUnlockKey( vuk, ilk, rlk );
     SqrlCrypt::generateUnlockRequestSigningKey( ursk, suk, iuk );
 
-    SqrlString *msg = new SqrlString( "This is a test message!" );
+    SqrlString msg = SqrlString( "This is a test message!" );
     SqrlCrypt::generatePublicKey( tmp, ursk );
-    SqrlCrypt::sign( msg, ursk, tmp, sig );
+    SqrlCrypt::sign( &msg, ursk, tmp, sig );
 
-    REQUIRE( SqrlCrypt::verifySignature( msg, sig, vuk ) );
+    REQUIRE( SqrlCrypt::verifySignature( &msg, sig, vuk ) );
     delete client;
 }

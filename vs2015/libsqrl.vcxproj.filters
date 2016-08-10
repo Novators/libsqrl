@@ -61,6 +61,9 @@
     <Filter Include="Source Files\Server">
       <UniqueIdentifier>{88cf327d-2350-4f4e-af7e-b528673ba590}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Header Files\Common\Strings">
+      <UniqueIdentifier>{d3abf507-6fce-4f6a-bcff-cc863c442787}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\aes.cpp">
@@ -281,20 +284,26 @@
     <ClInclude Include="..\src\SqrlDeque.h">
       <Filter>Header Files\Common</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SqrlString.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SqrlEnScrypt.h">
       <Filter>Header Files\Common\Crypto</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlBigInt.h">
-      <Filter>Header Files\Common</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlBase56.h">
       <Filter>Header Files\Common\Encoding</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlBase56Check.h">
       <Filter>Header Files\Common\Encoding</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlBigInt.h">
+      <Filter>Header Files\Common\Strings</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlString.h">
+      <Filter>Header Files\Common\Strings</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlFixedString.h">
+      <Filter>Header Files\Common\Strings</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlSecureString.h">
+      <Filter>Header Files\Common\Strings</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

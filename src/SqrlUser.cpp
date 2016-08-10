@@ -206,6 +206,9 @@ namespace libsqrl
             sqrl_mprotect_readwrite( this->keys );
             sqrl_free( this->keys, sizeof( this->keys ) );
         }
+        if( this->storage ) {
+            delete this->storage;
+        }
     }
 
     bool SqrlUser::isMemLocked() {
