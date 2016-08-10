@@ -22,53 +22,52 @@ namespace libsqrl
     class DLL_PUBLIC SqrlFixedString : public SqrlString
     {
     public:
-        SqrlFixedString() : SqrlString() {
-            this->reserve( SQRL_KEY_SIZE );
-        }
+        SqrlFixedString() : SqrlString( SQRL_KEY_SIZE ) {}
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>Constructor.</summary>
-        ///
+        /// 
+        /// <remarks>Maximum NULL terminated string length is 'capacity'.</remarks>
+        /// 
         /// <param name="capacity">Length of buffer.</param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        SqrlFixedString( size_t capacity ) : SqrlString() {
-            this->reserve( capacity );
-        }
+        SqrlFixedString( size_t capacity ) : SqrlString( capacity ) {}
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>Constructor.</summary>
         ///
+        /// <remarks>Capacity will be strlen( 'in' )</remarks>
+        /// 
         /// <param name="in">A C-style NULL terminated string.</param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        SqrlFixedString( const char *in ) : SqrlString() {
-            this->reserve( strlen( in ) );
-            this->append( in );
-        }
+        SqrlFixedString( const char *in ) : SqrlString( in ) {}
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>Constructor.</summary>
         ///
+        /// <remarks>Capacity will be 'len'</remarks>
+        /// 
         /// <param name="in"> An array of characters.</param>
         /// <param name="len">The length of the array.</param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        SqrlFixedString( const char *in, size_t len ) : SqrlString() {
-            this->append( in, len );
-        }
+        SqrlFixedString( const char *in, size_t len ) : SqrlString( in, len ) {}
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>Constructor.</summary>
         ///
+        /// <remarks>Capacity will be 'len'.</remarks>
+        /// 
         /// <param name="in"> Pointer to an array of bytes.</param>
         /// <param name="len">Length of the array..</param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        SqrlFixedString( const uint8_t *in, size_t len ) : SqrlString() {
-            this->append( in, len );
-        }
+        SqrlFixedString( const uint8_t *in, size_t len ) : SqrlString( in, len ) {}
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>Constructor.</summary>
         ///
-        /// <param name="capacity">The capacity of the buffer.</param>
+        /// <param name="capacity">The capacity of the buffer.  Maximum string length is one less 
+        ///                        than capacity.  Byte arrays may use the entire buffer, but will
+        ///                        not be NULL terminated.</param>
         /// <param name="location">[in] Pointer to the data buffer.</param>
         /// <param name="length">  (Optional) the length of data already stored in buffer.</param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -88,6 +87,8 @@ namespace libsqrl
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>Copy constructor.</summary>
+        /// 
+        /// <remarks>This SqrlFixedString will have the same capacity and data as 'in'.</remarks>
         ///
         /// <param name="in">[in] If non-null, pointer to a SqrlString to copy.</param>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
