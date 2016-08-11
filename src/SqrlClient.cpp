@@ -40,7 +40,7 @@ namespace libsqrl
         SQRL_MUTEX_LOCK( &sqrl_client_mutex )
             if( SqrlClient::client != NULL ) {
                 // Enforce a single SqrlClient object
-                exit( 4 );
+                exit( 1 );
             }
         SqrlInit();
 
@@ -117,8 +117,7 @@ namespace libsqrl
             }
             delete info;
         }
-        if( !this->actions.empty() ) {
-            action = this->actions.pop();
+        if( action = this->actions.pop() ) {
             if( action->exec() ) {
                 this->actions.push_back( action );
             }

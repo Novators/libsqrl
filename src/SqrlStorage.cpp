@@ -302,7 +302,7 @@ namespace libsqrl
         struct S4Page *page,
         Sqrl_Export etype,
         Sqrl_Encoding encoding ) {
-        SqrlString tmp;
+        SqrlString tmp = SqrlString();
         SqrlString *buf = new SqrlString();
         int i;
 

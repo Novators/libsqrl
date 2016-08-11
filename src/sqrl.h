@@ -143,6 +143,8 @@ namespace libsqrl
 
     typedef unsigned int Sqrl_Tif;
 
+    void sqrl_memzero( void *buf, size_t len );
+
     size_t		Sqrl_Version( char *buffer, size_t buffer_len );
     uint16_t Sqrl_Version_Major();
     uint16_t Sqrl_Version_Minor();

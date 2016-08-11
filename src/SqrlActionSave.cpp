@@ -62,11 +62,13 @@ namespace libsqrl
             return cs + 1;
         case 2:
             if( this->uri ) {
-                this->state = this->user->save( this ) ? 1 : -1;
+                this->status = this->user->save( this ) ? SQRL_ACTION_SUCCESS : SQRL_ACTION_FAIL;
             } else {
-                this->state = this->user->saveToBuffer( this ) ? 1 : -1;
+                this->status = this->user->saveToBuffer( this ) ? SQRL_ACTION_SUCCESS : SQRL_ACTION_FAIL;
             }
-            return this->retActionComplete( SQRL_ACTION_SUCCESS );
+            return cs + 1;
+        case 3:
+            return this->retActionComplete( this->status );
         default:
             // Invalid State
             return this->retActionComplete( SQRL_ACTION_FAIL );

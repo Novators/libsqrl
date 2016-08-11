@@ -44,6 +44,7 @@
     <ClCompile Include="..\src\SqrlEnScrypt.cpp" />
     <ClCompile Include="..\src\SqrlEntropy.cpp" />
     <ClCompile Include="..\src\SqrlIdentityAction.cpp" />
+    <ClCompile Include="..\src\SqrlKeySet.cpp" />
     <ClCompile Include="..\src\SqrlServer.cpp" />
     <ClCompile Include="..\src\SqrlSiteAction.cpp" />
     <ClCompile Include="..\src\SqrlStorage.cpp" />
@@ -89,6 +90,7 @@
     <ClInclude Include="..\src\SqrlEntropy_Arduino.h" />
     <ClInclude Include="..\src\SqrlFixedString.h" />
     <ClInclude Include="..\src\SqrlIdentityAction.h" />
+    <ClInclude Include="..\src\SqrlKeySet.h" />
     <ClInclude Include="..\src\SqrlMLockedString.h" />
     <ClInclude Include="..\src\SqrlServer.h" />
     <ClInclude Include="..\src\SqrlSiteAction.h" />

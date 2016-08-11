@@ -11,11 +11,10 @@
 
 #include "sqrl.h"
 #include "SqrlString.h"
+#include "SqrlKeySet.h"
 
 namespace libsqrl
 {
-#define USER_MAX_KEYS 16
-
 #define USER_FLAG_MEMLOCKED 	0x0001
 #define USER_FLAG_T1_CHANGED	0x0002
 #define USER_FLAG_T2_CHANGED	0x0004
@@ -31,34 +30,6 @@ namespace libsqrl
         /** Minutes to hold a hint when system is idle */
         uint16_t timeoutMinutes;
     } Sqrl_User_Options;
-
-#define KEY_MK           1
-#define KEY_ILK          2
-#define KEY_PIUK0        3
-#define KEY_PIUK1        4
-#define KEY_PIUK2        5
-#define KEY_PIUK3        6
-#define KEY_IUK          7
-#define KEY_LOCAL        8
-#define KEY_RESCUE_CODE  9
-#define KEY_PASSWORD    10
-
-#define KEY_PASSWORD_MAX_LEN 1024
-#define KEY_SCRATCH_SIZE 2048
-
-#pragma pack(push,8)
-    struct Sqrl_Keys
-    {
-        // Size should be less than a 4k page:
-        uint8_t keys[USER_MAX_KEYS][SQRL_KEY_SIZE];		//  512   (16 * 32)
-        size_t password_len;							//    8
-        char password[KEY_PASSWORD_MAX_LEN];			// 1024
-                                                        // Internal Use Only:
-        uint8_t scratch[KEY_SCRATCH_SIZE];				// 2048
-                                                        // 3592 bytes
-    };
-#pragma pack(pop)
-
 
     class DLL_PUBLIC SqrlUser
     {
@@ -93,8 +64,8 @@ namespace libsqrl
         bool uniqueIdMatches( const char *unique_id );
         bool setPassword( const char *password, size_t password_len );
         size_t getPasswordLength();
-        uint8_t* key( SqrlAction *action, int key_type );
-        uint8_t* scratch();
+        SqrlFixedString * key( SqrlAction *action, int key_type );
+        SqrlFixedString * scratch();
         bool hasKey( int key_type );
         bool isHintLocked();
         void hintUnlock( SqrlAction *action, SqrlString *hint );
@@ -107,7 +78,6 @@ namespace libsqrl
 
 
     private:
-        uint8_t lookup[USER_MAX_KEYS];
         uint32_t flags;
         uint32_t hint_iterations;
         Sqrl_User_Options options;
@@ -117,7 +87,7 @@ namespace libsqrl
         int referenceCount;
         SqrlStorage *storage;
         char uniqueId[SQRL_UNIQUE_ID_LENGTH + 1];
-        struct Sqrl_Keys *keys;
+        SqrlKeySet *keys;
 
         SqrlUser();
         SqrlUser( const char *buffer, size_t buffer_len );
@@ -131,12 +101,11 @@ namespace libsqrl
         bool        tryLoadRescue( SqrlAction *action, bool retry );
         void        memLock();
         void        memUnlock();
-        uint8_t*    newKey( int key_type );
         bool        regenKeys( SqrlAction *action );
         void        removeKey( int key_type );
         bool        updateStorage( SqrlAction *action );
         void initialize();
-        bool _keyGen( SqrlAction *t, int key_type, uint8_t *key );
+        bool _keyGen( SqrlAction *t, int key_type );
         SqrlCrypt* _init_t2( SqrlAction *t, SqrlBlock *block, bool forSaving );
         bool sul_block_2( SqrlAction *t, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata );
         bool sus_block_2( SqrlAction *t, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata );

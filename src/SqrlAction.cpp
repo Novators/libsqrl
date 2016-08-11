@@ -31,7 +31,7 @@ namespace libsqrl
         shouldCancel( false ) {
         SqrlClient *client = SqrlClient::getClient();
         if( !client ) {
-            exit( 3 );
+            exit( 1 );
         }
         SQRL_MUTEX_LOCK( &client->actionMutex )
             client->actions.push_back( this );

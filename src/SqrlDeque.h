@@ -20,46 +20,79 @@ namespace libsqrl
         {
             item( T2 newItem ) {
                 this->myItem = newItem;
+                this->previous = NULL;
                 this->next = NULL;
             }
             T2 myItem;
+            item *previous;
             item *next;
         };
         struct item<T> *list;
+        struct item<T> *lend;
 
     public:
         SqrlDeque() {
             this->list = NULL;
+            this->lend = NULL;
         }
 
         ~SqrlDeque() {
-            if( this->list ) delete this->list;
+            struct item<T> *cur = this->list;
+            struct item<T> *nxt = NULL;
+            while( cur ) {
+                nxt = cur->next;
+                delete cur;
+                cur = nxt;
+            }
         }
 
         void push( T newItem ) {
             struct item<T> *newStruct = new struct item<T>( newItem );
             newStruct->next = this->list;
+            if( this->list ) {
+                this->list->previous = newStruct;
+            } else {
+                this->lend = newStruct;
+            }
             this->list = newStruct;
         }
 
         void push_back( T newItem ) {
             struct item<T> *newStruct = new struct item<T>( newItem );
-            if( !this->list ) {
+            newStruct->previous = this->lend;
+            if( this->lend ) {
+                this->lend->next = newStruct;
+            } else {
                 this->list = newStruct;
-                return;
             }
-            struct item<T> *cur = this->list;
-            while( cur->next ) {
-                cur = cur->next;
-            }
-            cur->next = newStruct;
+            this->lend = newStruct;
         }
 
         T pop() {
             if( !this->list ) return NULL;
             struct item<T> *freeMe = this->list;
             T ret = freeMe->myItem;
+            if( freeMe->next ) {
+                freeMe->next->previous = NULL;
+            } else {
+                this->lend = NULL;
+            }
             this->list = freeMe->next;
+            delete freeMe;
+            return ret;
+        }
+
+        T pop_back() {
+            if( !this->lend ) return NULL;
+            struct item<T> *freeMe = this->lend;
+            T ret = freeMe->myItem;
+            if( freeMe->previous ) {
+                freeMe->previous->next = NULL;
+                this->lend = freeMe->previous;
+            } else {
+                this->list = NULL;
+            }
+            this->lend = freeMe->previous;
             delete freeMe;
             return ret;
         }
@@ -72,6 +105,11 @@ namespace libsqrl
             while( cur ) {
                 if( cur->myItem == comp ) {
                     freeMe = cur;
+                    if( cur->next ) {
+                        cur->next->previous = prev;
+                    } else {
+                        this->lend = prev;
+                    }
                     if( prev ) {
                         prev->next = cur->next;
                         cur = cur->next;
@@ -89,25 +127,14 @@ namespace libsqrl
         }
 
 
-        T pop_back() {
-            if( !this->list ) return NULL;
-            if( this->list->next == NULL ) {
-                return this->pop();
-            }
-            struct item<T> *cur = this->list;
-            while( cur->next && cur->next->next ) {
-                cur = cur->next;
-            }
-            struct item<T> *freeMe = cur->next;
-            T ret = freeMe->myItem;
-            cur->next = NULL;
-            delete freeMe;
-            return ret;
-        }
-
         T peek() {
             if( !this->list ) return NULL;
             return this->list->myItem;
+        }
+
+        T peek_back() {
+            if( !this->lend ) return NULL;
+            return this->lend->myItem;
         }
 
         bool empty() {

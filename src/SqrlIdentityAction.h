@@ -24,7 +24,7 @@ namespace libsqrl
 
 
     protected:
-        void onRelease();
+        virtual void onRelease();
     };
 }
 #endif // SQRLIDENTITYACTION_H

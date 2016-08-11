@@ -58,7 +58,9 @@ TEST_CASE( "EnHash", "[crypto]" ) {
         Sleep( 5 );
     }
     FILE *fp = fopen( "data/vectors/enhash-vectors.txt", "r" );
-    if( !fp ) exit( 2 );
+    if( fp == NULL ) {
+        REQUIRE( false );
+    }
 
     char line[256];
     size_t len = 0;

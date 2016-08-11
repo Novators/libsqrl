@@ -165,6 +165,9 @@
     <ClCompile Include="..\src\SqrlBase56Check.cpp">
       <Filter>Source Files\Common\Encoding</Filter>
     </ClCompile>
+    <ClCompile Include="..\src\SqrlKeySet.cpp">
+      <Filter>Source Files\Client</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\version.h">
@@ -304,6 +307,9 @@
     </ClInclude>
     <ClInclude Include="..\src\SqrlMLockedString.h">
       <Filter>Header Files\Common\Strings</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlKeySet.h">
+      <Filter>Header Files\Client</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

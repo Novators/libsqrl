@@ -8,6 +8,7 @@
 
 #include "sqrl_internal.h"
 #include "SqrlIdentityAction.h"
+#include "SqrlUser.h"
 
 namespace libsqrl
 {

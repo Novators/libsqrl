@@ -9,6 +9,7 @@
 #define SQRLSTRING_H
 
 #include "sqrl.h"
+#include "SqrlEntropy.h"
 
 namespace libsqrl
 {
@@ -265,6 +266,17 @@ namespace libsqrl
             }
         }
 
+        void secureClear() {
+#ifdef ARDUINO
+            this->clear();
+#else
+            if( this->myData ) {
+                sqrl_memzero( this->myData, this->myCapacity );
+            }
+#endif
+            this->myDend = this->myData;
+        }
+
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>Appends the given string.</summary>
         ///
@@ -325,6 +337,14 @@ namespace libsqrl
             size_t cpy = cap - this->length();
             if( cnt < cpy ) cpy = cnt;
             memset( this->myDend, (int)in, cpy );
+            this->myDend = (char*)this->myDend + cpy;
+        }
+
+        void appendEntropy( size_t bytes ) {
+            if( bytes == 0 ) return;
+            size_t cpy = this->reserve( this->length() + bytes ) - this->length();
+            if( bytes < cpy ) cpy = bytes;
+            SqrlEntropy::bytes( this->dend(), (int)cpy );
             this->myDend = (char*)this->myDend + cpy;
         }
 

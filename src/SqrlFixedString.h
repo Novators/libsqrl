@@ -76,7 +76,7 @@ namespace libsqrl
             this->myCapacity = capacity;
             this->myData = location;
             if( length ) {
-                if( length > capacity ) length = capacity;
+                if( length >= capacity ) length = capacity - 1;
                 this->myDend = (char*)location + length;
             } else {
                 this->myDend = location;

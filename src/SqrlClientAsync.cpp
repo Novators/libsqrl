@@ -30,7 +30,7 @@ namespace libsqrl
     void SqrlClientAsync::clientThread() {
         SqrlClientAsync *client = (SqrlClientAsync*)SqrlClient::getClient();
         if( !client ) return;
-        while( !client->stopping ) {
+         while( !client->stopping ) {
             if( client->loop() ) {
                 sqrl_sleep( 50 );
             } else {

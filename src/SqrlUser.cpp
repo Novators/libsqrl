@@ -14,6 +14,7 @@
 #include "SqrlCrypt.h"
 #include "SqrlEntropy.h"
 #include "SqrlActionLock.h"
+#include "SqrlStorage.h"
 
 namespace libsqrl
 {
@@ -59,8 +60,7 @@ namespace libsqrl
 
     void SqrlUser::ensureKeysAllocated() {
         if( this->keys == NULL ) {
-            this->keys = (Sqrl_Keys*)sqrl_malloc( sizeof( struct Sqrl_Keys ) );
-            memset( this->keys, 0, sizeof( struct Sqrl_Keys ) );
+            this->keys = new SqrlKeySet();
             FLAG_CLEAR( this->flags, USER_FLAG_MEMLOCKED );
         }
     }
@@ -91,6 +91,8 @@ namespace libsqrl
 #endif
         SqrlUser::defaultOptions( &this->options );
         this->referenceCount = 1;
+        this->keys = NULL;
+        this->storage = NULL;
         struct SqrlUserList *l = (struct SqrlUserList*)calloc( 1, sizeof( struct SqrlUserList ) );
         if( l ) {
             l->user = this;
@@ -184,6 +186,7 @@ namespace libsqrl
                 SQRL_MUTEX_UNLOCK( &client->userMutex )
                 goto END;
         }
+        SQRL_MUTEX_UNLOCK( &this->referenceCountMutex );
         // There were no other references... We can delete this.
         shouldFreeThis = true;
 
@@ -202,12 +205,11 @@ namespace libsqrl
     }
 
     SqrlUser::~SqrlUser() {
-        if( this->keys != NULL ) {
-            sqrl_mprotect_readwrite( this->keys );
-            sqrl_free( this->keys, sizeof( this->keys ) );
+        if( this->keys ) {
+            delete this->keys;
         }
         if( this->storage ) {
-            delete this->storage;
+            this->storage->release();
         }
     }
 
@@ -255,28 +257,29 @@ namespace libsqrl
         cbdata.adder = 0;
         cbdata.multiplier = 1;
 
+        SqrlFixedString *scratch = (*this->keys)[SQRL_KEY_SCRATCH];
         SqrlCrypt crypt = SqrlCrypt();
         uint8_t iv[12] = {0};
-        crypt.plain_text = this->keys->keys[0];
-        crypt.text_len = sizeof( struct Sqrl_Keys ) - KEY_SCRATCH_SIZE;
-        crypt.salt = this->keys->scratch;
+        crypt.plain_text = (uint8_t*)(*this->keys)[0];
+        crypt.text_len = (uint16_t)((uint8_t*)scratch - crypt.plain_text);
+        crypt.salt = scratch->data();
+        crypt.tag = scratch->data() + 16;
+        crypt.cipher_text = scratch->data() + 64;
         crypt.iv = iv;
-        crypt.tag = this->keys->scratch + 16;
-        crypt.cipher_text = this->keys->scratch + 64;
         crypt.add = NULL;
         crypt.add_len = 0;
         crypt.nFactor = SQRL_DEFAULT_N_FACTOR;
         crypt.count = this->hint_iterations;
         crypt.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
 
-        uint8_t *key = this->keys->scratch + 32;
+        uint8_t *key = scratch->data() + 32;
         if( !crypt.genKey( action, hint ) ||
             !crypt.doCrypt() ) {
             sqrl_memzero( crypt.plain_text, crypt.text_len );
         }
         this->hint_iterations = 0;
         sqrl_memzero( key, SQRL_KEY_SIZE );
-        sqrl_memzero( this->keys->scratch, KEY_SCRATCH_SIZE );
+        (*this->keys)[SQRL_KEY_SCRATCH]->secureClear();
     }
 
     static void bin2rc( char *buf, uint8_t *bin ) {
@@ -292,66 +295,71 @@ namespace libsqrl
         buf[j] = 0;
     }
 
-    bool SqrlUser::_keyGen( SqrlAction *action, int key_type, uint8_t *key ) {
+    bool SqrlUser::_keyGen( SqrlAction *action, int key_type ) {
         if( !action ) return false;
         if( action->getUser() != this ) {
             return false;
         }
         bool retVal = false;
-        int i;
-        uint8_t *temp[4];
-        int keys[] = {KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3};
+        int curKey;
+        SqrlFixedString *cur, *prev;
         switch( key_type ) {
-        case KEY_IUK:
-            for( i = 0; i < 4; i++ ) {
-                if( this->hasKey( keys[i] ) ) {
-                    temp[i] = this->key( action, keys[i] );
-                } else {
-                    temp[i] = this->newKey( keys[i] );
-                }
-            }
-            memcpy( temp[3], temp[2], SQRL_KEY_SIZE );
-            memcpy( temp[2], temp[1], SQRL_KEY_SIZE );
-            memcpy( temp[1], temp[0], SQRL_KEY_SIZE );
-            memcpy( temp[0], key, SQRL_KEY_SIZE );
-            SqrlEntropy::bytes( key, SQRL_KEY_SIZE );
+        case SQRL_KEY_IUK:
+            curKey = SQRL_KEY_PIUK3;
+            do {
+                cur = (*this->keys)[curKey];
+                prev = (*this->keys)[curKey - 1];
+                cur->clear();
+                cur->append( prev );
+                curKey--;
+            } while( curKey > SQRL_KEY_PIUK0 );
+            cur = (*this->keys)[SQRL_KEY_PIUK0];
+            prev = (*this->keys)[SQRL_KEY_IUK];
+            cur->clear();
+            cur->append( prev );
+            prev->clear();
+            prev->appendEntropy( SQRL_KEY_SIZE );
             retVal = true;
             break;
-        case KEY_MK:
-            if( this->hasKey( KEY_IUK ) ) {
-                temp[0] = this->key( action, KEY_IUK );
-                if( temp[0] ) {
-                    SqrlCrypt::generateMasterKey( key, temp[0] );
-                    retVal = true;
-                }
-            }
-            break;
-        case KEY_ILK:
-            temp[0] = this->key( action, KEY_IUK );
-            if( temp[0] ) {
-                SqrlCrypt::generateIdentityLockKey( key, temp[0] );
+        case SQRL_KEY_MK:
+            cur = (*this->keys)[SQRL_KEY_MK];
+            cur->clear();
+            prev = (*this->keys)[SQRL_KEY_IUK];
+            if( prev->length() == SQRL_KEY_SIZE ) {
+                cur->append( (char)0, SQRL_KEY_SIZE );
+                SqrlCrypt::generateMasterKey( cur->data(), prev->data() );
                 retVal = true;
             }
             break;
-        case KEY_LOCAL:
-            temp[0] = this->key( action, KEY_MK );
-            if( temp[0] ) {
-                SqrlCrypt::generateLocalKey( key, temp[0] );
+        case SQRL_KEY_ILK:
+            cur = (*this->keys)[SQRL_KEY_ILK];
+            cur->clear();
+            prev = (*this->keys)[SQRL_KEY_IUK];
+            if( prev->length() == SQRL_KEY_SIZE ) {
+                cur->append( (char)0, SQRL_KEY_SIZE );
+                SqrlCrypt::generateIdentityLockKey( cur->data(), prev->data() );
                 retVal = true;
             }
             break;
-        case KEY_RESCUE_CODE:
-            temp[0] = (uint8_t*)malloc( 512 );
-            if( temp[0] ) {
-                memset( key, 0, SQRL_KEY_SIZE );
-                sqrl_mlock( temp[0], 512 );
-                SqrlEntropy::get( temp[0], SQRL_ENTROPY_NEEDED );
-                bin2rc( (char*)key, temp[0] );
-                sqrl_munlock( temp[0], 512 );
-                free( temp[0] );
-                temp[0] = NULL;
+        case SQRL_KEY_LOCAL:
+            cur = (*this->keys)[SQRL_KEY_LOCAL];
+            cur->clear();
+            prev = (*this->keys)[SQRL_KEY_MK];
+            if( prev->length() == SQRL_KEY_SIZE ) {
+                cur->append( (char)0, SQRL_KEY_SIZE );
+                SqrlCrypt::generateLocalKey( cur->data(), prev->data() );
                 retVal = true;
             }
+            break;
+        case SQRL_KEY_RESCUE_CODE:
+            cur = (*this->keys)[SQRL_KEY_RESCUE_CODE];
+            cur->clear();
+            prev = (*this->keys)[SQRL_KEY_SCRATCH];
+            prev->clear();
+            prev->appendEntropy( 512 );
+            cur->append( (char)0, SQRL_RESCUE_CODE_LENGTH );
+            bin2rc( cur->string(), prev->data() );
+            retVal = true;
             break;
         }
         return retVal;
@@ -362,13 +370,9 @@ namespace libsqrl
         if( action->getUser() != this ) {
             return false;
         }
-        uint8_t *key;
-        int keys[] = {KEY_MK, KEY_ILK, KEY_LOCAL};
-        int i;
-        for( i = 0; i < 3; i++ ) {
-            key = this->newKey( keys[i] );
-            this->_keyGen( action, keys[i], key );
-        }
+        this->_keyGen( action, SQRL_KEY_MK );
+        this->_keyGen( action, SQRL_KEY_ILK );
+        this->_keyGen( action, SQRL_KEY_LOCAL );
         return true;
     }
 
@@ -379,159 +383,85 @@ namespace libsqrl
         }
         this->ensureKeysAllocated();
         bool retVal = true;
-        uint8_t *key;
-        if( this->hasKey( KEY_IUK ) ) {
-            key = this->key( action, KEY_IUK );
-        } else {
-            key = this->newKey( KEY_IUK );
-        }
-        if( !this->_keyGen( action, KEY_IUK, key ) ) {
-            goto ERR;
-        }
-        key = this->newKey( KEY_RESCUE_CODE );
-        if( !this->_keyGen( action, KEY_RESCUE_CODE, key ) ) {
-            goto ERR;
-        }
-        if( !this->regenKeys( action ) ) {
-            goto ERR;
-        }
-        this->flags |= (USER_FLAG_T1_CHANGED | USER_FLAG_T2_CHANGED);
-        goto DONE;
-
-    ERR:
-        retVal = false;
-
-    DONE:
-        return retVal;
-    }
-
-    uint8_t *SqrlUser::newKey( int key_type ) {
-        int offset = -1;
-        int empty = -1;
-        int i = 0;
-        for( i = 0; i < USER_MAX_KEYS; i++ ) {
-            if( this->lookup[i] == key_type ) {
-                offset = i;
-            }
-            if( this->lookup[i] == 0 ) {
-                empty = i;
-            }
-        }
-        if( offset == -1 ) {
-            // Not Found
-            if( empty > -1 ) {
-                // Create new slot
-                this->lookup[empty] = key_type;
-                offset = empty;
-            }
-        }
-        if( offset ) {
-            uint8_t *key = this->keys->keys[offset];
-            sqrl_memzero( key, SQRL_KEY_SIZE );
-            return key;
-        }
-        return NULL;
-    }
-
-    uint8_t *SqrlUser::key( SqrlAction *action, int key_type ) {
-        if( !action ) return NULL;
-        if( action->getUser() != this ) {
-            return NULL;
-        }
-        int offset, i;
-        int loop = -1;
-        uint8_t *key;
-    LOOP:
-        loop++;
-        if( loop == 3 ) {
-            goto DONE;
-        }
-        offset = -1;
-        for( i = 0; i < USER_MAX_KEYS; i++ ) {
-            if( this->lookup[i] == key_type ) {
-                offset = i;
-                break;
-            }
-        }
-        if( offset > -1 ) {
-            key = this->keys->keys[offset];
-            return key;
-        } else {
-            // Not Found!
-            switch( key_type ) {
-            case KEY_RESCUE_CODE:
-                // We cannot regenerate this key!
-                return NULL;
-            case KEY_IUK:
-                this->tryLoadRescue( action, true );
-                goto LOOP;
-                break;
-            case KEY_MK:
-            case KEY_ILK:
-            case KEY_PIUK0:
-            case KEY_PIUK1:
-            case KEY_PIUK2:
-            case KEY_PIUK3:
-                this->tryLoadPassword( action, true );
-                goto LOOP;
-                break;
-            }
-        }
-
-    DONE:
-        return NULL;
-    }
-
-    bool SqrlUser::hasKey( int key_type ) {
-        int i;
-        for( i = 0; i < USER_MAX_KEYS; i++ ) {
-            if( this->lookup[i] == key_type ) {
-                return true;
-            }
+        if( this->_keyGen( action, SQRL_KEY_IUK ) &&
+            this->_keyGen( action, SQRL_KEY_RESCUE_CODE ) &&
+            this->regenKeys( action )) {
+            this->flags |= (USER_FLAG_T1_CHANGED | USER_FLAG_T2_CHANGED);
+            return true;
         }
         return false;
     }
 
-    void SqrlUser::removeKey( int key_type ) {
-        int offset = -1;
-        int i;
-        for( i = 0; i < USER_MAX_KEYS; i++ ) {
-            if( this->lookup[i] == key_type ) {
-                offset = i;
+    SqrlFixedString *SqrlUser::key( SqrlAction *action, int key_type ) {
+        if( !action ) return NULL;
+        if( action->getUser() != this ) {
+            return NULL;
+        }
+        SqrlFixedString *ret = NULL;
+        int loop = -1;
+        for( loop = 0; loop < 3; loop++ ) {
+            ret = (*this->keys)[key_type];
+            if( ret->length() ) {
+                return ret;
+            }
+            switch( key_type ) {
+            case SQRL_KEY_RESCUE_CODE:
+                // We cannot regenerate this key!
+                return NULL;
+            case SQRL_KEY_IUK:
+                this->tryLoadRescue( action, true );
+                continue;
+            case SQRL_KEY_MK:
+            case SQRL_KEY_ILK:
+            case SQRL_KEY_PIUK0:
+            case SQRL_KEY_PIUK1:
+            case SQRL_KEY_PIUK2:
+            case SQRL_KEY_PIUK3:
+                this->tryLoadPassword( action, true );
+                continue;
             }
         }
-        if( offset > -1 ) {
-            sqrl_memzero( this->keys->keys[offset], SQRL_KEY_SIZE );
-            this->lookup[offset] = 0;
+        if( ret && ret->length() ) return ret;
+        return NULL;
+    }
+
+    bool SqrlUser::hasKey( int key_type ) {
+        SqrlFixedString *key = (*this->keys)[key_type];
+        return (key && key->length());
+    }
+
+    void SqrlUser::removeKey( int key_type ) {
+        SqrlFixedString *key = (*this->keys)[key_type];
+        if( key ) {
+            key->secureClear();
         }
     }
 
     char *SqrlUser::getRescueCode( SqrlAction *action ) {
         if( !action ) return NULL;
-        if( action->getUser() != this || !this->hasKey( KEY_RESCUE_CODE ) ) {
-            printf( "No key!\n" );
-            return NULL;
-        }
-        char *retVal = (char*)(this->key( action, KEY_RESCUE_CODE ));
-        return retVal;
+        if( action->getUser() != this ) return NULL;
+        return (*this->keys)[SQRL_KEY_RESCUE_CODE]->string();
     }
 
     bool SqrlUser::setRescueCode( char *rc ) {
-        if( strlen( rc ) != 24 ) return false;
+        if( strlen( rc ) != SQRL_RESCUE_CODE_LENGTH ) return false;
         int i;
         for( i = 0; i < SQRL_RESCUE_CODE_LENGTH; i++ ) {
             if( rc[i] < '0' || rc[i] > '9' ) {
                 return false;
             }
         }
-        uint8_t *key = this->newKey( KEY_RESCUE_CODE );
-        memcpy( key, rc, SQRL_RESCUE_CODE_LENGTH );
-        return true;
+        SqrlFixedString *m = (*this->keys)[SQRL_KEY_RESCUE_CODE];
+        if( m ) {
+            m->clear();
+            m->append( rc, SQRL_RESCUE_CODE_LENGTH );
+            return true;
+        }
+        return false;
     }
 
     bool SqrlUser::forceDecrypt( SqrlAction *t ) {
-        if( !t ) return false;
-        if( this->key( t, KEY_MK ) ) {
+        if( t && this->key( t, SQRL_KEY_MK ) ) {
             return true;
         }
         return false;
@@ -539,7 +469,7 @@ namespace libsqrl
 
     bool SqrlUser::forceRescue( SqrlAction *t ) {
         if( !t ) return false;
-        if( this->key( t, KEY_IUK ) ) {
+        if( this->key( t, SQRL_KEY_IUK ) ) {
             return true;
         }
         return false;
@@ -547,30 +477,30 @@ namespace libsqrl
 
     size_t SqrlUser::getPasswordLength() {
         if( this->isHintLocked() ) return 0;
-        return this->keys->password_len;
+        SqrlFixedString *pw = (*this->keys)[SQRL_KEY_PASSWORD];
+        if( pw ) {
+            return pw->length();
+        }
+        return 0;
     }
 
     bool SqrlUser::setPassword( const char *password, size_t password_len ) {
         if( this->isHintLocked() ) return false;
-        char *p = this->keys->password;
-        size_t *l = &this->keys->password_len;
-        if( !p || !l ) {
-            return false;
+        SqrlFixedString *pw = (*this->keys)[SQRL_KEY_PASSWORD];
+        if( pw ) {
+            if( pw->length() ) {
+                FLAG_SET( this->flags, USER_FLAG_T1_CHANGED );
+            }
+            pw->secureClear();
+            pw->append( password, password_len );
+            return true;
         }
-        sqrl_memzero( p, KEY_PASSWORD_MAX_LEN );
-        if( password_len > KEY_PASSWORD_MAX_LEN ) password_len = KEY_PASSWORD_MAX_LEN;
-        memcpy( p, password, password_len );
-        if( *l > 0 ) {
-            // 	Changing password
-            FLAG_SET( this->flags, USER_FLAG_T1_CHANGED );
-        }
-        *l = password_len;
-        return true;
+        return false;
     }
 
-    uint8_t *SqrlUser::scratch() {
+    SqrlFixedString *SqrlUser::scratch() {
         this->ensureKeysAllocated();
-        return this->keys->scratch;
+        return (*this->keys)[SQRL_KEY_SCRATCH];
     }
 
     uint8_t SqrlUser::getHintLength() {
