@@ -21,7 +21,7 @@ namespace libsqrl
         SQRL_SCHEME_FILE
     } Sqrl_Scheme;
 
-    /// <summary>Parses and stores information about a SQRL URI.</summary>
+    /// <summary>Parses and stores information about a SQRL URI or file path.</summary>
     class SqrlUri
     {
     public:

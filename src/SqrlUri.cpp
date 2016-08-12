@@ -89,7 +89,7 @@ namespace libsqrl
     ///
     /// <param name="buf">[out] (Optional) If non-null, a SqrlString to hold the challenge.</param>
     ///
-    /// <returns>pointer to a SqrlString containing the challenge.</returns>
+    /// <returns>pointer to a SqrlString containing the challenge, or NULL.</returns>
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     SqrlString * SqrlUri::getChallenge( SqrlString *buf ) { GETTER( this->challenge, buf ) }
 
@@ -98,7 +98,7 @@ namespace libsqrl
     ///
     /// <param name="buf">[out] (Optional) If non-null, a SqrlString to hold the site key.</param>
     ///
-    /// <returns>pointer to SqrlString containing the site key.</returns>
+    /// <returns>pointer to SqrlString containing the site key, or NULL.</returns>
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     SqrlString * SqrlUri::getSiteKey( SqrlString *buf ) { GETTER( this->siteKey, buf ) }
 
@@ -107,7 +107,7 @@ namespace libsqrl
     ///
     /// <param name="buf">[out] (Optional) If non-null, a SqrlString to hold the prefix.</param>
     ///
-    /// <returns>pointer to SqrlString containing the prefix.</returns>
+    /// <returns>pointer to SqrlString containing the prefix, or NULL.</returns>
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     SqrlString * SqrlUri::getPrefix( SqrlString *buf ) { GETTER( this->prefix, buf ) }
 
@@ -116,7 +116,7 @@ namespace libsqrl
     ///
     /// <param name="buf">[out] (Optional) If non-null, a SqrlString to hold the url.</param>
     ///
-    /// <returns>pointer to SqrlString containing the url.</returns>
+    /// <returns>pointer to SqrlString containing the url, or NULL.</returns>
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     SqrlString * SqrlUri::getUrl( SqrlString *buf ) { GETTER( this->url, buf ) }
 
@@ -125,7 +125,7 @@ namespace libsqrl
     ///
     /// <param name="buf">[out] (Optional) If non-null, a SqrlString to hold the SFN.</param>
     ///
-    /// <returns>pointer to SqrlString containing the SFN.</returns>
+    /// <returns>pointer to SqrlString containing the SFN, or NULL.</returns>
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     SqrlString * SqrlUri::getSFN( SqrlString *buf ) { GETTER( this->sfn, buf ) }
 
