@@ -454,9 +454,9 @@ namespace libsqrl
     bool SqrlStorage::load( SqrlUri *uri ) {
         SQRL_CAST_PAGE( page, this->data );
         if( uri->getScheme() != SQRL_SCHEME_FILE ) return false;
-        char *fn = uri->getChallenge();
-        bool ret = sqrl_storage_load_from_file( page, fn );
-        free( fn );
+        SqrlString fn = SqrlString();
+        uri->getChallenge( &fn );
+        bool ret = sqrl_storage_load_from_file( page, fn.string() );
         return ret;
     }
 
@@ -468,9 +468,9 @@ namespace libsqrl
     bool SqrlStorage::save( SqrlUri *uri, Sqrl_Export etype, Sqrl_Encoding encoding ) {
         SQRL_CAST_PAGE( page, this->data );
         if( uri->getScheme() != SQRL_SCHEME_FILE ) return false;
-        char *fn = uri->getChallenge();
-        int ret = sqrl_storage_save_to_file( page, fn, etype, encoding );
-        free( fn );
+        SqrlString fn = SqrlString();
+        uri->getChallenge( &fn );
+        int ret = sqrl_storage_save_to_file( page, fn.string(), etype, encoding );
         return ret > 0;
     }
 

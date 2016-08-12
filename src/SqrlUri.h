@@ -21,50 +21,49 @@ namespace libsqrl
         SQRL_SCHEME_FILE
     } Sqrl_Scheme;
 
-    class DLL_PUBLIC SqrlUri
+    /// <summary>Parses and stores information about a SQRL URI.</summary>
+    class SqrlUri
     {
     public:
-        static SqrlUri *parse( SqrlString *source );
-        SqrlUri *release();
+        SqrlUri();
+        SqrlUri( const SqrlString *source );
+        SqrlUri( const SqrlUri *src );
+        ~SqrlUri();
 
         Sqrl_Scheme getScheme();
 
         /** The Challenge is the full, original URL, or the response body from a previous SQRL action */
-        char *getChallenge();
+        SqrlString *getChallenge( SqrlString *buf = NULL );
         size_t getChallengeLength();
-        void setChallenge( const char *val );
+        void setChallenge( const SqrlString *val );
 
         /** The Hostname (fqdn), and any extension defined by the server.  Used in creating Site Specific Keys */
-        char *getSiteKey();
+        SqrlString *getSiteKey( SqrlString *buf = NULL );
         size_t getSiteKeyLength();
 
         /** The prefix URL.  Combined with a server's qry= parameter, defines where the client should connect for the next loop.
         * Typically, the FQDN, followed by an optional extension.
         */
-        char *getPrefix();
+        SqrlString *getPrefix( SqrlString *buf = NULL );
         size_t getPrefixLength();
 
         /** The server URL for the next action */
-        char *getUrl();
+        SqrlString *getUrl( SqrlString *buf = NULL );
         size_t getUrlLength();
-        void setUrl( const char *val );
+        void setUrl( const SqrlString *val );
 
-        /** The 'Server Friendly Name' */
-        char* getSFN();
+        SqrlString* getSFN( SqrlString *buf = NULL );
         size_t getSFNLength();
 
-        /** Creates a copy of a SqrlUri object. */
-        SqrlUri* copy();
+        bool isValid();
 
     private:
-        SqrlUri();
-        ~SqrlUri();
         Sqrl_Scheme scheme;
-        char *challenge;
-        char *siteKey;
-        char *prefix;
-        char *url;
-        char *sfn;
+        SqrlString *challenge;
+        SqrlString *siteKey;
+        SqrlString *prefix;
+        SqrlString *url;
+        SqrlString *sfn;
     };
 }
 #endif // SQRLURI_H

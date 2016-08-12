@@ -49,7 +49,7 @@ namespace libsqrl
             this->user->release();
         }
         if( this->uri ) {
-            this->uri->release();
+            delete this->uri;
         }
     }
 
@@ -91,9 +91,9 @@ namespace libsqrl
 
     void SqrlAction::setUri( SqrlUri *uri ) {
         if( this->uri ) {
-            this->uri = this->uri->release();
+            delete this->uri;
         }
-        this->uri = uri->copy();
+        this->uri = new SqrlUri( uri );
     }
 
     void SqrlAction::authenticate( Sqrl_Credential_Type credentialType, const char *credential, size_t length ) {

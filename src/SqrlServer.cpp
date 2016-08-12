@@ -25,13 +25,9 @@ namespace libsqrl
         if( sfn ) {
             this->sfn = new SqrlString( sfn );
         } else {
-            SqrlUri *tmpUri = SqrlUri::parse( &ssuri );
-            if( tmpUri ) {
-                char *tmp;
-                tmp = tmpUri->getSiteKey();
-                this->sfn = new SqrlString( tmp );
-                free( tmp );
-                tmpUri->release();
+            SqrlUri tmpUri = SqrlUri( &ssuri );
+            if( tmpUri.isValid() ) {
+                this->sfn = tmpUri.getSiteKey();
             } else {
                 this->sfn = new SqrlString( "Invalid Server Configuration" );
             }
@@ -46,9 +42,9 @@ namespace libsqrl
                 SqrlString str = SqrlString( (uint8_t*)uri, p - uri );
                 b64.encode( &str, this->sfn, true );
                 str.append( pp );
-                this->uri = SqrlUri::parse( &str );
+                this->uri = new SqrlUri( &str );
             } else {
-                this->uri = SqrlUri::parse( &ssuri );
+                this->uri = new SqrlUri( &ssuri );
             }
         }
 
@@ -62,11 +58,8 @@ namespace libsqrl
     }
 
     SqrlServer::~SqrlServer() {
-        if( this->uri ) {
-            this->uri = this->uri->release();
-        }
-        if( this->sfn ) delete(this->sfn);
-        //if( this->user ) free( this->user );
+        if( this->uri ) { delete this->uri; }
+        if( this->sfn ) { delete(this->sfn); }
         int i;
         for( i = 0; i < CONTEXT_KV_COUNT; i++ ) {
             if( this->context_strings[i] )
@@ -173,18 +166,18 @@ namespace libsqrl
         SqrlString *retVal = NULL;
         Sqrl_Nut nut;
         if( this->createNut( &nut, ip ) ) {
-            char *challenge = this->uri->getChallenge();
+            SqrlString challenge = SqrlString();
+            this->uri->getChallenge( &challenge );
             char *p, *pp;
-            p = strstr( challenge, SQRL_SERVER_TOKEN_NUT );
+            p = strstr( challenge.string(), SQRL_SERVER_TOKEN_NUT );
             if( p ) {
-                retVal = new SqrlString( challenge, p - challenge );
+                retVal = new SqrlString( challenge.string(), p - challenge.string() );
                 SqrlString nutString( (uint8_t*)&nut, sizeof( Sqrl_Nut ) );
                 SqrlBase64().encode( retVal, &nutString, true );
                 pp = p + strlen( SQRL_SERVER_TOKEN_NUT );
                 retVal->append( pp );
                 this->addMAC( retVal, '&' );
             }
-            free( challenge );
         }
         return retVal;
     }

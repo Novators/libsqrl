@@ -21,7 +21,7 @@ namespace libsqrl
         buffer( NULL ),
         buffer_len( 0 ) {
         if( uri ) {
-            this->uri = uri->copy();
+            this->uri = new SqrlUri( uri );
         } else {
             this->uri = NULL;
         }
@@ -35,7 +35,7 @@ namespace libsqrl
         buffer_len( 0 ) {
         if( path ) {
             SqrlString ps = SqrlString( path );
-            this->uri = SqrlUri::parse( &ps );
+            this->uri = new SqrlUri( &ps );
         } else {
             this->uri = NULL;
         }

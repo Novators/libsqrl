@@ -28,6 +28,7 @@ namespace libsqrl
         /// <summary>Constructs an empty SqrlString</summary>
         SqrlString() :
             myData( NULL ),
+            myDend( NULL ),
             myCapacity( 0 ) {
         }
 
@@ -291,6 +292,7 @@ namespace libsqrl
             if( len < cpy ) cpy = len;
             memcpy( this->myDend, string->cdata(), cpy );
             this->myDend = (char*)this->myDend + cpy;
+            *((uint8_t*)this->myDend) = 0;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -307,6 +309,7 @@ namespace libsqrl
             if( len < cpy ) cpy = len;
             memcpy( this->myDend, in, cpy );
             this->myDend = (char*)this->myDend + cpy;
+            *((uint8_t*)this->myDend) = 0;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -323,6 +326,7 @@ namespace libsqrl
             if( len < cpy ) cpy = len;
             memcpy( this->myDend, in, cpy );
             this->myDend = (char*)this->myDend + cpy;
+            *((uint8_t*)this->myDend) = 0;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -338,6 +342,7 @@ namespace libsqrl
             if( cnt < cpy ) cpy = cnt;
             memset( this->myDend, (int)in, cpy );
             this->myDend = (char*)this->myDend + cpy;
+            *((uint8_t*)this->myDend) = 0;
         }
 
         void appendEntropy( size_t bytes ) {
@@ -346,6 +351,7 @@ namespace libsqrl
             if( bytes < cpy ) cpy = bytes;
             SqrlEntropy::bytes( this->dend(), (int)cpy );
             this->myDend = (char*)this->myDend + cpy;
+            *((uint8_t*)this->myDend) = 0;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////

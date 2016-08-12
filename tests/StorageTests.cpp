@@ -23,10 +23,9 @@ TEST_CASE( "LoadFile", "[storage]" ) {
     NullClient * client = new NullClient();
     bool bError = false;
     SqrlString filename( "file://data/test1.sqrl" );
-    SqrlUri *fn = SqrlUri::parse( &filename );
-    REQUIRE( fn );
-    SqrlStorage *storage = SqrlStorage::from( fn );
-    fn->release();
+    SqrlUri fn = SqrlUri( &filename );
+    REQUIRE( fn.isValid() );
+    SqrlStorage *storage = SqrlStorage::from( &fn );
     REQUIRE( storage );
 
     REQUIRE( storage->hasBlock( SQRL_BLOCK_USER ) );

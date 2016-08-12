@@ -12,137 +12,179 @@
 #include "SqrlUri.h"
 #include "SqrlBase64.h"
 
+#define GETTER( t,i ) \
+if( (t) == NULL ) { \
+    if( (i) ) (i)->clear(); \
+    return NULL; \
+} \
+if( (i) ) { \
+    (i)->clear(); \
+    (i)->append( (t) ); \
+} else { \
+    (i) = new SqrlString( (t) ); \
+} \
+return (i);
+
+#define SETTER( t, v ) \
+if( (v) ) { \
+    if( (t) ) { \
+        (t)->clear(); \
+        (t)->append( (v) ); \
+    } else { \
+        (t) = new SqrlString( (v) ); \
+    } \
+} else { \
+    delete (t); \
+}
+
+#define GETLEN( t ) \
+if( (t) == NULL ) {return 0;} else {return (t)->length();}
+
+
 namespace libsqrl
 {
-    Sqrl_Scheme SqrlUri::getScheme() {
-        return this->scheme;
-    }
-    char* SqrlUri::getChallenge() {
-        if( this->challenge == NULL ) return NULL;
-        size_t len = strlen( this->challenge );
-        char *ret = (char*)malloc( len + 1 );
-        if( ret ) {
-            memcpy( ret, this->challenge, len );
-            ret[len] = 0;
+
+    /// <summary>Default constructor.  Not very useful.</summary>
+    SqrlUri::SqrlUri() :
+        scheme( SQRL_SCHEME_INVALID ),
+        challenge( NULL ),
+        siteKey( NULL ),
+        prefix( NULL ),
+        url( NULL ),
+        sfn( NULL ) { }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Construct a copy of a SqrlUri object.</summary>
+    ///
+    /// <param name="src">[in] If non-null, a SqrlUri object to copy.</param>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    SqrlUri::SqrlUri( const SqrlUri *src ) : SqrlUri::SqrlUri() {
+        if( src ) {
+            this->scheme = src->scheme;
+            if( src->challenge ) this->challenge = new SqrlString( src->challenge );
+            if( src->siteKey ) this->siteKey = new SqrlString( src->siteKey );
+            if( src->prefix ) this->prefix = new SqrlString( src->prefix );
+            if( src->url ) this->url = new SqrlString( src->url );
+            if( src->sfn ) this->sfn = new SqrlString( src->sfn );
         }
-        return ret;
-    }
-    void SqrlUri::setChallenge( const char *val ) {
-        if( this->challenge ) free( this->challenge );
-        this->challenge = NULL;
-        if( val ) {
-            size_t len = strlen( val );
-            this->challenge = (char*)malloc( len + 1 );
-            if( this->challenge ) {
-                memcpy( this->challenge, val, len );
-                this->challenge[len] = 0;
-            }
-        }
-    }
-    void SqrlUri::setUrl( const char *val ) {
-        if( this->url ) free( this->url );
-        this->url = NULL;
-        if( val ) {
-            size_t len = strlen( val );
-            this->url = (char*)malloc( len + 1 );
-            if( this->url ) {
-                memcpy( this->url, val, len );
-                this->url[len] = 0;
-            }
-        }
-    }
-    char* SqrlUri::getSiteKey() {
-        if( this->siteKey == NULL ) return NULL;
-        size_t len = strlen( this->siteKey );
-        char *ret = (char*)malloc( len + 1 );
-        if( ret ) {
-            memcpy( ret, this->siteKey, len );
-            ret[len] = 0;
-        }
-        return ret;
-    }
-    char* SqrlUri::getPrefix() {
-        if( this->prefix == NULL ) return NULL;
-        size_t len = strlen( this->prefix );
-        char *ret = (char*)malloc( len + 1 );
-        if( ret ) {
-            memcpy( ret, this->prefix, len );
-            ret[len] = 0;
-        }
-        return ret;
-    }
-    char* SqrlUri::getUrl() {
-        if( this->url == NULL ) return NULL;
-        size_t len = strlen( this->url );
-        char *ret = (char*)malloc( len + 1 );
-        if( ret ) {
-            memcpy( ret, this->url, len );
-            ret[len] = 0;
-        }
-        return ret;
-    }
-    char* SqrlUri::getSFN() {
-        if( this->sfn == NULL ) return NULL;
-        size_t len = strlen( this->sfn );
-        char *ret = (char*)malloc( len + 1 );
-        if( ret ) {
-            memcpy( ret, this->sfn, len );
-            ret[len] = 0;
-        }
-        return ret;
-    }
-    size_t SqrlUri::getChallengeLength() {
-        if( this->challenge == NULL ) return 0;
-        return strlen( this->challenge );
-    }
-    size_t SqrlUri::getSiteKeyLength() {
-        if( this->siteKey == NULL ) return 0;
-        return strlen( this->siteKey );
-    }
-    size_t SqrlUri::getPrefixLength() {
-        if( this->prefix == NULL ) return 0;
-        return strlen( this->prefix );
-    }
-    size_t SqrlUri::getUrlLength() {
-        if( this->url == NULL ) return 0;
-        return strlen( this->url );
-    }
-    size_t SqrlUri::getSFNLength() {
-        if( this->sfn == NULL ) return 0;
-        return strlen( this->sfn );
     }
 
-    SqrlUri::SqrlUri() {
-        this->challenge = NULL;
-        this->siteKey = NULL;
-        this->prefix = NULL;
-        this->url = NULL;
-        this->sfn = NULL;
-        this->scheme = SQRL_SCHEME_INVALID;
+    SqrlUri::~SqrlUri() {
+        if( this->challenge ) delete(this->challenge);
+        if( this->siteKey ) delete( this->siteKey );
+        if( this->prefix ) delete( this->prefix );
+        if( this->url ) delete( this->url );
+        if( this->sfn ) delete( this->sfn );
     }
 
-    SqrlUri* SqrlUri::copy() {
-        SqrlUri *nuri = (SqrlUri*)malloc( sizeof( SqrlUri ) );
-        if( nuri ) {
-            new (nuri) SqrlUri();
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets the scheme.</summary>
+    ///
+    /// <returns>The scheme.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    Sqrl_Scheme SqrlUri::getScheme() { return this->scheme; }
 
-            if( this->challenge ) {
-                nuri->challenge = this->getChallenge();
-            }
-            if( this->siteKey ) {
-                nuri->siteKey = this->getSiteKey();
-            }
-            if( this->prefix ) {
-                nuri->prefix = this->getPrefix();
-            }
-            if( this->url ) {
-                nuri->url = this->getUrl();
-            }
-            if( this->sfn ) {
-                nuri->sfn = this->getSFN();
-            }
-        }
-        return nuri;
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets the challenge.</summary>
+    ///
+    /// <param name="buf">[out] (Optional) If non-null, a SqrlString to hold the challenge.</param>
+    ///
+    /// <returns>pointer to a SqrlString containing the challenge.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    SqrlString * SqrlUri::getChallenge( SqrlString *buf ) { GETTER( this->challenge, buf ) }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets site key.</summary>
+    ///
+    /// <param name="buf">[out] (Optional) If non-null, a SqrlString to hold the site key.</param>
+    ///
+    /// <returns>pointer to SqrlString containing the site key.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    SqrlString * SqrlUri::getSiteKey( SqrlString *buf ) { GETTER( this->siteKey, buf ) }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets the prefix.</summary>
+    ///
+    /// <param name="buf">[out] (Optional) If non-null, a SqrlString to hold the prefix.</param>
+    ///
+    /// <returns>pointer to SqrlString containing the prefix.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    SqrlString * SqrlUri::getPrefix( SqrlString *buf ) { GETTER( this->prefix, buf ) }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets the URL.</summary>
+    ///
+    /// <param name="buf">[out] (Optional) If non-null, a SqrlString to hold the url.</param>
+    ///
+    /// <returns>pointer to SqrlString containing the url.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    SqrlString * SqrlUri::getUrl( SqrlString *buf ) { GETTER( this->url, buf ) }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets the Server Friendly Name.</summary>
+    ///
+    /// <param name="buf">[out] (Optional) If non-null, a SqrlString to hold the SFN.</param>
+    ///
+    /// <returns>pointer to SqrlString containing the SFN.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    SqrlString * SqrlUri::getSFN( SqrlString *buf ) { GETTER( this->sfn, buf ) }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Sets the challenge.</summary>
+    ///
+    /// <param name="val">The new challenge.</param>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    void SqrlUri::setChallenge( const SqrlString *val ) { SETTER( this->challenge, val ) }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Sets the URL.</summary>
+    ///
+    /// <param name="val">The new URL.</param>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    void SqrlUri::setUrl( const SqrlString *val ) { SETTER( this->url, val ) }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets length of the challenge.</summary>
+    ///
+    /// <returns>The challenge length.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    size_t SqrlUri::getChallengeLength() { GETLEN( this->challenge ) }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets length of site key.</summary>
+    ///
+    /// <returns>The site key length.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    size_t SqrlUri::getSiteKeyLength() { GETLEN( this->siteKey ) }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets length of prefix.</summary>
+    ///
+    /// <returns>The prefix length.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    size_t SqrlUri::getPrefixLength() { GETLEN( this->prefix ) }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets length of URL.</summary>
+    ///
+    /// <returns>The URL length.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    size_t SqrlUri::getUrlLength() { GETLEN( this->url ) }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets length of SFN.</summary>
+    ///
+    /// <returns>The SFN length.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    size_t SqrlUri::getSFNLength() { GETLEN( this->sfn ) }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Query if this SqrlUri is valid.</summary>
+    ///
+    /// <returns>true if valid, false if not.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    bool SqrlUri::isValid() {
+        return this->scheme != SQRL_SCHEME_INVALID;
     }
 
     /*
@@ -169,26 +211,19 @@ namespace libsqrl
         }
     }
 
-    /**
-    Parses a SQRL URL and returns a \p SqrlUri object
-
-    \warning Allocates a new \p SqrlUri object!
-
-    @param theUrl NULL terminated SQRL URL string
-    @return A new \p SqrlUri object
-    */
-    SqrlUri *SqrlUri::parse( SqrlString *source ) {
-        SqrlUri *theUri = (SqrlUri*)malloc( sizeof( SqrlUri ) );
-        new (theUri) SqrlUri();
-
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Parses a SqrlString to a SqrlUri.</summary>
+    ///
+    /// <param name="source">Source string.</param>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    SqrlUri::SqrlUri( const SqrlString *source ) : SqrlUri() {
         const char *tmpstr;
         const char *curstr;
         size_t len;
         size_t i;
         int userpass_flag;
         int bracket_flag;
-        char *host = NULL,
-            *port = NULL,
+        char *port = NULL,
             *path = NULL,
             *query = NULL,
             *fragment = NULL,
@@ -197,12 +232,10 @@ namespace libsqrl
             *sch = NULL,
             *pp = NULL,
             *ppp = NULL;
-        size_t hl;
         long pl;
-        size_t ul;
 
-        SqrlString *prefix = NULL;
         SqrlString uri = SqrlString( source );
+        this->siteKey = new SqrlString();
 
         curstr = uri.string();
 
@@ -227,8 +260,8 @@ namespace libsqrl
         memcpy( sch, curstr, len );
         sch[len] = 0;
         sqrl_lcstr( sch );
-        if( strcmp( sch, "sqrl" ) == 0 ) theUri->scheme = SQRL_SCHEME_SQRL;
-        else if( strcmp( sch, "file" ) == 0 ) theUri->scheme = SQRL_SCHEME_FILE;
+        if( strcmp( sch, "sqrl" ) == 0 ) this->scheme = SQRL_SCHEME_SQRL;
+        else if( strcmp( sch, "file" ) == 0 ) this->scheme = SQRL_SCHEME_FILE;
         else {
             free( sch );
             goto ERR;
@@ -316,12 +349,9 @@ namespace libsqrl
             }
             tmpstr++;
         }
-        len = (int)(tmpstr - curstr);
+        len = (size_t)(tmpstr - curstr);
         if( len ) {
-            host = (char*)malloc( len + 1 );
-            if( !host ) goto ERR;
-            memcpy( host, curstr, len );
-            host[len] = '\0';
+            this->siteKey->append( curstr, len );
         }
         curstr = tmpstr;
 
@@ -397,39 +427,30 @@ namespace libsqrl
 
         /* SQRL Specific... */
     SQRL:
-        switch( theUri->scheme ) {
+        switch( this->scheme ) {
         case SQRL_SCHEME_SQRL:
             len = uri.length();
-            theUri->url = (char*)malloc( len + 2 );
-            memcpy( theUri->url + 1, uri.string(), len );
-            memcpy( theUri->url, "https", 5 );
-            theUri->url[len + 1] = 0;
-            prefix = new SqrlString( "https://" );
+            this->url = new SqrlString( uri.length() + 1 );
+            this->url->append( 'h', 1 );
+            this->url->append( &uri );
+            memcpy( this->url->string(), "https", 5 );
+            this->prefix = new SqrlString( "https://" );
             break;
         case SQRL_SCHEME_FILE:
-            len = uri.length();
-            theUri->url = (char*)malloc( len + 1 );
-            if( !theUri->url ) goto ERR;
-            memcpy( theUri->url, uri.string(), len );
-            theUri->url[len] = 0;
-            len -= 7;
-            theUri->challenge = (char*)malloc( len + 1 );
-            if( !theUri->challenge ) goto ERR;
-            memcpy( theUri->challenge, uri.string() + 7, len );
-            theUri->challenge[len] = 0;
+            this->url = new SqrlString( &uri );
+            this->challenge = new SqrlString();
+            this->siteKey->clear();
+            uri.substring( this->challenge, 7, uri.length() - 7 );
             goto END;
         default:
             goto ERR;
         }
         len = source->length();
-        theUri->challenge = (char*)malloc( len + 1 );
-        if( theUri->challenge == NULL || theUri->url == NULL ) goto ERR;
-        memcpy( theUri->challenge, source->string(), len );
-        theUri->challenge[len] = 0;
+        this->challenge = new SqrlString( len + 1 );
+        if( this->challenge == NULL || this->url == NULL ) goto ERR;
+        this->challenge->append( source->cstring(), len );
 
-        hl = strlen( host );
         pl = 0;
-        ul = hl;
         pp = NULL;
         ppp = NULL;
         if( query ) {
@@ -444,18 +465,9 @@ namespace libsqrl
             } else {
                 pl = (long)strlen( pp );
             }
-            char *utsfnsrcsrc = (char*)malloc( pl + 1 );
-            memcpy( utsfnsrcsrc, pp, pl );
-            utsfnsrcsrc[pl] = 0;
-            SqrlString *utsfnsrc = new SqrlString( utsfnsrcsrc );
-            free( utsfnsrcsrc );
+            SqrlString *utsfnsrc = new SqrlString( pp, pl );
             if( utsfnsrc ) {
-                SqrlString *utsfn = SqrlBase64().decode( NULL, utsfnsrc );
-                if( utsfn ) {
-                    theUri->sfn = (char*)calloc( 1, utsfn->length() + 1 );
-                    memcpy( theUri->sfn, utsfn->cdata(), utsfn->length() );
-                    delete utsfn;
-                }
+                this->sfn = SqrlBase64().decode( NULL, utsfnsrc );
                 delete utsfnsrc;
             }
             pl = 0;
@@ -465,61 +477,26 @@ namespace libsqrl
                 pl = strtol( pp, NULL, 10 );
             }
         }
-        if( pl ) ul += pl + 1;
-        theUri->siteKey = (char*)malloc( ul + 1 );
-        if( theUri->siteKey == NULL ) goto ERR;
-        memcpy( theUri->siteKey, host, hl );
-        theUri->siteKey[ul] = 0;
-        prefix->append( host );
+        this->prefix->append( this->siteKey );
         if( port ) {
-            prefix->append( ":" );
-            prefix->append( port );
+            this->prefix->append( ":" );
+            this->prefix->append( port );
         }
         if( pl ) {
-            theUri->siteKey[hl] = '/';
-            strncpy( theUri->siteKey + hl + 1, path, pl );
+            this->siteKey->append( "/" );
+            this->siteKey->append( path, pl - 1 );
         }
-        len = prefix->length();
-        theUri->prefix = (char*)malloc( len + 1 );
-        if( theUri->prefix == NULL ) goto ERR;
-        memcpy( theUri->prefix, prefix->cdata(), len );
-        theUri->prefix[len] = 0;
         goto END;
 
     ERR:
-        theUri->~SqrlUri();
-        theUri = NULL;
+        this->scheme = SQRL_SCHEME_INVALID;
 
     END:
-        if( host ) free( host );
         if( port ) free( port );
         if( query ) free( query );
         if( fragment ) free( fragment );
         if( username ) free( username );
         if( password ) free( password );
         if( path ) free( path );
-        if( prefix ) delete prefix;
-        return theUri;
-    }
-
-    /**
-    Frees the memory allocated to a \p SqrlUri object
-
-    @param uri the \p SqrlUri object
-    @return NULL
-    */
-
-    SqrlUri::~SqrlUri() {
-        if( this->challenge ) free( this->challenge );
-        if( this->siteKey ) free( this->siteKey );
-        if( this->prefix ) free( this->prefix );
-        if( this->url ) free( this->url );
-        if( this->sfn ) free( this->sfn );
-        free( this );
-    }
-
-    SqrlUri *SqrlUri::release() {
-        this->~SqrlUri();
-        return NULL;
     }
 }
