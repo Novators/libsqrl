@@ -81,7 +81,7 @@ namespace libsqrl
             } else {
                 this->myDend = location;
             }
-            this->myDend = location;
+            memset( this->myDend, 0, capacity - length + 1 );
             this->selfAllocated = false;
         }
 

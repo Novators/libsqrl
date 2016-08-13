@@ -209,9 +209,9 @@ namespace libsqrl
         ///
         /// <returns>null if it fails, else a pointer to a char.</returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        char *find( char needle ) {
-            char *it = this->string();
-            char *end = this->strend();
+        const char *find( char needle ) const {
+            const char *it = this->cstring();
+            const char *end = this->cstrend();
             while( it != end ) {
                 if( *it == needle ) {
                     return it;
@@ -228,9 +228,9 @@ namespace libsqrl
         ///
         /// <returns>null if it fails, else a pointer to an uint8_t.</returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
-        uint8_t *find( uint8_t needle ) {
-            uint8_t *it = this->data();
-            uint8_t *end = this->dend();
+        const uint8_t *find( uint8_t needle ) const {
+            const uint8_t *it = this->cdata();
+            const uint8_t *end = this->cdend();
             while( it != end ) {
                 if( *it == needle ) {
                     return it;

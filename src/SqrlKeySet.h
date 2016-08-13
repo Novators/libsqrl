@@ -12,8 +12,6 @@
 #include "sqrl.h"
 #include "SqrlFixedString.h"
 
-namespace libsqrl
-{
 #define SQRL_KEY_MK           0
 #define SQRL_KEY_ILK          1
 #define SQRL_KEY_PIUK0        2
@@ -26,12 +24,14 @@ namespace libsqrl
 #define SQRL_KEY_PASSWORD     9
 #define SQRL_KEY_SCRATCH     10
 
+namespace libsqrl
+{
     class SqrlKeySet
     {
     private:
         uint8_t *myData = NULL;
-        uint16_t slotSize = 0;
-        uint16_t keyCount = 0;
+        uint8_t *myScratch = NULL;
+        uint8_t mySlotSize = 0;
 
     public:
         SqrlKeySet();
