@@ -11,6 +11,7 @@
 #include "SqrlBlock.h"
 #include "SqrlUri.h"
 #include "SqrlBase64.h"
+#include <new>
 
 namespace libsqrl
 {
@@ -382,7 +383,6 @@ namespace libsqrl
         memset( unique_id, 0, SQRL_UNIQUE_ID_LENGTH + 1 );
     }
 
-#include <new>
 
     SqrlStorage *SqrlStorage::empty() {
         SqrlStorage *storage = (SqrlStorage*)malloc( sizeof( SqrlStorage ) );

@@ -8,6 +8,7 @@
 
 #include "sqrl_internal.h"
 #include "SqrlKeySet.h"
+#include <new>
 
 // Total data size is 4096 bytes.
 #define KEY_SET_SIZE 4096

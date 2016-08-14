@@ -38,9 +38,10 @@ namespace libsqrl
         friend class SqrlActionLock;
 
     public:
-        static SqrlUser *create();
-        static SqrlUser *create( const char *buffer, size_t buffer_len );
-        static SqrlUser *create( SqrlUri *uri );
+        SqrlUser();
+        SqrlUser( const char *buffer, size_t buffer_len );
+        SqrlUser( SqrlUri *uri );
+        ~SqrlUser();
 
         static void defaultOptions( Sqrl_User_Options *options );
         static int countUsers();
@@ -84,11 +85,6 @@ namespace libsqrl
         SqrlStorage *storage;
         char uniqueId[SQRL_UNIQUE_ID_LENGTH + 1];
         SqrlKeySet *keys;
-
-        SqrlUser();
-        SqrlUser( const char *buffer, size_t buffer_len );
-        SqrlUser( SqrlUri *uri );
-        ~SqrlUser();
 
         static int         enscryptCallback( int percent, void *data );
         void        ensureKeysAllocated();

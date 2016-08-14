@@ -34,6 +34,7 @@ namespace libsqrl
         SqrlClient();
         ~SqrlClient();
         static SqrlClient *getClient();
+        bool loop();
 
     protected:
         void initialize();
@@ -79,8 +80,6 @@ namespace libsqrl
         std::mutex actionMutex;
         std::mutex userMutex;
 #endif
-
-        bool loop();
 
         void callSaveSuggested(
             SqrlUser *user );

@@ -117,7 +117,7 @@ namespace libsqrl
             }
             delete info;
         }
-        if( action = this->actions.pop() ) {
+        if( (action = this->actions.pop()) ) {
             if( action->exec() ) {
                 this->actions.push_back( action );
             }

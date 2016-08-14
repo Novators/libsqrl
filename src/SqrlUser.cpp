@@ -41,24 +41,6 @@ namespace libsqrl
         }
     }
 
-    SqrlUser *SqrlUser::create() {
-        SqrlUser *user = (SqrlUser*)malloc( sizeof( SqrlUser ) );
-        new (user) SqrlUser();
-        return user;
-    }
-
-    SqrlUser *SqrlUser::create( const char *buffer, size_t buffer_len ) {
-        SqrlUser *user = (SqrlUser*)malloc( sizeof( SqrlUser ) );
-        new (user) SqrlUser( buffer, buffer_len );
-        return user;
-    }
-
-    SqrlUser *SqrlUser::create( SqrlUri *uri ) {
-        SqrlUser *user = (SqrlUser*)malloc( sizeof( SqrlUser ) );
-        new (user) SqrlUser();
-        return user;
-    }
-
     void SqrlUser::ensureKeysAllocated() {
         if( this->keys == NULL ) {
             this->keys = new SqrlKeySet();
@@ -253,10 +235,12 @@ namespace libsqrl
         if( action->getUser() != this || !this->isHintLocked() ) {
             return;
         }
+        /*
         struct Sqrl_User_s_callback_data cbdata;
         cbdata.action = action;
         cbdata.adder = 0;
         cbdata.multiplier = 1;
+        */
 
         SqrlFixedString *scratch = (*this->keys)[SQRL_KEY_SCRATCH];
         SqrlCrypt crypt = SqrlCrypt();
@@ -383,7 +367,6 @@ namespace libsqrl
             return false;
         }
         this->ensureKeysAllocated();
-        bool retVal = true;
         if( this->_keyGen( action, SQRL_KEY_IUK ) &&
             this->_keyGen( action, SQRL_KEY_RESCUE_CODE ) &&
             this->regenKeys( action )) {

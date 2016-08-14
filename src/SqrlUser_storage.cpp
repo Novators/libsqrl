@@ -508,10 +508,12 @@ namespace libsqrl
             return false;
         }
         bool retVal = true;
+        /*
         struct Sqrl_User_s_callback_data cbdata;
         cbdata.action = action;
         cbdata.adder = 0;
         cbdata.multiplier = 1;
+        */
 
         SqrlString *buf = NULL;
         if( this->updateStorage( action ) ) {
