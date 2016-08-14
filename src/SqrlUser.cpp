@@ -15,6 +15,7 @@
 #include "SqrlEntropy.h"
 #include "SqrlActionLock.h"
 #include "SqrlStorage.h"
+#include "SqrlDeque.h"
 
 namespace libsqrl
 {

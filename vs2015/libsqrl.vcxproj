@@ -56,8 +56,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\aes.h" />
-    <ClInclude Include="..\src\config.h" />
-    <ClInclude Include="..\src\detect_platform.h" />
     <ClInclude Include="..\src\SqrlBase56.h" />
     <ClInclude Include="..\src\SqrlBase56Check.h" />
     <ClInclude Include="..\src\SqrlBigInt.h" />

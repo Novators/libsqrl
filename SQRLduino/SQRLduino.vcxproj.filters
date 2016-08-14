@@ -25,12 +25,6 @@
     <ClInclude Include="..\src\aes.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\config.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\detect_platform.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\gcm.h">
       <Filter>Header Files</Filter>
     </ClInclude>

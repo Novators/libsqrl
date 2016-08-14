@@ -66,7 +66,7 @@
       <SDLCheck>true</SDLCheck>
       <ForcedIncludeFiles>C:\Users\adam\Source\Repos\libsqrl\SQRLduino\__vm\.SQRLduino.vsarduino.h;%(ForcedIncludeFiles)</ForcedIncludeFiles>
       <WholeProgramOptimization>false</WholeProgramOptimization>
-      <PreprocessorDefinitions>__HARDWARE_MK20dx256__;__HARDWARE_MK20DX256__;__MK20DX256__;TEENSYDUINO=129;ARDUINO=10609;F_CPU={build.fcpu};{build.usbtype};LAYOUT_{build.keylayout};__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+      <PreprocessorDefinitions>__HARDWARE_MK20dx256__;__HARDWARE_MK20DX256__;__MK20DX256__;TEENSYDUINO=129;ARDUINO=10609;F_CPU=96000000;USB_SERIAL;LAYOUT_US_ENGLISH;__cplusplus=201103L;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <AdditionalIncludeDirectories>C:\Users\adam\Documents\Arduino\libraries\Crypto;C:\Users\adam\Documents\Arduino\libraries\Crypto\utility;C:\Program Files (x86)\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\libraries;C:\Program Files (x86)\Microsoft Visual Studio 14.0\Common7\IDE\Extensions\kuffluyd.fdf\Micro Platforms\default\debuggers;C:\Users\adam\Documents\Arduino\libraries;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\util;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\utils;C:\Program Files (x86)\Arduino\hardware\teensy\avr\cores\teensy3\avr;C:\Program Files (x86)\Arduino\hardware\teensy/../tools/arm/bin/..\arm-none-eabi\include;C:\Users\adam\Source\Repos\libsqrl\SQRLduino;C:\Program Files (x86)\Arduino\hardware\hardware\include;C:\Program Files (x86)\Arduino\hardware\Arduino\include;C:\Users\adam\Source\Repos\libsqrl\src;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
       <DisableSpecificWarnings>reorder;%(DisableSpecificWarnings)</DisableSpecificWarnings>
     </ClCompile>
@@ -83,8 +83,6 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\src\aes.h" />
-    <ClInclude Include="..\src\config.h" />
-    <ClInclude Include="..\src\detect_platform.h" />
     <ClInclude Include="..\src\gcm.h" />
     <ClInclude Include="..\src\sqrl.h" />
     <ClInclude Include="..\src\SqrlAction.h" />

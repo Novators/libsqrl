@@ -8,12 +8,13 @@
 #ifndef SQRL_INTERNAL_H
 #define SQRL_INTERNAL_H
 
-#include "config.h"
-
+#define DLL_PUBLIC
 #include "sqrl.h"
 #include <stdio.h>
 
 #ifndef ARDUINO
+#define SCRYPT_SALSA
+#define SCRYPT_SHA256
 #define SODIUM_STATIC
 #include "sodium.h"
 extern "C" {

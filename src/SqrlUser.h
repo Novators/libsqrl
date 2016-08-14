@@ -42,7 +42,7 @@ namespace libsqrl
         static SqrlUser *create( const char *buffer, size_t buffer_len );
         static SqrlUser *create( SqrlUri *uri );
 
-        static void        defaultOptions( Sqrl_User_Options *options );
+        static void defaultOptions( Sqrl_User_Options *options );
         static int countUsers();
 
         uint16_t checkFlags( uint16_t flags );
@@ -72,10 +72,6 @@ namespace libsqrl
         bool forceRescue( SqrlAction *action );
         bool rekey( SqrlAction *action );
         bool forceDecrypt( SqrlAction *action );
-        void exportAll( const char *uri, Sqrl_Encoding encoding );
-        void exportRescue( const char *uri, Sqrl_Encoding encoding );
-
-
 
     private:
         uint32_t flags;
