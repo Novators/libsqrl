@@ -15,10 +15,25 @@
 
 namespace libsqrl
 {
+    /// <summary>Default constructor.</summary>
     SqrlStorage::SqrlStorage() : data( SqrlDeque<SqrlBlock*>() ) {}
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Constructor.  Creates a SqrlStorage object with the contents of an S4 formatted buffer.</summary>
+    ///
+    /// <remarks>The supplied buffer may be modified.</remarks>
+    /// 
+    /// <param name="buffer">[in] The SqrlString to load data from.</param>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     SqrlStorage::SqrlStorage( SqrlString *buffer ) : SqrlStorage() {
         this->load( buffer );
     }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Constructor.  Creates a SqrlStorage object with the contents of a file.</summary>
+    ///
+    /// <param name="uri">[in] The SqrlUri containing the file's path and name.</param>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     SqrlStorage::SqrlStorage( SqrlUri *uri ) : SqrlStorage() {
         this->load( uri );
     }
@@ -29,6 +44,13 @@ namespace libsqrl
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Query if this SqrlStorage has a block of type blockType.</summary>
+    ///
+    /// <param name="blockType">Type of the block.</param>
+    ///
+    /// <returns>true if this SqrlStorage contains a block of type blockType, false if not.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     bool SqrlStorage::hasBlock( uint16_t blockType ) {
         SqrlBlock *block;
         size_t cnt = 0;
@@ -45,6 +67,14 @@ namespace libsqrl
         return false;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets a block.</summary>
+    ///
+    /// <param name="block">    [out] A SqrlBlock object to write the block's data to.</param>
+    /// <param name="blockType">Type of the block.</param>
+    ///
+    /// <returns>true if it succeeds, false if it fails.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     bool SqrlStorage::getBlock( SqrlBlock *block, uint16_t blockType ) {
         if( !block ) return false;
         SqrlBlock *b;
@@ -64,6 +94,13 @@ namespace libsqrl
         return false;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Adds a SqrlBlock to this SqrlStorage.</summary>
+    ///
+    /// <param name="block">[in] If non-null, the block.</param>
+    ///
+    /// <returns>true if it succeeds, false if it fails.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     bool SqrlStorage::putBlock( SqrlBlock *block ) {
         if( !block ) return false;
         SqrlBlock *b = new SqrlBlock( block );
@@ -72,6 +109,13 @@ namespace libsqrl
         return true;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Removes the block of type blockType from this SqrlStorage, if it exists.</summary>
+    ///
+    /// <param name="blockType">Type of the block.</param>
+    ///
+    /// <returns>true if a block was removed, false if not.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     bool SqrlStorage::removeBlock( uint16_t blockType ) {
         SqrlBlock *b;
         size_t cnt = 0;
@@ -87,6 +131,7 @@ namespace libsqrl
         return false;
     }
 
+    /// <summary>Removes all SqrlBlocks stored in the SqrlStorage.</summary>
     void SqrlStorage::clear() {
         SqrlBlock *b = this->data.pop();
         while( b ) {
@@ -95,6 +140,13 @@ namespace libsqrl
         }
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Clears this SqrlStorage and reloads data from the given buffer.</summary>
+    ///
+    /// <param name="buffer">[in] The buffer to load from.</param>
+    ///
+    /// <returns>true if it succeeds, false if it fails.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     bool SqrlStorage::load( SqrlString *buffer ) {
         this->clear();
         if( buffer->compare( 0, 8, "sqrldata" ) == 0 ) {
@@ -124,6 +176,13 @@ namespace libsqrl
         return true;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Clears this SqrlStorage and reloads data from the given file.</summary>
+    ///
+    /// <param name="uri">[in] The SqrlUri of the file to load from.</param>
+    ///
+    /// <returns>true if it succeeds, false if it fails.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     bool SqrlStorage::load( SqrlUri *uri ) {
 #ifdef ARDUINO
         return false;
@@ -149,6 +208,14 @@ namespace libsqrl
 #endif
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Saves the contents of this SqrlStorage into a new SqrlString, with S4 formatting.</summary>
+    ///
+    /// <param name="etype">   The type of export</param>
+    /// <param name="encoding">The encoding.</param>
+    ///
+    /// <returns>null if it fails, else a pointer to a SqrlString.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     SqrlString *SqrlStorage::save( Sqrl_Export etype, Sqrl_Encoding encoding ) {
         SqrlString tmp = SqrlString();
         SqrlString *buf = new SqrlString();
@@ -184,6 +251,15 @@ namespace libsqrl
         return buf;
     }
 
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Saves the contents of this SqrlStorage to a file, with S4 formatting.</summary>
+    ///
+    /// <param name="uri">     [in] The SqrlUri of the file to save to.</param>
+    /// <param name="etype">   The type of export</param>
+    /// <param name="encoding">The encoding.</param>
+    ///
+    /// <returns>true if it succeeds, false if it fails.</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     bool SqrlStorage::save( SqrlUri *uri, Sqrl_Export etype, Sqrl_Encoding encoding ) {
 #ifdef ARDUINO
         return 0;
@@ -210,7 +286,7 @@ namespace libsqrl
         if( !unique_id ) return;
         SqrlBlock block = SqrlBlock();
         if( this->getBlock( &block, SQRL_BLOCK_RESCUE ) ) {
-            if( block.getBlockLength() == 73 ) {
+            if( block.length() == 73 ) {
                 SqrlString tstr;
                 block.substring( &tstr, 25, SQRL_KEY_SIZE );
                 SqrlBase64().encode( unique_id, &tstr );

@@ -42,10 +42,10 @@ TEST_CASE( "BlockSizeAndType", "[storage]" ) {
     new NullClient();
     uint16_t t, l;
     SqrlBlock *block = new SqrlBlock();
-    REQUIRE( block->getBlockLength() == 0 );
+    REQUIRE( block->length() == 0 );
     REQUIRE( block->getBlockType() == 0 );
     block->init( 0, 1 );
-    REQUIRE( block->getBlockLength() == 4 );
+    REQUIRE( block->length() == 4 );
     REQUIRE( block->getBlockType() == 0 );
     for( l = 4; l < 512; l++ ) {
         t = (rand() % 65535);
@@ -54,7 +54,7 @@ TEST_CASE( "BlockSizeAndType", "[storage]" ) {
         if( l == 0 ) {
             REQUIRE( !data );
         } else REQUIRE( data );
-        REQUIRE( block->getBlockLength() == l );
+        REQUIRE( block->length() == l );
         REQUIRE( block->getBlockType() == t );
         if( data ) {
             REQUIRE( data->length() == l );
@@ -63,7 +63,7 @@ TEST_CASE( "BlockSizeAndType", "[storage]" ) {
     }
     block->init( 65535, 1 );
     REQUIRE( block->getBlockType() == 65535 );
-    REQUIRE( block->getBlockLength() == 4 );
+    REQUIRE( block->length() == 4 );
     delete block;
     delete (NullClient*)NullClient::getClient();
 }

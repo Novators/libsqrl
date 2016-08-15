@@ -16,7 +16,8 @@
 
 namespace libsqrl
 {
-    class DLL_PUBLIC SqrlStorage
+    /// <summary>Stores a collection of SqrlBlock objects, and imports / exports them in S4 format.</summary>
+    class SqrlStorage
     {
     public:
         SqrlStorage();
