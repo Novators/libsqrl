@@ -15,44 +15,31 @@
 
 namespace libsqrl
 {
-    class DLL_PUBLIC SqrlBlock
+    class DLL_PUBLIC SqrlBlock : public SqrlString
     {
     public:
-        static SqrlBlock *create();
-        static SqrlBlock *create( uint16_t blockType, uint16_t blockLength );
-
-        SqrlBlock *release();
-
-        void        clear();
-        bool        init( uint16_t blockType, uint16_t blockLength );
-        int         read( uint8_t *data, size_t data_len );
-        uint16_t    readInt16();
-        uint32_t    readInt32();
-        uint8_t     readInt8();
-        bool        resize( size_t new_size );
+        SqrlBlock();
+        SqrlBlock( SqrlString *original );
+        SqrlBlock( const uint8_t* data );
+        void        init( uint16_t blockType, uint16_t blockLength );
+        int         read( uint8_t *data, size_t data_len, uint16_t offset = UINT16_MAX );
+        uint16_t    readInt16( uint16_t offset = UINT16_MAX );
+        uint32_t    readInt32( uint16_t offset = UINT16_MAX );
+        uint8_t     readInt8( uint16_t offset = UINT16_MAX );
+        bool        resize( uint16_t new_size );
         uint16_t    seek( uint16_t dest, bool offset = false );
         uint16_t	seekBack( uint16_t dest, bool offset = false );
-        int         write( uint8_t *data, size_t data_len );
-        bool        writeInt16( uint16_t value );
-        bool        writeInt32( uint32_t value );
-        bool        writeInt8( uint8_t value );
+        int         write( uint8_t *data, uint16_t data_len, uint16_t offset = UINT16_MAX );
+        bool        writeInt16( uint16_t value, uint16_t offset = UINT16_MAX );
+        bool        writeInt32( uint32_t value, uint16_t offset = UINT16_MAX );
+        bool        writeInt8( uint8_t value, uint16_t offset = UINT16_MAX );
         SqrlString*	getData( SqrlString *buf, bool append = false );
         uint8_t*	getDataPointer( bool atCursor = false );
         uint16_t	getBlockLength();
         uint16_t	getBlockType();
 
     private:
-        SqrlBlock();
-        ~SqrlBlock();
-
-        /** The length of the block, in bytes */
-        uint16_t blockLength;
-        /** The type of block */
-        uint16_t blockType;
-        /** An offset into the block where reading or writing will occur */
         uint16_t cur;
-        /** Pointer to the actual data of the block */
-        uint8_t *data;
     };
 }
 #endif // SQRLBLOCK_H

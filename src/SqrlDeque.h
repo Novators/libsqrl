@@ -127,9 +127,18 @@ namespace libsqrl
         }
 
 
-        T peek() {
+        T peek( size_t offset = 0 ) {
             if( !this->list ) return NULL;
-            return this->list->myItem;
+            size_t cnt = 0;
+            struct item<T> *cur = this->list;
+            while( cur ) {
+                if( cnt == offset ) {
+                    return cur->myItem;
+                }
+                cur = cur->next;
+                cnt++;
+            }
+            return NULL;
         }
 
         T peek_back() {

@@ -83,7 +83,7 @@ namespace libsqrl
 #endif
         int referenceCount;
         SqrlStorage *storage;
-        char uniqueId[SQRL_UNIQUE_ID_LENGTH + 1];
+        SqrlString uniqueId;
         SqrlKeySet *keys;
 
         static int         enscryptCallback( int percent, void *data );

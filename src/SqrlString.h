@@ -368,6 +368,7 @@ namespace libsqrl
             size_t len = this->length() + 1;
             while( this->reserve( len ) < len ) {
                 this->popb_back();
+                len = this->length() + 1;
             }
             uint8_t *it = this->dend() - 1;
             uint8_t *end = this->data() + offset;

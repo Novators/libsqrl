@@ -30,10 +30,7 @@ namespace libsqrl
         crypt->plain_text = this->scratch()->data();
         crypt->text_len = SQRL_KEY_SIZE;
         if( forSaving ) {
-            if( !block->init( 2, 73 ) ) {
-                delete crypt;
-                return NULL;
-            }
+            block->init( 2, 73 );
             block->writeInt16( 73 );
             block->writeInt16( 2 );
             uint8_t ent[16];
@@ -135,12 +132,8 @@ namespace libsqrl
         memcpy( crypt->plain_text, iuk, crypt->text_len );
         if( crypt->doCrypt() ) {
             // Save unique id
-            SqrlString str;
             SqrlString tstr( (char*)crypt->cipher_text, SQRL_KEY_SIZE );
-            SqrlBase64().encode( &str, &tstr );
-            memcpy( this->uniqueId, str.cdata(), str.length() );
-            this->uniqueId[str.length()] = 0;
-
+            SqrlBase64().encode( &this->uniqueId, &tstr );
             goto DONE;
         }
 
@@ -412,20 +405,20 @@ namespace libsqrl
             return false;
         }
         if( this->storage == NULL ) {
-            this->storage = SqrlStorage::empty();
+            this->storage = new SqrlStorage();
         }
         struct Sqrl_User_s_callback_data cbdata;
         memset( &cbdata, 0, sizeof( struct Sqrl_User_s_callback_data ) );
         cbdata.action = action;
         this->saveCallbackData( &cbdata );
 
-        SqrlBlock *block = SqrlBlock::create();
+        SqrlBlock block = SqrlBlock();
         bool retVal = true;
 
         if( (this->flags & USER_FLAG_T1_CHANGED) == USER_FLAG_T1_CHANGED ||
             !this->storage->hasBlock( SQRL_BLOCK_USER ) ) {
-            if( sus_block_1( action, block, cbdata ) ) {
-                this->storage->putBlock( block );
+            if( sus_block_1( action, &block, cbdata ) ) {
+                this->storage->putBlock( &block );
             }
         }
 
@@ -438,24 +431,23 @@ namespace libsqrl
             } else {
                 cbdata.multiplier = 1;
             }
-            if( sus_block_2( action, block, cbdata ) ) {
-                this->storage->putBlock( block );
+            if( sus_block_2( action, &block, cbdata ) ) {
+                this->storage->putBlock( &block );
             }
         }
 
         if( (this->flags & USER_FLAG_T2_CHANGED) == USER_FLAG_T2_CHANGED ||
             !this->storage->hasBlock( SQRL_BLOCK_PREVIOUS ) ) {
-            if( sus_block_3( action, block, cbdata ) ) {
-                this->storage->putBlock( block );
+            if( sus_block_3( action, &block, cbdata ) ) {
+                this->storage->putBlock( &block );
             }
         }
-        block->release();
         return retVal;
     }
 
     void SqrlUser::_load_unique_id() {
         if( this->storage ) {
-            this->storage->getUniqueId( this->uniqueId );
+            this->storage->getUniqueId( &this->uniqueId );
         }
     }
 
@@ -464,7 +456,7 @@ namespace libsqrl
         if( uri->getScheme() != SQRL_SCHEME_FILE ) {
             return;
         }
-        this->storage = SqrlStorage::from( uri );
+        this->storage = new SqrlStorage( uri );
         if( this->storage ) {
             this->_load_unique_id();
             // TODO: Load Options
@@ -474,7 +466,7 @@ namespace libsqrl
     SqrlUser::SqrlUser( const char *buffer, size_t buffer_len ) {
         this->initialize();
         SqrlString buf( buffer, buffer_len );
-        this->storage = SqrlStorage::from( &buf );
+        this->storage = new SqrlStorage( &buf );
         if( this->storage ) {
             this->_load_unique_id();
         }
@@ -538,7 +530,7 @@ namespace libsqrl
             return false;
         }
         bool retVal = false;
-        SqrlBlock *block = SqrlBlock::create();
+        SqrlBlock block = SqrlBlock();
         struct Sqrl_User_s_callback_data cbdata;
         cbdata.action = action;
         cbdata.adder = 0;
@@ -552,13 +544,13 @@ namespace libsqrl
             goto NEEDAUTH;
         }
 
-        this->storage->getBlock( block, SQRL_BLOCK_USER );
-        if( !sul_block_1( action, block, cbdata ) ) {
+        this->storage->getBlock( &block, SQRL_BLOCK_USER );
+        if( !sul_block_1( action, &block, cbdata ) ) {
             goto NEEDAUTH;
         }
         if( this->storage->hasBlock( SQRL_BLOCK_PREVIOUS ) &&
-            this->storage->getBlock( block, SQRL_BLOCK_PREVIOUS ) ) {
-            sul_block_3( action, block, cbdata );
+            this->storage->getBlock( &block, SQRL_BLOCK_PREVIOUS ) ) {
+            sul_block_3( action, &block, cbdata );
         }
         retVal = true;
         goto DONE;
@@ -571,7 +563,6 @@ namespace libsqrl
         }
 
     DONE:
-        block->release();
         return retVal;
     }
 
@@ -585,7 +576,7 @@ namespace libsqrl
         cbdata.action = action;
         cbdata.adder = 0;
         cbdata.multiplier = 1;
-        SqrlBlock *block = SqrlBlock::create();
+        SqrlBlock block = SqrlBlock();
 
     LOOP:
         if( !this->storage->hasBlock( SQRL_BLOCK_RESCUE ) ) {
@@ -595,14 +586,14 @@ namespace libsqrl
             goto NEEDAUTH;
         }
 
-        this->storage->getBlock( block, SQRL_BLOCK_RESCUE );
-        if( !sul_block_2( action, block, cbdata ) ) {
+        this->storage->getBlock( &block, SQRL_BLOCK_RESCUE );
+        if( !sul_block_2( action, &block, cbdata ) ) {
             goto NEEDAUTH;
         }
         this->regenKeys( action );
         if( this->storage->hasBlock( SQRL_BLOCK_PREVIOUS ) &&
-            this->storage->getBlock( block, SQRL_BLOCK_PREVIOUS ) ) {
-            sul_block_3( action, block, cbdata );
+            this->storage->getBlock( &block, SQRL_BLOCK_PREVIOUS ) ) {
+            sul_block_3( action, &block, cbdata );
         }
         goto DONE;
 
@@ -614,7 +605,6 @@ namespace libsqrl
         }
 
     DONE:
-        block->release();
         return retVal;
     }
 }

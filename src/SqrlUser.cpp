@@ -192,7 +192,7 @@ namespace libsqrl
             delete this->keys;
         }
         if( this->storage ) {
-            this->storage->release();
+            delete this->storage;
         }
     }
 
@@ -553,22 +553,15 @@ namespace libsqrl
 
     bool SqrlUser::getUniqueId( char *buffer ) {
         if( !buffer ) return false;
-        memcpy( buffer, this->uniqueId, SQRL_UNIQUE_ID_LENGTH );
-        buffer[SQRL_UNIQUE_ID_LENGTH] = 0;
-        return true;
+        if( this->uniqueId.length() == SQRL_UNIQUE_ID_LENGTH ) {
+            strcpy( buffer, this->uniqueId.cstring() );
+            return true;
+        }
+        return false;
     }
 
     bool SqrlUser::uniqueIdMatches( const char *unique_id ) {
-        bool retVal = false;
-        if( unique_id == NULL ) {
-            if( this->uniqueId[0] == 0 ) {
-                retVal = true;
-            }
-        } else {
-            if( 0 == strcmp( unique_id, this->uniqueId ) ) {
-                retVal = true;
-            }
-        }
-        return retVal;
+        if( !unique_id ) return false;
+        return(0 == this->uniqueId.compare( unique_id ));
     }
 }
