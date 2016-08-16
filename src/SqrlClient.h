@@ -37,6 +37,8 @@ namespace libsqrl
         bool loop();
 
     protected:
+        bool rapid;
+
         void initialize();
 
         virtual int getUserIdleSeconds();

@@ -11,6 +11,7 @@
 
 #include "sqrl.h"
 #include "SqrlString.h"
+#include "SqrlEnScrypt.h"
 
 namespace libsqrl
 {
@@ -43,6 +44,9 @@ namespace libsqrl
         static void generateCurvePublicKey( uint8_t *puk, const uint8_t *prk );
         static int generateSharedSecret( uint8_t *shared, const uint8_t *puk, const uint8_t *prk );
 
+        bool genKey_init( SqrlAction *action, const SqrlString *password );
+        bool genKey_step( SqrlAction *action );
+        bool genKey_finalize( SqrlAction *action );
         bool genKey( SqrlAction *action, const SqrlString *password );
         bool doCrypt();
 
@@ -58,6 +62,8 @@ namespace libsqrl
         uint8_t nFactor;
         uint8_t flags;
         uint8_t *key;
+        SqrlEnScrypt *enscrypt;
+        int lastProgress;
     };
 }
 #endif // SQRLCRYPT_H

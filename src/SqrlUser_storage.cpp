@@ -20,30 +20,9 @@
 
 namespace libsqrl
 {
-#pragma pack(push)
-#pragma pack(1)
-    struct t1scratch
-    {
-        uint8_t mk[SQRL_KEY_SIZE];
-        uint8_t ilk[SQRL_KEY_SIZE];
-        uint8_t key[SQRL_KEY_SIZE];
-    };
-    struct t2scratch
-    {
-        uint8_t iuk[SQRL_KEY_SIZE];
-        uint8_t key[SQRL_KEY_SIZE];
-    };
-    struct t3scratch
-    {
-        uint8_t piuks[4][SQRL_KEY_SIZE];
-        uint8_t key[SQRL_KEY_SIZE];
-    };
-#pragma pack(pop)
-
-    bool SqrlUser::saveOrLoadType2Block(
+    bool SqrlUser::loadType2Block(
         SqrlAction *action,
-        SqrlBlock *block,
-        bool saving ) {
+        SqrlBlock *block ) {
         if( !block || !action ) return false;
         if( action->getUser() != this ) return false;
         if( !this->hasKey( SQRL_KEY_RESCUE_CODE ) ) return false;
@@ -55,33 +34,15 @@ namespace libsqrl
         crypt.text_len = SQRL_KEY_SIZE;
         crypt.key = t2s->key;
 
-        if( saving ) {
-            if( !this->hasKey( SQRL_KEY_IUK )
-                || !this->hasKey( SQRL_KEY_RESCUE_CODE ) ) {
-                return false;
-            }
-            block->init( 2, 73 );
-            SqrlEntropy::bytes( block->getDataPointer( true ), 16 );
-            block->seek( 16, true );
-            crypt.nFactor = SQRL_DEFAULT_N_FACTOR;
-            block->writeInt8( crypt.nFactor );
-            SqrlFixedString *iuk = this->key( action, SQRL_KEY_IUK );
-            if( iuk ) {
-                memcpy( crypt.plain_text, iuk->data(), SQRL_KEY_SIZE );
-            }
-            crypt.flags = SQRL_ENCRYPT | SQRL_MILLIS;
-            crypt.count = SQRL_RESCUE_ENSCRYPT_SECONDS * SQRL_MILLIS_PER_SECOND;
-        } else {
-            block->seek( 0 );
-            if( 73 != block->readInt16() ||
-                2 != block->readInt16() ) {
-                return false;
-            }
-            block->seek( 20 );
-            crypt.nFactor = block->readInt8();
-            crypt.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
-            crypt.count = block->readInt32();
+        block->seek( 0 );
+        if( 73 != block->readInt16() ||
+            2 != block->readInt16() ) {
+            return false;
         }
+        block->seek( 20 );
+        crypt.nFactor = block->readInt8();
+        crypt.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
+        crypt.count = block->readInt32();
 
         crypt.add = block->getDataPointer();
         crypt.add_len = 25;
@@ -94,31 +55,12 @@ namespace libsqrl
         str = this->key( action, SQRL_KEY_RESCUE_CODE );
         if( str ) {
             if( crypt.genKey( action, str ) && crypt.doCrypt() ) {
-                if( saving ) {
-                    block->seek( 21 );
-                    block->writeInt32( crypt.count );
-
-                    // Cipher Text
-                    crypt.flags = SQRL_ENCRYPT | SQRL_ITERATIONS;
-                    SqrlFixedString *iuk = this->key( action, SQRL_KEY_IUK );
-                    if( iuk ) {
-                        memcpy( crypt.plain_text, iuk->data(), crypt.text_len );
-                        if( crypt.doCrypt() ) {
-                            // Save unique id
-                            SqrlString tstr( (char*)crypt.cipher_text, SQRL_KEY_SIZE );
-                            SqrlBase64().encode( &this->uniqueId, &tstr );
-                            sqrl_memzero( t2s, sizeof( struct t2scratch ) );
-                            return true;
-                        }
-                    }
-                } else {
-                    SqrlFixedString *str = (*this->keys)[SQRL_KEY_IUK];
-                    if( str ) {
-                        str->clear();
-                        str->append( t2s->iuk, SQRL_KEY_SIZE );
-                        sqrl_memzero( t2s, sizeof( struct t2scratch ) );
-                        return true;
-                    }
+                SqrlFixedString *str = (*this->keys)[SQRL_KEY_IUK];
+                if( str ) {
+                    str->clear();
+                    str->append( t2s->iuk, SQRL_KEY_SIZE );
+                    sqrl_memzero( t2s, sizeof( struct t2scratch ) );
+                    return true;
                 }
             }
         }
@@ -250,111 +192,6 @@ namespace libsqrl
         return false;
     }
 
-    bool SqrlUser::saveType1Block( SqrlAction *action, SqrlBlock *block ) {
-        if( action->getUser() != this ) return false;
-        bool retVal = false;
-        if( this->getPasswordLength() == 0 ) {
-            return false;
-        }
-
-        SqrlCrypt crypt = SqrlCrypt();
-        uint8_t ent[28];
-        struct t1scratch *t1s = (struct t1scratch*)this->scratch()->data();
-
-        SqrlFixedString *keyString;
-        block->init( 1, 125 );
-        // ADD
-        crypt.add = block->getDataPointer();
-        crypt.add_len = 45;
-        block->writeInt16( 45 );
-        // IV and Salt
-        crypt.iv = block->getDataPointer( true );
-        SqrlEntropy::bytes( ent, 28 );
-        block->write( ent, 12 );
-        crypt.salt = block->getDataPointer( true );
-        block->write( ent + 12, 16 );
-        // N Factor
-        crypt.nFactor = SQRL_DEFAULT_N_FACTOR;
-        block->writeInt8( crypt.nFactor );
-        // Options
-        block->seek( 4, true );
-        block->writeInt16( this->options.flags );
-        block->writeInt8( this->options.hintLength );
-        block->writeInt8( this->options.enscryptSeconds );
-        block->writeInt16( this->options.timeoutMinutes );
-        // Cipher Text
-        crypt.text_len = SQRL_KEY_SIZE * 2;
-        crypt.cipher_text = block->getDataPointer( true );
-        // Verification Tag
-        block->seek( crypt.text_len, true );
-        crypt.tag = block->getDataPointer( true );
-        // Plain Text
-        crypt.plain_text = (uint8_t*)t1s;
-        if( this->hasKey( SQRL_KEY_MK ) ) {
-            keyString = this->key( action, SQRL_KEY_MK );
-            memcpy( t1s->mk, keyString->data(), SQRL_KEY_SIZE );
-        } else {
-            memset( t1s->mk, 0, SQRL_KEY_SIZE );
-        }
-        if( this->hasKey( SQRL_KEY_ILK ) ) {
-            keyString = this->key( action, SQRL_KEY_ILK );
-            memcpy( t1s->ilk, keyString->data(), SQRL_KEY_SIZE );
-        } else {
-            memset( t1s->ilk, 0, SQRL_KEY_SIZE );
-        }
-
-        // Iteration Count
-        crypt.key = t1s->key;
-        crypt.flags = SQRL_ENCRYPT | SQRL_MILLIS;
-        crypt.count = this->options.enscryptSeconds * SQRL_MILLIS_PER_SECOND;
-        
-        if( crypt.genKey( action, (*this->keys)[SQRL_KEY_PASSWORD] ) ) {
-            block->seek( 35 );
-            block->writeInt32( crypt.count );
-
-            // Cipher Text
-            crypt.flags = SQRL_ENCRYPT | SQRL_ITERATIONS;
-            retVal = crypt.doCrypt();
-        }
-        sqrl_memzero( t1s, sizeof( struct t1scratch ) );
-        return retVal;
-    }
-
-    bool SqrlUser::updateStorage( SqrlAction *action ) {
-        if( !action ) return false;
-        if( action->getUser() != this ) {
-            return false;
-        }
-        if( this->storage == NULL ) {
-            this->storage = new SqrlStorage();
-        }
-
-        SqrlBlock block = SqrlBlock();
-        bool retVal = true;
-
-        if( (this->flags & USER_FLAG_T1_CHANGED) == USER_FLAG_T1_CHANGED ||
-            !this->storage->hasBlock( SQRL_BLOCK_USER ) ) {
-            if( saveType1Block( action, &block ) ) {
-                this->storage->putBlock( &block );
-            }
-        }
-
-        if( (this->flags & USER_FLAG_T2_CHANGED) == USER_FLAG_T2_CHANGED ||
-            !this->storage->hasBlock( SQRL_BLOCK_RESCUE ) ) {
-            if( this->saveOrLoadType2Block( action, &block, true ) ) {
-                this->storage->putBlock( &block );
-            }
-        }
-
-        if( (this->flags & USER_FLAG_T2_CHANGED) == USER_FLAG_T2_CHANGED ||
-            !this->storage->hasBlock( SQRL_BLOCK_PREVIOUS ) ) {
-            if( this->saveOrLoadType3Block( action, &block, true ) ) {
-                this->storage->putBlock( &block );
-            }
-        }
-        return retVal;
-    }
-
     void SqrlUser::_load_unique_id() {
         if( this->storage ) {
             this->storage->getUniqueId( &this->uniqueId );
@@ -380,54 +217,6 @@ namespace libsqrl
         if( this->storage ) {
             this->_load_unique_id();
         }
-    }
-
-    bool SqrlUser::save( SqrlActionSave *action ) {
-        if( !action ) return false;
-
-        SqrlUri *uri = action->getUri();
-        if( !uri || (uri->getScheme() != SQRL_SCHEME_FILE) ) {
-            return false;
-        }
-        if( action->getUser() != this ) {
-            return false;
-        }
-        if( uri->getChallengeLength() == 0 ) {
-            return false;
-        }
-
-        if( this->updateStorage( (SqrlAction*)action ) ) {
-            if( this->storage->save( uri, action->getExportType(), action->getEncodingType() ) ) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    bool SqrlUser::saveToBuffer( SqrlActionSave *action ) {
-        if( !action ) return false;
-        if( action->getUser() != this ) {
-            return false;
-        }
-        /*
-        struct Sqrl_User_s_callback_data cbdata;
-        cbdata.action = action;
-        cbdata.adder = 0;
-        cbdata.multiplier = 1;
-        */
-
-        SqrlString *buf = NULL;
-        if( this->updateStorage( action ) ) {
-            buf = this->storage->save( action->getExportType(), action->getEncodingType() );
-            if( buf ) {
-                action->setString( buf->cstring(), buf->length() );
-                delete buf;
-                return true;
-            }
-        }
-
-        action->setString( NULL, 0 );
-        return false;
     }
 
     bool SqrlUser::tryLoadPassword( SqrlAction *action, bool retry ) {
@@ -485,7 +274,7 @@ namespace libsqrl
         }
 
         this->storage->getBlock( &block, SQRL_BLOCK_RESCUE );
-        if( !this->saveOrLoadType2Block( action, &block, false ) ) {
+        if( !this->loadType2Block( action, &block ) ) {
             goto NEEDAUTH;
         }
         this->regenKeys( action );

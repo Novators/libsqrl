@@ -17,7 +17,7 @@
 
 namespace libsqrl
 {
-    SqrlClientAsync::SqrlClientAsync() {
+    SqrlClientAsync::SqrlClientAsync() : SqrlClient() {
         this->myThread = new std::thread( SqrlClientAsync::clientThread );
     }
 
@@ -32,7 +32,11 @@ namespace libsqrl
         if( !client ) return;
          while( !client->stopping ) {
             if( client->loop() ) {
-                sqrl_sleep( 50 );
+                if( client->rapid ) {
+                    client->rapid = false;
+                } else {
+                    sqrl_sleep( 50 );
+                }
             } else {
                 sqrl_sleep( 100 );
             }

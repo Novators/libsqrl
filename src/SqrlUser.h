@@ -94,16 +94,12 @@ namespace libsqrl
         void        memUnlock();
         bool        regenKeys( SqrlAction *action );
         void        removeKey( int key_type );
-        bool        updateStorage( SqrlAction *action );
         void initialize();
         bool _keyGen( SqrlAction *t, int key_type );
-        bool saveOrLoadType2Block( SqrlAction *t, SqrlBlock *block, bool saving );
+        bool loadType2Block( SqrlAction *t, SqrlBlock *block );
         bool saveOrLoadType3Block( SqrlAction *action, SqrlBlock *block, bool saving );
         bool loadType1Block( SqrlAction *t, SqrlBlock *block );
-        bool saveType1Block( SqrlAction *t, SqrlBlock *block );
         void _load_unique_id();
-        bool save( SqrlActionSave *action );
-        bool saveToBuffer( SqrlActionSave *action );
     };
 }
 #endif // SQRLUSER_H

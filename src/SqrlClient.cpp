@@ -32,7 +32,9 @@ namespace libsqrl
     static std::mutex sqrl_client_mutex;
 #endif
 
-    SqrlClient::SqrlClient() {
+    SqrlClient::SqrlClient() :
+        rapid(false)
+    {
         this->initialize();
     }
 

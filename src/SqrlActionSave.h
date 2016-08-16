@@ -11,6 +11,8 @@
 
 #include "sqrl.h"
 #include "SqrlIdentityAction.h"
+#include "SqrlCrypt.h"
+#include "SqrlBlock.h"
 
 namespace libsqrl
 {
@@ -19,6 +21,7 @@ namespace libsqrl
     public:
         SqrlActionSave( SqrlUser *user, SqrlUri *uri = NULL, Sqrl_Export exportType = SQRL_EXPORT_ALL, Sqrl_Encoding encodingType = SQRL_ENCODING_BINARY );
         SqrlActionSave( SqrlUser *user, const char *path, Sqrl_Export exportType = SQRL_EXPORT_ALL, Sqrl_Encoding encodingType = SQRL_ENCODING_BINARY );
+        ~SqrlActionSave();
         Sqrl_Export getExportType();
         void setExportType( Sqrl_Export type );
         Sqrl_Encoding getEncodingType();
@@ -29,10 +32,17 @@ namespace libsqrl
         int run( int cs );
 
     protected:
+        bool t1_init();
+        bool t1_finalize();
+        bool t2_init();
+        bool t2_finalize();
+
         Sqrl_Export exportType;
         Sqrl_Encoding encodingType;
         char *buffer;
         size_t buffer_len;
+        SqrlCrypt *crypt;
+        SqrlBlock *block;
         void onRelease();
     };
 }

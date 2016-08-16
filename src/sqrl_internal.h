@@ -56,6 +56,26 @@ return SQRL_ACTION_STATE_DELETE;
 
     extern struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
 
+#pragma pack(push)
+#pragma pack(1)
+    struct t1scratch
+    {
+        uint8_t mk[SQRL_KEY_SIZE];
+        uint8_t ilk[SQRL_KEY_SIZE];
+        uint8_t key[SQRL_KEY_SIZE];
+    };
+    struct t2scratch
+    {
+        uint8_t iuk[SQRL_KEY_SIZE];
+        uint8_t key[SQRL_KEY_SIZE];
+    };
+    struct t3scratch
+    {
+        uint8_t piuks[4][SQRL_KEY_SIZE];
+        uint8_t key[SQRL_KEY_SIZE];
+    };
+#pragma pack(pop)
+
     void SqrlInit();
     void sqrl_sleep( int sleepMs );
     bool sqrl_parse_key_value( char **strPtr, char **keyPtr, char **valPtr,

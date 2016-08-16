@@ -39,11 +39,15 @@ namespace libsqrl
         count(0),
         nFactor(9),
         flags(SQRL_ENCRYPT | SQRL_ITERATIONS),
-        key(NULL)    
+        key(NULL),
+        enscrypt(NULL)
     {
     }
 
     SqrlCrypt::~SqrlCrypt() {
+        if( this->enscrypt ) {
+            delete this->enscrypt;
+        }
     }
 
     int SqrlCrypt::enHash( uint64_t *out, const uint64_t *in ) {
@@ -129,47 +133,57 @@ namespace libsqrl
 
     }
 
-    bool SqrlCrypt::genKey( SqrlAction *action, const SqrlString *password ) {
-        if( !action || !password ) return false;
+    bool SqrlCrypt::genKey_init( SqrlAction *action, const SqrlString *password ) {
+        if( !action || !password || this->enscrypt ) {
+            return false;
+        }
         if( !this->key || this->count == 0 ) return false;
         size_t salt_len = this->salt ? 16 : 0;
         SqrlString salt( this->salt, salt_len );
         if( (this->flags & SQRL_MILLIS) == SQRL_MILLIS ) {
-            SqrlEnScrypt es = SqrlEnScrypt( NULL, password, &salt, this->count, false, this->nFactor );
-            int p, lp = 0;
-            action->onProgress( 0 );
-            while( !es.isFinished() ) {
-                es.update();
-                p = es.getCurrentProgress();
-                if( p > lp ) {
-                    lp = p;
-                    action->onProgress( p );
-                }
-            }
-            if( !es.isSuccessful() ) return false;
-            SqrlString *key = es.getResult();
-            memcpy( this->key, key->cdata(), SQRL_KEY_SIZE );
-            this->count = es.getIterations();
-            this->flags &= ~SQRL_MILLIS;
-            this->flags |= SQRL_ITERATIONS;
+            this->enscrypt = new SqrlEnScrypt( action, password, &salt, this->count, false, this->nFactor );
         } else {
-            SqrlEnScrypt es( NULL, password, &salt, this->count, true, this->nFactor );
-            int p, lp = 0;
-            action->onProgress( 0 );
-            while( !es.isFinished() ) {
-                es.update();
-                p = es.getCurrentProgress();
-                if( p > lp ) {
-                    lp = p;
-                    action->onProgress( p );
-                }
-            }
-            if( !es.isSuccessful() ) return false;
-            SqrlString *key = es.getResult();
-            memcpy( this->key, key->cdata(), SQRL_KEY_SIZE );
-            this->count = es.getIterations();
+            this->enscrypt = new SqrlEnScrypt( action, password, &salt, this->count, true, this->nFactor );
         }
+        this->lastProgress = 0;
+        action->onProgress( 0 );
         return true;
+    }
+
+    bool SqrlCrypt::genKey_step( SqrlAction *action ) {
+        if( !action || !this->enscrypt ) return false;
+        int p;
+        if( !this->enscrypt->isFinished() ) {
+            this->enscrypt->update();
+            p = this->enscrypt->getCurrentProgress();
+            if( p > this->lastProgress ) {
+                this->lastProgress = p;
+                action->onProgress( p );
+            }
+            return true;
+        }
+        return false;
+    }
+
+    bool SqrlCrypt::genKey_finalize( SqrlAction *action ) {
+        if( !action || !this->enscrypt ) return false;
+        if( !this->enscrypt->isFinished() || !this->enscrypt->isSuccessful() ) return false;
+        SqrlString *key = this->enscrypt->getResult();
+        memcpy( this->key, key->cdata(), SQRL_KEY_SIZE );
+        this->count = this->enscrypt->getIterations();
+        this->flags &= ~SQRL_MILLIS;
+        this->flags |= SQRL_ITERATIONS;
+        delete this->enscrypt;
+        this->enscrypt = NULL;
+        return true;
+    }
+
+    bool SqrlCrypt::genKey( SqrlAction *action, const SqrlString *password ) {
+        if( this->genKey_init( action, password ) ) {
+            while( this->genKey_step( action ) );
+            return this->genKey_finalize( action );
+        }
+        return false;
     }
 
     bool SqrlCrypt::doCrypt() {
