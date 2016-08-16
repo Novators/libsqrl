@@ -27,6 +27,25 @@ namespace libsqrl
 #define SODIUM_SCRYPT crypto_pwhash_scryptsalsa208sha256_ll
 
 
+    SqrlCrypt::SqrlCrypt() :
+        plain_text(NULL),
+        cipher_text(NULL),
+        text_len(0),
+        add(NULL),
+        add_len(0),
+        tag(NULL),
+        salt(NULL),
+        iv(NULL),
+        count(0),
+        nFactor(9),
+        flags(SQRL_ENCRYPT | SQRL_ITERATIONS),
+        key(NULL)    
+    {
+    }
+
+    SqrlCrypt::~SqrlCrypt() {
+    }
+
     int SqrlCrypt::enHash( uint64_t *out, const uint64_t *in ) {
         uint64_t trans[4];
         uint64_t tmp[4];

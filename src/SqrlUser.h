@@ -86,7 +86,6 @@ namespace libsqrl
         SqrlString uniqueId;
         SqrlKeySet *keys;
 
-        static int         enscryptCallback( int percent, void *data );
         void        ensureKeysAllocated();
         bool        isMemLocked();
         bool        tryLoadPassword( SqrlAction *action, bool retry );
@@ -98,14 +97,10 @@ namespace libsqrl
         bool        updateStorage( SqrlAction *action );
         void initialize();
         bool _keyGen( SqrlAction *t, int key_type );
-        SqrlCrypt* _init_t2( SqrlAction *t, SqrlBlock *block, bool forSaving );
-        bool sul_block_2( SqrlAction *t, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata );
-        bool sus_block_2( SqrlAction *t, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata );
-        bool sul_block_3( SqrlAction *t, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata );
-        bool sus_block_3( SqrlAction *t, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata );
-        bool sul_block_1( SqrlAction *t, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata );
-        bool sus_block_1( SqrlAction *t, SqrlBlock *block, struct Sqrl_User_s_callback_data cbdata );
-        static void saveCallbackData( struct Sqrl_User_s_callback_data *cbdata );
+        bool saveOrLoadType2Block( SqrlAction *t, SqrlBlock *block, bool saving );
+        bool saveOrLoadType3Block( SqrlAction *action, SqrlBlock *block, bool saving );
+        bool loadType1Block( SqrlAction *t, SqrlBlock *block );
+        bool saveType1Block( SqrlAction *t, SqrlBlock *block );
         void _load_unique_id();
         bool save( SqrlActionSave *action );
         bool saveToBuffer( SqrlActionSave *action );

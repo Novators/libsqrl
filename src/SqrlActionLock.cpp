@@ -49,9 +49,6 @@ namespace libsqrl
                 // locking not required
                 return this->retActionComplete( SQRL_ACTION_SUCCESS );
             }
-            this->cbdata.action = this;
-            this->cbdata.adder = 0;
-            this->cbdata.multiplier = 1;
             crypt.plain_text = (uint8_t*)(*this->user->keys)[0];
             crypt.text_len = (uint16_t)((uint8_t*)scratch - crypt.plain_text);
             crypt.salt = scratch->data();

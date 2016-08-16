@@ -55,14 +55,10 @@ namespace libsqrl
     void SqrlBlock::init( uint16_t blockType, uint16_t blockLength ) {
         if( blockLength < 4 ) blockLength = 4;
         this->clear();
+        this->append( (char)0, blockLength );
+        this->writeInt16( blockLength, 0 );
+        this->writeInt16( blockType, 2 );
         this->cur = 4;
-        if( blockLength > 0 ) {
-            this->append( (char)0, blockLength );
-            this->writeInt16( blockLength, 0 );
-            this->writeInt16( blockType, 2 );
-        } else {
-            this->append( (char)0, 4 );
-        }
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////

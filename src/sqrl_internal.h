@@ -51,16 +51,6 @@ namespace libsqrl
 SqrlClient::getClient()->callActionComplete( this ); \
 return SQRL_ACTION_STATE_DELETE;
 
-    struct Sqrl_User_s_callback_data
-    {
-        SqrlAction *action;
-        int adder;
-        double multiplier;
-        int t1;
-        int t2;
-        int total;
-    };
-
     double sqrl_get_real_time();
     uint64_t sqrl_get_timestamp();
 

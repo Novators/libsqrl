@@ -27,20 +27,6 @@ namespace libsqrl
 
     struct SqrlUserList *SQRL_USER_LIST;
 
-    int SqrlUser::enscryptCallback( int percent, void *data ) {
-        struct Sqrl_User_s_callback_data *cbdata = (struct Sqrl_User_s_callback_data*)data;
-        if( cbdata ) {
-            int progress = cbdata->adder + (int)((double)percent * cbdata->multiplier);
-            if( progress > 100 ) progress = 100;
-            if( progress < 0 ) progress = 0;
-            if( percent == 100 && progress >= 99 ) progress = 100;
-            SqrlClient::getClient()->onProgress( cbdata->action, progress );
-            return 0;
-        } else {
-            return 1;
-        }
-    }
-
     void SqrlUser::ensureKeysAllocated() {
         if( this->keys == NULL ) {
             this->keys = new SqrlKeySet();

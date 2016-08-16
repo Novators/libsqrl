@@ -22,11 +22,13 @@ namespace libsqrl
     class DLL_PUBLIC SqrlCrypt
     {
     public:
+        SqrlCrypt();
+        ~SqrlCrypt();
         static int enHash( uint64_t *out, const uint64_t *in );
         static int encrypt( uint8_t *cipherText, const uint8_t *plainText, size_t textLength,
-            const uint8_t *key, const uint8_t *iv, const uint8_t *add, size_t add_len, uint8_t *tag );
+        const uint8_t *key, const uint8_t *iv, const uint8_t *add, size_t add_len, uint8_t *tag );
         static int decrypt( uint8_t *plainText, const uint8_t *cipherText, size_t textLength,
-            const uint8_t *key, const uint8_t *iv, const uint8_t *add, size_t add_len, const uint8_t *tag );
+        const uint8_t *key, const uint8_t *iv, const uint8_t *add, size_t add_len, const uint8_t *tag );
         static void generateIdentityLockKey( uint8_t ilk[SQRL_KEY_SIZE], const uint8_t iuk[SQRL_KEY_SIZE] );
         static void generateLocalKey( uint8_t local[SQRL_KEY_SIZE], const uint8_t mk[SQRL_KEY_SIZE] );
         static void generateMasterKey( uint8_t mk[SQRL_KEY_SIZE], const uint8_t iuk[SQRL_KEY_SIZE] );
@@ -44,18 +46,18 @@ namespace libsqrl
         bool genKey( SqrlAction *action, const SqrlString *password );
         bool doCrypt();
 
-        uint8_t *plain_text = NULL;
-        uint8_t *cipher_text = NULL;
-        uint16_t text_len = 0;
-        uint8_t *add = NULL;
-        uint16_t add_len = 0;
-        uint8_t *tag = NULL;
-        uint8_t *salt = NULL;
-        uint8_t *iv = NULL;
-        uint32_t count = 0;
-        uint8_t nFactor = 9;
-        uint8_t flags = SQRL_ENCRYPT | SQRL_ITERATIONS;
-        uint8_t *key = NULL;
+        uint8_t *plain_text;
+        uint8_t *cipher_text;
+        uint16_t text_len;
+        uint8_t *add;
+        uint16_t add_len;
+        uint8_t *tag;
+        uint8_t *salt;
+        uint8_t *iv;
+        uint32_t count;
+        uint8_t nFactor;
+        uint8_t flags;
+        uint8_t *key;
     };
 }
 #endif // SQRLCRYPT_H
