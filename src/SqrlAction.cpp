@@ -72,6 +72,11 @@ namespace libsqrl
     void SqrlAction::onRelease() {
     }
 
+    void SqrlAction::onProgress( int progress ) {
+        SqrlClient *client = SqrlClient::getClient();
+        client->callProgress( this, progress );
+    }
+
     void SqrlAction::setUser( SqrlUser *u ) {
         if( !u ) return;
         if( this->user ) {

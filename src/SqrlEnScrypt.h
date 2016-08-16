@@ -32,25 +32,26 @@ namespace libsqrl
         SqrlString *getResult();
         uint16_t getIterations();
         int getElapsedTime();
+        int getCurrentProgress();
 
         bool update();
 
     private:
         void done();
 
-        SqrlString *result = NULL;
-        SqrlString *password = NULL;
+        SqrlString *result;
+        SqrlString *password;
         uint16_t count;
         bool countIsIterations;
         uint64_t N;
         bool isComplete;
-        bool didError = false;
+        bool didError;
 
         uint8_t t[2][32] = {{0}, {0}};
-        double startTime, endTime;
-        void *escrypt_kdf = NULL;
-        void *local = NULL;
-        int iCount = 0;
+        double startTime, endTime, elapsed;
+        void *escrypt_kdf;
+        void *local;
+        int iCount;
 
         const SqrlAction *action;
     };

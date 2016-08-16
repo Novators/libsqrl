@@ -17,6 +17,17 @@ class GenClient : public SqrlClientAsync
     void onProgress(
         SqrlAction *transaction,
         int progress ) {
+        switch( progress ) {
+        case 0:
+            printf( "[" );
+            break;
+        case 100:
+            printf( "]\n" );
+            break;
+        default:
+            printf( "*" );
+        }
+        fflush( stdout );
     }
 
     void onAsk(

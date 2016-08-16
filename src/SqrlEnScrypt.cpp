@@ -22,9 +22,21 @@ namespace libsqrl
 /// <param name="countIsIterations">If 'count' is iterations, true.  If milliseconds, false.</param>
 /// <param name="nFactor">			The N-Factor.</param>
 ////////////////////////////////////////////////////////////////////////////////////////////////////
-    SqrlEnScrypt::SqrlEnScrypt( const SqrlAction *action, const SqrlString * password, const SqrlString * salt, uint16_t count, bool countIsIterations, uint8_t nFactor ) {
-        this->action = action;
-        this->result = new SqrlString( 32 );
+    SqrlEnScrypt::SqrlEnScrypt( const SqrlAction *action, const SqrlString * password, const SqrlString * salt, uint16_t count, bool countIsIterations, uint8_t nFactor ) :
+        result( new SqrlString( SQRL_KEY_SIZE ) ),
+        count( count ),
+        countIsIterations( countIsIterations ),
+        N( (((uint64_t)1) << nFactor) ),
+        isComplete( false ),
+        didError( false ),
+        startTime(0.0),
+        endTime(0.0),
+        elapsed(0.0),
+        escrypt_kdf(NULL),
+        local(NULL),
+        iCount(0),
+        action(action)
+    {
         const uint8_t *thePassword = NULL;
         size_t password_len = 0;
         if( password ) {
@@ -34,10 +46,6 @@ namespace libsqrl
         }
         const uint8_t *theSalt = salt ? salt->cdata() : NULL;
         size_t salt_len = salt ? salt->length() : 0;
-        this->count = count;
-        this->countIsIterations = countIsIterations;
-        this->N = (((uint64_t)1) << nFactor);
-        isComplete = false;
 
 #ifdef ARDUINO
         SHA256 sha = SHA256();
@@ -138,6 +146,20 @@ namespace libsqrl
     }
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////
+    /// <summary>Gets current progress as a percentage of the total operation.</summary>
+    ///
+    /// <returns>An integer between 0 and 100 (inclusive).</returns>
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
+    int SqrlEnScrypt::getCurrentProgress() {
+        if( this->isComplete ) return 100;
+        if( this->countIsIterations ) {
+            return this->iCount * 100 / this->count;
+        } else {
+            return (int)(this->elapsed * 100.0 / this->count);
+        }
+    }
+
+    ////////////////////////////////////////////////////////////////////////////////////////////////////
     /// <summary>Updates this SqrlEnScrypt.</summary>
     /// 
     /// <remarks>Called repeatedly, until it returns true.</remarks>
@@ -154,8 +176,8 @@ namespace libsqrl
         if( this->countIsIterations ) {
             if( this->iCount < this->count ) go = true;
         } else {
-            double elapsed = 1000 * (sqrl_get_real_time() - this->startTime);
-            if( elapsed < this->count ) go = true;
+            this->elapsed = 1000 * (sqrl_get_real_time() - this->startTime);
+            if( this->elapsed < this->count ) go = true;
         }
         if( go ) {
             if( this->iCount & 1 ) {

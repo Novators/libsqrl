@@ -135,9 +135,16 @@ namespace libsqrl
         size_t salt_len = this->salt ? 16 : 0;
         SqrlString salt( this->salt, salt_len );
         if( (this->flags & SQRL_MILLIS) == SQRL_MILLIS ) {
-            SqrlEnScrypt es( NULL, password, &salt, this->count, false, this->nFactor );
+            SqrlEnScrypt es = SqrlEnScrypt( NULL, password, &salt, this->count, false, this->nFactor );
+            int p, lp = 0;
+            action->onProgress( 0 );
             while( !es.isFinished() ) {
                 es.update();
+                p = es.getCurrentProgress();
+                if( p > lp ) {
+                    lp = p;
+                    action->onProgress( p );
+                }
             }
             if( !es.isSuccessful() ) return false;
             SqrlString *key = es.getResult();
@@ -147,8 +154,15 @@ namespace libsqrl
             this->flags |= SQRL_ITERATIONS;
         } else {
             SqrlEnScrypt es( NULL, password, &salt, this->count, true, this->nFactor );
+            int p, lp = 0;
+            action->onProgress( 0 );
             while( !es.isFinished() ) {
                 es.update();
+                p = es.getCurrentProgress();
+                if( p > lp ) {
+                    lp = p;
+                    action->onProgress( p );
+                }
             }
             if( !es.isSuccessful() ) return false;
             SqrlString *key = es.getResult();

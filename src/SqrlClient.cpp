@@ -162,7 +162,7 @@ namespace libsqrl
         info->cbType = SQRL_CALLBACK_PROGRESS;
         info->ptr = action;
         info->progress = progress;
-        this->callbackQueue.push( info );
+        this->callbackQueue.push_back( info );
     }
 
     void SqrlClient::callAuthenticationRequired( SqrlAction * action, Sqrl_Credential_Type credentialType ) {

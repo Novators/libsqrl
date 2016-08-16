@@ -46,6 +46,7 @@ namespace libsqrl
         friend class SqrlClientAsync;
         friend class SqrlUser;
         friend class SqrlIdentityAction;
+        friend class SqrlCrypt;
 
     public:
         SqrlAction();
@@ -128,6 +129,13 @@ namespace libsqrl
         /// etc...</summary>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         virtual void onRelease();
+
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        /// <summary>Called internally to update progress bar.</summary>
+        ///
+        /// <param name="progress">Progress of current operation (percentage between 0 and 100)</param>
+        ////////////////////////////////////////////////////////////////////////////////////////////////////
+        virtual void onProgress( int progress );
 
         SqrlUser *user;
         SqrlUri *uri;
