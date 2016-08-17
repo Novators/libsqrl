@@ -28,12 +28,18 @@ namespace libsqrl
         buffer( NULL ),
         buffer_len( 0 ),
         crypt(NULL),
-        block(NULL){
+        block(NULL) {
         if( uri ) {
             this->uri = new SqrlUri( uri );
         } else {
             this->uri = NULL;
         }
+        double t1ms = user->getEnscryptSeconds() * 1000.0;
+        double t2ms = SQRL_RESCUE_ENSCRYPT_SECONDS * 1000.0;
+        double total = t1ms + t2ms;
+        this->t1per = t1ms / total;
+        this->t2per = t2ms / total;
+
     }
 
     SqrlActionSave::SqrlActionSave( SqrlUser *user, const char *path, Sqrl_Export exportType, Sqrl_Encoding encodingType )
@@ -305,6 +311,16 @@ namespace libsqrl
             }
         }
         return false;
+    }
+    
+    void SqrlActionSave::onProgress( int progress ) {
+        if( this->state < SAS_T2 ) {
+            progress = (int)(progress * this->t1per);
+        } else {
+            progress = (int)((progress * this->t2per) + (100 * this->t1per));
+        }
+        SqrlClient *client = SqrlClient::getClient();
+        client->callProgress( this, progress );
     }
 
     Sqrl_Export SqrlActionSave::getExportType() {

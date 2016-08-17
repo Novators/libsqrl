@@ -36,6 +36,8 @@ namespace libsqrl
         bool t1_finalize();
         bool t2_init();
         bool t2_finalize();
+        virtual void onProgress( int progress ) override;
+        double t1per, t2per;
 
         Sqrl_Export exportType;
         Sqrl_Encoding encodingType;

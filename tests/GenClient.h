@@ -56,7 +56,7 @@ class GenClient : public SqrlClientAsync
         REQUIRE( false );
     }
     void onSaveSuggested( SqrlUser *user ) {
-        new SqrlActionSave( user, "file://test2.sqrl" );
+        new SqrlActionSave( user, "file://test2.sqrl", SQRL_EXPORT_ALL, SQRL_ENCODING_BINARY );
     }
     void onActionComplete( SqrlAction *action ) {
         this->completed++;
