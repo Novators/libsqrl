@@ -62,6 +62,7 @@ namespace libsqrl
         this->referenceCount = 1;
         this->keys = NULL;
         this->storage = NULL;
+        this->edition = 0;
         struct SqrlUserList *l = (struct SqrlUserList*)calloc( 1, sizeof( struct SqrlUserList ) );
         if( l ) {
             l->user = this;

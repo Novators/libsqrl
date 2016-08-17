@@ -77,6 +77,7 @@ namespace libsqrl
     private:
         uint32_t flags;
         uint32_t hint_iterations;
+        uint16_t edition;
         Sqrl_User_Options options;
 #ifndef ARDUINO
         std::mutex referenceCountMutex;

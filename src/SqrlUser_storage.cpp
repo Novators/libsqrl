@@ -73,25 +73,31 @@ namespace libsqrl
         SqrlBlock *block,
         bool saving ) {
         if( action->getUser() != this ) return false;
+        uint16_t ed = this->edition;
         
         SqrlCrypt crypt = SqrlCrypt();
         struct t3scratch *t3s = (struct t3scratch*)this->scratch()->data();
         int piuks[] = {SQRL_KEY_PIUK0, SQRL_KEY_PIUK1, SQRL_KEY_PIUK2, SQRL_KEY_PIUK3};
 
         if( saving ) {
-            block->init( 3, 148 );
+            if( ed == 0 ) return false;
+            if( ed >= 4 ) block->init( 3, 150 );
+            else block->init( 3, 22 + (ed * SQRL_KEY_SIZE) );
+            block->writeInt16( this->edition );
         } else {
+            block->seek( 2 );
+            if( block->readInt16() != 3 ) return false;
+            ed = block->readInt16();
             block->seek( 0 );
-            if( block->readInt16() != 148 ||
-                block->readInt16() != 3 ) {
-                return false;
-            }
+            if( ed == 0 ) return false;
+            if( ed >= 4 && block->readInt16() != 150 ) return false;
+            else if( block->readInt16() != (22 + (ed * SQRL_KEY_SIZE)) ) return false;
         }
 
         crypt.add = block->getDataPointer();
-        crypt.add_len = 4;
-        crypt.text_len = SQRL_KEY_SIZE * 4;
-        crypt.cipher_text = crypt.add + 4;
+        crypt.add_len = 6;
+        crypt.text_len = (ed > 4) ? (4 * SQRL_KEY_SIZE) : (ed * SQRL_KEY_SIZE);
+        crypt.cipher_text = crypt.add + crypt.add_len;
         crypt.tag = crypt.cipher_text + crypt.text_len;
         crypt.plain_text = (uint8_t*)t3s;
         crypt.iv = crypt.plain_text + crypt.text_len;
@@ -99,7 +105,8 @@ namespace libsqrl
         crypt.flags = SQRL_DECRYPT | SQRL_ITERATIONS;
 
         if( saving ) {
-            for( int i = 0; i < 4; i++ ) {
+            if( ed > 4 ) ed = 4;
+            for( int i = 0; i < ed; i++ ) {
                 SqrlFixedString *str = (*this->keys)[piuks[i]];
                 if( str && str->length() == SQRL_KEY_SIZE ) {
                     memcpy( t3s->piuks[i], str->data(), SQRL_KEY_SIZE );
@@ -118,7 +125,9 @@ namespace libsqrl
 
             if( crypt.doCrypt() ) {
                 if( !saving ) {
-                    for( int i = 0; i < 4; i++ ) {
+                    this->edition = ed;
+                    if( ed > 4 ) ed = 4;
+                    for( int i = 0; i < ed; i++ ) {
                         SqrlFixedString *str = this->key( action, piuks[i] );
                         str->clear();
                         str->append( t3s->piuks[i], SQRL_KEY_SIZE );
