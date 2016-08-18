@@ -274,18 +274,24 @@ namespace libsqrl
         SqrlFixedString *cur, *prev;
         switch( key_type ) {
         case SQRL_KEY_IUK:
-            curKey = SQRL_KEY_PIUK3;
-            do {
-                cur = (*this->keys)[curKey];
-                prev = (*this->keys)[curKey - 1];
+            if( this->hasKey( SQRL_KEY_IUK ) ) {
+                this->edition++;
+                curKey = SQRL_KEY_PIUK3;
+                do {
+                    cur = (*this->keys)[curKey];
+                    prev = (*this->keys)[curKey - 1];
+                    cur->clear();
+                    if( prev->length() ) cur->append( prev );
+                    curKey--;
+                } while( curKey > SQRL_KEY_PIUK0 );
+                cur = (*this->keys)[SQRL_KEY_PIUK0];
+                prev = (*this->keys)[SQRL_KEY_IUK];
                 cur->clear();
                 cur->append( prev );
-                curKey--;
-            } while( curKey > SQRL_KEY_PIUK0 );
-            cur = (*this->keys)[SQRL_KEY_PIUK0];
-            prev = (*this->keys)[SQRL_KEY_IUK];
-            cur->clear();
-            cur->append( prev );
+            } else {
+                this->edition = 0;
+                prev = (*this->keys)[SQRL_KEY_IUK];
+            }
             prev->clear();
             prev->appendEntropy( SQRL_KEY_SIZE );
             retVal = true;
