@@ -19,6 +19,8 @@ namespace libsqrl
     public:
         SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false );
         SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false );
-    };
+	protected:
+		const char *alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789-_";
+	};
 }
 #endif // SQRLBASE64_H
