@@ -183,7 +183,7 @@ TEST_CASE( "EnScrypt password, salt, 123 iterations", "[.][enscrypt]" ) {
 
 TEST_CASE( "Identity Lock Keys", "[crypto]" ) {
     NullClient *client = new NullClient();
-    uint8_t iuk[32] = {0};
+    uint8_t iuk[32];
     uint8_t ilk[32];
     uint8_t rlk[32] = {0xff};
     uint8_t suk[32];
@@ -192,9 +192,10 @@ TEST_CASE( "Identity Lock Keys", "[crypto]" ) {
     uint8_t tmp[32];
 
     uint8_t sig[SQRL_SIG_SIZE];
-    SqrlEntropy::bytes( iuk, 32 );
+    sqrl_randombytes( iuk, 32 );
     SqrlCrypt::generateIdentityLockKey( ilk, iuk );
-    SqrlCrypt::generateRandomLockKey( rlk );
+    sqrl_randombytes( rlk, 32 );
+    SqrlCrypt::generateCurvePrivateKey( rlk );
     SqrlCrypt::generateCurvePrivateKey( rlk );
     SqrlCrypt::generateServerUnlockKey( suk, rlk );
     SqrlCrypt::generateVerifyUnlockKey( vuk, ilk, rlk );

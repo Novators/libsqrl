@@ -16,6 +16,7 @@
 #include "SqrlActionLock.h"
 #include "SqrlStorage.h"
 #include "SqrlDeque.h"
+#include "SqrlBigInt.h"
 
 namespace libsqrl
 {
@@ -254,17 +255,13 @@ namespace libsqrl
         (*this->keys)[SQRL_KEY_SCRATCH]->secureClear();
     }
 
-    static void bin2rc( char *buf, uint8_t *bin ) {
-        // bin must be 512+ bits of entropy!
-        int i, j, k;
-        uint64_t *tmp = (uint64_t*)bin;
-        for( i = 0, j = 0; i < 3; i++ ) {
-            for( k = 0; k < 8; k++ ) {
-                buf[j++] = '0' + (tmp[k] % 10);
-                tmp[k] /= 10;
-            }
+    static void bin2rc( SqrlString *buf, SqrlString *bin ) {
+        SqrlBigInt src = SqrlBigInt( bin );
+        int i;
+        buf->clear();
+        for( i = 0; i < 24; i++ ) {
+            buf->append( src.divideBy( 10 ) + '0', 1 );
         }
-        buf[j] = 0;
     }
 
     bool SqrlUser::_keyGen( SqrlAction *action, int key_type ) {
@@ -325,12 +322,10 @@ namespace libsqrl
             break;
         case SQRL_KEY_RESCUE_CODE:
             cur = (*this->keys)[SQRL_KEY_RESCUE_CODE];
-            cur->clear();
             prev = (*this->keys)[SQRL_KEY_SCRATCH];
             prev->clear();
-            prev->appendEntropy( 512 );
-            cur->append( (char)0, SQRL_RESCUE_CODE_LENGTH );
-            bin2rc( cur->string(), prev->data() );
+            prev->appendEntropy( 32 );
+            bin2rc( cur, prev );
             retVal = true;
             break;
         }

@@ -89,7 +89,5 @@ return SQRL_ACTION_STATE_DELETE;
     int sqrl_mprotect_noaccess( void *ptr );
     int sqrl_mprotect_readonly( void *ptr );
     int sqrl_mprotect_readwrite( void *ptr );
-    uint32_t sqrl_random();
-    void sqrl_randombytes( void *ptr, size_t len );
 }
 #endif // SQRL_INTERNAL_H

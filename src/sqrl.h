@@ -109,7 +109,6 @@ namespace libsqrl
 
 #define SQRL_DEFAULT_ENSCRYPT_SECONDS 		     1
 #define SQRL_RESCUE_ENSCRYPT_SECONDS 		     5
-#define SQRL_ENTROPY_NEEDED 				   512
 #define SQRL_MILLIS_PER_SECOND				  1000
 #define SQRL_HINT_ENSCRYPT_MILLISECONDS 	  1000
 
@@ -150,5 +149,9 @@ namespace libsqrl
     uint16_t Sqrl_Version_Minor();
     uint16_t Sqrl_Version_Build();
     uint16_t Sqrl_Version_Revision();
+
+    uint32_t sqrl_random();
+    void sqrl_randombytes( void *ptr, size_t len );
+
 }
 #endif // SQRL_H

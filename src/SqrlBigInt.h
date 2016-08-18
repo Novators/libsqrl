@@ -33,9 +33,10 @@ namespace libsqrl
         }
 
     public:
-        SqrlBigInt() : SqrlString() {};
-        SqrlBigInt( const SqrlString *in ) : SqrlString( in ) {};
-        SqrlBigInt( size_t len ) : SqrlString( len ) {};
+        SqrlBigInt() : SqrlString() {}
+        SqrlBigInt( const SqrlString *in ) : SqrlString( in ) {}
+        SqrlBigInt( size_t len ) : SqrlString( len ) {}
+        SqrlBigInt( const uint8_t *in, size_t len ) : SqrlString( in, len ) {}
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         /// <summary>Adds a single byte to the string.</summary>

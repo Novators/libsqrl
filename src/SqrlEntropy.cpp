@@ -248,7 +248,6 @@ namespace libsqrl
         if( !buf || (nBytes <= 0) ) return 0;
 
         int desired_entropy = (nBytes > 64) ? (8 * 64) : (8 * nBytes);
-        if( desired_entropy > SQRL_ENTROPY_NEEDED ) desired_entropy = SQRL_ENTROPY_NEEDED;
 #ifdef ARDUINO
         while( SqrlEntropy::estimated_entropy < desired_entropy ) {
             SqrlEntropy::update();
