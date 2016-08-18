@@ -63,17 +63,17 @@ namespace libsqrl
         int i;
         for( i = 0; i < CONTEXT_KV_COUNT; i++ ) {
             if( this->context_strings[i] )
-                free( this->context_strings[i] );
+                delete this->context_strings[i];
         }
         for( i = 0; i < CLIENT_KV_COUNT; i++ ) {
             if( this->client_strings[i] )
-                free( this->client_strings[i] );
+                delete this->client_strings[i];
         }
         for( i = 0; i < SERVER_KV_COUNT; i++ ) {
             if( this->server_strings[i] )
-                free( this->server_strings[i] );
+                delete this->server_strings[i];
         }
-        if( this->reply ) free( this->reply );
+        if( this->reply ) delete this->reply;
 
         sqrl_memzero( this, sizeof( this ) );
     }

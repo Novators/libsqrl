@@ -74,12 +74,12 @@ namespace libsqrl
         SqrlFixedString( size_t capacity, void * location, size_t length = 0 ) {
             if( !location ) capacity = 0;
             this->myCapacity = capacity;
-            this->myData = location;
+            this->myData = (uint8_t*)location;
             if( length ) {
                 if( length >= capacity ) length = capacity - 1;
-                this->myDend = (char*)location + length;
+                this->myDend = this->myData + length;
             } else {
-                this->myDend = location;
+                this->myDend = this->myData;
             }
             memset( this->myDend, 0, capacity - length + 1 );
             this->selfAllocated = false;
@@ -129,7 +129,7 @@ namespace libsqrl
         /// <summary>Deallocates this SqrlString.</summary>
         virtual void deallocate() {
             if( this->selfAllocated && this->myData ) {
-                free( this->myData );
+                delete this->myData;
             }
             this->myData = NULL;
             this->myDend = NULL;

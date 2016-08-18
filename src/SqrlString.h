@@ -291,7 +291,7 @@ namespace libsqrl
             size_t cpy = cap - this->length();
             if( len < cpy ) cpy = len;
             memcpy( this->myDend, string->cdata(), cpy );
-            this->myDend = (char*)this->myDend + cpy;
+            this->myDend += cpy;
             *((uint8_t*)this->myDend) = 0;
         }
 
@@ -308,7 +308,7 @@ namespace libsqrl
             size_t cpy = cap - this->length();
             if( len < cpy ) cpy = len;
             memcpy( this->myDend, in, cpy );
-            this->myDend = (char*)this->myDend + cpy;
+            this->myDend += cpy;
             *((uint8_t*)this->myDend) = 0;
         }
 
@@ -325,7 +325,7 @@ namespace libsqrl
             size_t cpy = cap - this->length();
             if( len < cpy ) cpy = len;
             memcpy( this->myDend, in, cpy );
-            this->myDend = (char*)this->myDend + cpy;
+            this->myDend += cpy;
             *((uint8_t*)this->myDend) = 0;
         }
 
@@ -341,7 +341,7 @@ namespace libsqrl
             size_t cpy = cap - this->length();
             if( cnt < cpy ) cpy = cnt;
             memset( this->myDend, (int)in, cpy );
-            this->myDend = (char*)this->myDend + cpy;
+            this->myDend += cpy;
             *((uint8_t*)this->myDend) = 0;
         }
 
@@ -350,7 +350,7 @@ namespace libsqrl
             size_t cpy = this->reserve( this->length() + bytes ) - this->length();
             if( bytes < cpy ) cpy = bytes;
             SqrlEntropy::bytes( this->dend(), (int)cpy );
-            this->myDend = (char*)this->myDend + cpy;
+            this->myDend += cpy;
             *((uint8_t*)this->myDend) = 0;
         }
 
@@ -378,7 +378,7 @@ namespace libsqrl
             }
             it[1] = it[0];
             it[0] = byte;
-            this->myDend = (char*) this->myDend + 1;
+            this->myDend++;
         }
 
         ////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -390,7 +390,7 @@ namespace libsqrl
             size_t len = this->length() + 1;
             if( this->reserve( len ) < len ) return;
             *((char*)this->myDend) = ch;
-            this->myDend = (char*) this->myDend + 1;
+            this->myDend++;
             *((char*)this->myDend) = 0;
         }
 
@@ -413,7 +413,7 @@ namespace libsqrl
         /// <returns>The value of the char that was removed.</returns>
         ////////////////////////////////////////////////////////////////////////////////////////////////////
         char popc_back() {
-            char *back = (char*)this->myDend - 1;
+            uint8_t *back = this->myDend - 1;
             if( back < this->myData ) return 0;
             char ret = *back;
             *back = 0;
@@ -567,7 +567,7 @@ namespace libsqrl
         virtual void allocate( size_t len ) {
             if( len <= this->myCapacity ) return;
             if( this->myData ) this->deallocate();
-            this->myData = malloc( len + 1 );
+            this->myData = new uint8_t[len + 1];
             if( this->myData ) {
                 this->myCapacity = len;
                 this->myDend = this->myData;
@@ -584,27 +584,27 @@ namespace libsqrl
             if( len <= this->myCapacity ) return;
             size_t oldLen = this->length();
             void * oldData = this->myData;
-            this->myData = malloc( len + 1 );
+            this->myData = new uint8_t[len + 1];
             if( this->myData ) {
                 this->myCapacity = len;
-                this->myDend = (char*)this->myData + oldLen;
+                this->myDend = this->myData + oldLen;
                 memset( this->myData, 0, len + 1 );
                 memcpy( this->myData, oldData, oldLen );
-                free( oldData );
+                delete oldData;
             }
         }
         /// <summary>Deallocates this SqrlString.</summary>
         virtual void deallocate() {
             if( this->myData ) {
-                free( this->myData );
+                delete this->myData;
                 this->myData = NULL;
             }
             this->myDend = NULL;
             this->myCapacity = 0;
         }
 
-        void * myData = NULL;
-        void * myDend = NULL;
+        uint8_t * myData = NULL;
+        uint8_t * myDend = NULL;
         size_t myCapacity = 0;
     };
 }

@@ -63,11 +63,11 @@ namespace libsqrl
         this->keys = NULL;
         this->storage = NULL;
         this->edition = 0;
-        struct SqrlUserList *l = (struct SqrlUserList*)calloc( 1, sizeof( struct SqrlUserList ) );
+        struct SqrlUserList *l = new struct SqrlUserList;
         if( l ) {
             l->user = this;
             SQRL_MUTEX_LOCK( &client->userMutex )
-                l->next = SQRL_USER_LIST;
+            l->next = SQRL_USER_LIST;
             SQRL_USER_LIST = l;
             SQRL_MUTEX_UNLOCK( &client->userMutex )
         }
@@ -165,7 +165,7 @@ namespace libsqrl
         } else {
             prev->next = list->next;
         }
-        free( list );
+        delete list;
         SQRL_MUTEX_UNLOCK( &client->userMutex )
 
             END:

@@ -97,11 +97,11 @@ namespace libsqrl
 #ifdef ARDUINO
         SqrlEntropy::initialized = true;
         size_t len = Sqrl_Version( NULL, 0 );
-        char *buf = (char*)malloc( len + 1 );
+        char *buf = new char[len + 1];
         Sqrl_Version( buf, len );
         // TODO: EEPROM address?
         RNG.begin( buf, 0 );
-        free( buf );
+        delete buf;
 #else
         if( SqrlEntropy::state ) return;
         SqrlEntropy::initialized = true;
@@ -159,7 +159,7 @@ namespace libsqrl
             if( SqrlEntropy::initialized ) {
                 struct sqrl_fast_flux_entropy ffe;
                 sqrl_store_fast_flux_entropy( &ffe );
-                uint8_t *buf = (uint8_t*)malloc( msg_len + sizeof( struct sqrl_fast_flux_entropy ) );
+                uint8_t *buf = new uint8_t[msg_len + sizeof( struct sqrl_fast_flux_entropy )];
                 if( buf ) {
                     memcpy( buf, msg, msg_len );
                     memcpy( buf + msg_len, &ffe, sizeof( struct sqrl_fast_flux_entropy ) );
@@ -168,7 +168,7 @@ namespace libsqrl
                     if( SqrlEntropy::estimated_entropy >= SqrlEntropy::entropy_target ) {
                         SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_SLOW;
                     }
-                    free( buf );
+                    delete buf;
                 }
             }
             SqrlEntropy::mutex->unlock();

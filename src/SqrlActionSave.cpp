@@ -340,7 +340,7 @@ namespace libsqrl
     }
 
     void SqrlActionSave::onRelease() {
-        if( this->buffer ) { free( this->buffer ); }
+        if( this->buffer ) { delete this->buffer; }
         SqrlIdentityAction::onRelease();
     }
 
@@ -362,12 +362,12 @@ namespace libsqrl
 
     void SqrlActionSave::setString( const char *buf, size_t len ) {
         if( this->buffer ) {
-            free( this->buffer );
+            delete this->buffer;
         }
         this->buffer = NULL;
         this->buffer_len = 0;
         if( buf && len > 0 ) {
-            this->buffer = (char*)malloc( len + 1 );
+            this->buffer = new char[len + 1];
             if( this->buffer ) {
                 memcpy( this->buffer, buf, len );
                 this->buffer[len] = 0;

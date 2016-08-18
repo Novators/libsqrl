@@ -17,12 +17,12 @@ char *SqrlSiteAction::getAltIdentity() {
 
 void SqrlSiteAction::setAltIdentity( const char *alt ) {
     if( this->altIdentity ) {
-        free( this->altIdentity );
+        delete this->altIdentity;
         this->altIdentity = NULL;
     }
     if( alt ) {
         size_t len = strlen( alt );
-        this->altIdentity = (char*)malloc( len + 1 );
+        this->altIdentity = new char[len + 1];
         if( this->altIdentity ) {
             memcpy( this->altIdentity, alt, len );
             this->altIdentity[len] = 0;
@@ -31,5 +31,5 @@ void SqrlSiteAction::setAltIdentity( const char *alt ) {
 }
 
 void SqrlSiteAction::onRelease() {
-    if( this->altIdentity ) free( this->altIdentity );
+    if( this->altIdentity ) delete this->altIdentity;
 }

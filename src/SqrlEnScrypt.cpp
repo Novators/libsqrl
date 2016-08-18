@@ -56,7 +56,7 @@ namespace libsqrl
         this->isComplete = true;
         return true;
 #else
-        this->local = (void*)malloc( sizeof( escrypt_local_t ) );
+        this->local = malloc( sizeof( escrypt_local_t ) );
         if( escrypt_init_local( (escrypt_local_t*)this->local ) ) {
             this->didError = true;
             this->done();

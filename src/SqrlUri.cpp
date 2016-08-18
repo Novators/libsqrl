@@ -255,7 +255,7 @@ namespace libsqrl
             if( !_is_scheme_char( curstr[i] ) ) goto ERR;
         }
         /* Copy the scheme to the storage */
-        sch = (char*)malloc( len + 1 );
+        sch = new char[len + 1];
         if( NULL == sch ) goto ERR;
         memcpy( sch, curstr, len );
         sch[len] = 0;
@@ -263,10 +263,10 @@ namespace libsqrl
         if( strcmp( sch, "sqrl" ) == 0 ) this->scheme = SQRL_SCHEME_SQRL;
         else if( strcmp( sch, "file" ) == 0 ) this->scheme = SQRL_SCHEME_FILE;
         else {
-            free( sch );
+            delete sch;
             goto ERR;
         }
-        free( sch );
+        delete sch;
 
         /* Skip ':' */
         tmpstr++;
@@ -306,7 +306,7 @@ namespace libsqrl
                 tmpstr++;
             }
             len = (int)(tmpstr - curstr);
-            username = (char*)malloc( len + 1 );
+            username = new char[len + 1];
             memcpy( username, curstr, len );
             username[len] = 0;
             /* Proceed current pointer */
@@ -320,7 +320,7 @@ namespace libsqrl
                     tmpstr++;
                 }
                 len = (int)(tmpstr - curstr);
-                password = (char*)malloc( len + 1 );
+                password = new char[len + 1];
                 if( NULL == password ) goto ERR;
                 memcpy( password, curstr, len );
                 password[len] = '\0';
@@ -364,7 +364,7 @@ namespace libsqrl
                 tmpstr++;
             }
             len = (int)(tmpstr - curstr);
-            port = (char*)malloc( len + 1 );
+            port = new char[len + 1];
             if( NULL == port ) goto ERR;
             memcpy( port, curstr, len );
             port[len] = '\0';
@@ -386,7 +386,7 @@ namespace libsqrl
             tmpstr++;
         }
         len = (int)(tmpstr - curstr);
-        path = (char*)malloc( len + 1 );
+        path = new char[len + 1];
         if( NULL == path ) goto ERR;
         memcpy( path, curstr, len );
         path[len] = '\0';
@@ -402,7 +402,7 @@ namespace libsqrl
                 tmpstr++;
             }
             len = (int)(tmpstr - curstr);
-            query = (char*)malloc( len + 1 );
+            query = new char[len + 1];
             if( NULL == query ) goto ERR;
             memcpy( query, curstr, len );
             query[len] = '\0';
@@ -419,7 +419,7 @@ namespace libsqrl
                 tmpstr++;
             }
             len = (int)(tmpstr - curstr);
-            fragment = (char*)malloc( len + 1 );
+            fragment = new char[len + 1];
             if( NULL == fragment ) goto ERR;
             memcpy( fragment, curstr, len );
             fragment[len] = '\0';
@@ -492,11 +492,11 @@ namespace libsqrl
         this->scheme = SQRL_SCHEME_INVALID;
 
     END:
-        if( port ) free( port );
-        if( query ) free( query );
-        if( fragment ) free( fragment );
-        if( username ) free( username );
-        if( password ) free( password );
-        if( path ) free( path );
+        if( port ) delete port;
+        if( query ) delete query;
+        if( fragment ) delete fragment;
+        if( username ) delete username;
+        if( password ) delete password;
+        if( path ) delete path;
     }
 }
