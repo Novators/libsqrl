@@ -19,26 +19,14 @@
     <Filter Include="Header Files\Client\Actions">
       <UniqueIdentifier>{7b9d570f-7266-436a-8ae8-73af2188bdfa}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Common">
-      <UniqueIdentifier>{bf40706a-bb43-4e29-9511-91eedcd84a07}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Common\Crypto">
-      <UniqueIdentifier>{207c0f4c-4db9-4562-9d86-3dc14b11df77}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Client\Entropy">
       <UniqueIdentifier>{d2d89c5e-9129-4b61-8efc-06c41b46d5c7}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Header Files\Common\Encoding">
-      <UniqueIdentifier>{baebe398-91df-4540-8f56-a9da06caf327}</UniqueIdentifier>
     </Filter>
     <Filter Include="Header Files\Client\Storage">
       <UniqueIdentifier>{63e89492-7c47-4e6d-bb0c-9e80ca8d029d}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Client">
       <UniqueIdentifier>{937ecf0d-19d0-4191-90d3-6fa03dcc3330}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Common">
-      <UniqueIdentifier>{96995837-5d75-4a55-9f72-90b31c92264e}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Client\Actions">
       <UniqueIdentifier>{bf326c1a-cf19-4975-8356-acb9c27cef70}</UniqueIdentifier>
@@ -49,34 +37,40 @@
     <Filter Include="Source Files\Client\Storage">
       <UniqueIdentifier>{4a59c61d-e2de-4f7b-bd18-72e2f5390b50}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Source Files\Common\Crypto">
-      <UniqueIdentifier>{8480fe32-8eee-4e6e-bbdb-047b4aea8d6c}</UniqueIdentifier>
-    </Filter>
-    <Filter Include="Source Files\Common\Encoding">
-      <UniqueIdentifier>{aed1709a-34b6-4ebd-91d0-12cb8fd046ce}</UniqueIdentifier>
-    </Filter>
     <Filter Include="Header Files\Server">
       <UniqueIdentifier>{e1581cc0-05f8-4a9b-b56f-f6760adfa202}</UniqueIdentifier>
     </Filter>
     <Filter Include="Source Files\Server">
       <UniqueIdentifier>{88cf327d-2350-4f4e-af7e-b528673ba590}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files\Common\Strings">
+    <Filter Include="Header Files\Crypto">
+      <UniqueIdentifier>{207c0f4c-4db9-4562-9d86-3dc14b11df77}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Encoding">
+      <UniqueIdentifier>{baebe398-91df-4540-8f56-a9da06caf327}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Header Files\Data Containers">
       <UniqueIdentifier>{d3abf507-6fce-4f6a-bcff-cc863c442787}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Crypto">
+      <UniqueIdentifier>{8480fe32-8eee-4e6e-bbdb-047b4aea8d6c}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Encoding">
+      <UniqueIdentifier>{aed1709a-34b6-4ebd-91d0-12cb8fd046ce}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Source Files\Data Containers">
+      <UniqueIdentifier>{3c715f6e-3b6c-45a1-b98b-cc94aaead405}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="..\src\aes.cpp">
-      <Filter>Source Files\Common\Crypto</Filter>
+      <Filter>Source Files\Crypto</Filter>
     </ClCompile>
     <ClCompile Include="..\src\gcm.cpp">
-      <Filter>Source Files\Common\Crypto</Filter>
+      <Filter>Source Files\Crypto</Filter>
     </ClCompile>
     <ClCompile Include="..\src\rdrand.cpp">
-      <Filter>Source Files\Common\Crypto</Filter>
-    </ClCompile>
-    <ClCompile Include="..\src\realtime.cpp">
-      <Filter>Source Files\Common</Filter>
+      <Filter>Source Files\Crypto</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SqrlAction.cpp">
       <Filter>Source Files\Client\Actions</Filter>
@@ -112,7 +106,7 @@
       <Filter>Source Files\Client\Actions</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SqrlBase64.cpp">
-      <Filter>Source Files\Common\Encoding</Filter>
+      <Filter>Source Files\Encoding</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SqrlBlock.cpp">
       <Filter>Source Files\Client\Storage</Filter>
@@ -124,7 +118,7 @@
       <Filter>Source Files\Client</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SqrlCrypt.cpp">
-      <Filter>Source Files\Common\Crypto</Filter>
+      <Filter>Source Files\Crypto</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SqrlEntropy.cpp">
       <Filter>Source Files\Client\Entropy</Filter>
@@ -138,11 +132,8 @@
     <ClCompile Include="..\src\SqrlStorage.cpp">
       <Filter>Source Files\Client\Storage</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\SqrlUri.cpp">
-      <Filter>Source Files\Common</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SqrlUrlEncode.cpp">
-      <Filter>Source Files\Common\Encoding</Filter>
+      <Filter>Source Files\Encoding</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SqrlUser.cpp">
       <Filter>Source Files\Client</Filter>
@@ -150,23 +141,29 @@
     <ClCompile Include="..\src\SqrlUser_storage.cpp">
       <Filter>Source Files\Client</Filter>
     </ClCompile>
-    <ClCompile Include="..\src\util.cpp">
-      <Filter>Source Files\Common</Filter>
-    </ClCompile>
     <ClCompile Include="..\src\SqrlServer.cpp">
       <Filter>Source Files\Server</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SqrlEnScrypt.cpp">
-      <Filter>Source Files\Common\Crypto</Filter>
+      <Filter>Source Files\Crypto</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SqrlBase56.cpp">
-      <Filter>Source Files\Common\Encoding</Filter>
+      <Filter>Source Files\Encoding</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SqrlBase56Check.cpp">
-      <Filter>Source Files\Common\Encoding</Filter>
+      <Filter>Source Files\Encoding</Filter>
     </ClCompile>
     <ClCompile Include="..\src\SqrlKeySet.cpp">
       <Filter>Source Files\Client</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\SqrlUri.cpp">
+      <Filter>Source Files\Data Containers</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\realtime.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\src\util.cpp">
+      <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
@@ -216,16 +213,16 @@
       <Filter>Header Files\Client\Actions</Filter>
     </ClInclude>
     <ClInclude Include="..\src\aes.h">
-      <Filter>Header Files\Common\Crypto</Filter>
+      <Filter>Header Files\Crypto</Filter>
     </ClInclude>
     <ClInclude Include="..\src\gcm.h">
-      <Filter>Header Files\Common\Crypto</Filter>
+      <Filter>Header Files\Crypto</Filter>
     </ClInclude>
     <ClInclude Include="..\src\rdrand.h">
-      <Filter>Header Files\Common\Crypto</Filter>
+      <Filter>Header Files\Crypto</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlBase64.h">
-      <Filter>Header Files\Common\Encoding</Filter>
+      <Filter>Header Files\Encoding</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlBlock.h">
       <Filter>Header Files\Client\Storage</Filter>
@@ -237,13 +234,13 @@
       <Filter>Header Files\Client</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlCrypt.h">
-      <Filter>Header Files\Common\Crypto</Filter>
+      <Filter>Header Files\Crypto</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlIdentityAction.h">
       <Filter>Header Files\Client\Actions</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlEncoder.h">
-      <Filter>Header Files\Common\Encoding</Filter>
+      <Filter>Header Files\Encoding</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlEntropy.h">
       <Filter>Header Files\Client\Entropy</Filter>
@@ -252,10 +249,7 @@
       <Filter>Header Files\Client\Storage</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlUrlEncode.h">
-      <Filter>Header Files\Common\Encoding</Filter>
-    </ClInclude>
-    <ClInclude Include="..\src\SqrlUri.h">
-      <Filter>Header Files\Common</Filter>
+      <Filter>Header Files\Encoding</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlSiteAction.h">
       <Filter>Header Files\Client\Actions</Filter>
@@ -278,32 +272,35 @@
     <ClInclude Include="..\src\SqrlEntropy_Win.h">
       <Filter>Header Files\Client\Entropy</Filter>
     </ClInclude>
-    <ClInclude Include="..\src\SqrlDeque.h">
-      <Filter>Header Files\Common</Filter>
-    </ClInclude>
     <ClInclude Include="..\src\SqrlEnScrypt.h">
-      <Filter>Header Files\Common\Crypto</Filter>
+      <Filter>Header Files\Crypto</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlBase56.h">
-      <Filter>Header Files\Common\Encoding</Filter>
+      <Filter>Header Files\Encoding</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlBase56Check.h">
-      <Filter>Header Files\Common\Encoding</Filter>
+      <Filter>Header Files\Encoding</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlBigInt.h">
-      <Filter>Header Files\Common\Strings</Filter>
+      <Filter>Header Files\Data Containers</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlString.h">
-      <Filter>Header Files\Common\Strings</Filter>
+      <Filter>Header Files\Data Containers</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlFixedString.h">
-      <Filter>Header Files\Common\Strings</Filter>
+      <Filter>Header Files\Data Containers</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlMLockedString.h">
-      <Filter>Header Files\Common\Strings</Filter>
+      <Filter>Header Files\Data Containers</Filter>
     </ClInclude>
     <ClInclude Include="..\src\SqrlKeySet.h">
       <Filter>Header Files\Client</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlDeque.h">
+      <Filter>Header Files\Data Containers</Filter>
+    </ClInclude>
+    <ClInclude Include="..\src\SqrlUri.h">
+      <Filter>Header Files\Data Containers</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>

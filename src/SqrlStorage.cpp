@@ -39,7 +39,7 @@ namespace libsqrl
     }
     SqrlStorage::~SqrlStorage() {
         SqrlBlock *block;
-        while( block = this->data.pop() ) {
+        while( (block = this->data.pop()) ) {
             delete block;
         }
     }

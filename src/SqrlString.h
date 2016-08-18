@@ -583,7 +583,7 @@ namespace libsqrl
         virtual void reallocate( size_t len ) {
             if( len <= this->myCapacity ) return;
             size_t oldLen = this->length();
-            void * oldData = this->myData;
+            uint8_t * oldData = this->myData;
             this->myData = new uint8_t[len + 1];
             if( this->myData ) {
                 this->myCapacity = len;
