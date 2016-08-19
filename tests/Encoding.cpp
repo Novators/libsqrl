@@ -1,13 +1,181 @@
 #include "catch.hpp"
+#include "SqrlEncoder.h"
 #include "SqrlBase64.h"
 #include "SqrlBase56.h"
 #include "SqrlBase56Check.h"
+#include "SqrlUrlEncode.h"
 
 using namespace libsqrl;
 
 static void testString( char *a, const char *b ) {
     REQUIRE( strcmp( a, b ) == 0 );
     if( a ) free( a );
+}
+
+TEST_CASE( "UrlEncode", "[encode]" ) {
+	char src[] = "UrlEncoded: http://blah.com/test?something=somethingElse&a=b";
+	SqrlString srcString = SqrlString( src );
+	SqrlString cmpString = SqrlString( "UrlEncoded%3A+http%3A%2F%2Fblah%2Ecom%2Ftest%3Fsomething%3DsomethingElse%26a%3Db" );
+	SqrlString encoded = SqrlString();
+	SqrlString decoded = SqrlString();
+
+	SqrlUrlEncode encoder = SqrlUrlEncode();
+	encoder.encode( &encoded, &srcString );
+	encoder.decode( &decoded, &encoded );
+	REQUIRE( 0 == srcString.compare( &decoded ) );
+	REQUIRE( 0 == cmpString.compare( &encoded ) );
+}
+
+TEST_CASE( "Base2", "[encode]" ) {
+	uint8_t src[] = {0, 1, 0};
+	SqrlString srcString = SqrlString( src, 3 );
+	SqrlString cmpString = SqrlString( "00000000100000000" );
+	SqrlString encoded = SqrlString();
+	SqrlString decoded = SqrlString();
+
+	SqrlEncoder encoder = SqrlEncoder( "01" );
+	encoder.encode( &encoded, &srcString );
+	encoder.decode( &decoded, &encoded );
+	REQUIRE( 0 == srcString.compare( &decoded ) );
+	REQUIRE( 0 == cmpString.compare( &encoded ) );
+}
+
+TEST_CASE( "Base8", "[encode]" ) {
+	const int NT = 6;
+	SqrlString evector[NT] = {
+		"f",
+		"fo",
+		"foo",
+		"foob",
+		"fooba",
+		"foobar",
+	};
+	SqrlString dvector[NT*4] = {
+		"146",
+		"63157",
+		"31467557",
+		"14633667542",
+		"6315733661141",
+		"3146755730460562",
+		"63000",
+		"31467400",
+		"14633667400",
+		"6315733661000",
+		"3146755730460400",
+		"1463366754230271000",
+		"00063000",
+		"00031467400",
+		"00014633667400",
+		"0006315733661000",
+		"0003146755730460400",
+		"0001463366754230271000",
+		"00000063000",
+		"00000031467400",
+		"00000014633667400",
+		"0000006315733661000",
+		"0000003146755730460400",
+		"0000001463366754230271000"
+	};
+	SqrlString encoded = SqrlString();
+	SqrlString decoded = SqrlString();
+	SqrlEncoder encoder = SqrlEncoder( "01234567" );
+
+	for( int i = 0; i < NT; i++ ) {
+		encoder.encode( &encoded, &evector[i] );
+		encoder.decode( &decoded, &encoded );
+		REQUIRE( 0 == decoded.compare( &evector[i] ) );
+		REQUIRE( 0 == encoded.compare( &dvector[i] ) );
+		evector[i].append( (char)0, 1 );
+		encoder.encode( &encoded, &evector[i] );
+		encoder.decode( &decoded, &encoded );
+		REQUIRE( 0 == decoded.compare( &evector[i] ) );
+		REQUIRE( 0 == encoded.compare( &dvector[i+NT] ) );
+		evector[i].insert( 0, 0 );
+		encoder.encode( &encoded, &evector[i] );
+		encoder.decode( &decoded, &encoded );
+		REQUIRE( 0 == encoded.compare( &dvector[i + NT + NT] ) );
+		REQUIRE( 0 == decoded.compare( &evector[i] ) );
+		evector[i].insert( 0, 0 );
+		encoder.encode( &encoded, &evector[i] );
+		encoder.decode( &decoded, &encoded );
+		REQUIRE( 0 == decoded.compare( &evector[i] ) );
+		REQUIRE( 0 == encoded.compare( &dvector[i + NT + NT + NT] ) );
+	}
+}
+
+TEST_CASE( "Base16", "[encode]" ) {
+	const int NT = 18;
+	SqrlString evector[NT] = {
+		"f",
+		"fo",
+		"foo",
+		"foob",
+		"fooba",
+		"foobar",
+		"foobarf",
+		"foobarfo",
+		"foobarfoo",
+		"foobarfoob",
+		"foobarfooba",
+		"foobarfoobar",
+		"foobarfoobarf",
+		"foobarfoobarfo",
+		"foobarfoobarfoo",
+		"foobarfoobarfoob",
+		"foobarfoobarfooba",
+		"foobarfoobarfoobar"
+	};
+	SqrlString dvector[NT] = {
+		"66",
+		"666f",
+		"666f6f",
+		"666f6f62",
+		"666f6f6261",
+		"666f6f626172",
+		"666f6f62617266",
+		"666f6f626172666f",
+		"666f6f626172666f6f",
+		"666f6f626172666f6f62",
+		"666f6f626172666f6f6261",
+		"666f6f626172666f6f626172",
+		"666f6f626172666f6f62617266",
+		"666f6f626172666f6f626172666f",
+		"666f6f626172666f6f626172666f6f",
+		"666f6f626172666f6f626172666f6f62",
+		"666f6f626172666f6f626172666f6f6261",
+		"666f6f626172666f6f626172666f6f626172"
+	};
+
+	SqrlString encoded = SqrlString();
+	SqrlString decoded = SqrlString();
+	SqrlEncoder encoder = SqrlEncoder( "0123456789abcdef" );
+
+	for( int i = 0; i < NT; i++ ) {
+		encoder.encode( &encoded, &evector[i] );
+		encoder.decode( &decoded, &encoded );
+		REQUIRE( 0 == decoded.compare( &evector[i] ) );
+		REQUIRE( 0 == encoded.compare( &dvector[i] ) );
+		evector[i].append( (char)0, 1 );
+		dvector[i].append( "00" );
+		encoder.encode( &encoded, &evector[i] );
+		encoder.decode( &decoded, &encoded );
+		REQUIRE( 0 == decoded.compare( &evector[i] ) );
+		REQUIRE( 0 == encoded.compare( &dvector[i] ) );
+		evector[i].insert( 0, 0 );
+		dvector[i].insert( 0, '0' );
+		dvector[i].insert( 0, '0' );
+		encoder.encode( &encoded, &evector[i] );
+		encoder.decode( &decoded, &encoded );
+		REQUIRE( 0 == decoded.compare( &evector[i] ) );
+		REQUIRE( 0 == encoded.compare( &dvector[i] ) );
+		evector[i].insert( 0, 0 );
+		dvector[i].insert( 0, '0' );
+		dvector[i].insert( 0, '0' );
+		encoder.encode( &encoded, &evector[i] );
+		encoder.decode( &decoded, &encoded );
+		REQUIRE( 0 == decoded.compare( &evector[i] ) );
+		REQUIRE( 0 == encoded.compare( &dvector[i] ) );
+	}
 }
 
 TEST_CASE( "Base56Identity", "[encode]" ) {
@@ -50,13 +218,16 @@ TEST_CASE( "Base56Check", "[encode]" ) {
 
     for( i = 0; i < NT; i++ ) {
         b56.encode( &e, &(evector[i]) );
-        REQUIRE( b56.decode( &d, &e ) );
+		if( e.length() ) {
+			REQUIRE( b56.decode( &d, &e ) );
+		} else {
+			b56.decode( &d, &e );
+		}
         REQUIRE( d.compare( &(evector[i]) ) == 0 );
     }
 
     SqrlString lString = SqrlString( "This is a long sentence used to test Base56Check in a multi-line scenario." );
     b56.encode( &e, &lString );
-    uint8_t lineCount = 0;
     REQUIRE( b56.decode( &d, &e ) );
     REQUIRE( d.compare( &lString ) == 0 );
 }

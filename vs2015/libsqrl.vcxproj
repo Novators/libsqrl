@@ -41,6 +41,7 @@
     <ClCompile Include="..\src\SqrlClient.cpp" />
     <ClCompile Include="..\src\SqrlClientAsync.cpp" />
     <ClCompile Include="..\src\SqrlCrypt.cpp" />
+    <ClCompile Include="..\src\SqrlEncoder.cpp" />
     <ClCompile Include="..\src\SqrlEnScrypt.cpp" />
     <ClCompile Include="..\src\SqrlEntropy.cpp" />
     <ClCompile Include="..\src\SqrlIdentityAction.cpp" />
