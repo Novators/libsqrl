@@ -50,7 +50,7 @@ namespace libsqrl
 		}
 		return dest;
 	}
-
+	
 	SqrlString *SqrlBase64::decode( SqrlString *dest, const SqrlString *src, bool append ) {
 		if( !src || src->length() == 0 ) return NULL;
 		size_t input_length = src->length();

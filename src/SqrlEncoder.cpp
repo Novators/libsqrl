@@ -23,24 +23,28 @@ namespace libsqrl
 		if( src->length() == 0 ) return dest;
 
 		int base = (int)strlen( this->alphabet );
-		int cpb = (int)ceil( 8.0 / log2(base) );
-		int cnt = (int)src->length() * cpb;
-		uint8_t rem;
+		double cpb = 8.0 / log2(base);
+		int zc = 0;
 		SqrlBigInt s( src );
+		SqrlString ob( (size_t)ceil( src->length() * cpb ) );
 
+		const uint8_t *it = s.cdata();
+		const uint8_t *end = s.cdend();
+		while( it[0] == 0 && it != end ) {
+			zc++;
+			it++;
+		}
+		zc *= (int)ceil(cpb);
 		if( this->reverseMath )	s.reverse();
-		dest->reserve( dest->length() + cnt );
 
 		do {
-			rem = s.divideBy( base );
-			dest->push_back( this->alphabet[(rem == base ? 0 : rem)] );
+			ob.push_back( this->alphabet[(s.divideBy(base)) % base] );
 		} while( s.length() );
 
-		cnt -= (int)dest->length();
-		cnt = (cnt / cpb) * cpb;
-		if( cnt ) dest->append( this->alphabet[0], cnt );
+		ob.append( this->alphabet[0], zc );
 
-		if( this->reverseMath ) dest->reverse();
+		if( this->reverseMath ) ob.reverse();
+		dest->append( &ob );
 		return dest;
 	}
 

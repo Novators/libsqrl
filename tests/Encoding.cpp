@@ -36,6 +36,7 @@ TEST_CASE( "Base2", "[encode]" ) {
 	SqrlEncoder encoder = SqrlEncoder( "01" );
 	encoder.encode( &encoded, &srcString );
 	encoder.decode( &decoded, &encoded );
+
 	REQUIRE( 0 == srcString.compare( &decoded ) );
 	REQUIRE( 0 == cmpString.compare( &encoded ) );
 }
@@ -83,13 +84,13 @@ TEST_CASE( "Base8", "[encode]" ) {
 	for( int i = 0; i < NT; i++ ) {
 		encoder.encode( &encoded, &evector[i] );
 		encoder.decode( &decoded, &encoded );
-		REQUIRE( 0 == decoded.compare( &evector[i] ) );
 		REQUIRE( 0 == encoded.compare( &dvector[i] ) );
+		REQUIRE( 0 == decoded.compare( &evector[i] ) );
 		evector[i].append( (char)0, 1 );
 		encoder.encode( &encoded, &evector[i] );
 		encoder.decode( &decoded, &encoded );
+		REQUIRE( 0 == encoded.compare( &dvector[i + NT] ) );
 		REQUIRE( 0 == decoded.compare( &evector[i] ) );
-		REQUIRE( 0 == encoded.compare( &dvector[i+NT] ) );
 		evector[i].insert( 0, 0 );
 		encoder.encode( &encoded, &evector[i] );
 		encoder.decode( &decoded, &encoded );
@@ -98,8 +99,8 @@ TEST_CASE( "Base8", "[encode]" ) {
 		evector[i].insert( 0, 0 );
 		encoder.encode( &encoded, &evector[i] );
 		encoder.decode( &decoded, &encoded );
-		REQUIRE( 0 == decoded.compare( &evector[i] ) );
 		REQUIRE( 0 == encoded.compare( &dvector[i + NT + NT + NT] ) );
+		REQUIRE( 0 == decoded.compare( &evector[i] ) );
 	}
 }
 
@@ -251,18 +252,9 @@ TEST_CASE( "Base56", "[encode]" ) {
     for( i = 0; i < NT; i++ ) {
         b56.encode( &e, &(evector[i]) );
         b56.decode( &d, &e );
-		printf( "%s -> %s -> %s\n", evector[i].cstring(), e.cstring(), d.cstring() );
 		REQUIRE( d.compare( &(evector[i]) ) == 0 );
     }
 }
-/*
-f -> q3 -> f
-fo -> G7B -> fo
-foo -> ykaj2 -> foo
-foob -> yksvz4 -> foob
-fooba -> Q8SEUZF -> fooba
-foobar -> y4MpRmpJ3 -> foobar
-*/
 
 TEST_CASE( "Base64", "[encode]" ) {
     const int NT = 10;
