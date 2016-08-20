@@ -71,7 +71,7 @@ namespace libsqrl
             this->done();
             return;
         }
-        memcpy( this->result->data(), this->t[1], 32 );
+		this->result->append( this->t[1], 32 );
 #endif
     }
 

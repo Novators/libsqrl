@@ -1,26 +1,14 @@
 #include "catch.hpp"
 
 #include "sqrl.h"
-#include "Sqrlstorage.h"
+#include "SqrlStorage.h"
 #include "SqrlUri.h"
 #include "SqrlBlock.h"
 #include "SqrlString.h"
-#include "NullClient.h"
 
 using namespace libsqrl;
 
-static void testString( char *a, const char *b ) {
-    if( !a ) {
-        REQUIRE( !b );
-    } else {
-        REQUIRE( 0 == strcmp( a, b ) );
-        free( a );
-    }
-}
-
-
 TEST_CASE( "LoadFile", "[storage]" ) {
-    NullClient * client = new NullClient();
     bool bError = false;
     SqrlString filename( "file://data/test1.sqrl" );
     SqrlUri fn = SqrlUri( &filename );
@@ -34,12 +22,10 @@ TEST_CASE( "LoadFile", "[storage]" ) {
     REQUIRE( buf );
     REQUIRE( 0 == buf->compare( "SQRLDATAfQABAC0AwDR2aKohNUWypIv-Y6TeUWbko_arcPwMB9alpAkEAAAA8QAEAQ8A7uDRpBDxqJZxwUkB4y9-p5XWvAbgVMK02lvnSA_-EBHjLarjoHYdb-UEVW2rC4z2URyOcxpCeQXfGpZQyuZ3dSGiuIFI1eLFX-xnsRsRBdtJAAIAoiMr93uN8ylhOHzwlPmfVAkUAAAATne7wOsRjUo1A8xs7V4K2kDpdKqpHsmHZpN-6eyOcLfD_Gul4vRyrMC2pn7UBaV9lAADAAQSHK1PlkUshvEqNeCLibmJgQvveUFrPbg4bNuk47FAj5dUgaa_fQoD_KMi17Z3jDF-1fCqoqY3GRwxaW-DzYtEIORB2AsRJUgZWviZe8anbLUP5dKt1r0LyDpTCTcNmzPvfbq8y-7J7r3OH7PlKOpGrAAs2Cw1GFb3l6hDPDa5gDKs90AGiXwgqUD7_7qMBA" ) );
     delete(buf);
-    delete client;
 }
 
 
 TEST_CASE( "BlockSizeAndType", "[storage]" ) {
-    new NullClient();
     uint16_t t, l;
     SqrlBlock *block = new SqrlBlock();
     REQUIRE( block->length() == 0 );
@@ -65,11 +51,9 @@ TEST_CASE( "BlockSizeAndType", "[storage]" ) {
     REQUIRE( block->getBlockType() == 65535 );
     REQUIRE( block->length() == 4 );
     delete block;
-    delete (NullClient*)NullClient::getClient();
 }
 
 TEST_CASE( "BlockRandomAccess", "[storage]" ) {
-    new NullClient();
     char *testString = "Bender is Great!";
     SqrlString *str = NULL;
     SqrlBlock *block = new SqrlBlock();
@@ -96,6 +80,5 @@ TEST_CASE( "BlockRandomAccess", "[storage]" ) {
     REQUIRE( strcmp( "Nibbler is Great!", (char*)block->getDataPointer()+4 ) == 0 );
     delete str;
     delete block;
-    delete (NullClient*)NullClient::getClient();
 }
 

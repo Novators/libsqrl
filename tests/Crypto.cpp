@@ -5,35 +5,13 @@
 #include <stdint.h>
 #include "sqrl.h"
 #include "SqrlCrypt.h"
-#include "SqrlEntropy.h"
+#include "SqrlEncoder.h"
 #include "SqrlBase64.h"
 #include "SqrlBigInt.h"
 #include "SqrlEnScrypt.h"
-#include "NullClient.h"
-#include "Windows.h"
 
 using namespace std;
 using namespace libsqrl;
-
-static void sqrl_hex_encode( SqrlString *dest, const uint8_t *src, size_t src_len ) {
-    if( !dest ) return;
-    static const char tab[] = "0123456789abcdef";
-    size_t i;
-    char tmp[3] = {0};
-
-    dest->clear();
-    dest->reserve( src_len * 2 + 1 );
-    for( i = 0; i < src_len; i++ ) {
-        tmp[0] = tab[src[i] >> 4];
-        tmp[1] = tab[src[i] & 0x0F];
-        dest->append( tmp, 2 );
-    }
-}
-
-static void testString( char *a, const char *b ) {
-    REQUIRE( 0 == strcmp( a, b ) );
-    if( a ) free( a );
-}
 
 TEST_CASE( "SqrlBigInt", "[crypto]" ) {
     SqrlBigInt a = SqrlBigInt();
@@ -53,10 +31,6 @@ TEST_CASE( "SqrlBigInt", "[crypto]" ) {
 }
 
 TEST_CASE( "EnHash", "[crypto]" ) {
-    NullClient *client = new NullClient();
-    while( NullClient::getClient() == NULL ) {
-        Sleep( 5 );
-    }
     FILE *fp = fopen( "data/vectors/enhash-vectors.txt", "r" );
     if( fp == NULL ) {
         REQUIRE( false );
@@ -83,31 +57,21 @@ TEST_CASE( "EnHash", "[crypto]" ) {
         tmp2.clear();
     }
     fclose( fp );
-    delete client;
 }
 
 TEST_CASE( "EnScrypt -- 1 iteration", "[enscrypt]" ) {
-    NullClient *client = new NullClient();
-    while( NullClient::getClient() == NULL ) {
-        Sleep( 5 );
-    }
     SqrlEnScrypt es = SqrlEnScrypt( NULL, NULL, NULL, 1 );
     while( !es.isFinished() ) {
         es.update();
     }
     REQUIRE( es.isSuccessful() );
     SqrlString *buf = es.getResult();
-    SqrlString str;
-    sqrl_hex_encode( &str, buf->cdata(), 32 );
+    SqrlString str = SqrlString();
+	SqrlEncoder().encode( &str, buf );
     REQUIRE( str.compare( "a8ea62a6e1bfd20e4275011595307aa302645c1801600ef5cd79bf9d884d911c" ) == 0 );
-    delete client;
 }
 
 TEST_CASE( "EnScrypt -- 1 + 1 second", "[enscrypt]" ) {
-    NullClient *client = new NullClient();
-    while( NullClient::getClient() == NULL ) {
-        Sleep( 5 );
-    }
     SqrlEnScrypt es = SqrlEnScrypt( NULL, NULL, NULL, 1000, false );
     while( !es.isFinished() ) {
         es.update();
@@ -122,50 +86,34 @@ TEST_CASE( "EnScrypt -- 1 + 1 second", "[enscrypt]" ) {
     REQUIRE( es2.isSuccessful() );
     SqrlString *buf2 = es2.getResult();
     REQUIRE( buf->compare( buf2 ) == 0 );
-    delete client;
 }
 
 TEST_CASE( "EnScrypt 100 iterations", "[.][enscrypt]" ) {
-    NullClient *client = new NullClient();
-    while( NullClient::getClient() == NULL ) {
-        Sleep( 5 );
-    }
     SqrlEnScrypt es = SqrlEnScrypt( NULL, NULL, NULL, 100 );
     while( !es.isFinished() ) {
         es.update();
     }
     REQUIRE( es.isSuccessful() );
-
-    SqrlString *buf = es.getResult();
-    SqrlString str;
-    sqrl_hex_encode( &str, buf->cdata(), 32 );
-    REQUIRE( str.compare( "45a42a01709a0012a37b7b6874cf16623543409d19e7740ed96741d2e99aab67" ) == 0 );
-    delete client;
+	SqrlString *buf = es.getResult();
+	SqrlString str = SqrlString();
+	SqrlEncoder().encode( &str, buf );
+	REQUIRE( str.compare( "45a42a01709a0012a37b7b6874cf16623543409d19e7740ed96741d2e99aab67" ) == 0 );
 }
 
 TEST_CASE( "EnScrypt password, 123 iterations", "[.][enscrypt]" ) {
-    NullClient *client = new NullClient();
-    while( NullClient::getClient() == NULL ) {
-        Sleep( 5 );
-    }
     SqrlString pw( "password" );
     SqrlEnScrypt es = SqrlEnScrypt( NULL, &pw, NULL, 123 );
     while( !es.isFinished() ) {
         es.update();
     }
     REQUIRE( es.isSuccessful() );
-    SqrlString *buf = es.getResult();
-    SqrlString str;
-    sqrl_hex_encode( &str, buf->cdata(), 32 );
-    REQUIRE( str.compare( "129d96d1e735618517259416a605be7094c2856a53c14ef7d4e4ba8e4ea36aeb" ) == 0 );
-    delete client;
+	SqrlString *buf = es.getResult();
+	SqrlString str = SqrlString();
+	SqrlEncoder().encode( &str, buf );
+	REQUIRE( str.compare( "129d96d1e735618517259416a605be7094c2856a53c14ef7d4e4ba8e4ea36aeb" ) == 0 );
 }
 
 TEST_CASE( "EnScrypt password, salt, 123 iterations", "[.][enscrypt]" ) {
-    NullClient *client = new NullClient();
-    while( NullClient::getClient() == NULL ) {
-        Sleep( 5 );
-    }
     SqrlString pw( "password" );
     SqrlString salt( 32 );
     salt.append( (char)0, 32 );
@@ -174,15 +122,13 @@ TEST_CASE( "EnScrypt password, salt, 123 iterations", "[.][enscrypt]" ) {
         es.update();
     }
     REQUIRE( es.isSuccessful() );
-    SqrlString *buf = es.getResult();
-    SqrlString str;
-    sqrl_hex_encode( &str, buf->cdata(), 32 );
-    REQUIRE( str.compare( "2f30b9d4e5c48056177ff90a6cc9da04b648a7e8451dfa60da56c148187f6a7d" ) == 0 );
-    delete client;
+	SqrlString *buf = es.getResult();
+	SqrlString str = SqrlString();
+	SqrlEncoder().encode( &str, buf );
+	REQUIRE( str.compare( "2f30b9d4e5c48056177ff90a6cc9da04b648a7e8451dfa60da56c148187f6a7d" ) == 0 );
 }
 
 TEST_CASE( "Identity Lock Keys", "[crypto]" ) {
-    NullClient *client = new NullClient();
     uint8_t iuk[32];
     uint8_t ilk[32];
     uint8_t rlk[32] = {0xff};
@@ -206,5 +152,4 @@ TEST_CASE( "Identity Lock Keys", "[crypto]" ) {
     SqrlCrypt::sign( &msg, ursk, tmp, sig );
 
     REQUIRE( SqrlCrypt::verifySignature( &msg, sig, vuk ) );
-    delete client;
 }
