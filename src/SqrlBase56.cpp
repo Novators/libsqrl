@@ -15,6 +15,7 @@ namespace libsqrl
 	SqrlBase56::SqrlBase56() : SqrlEncoder( "23456789ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz" ) {
 		this->reverseMath = false;
 	}
+	
 	/*
 	SqrlString *SqrlBase56::encode( SqrlString *dest, const SqrlString *src, bool append ) {
 		if( !src ) return NULL;
@@ -42,7 +43,8 @@ namespace libsqrl
 
 		return dest;
 	}
-
+	*/
+	/*
 	SqrlString *SqrlBase56::decode( SqrlString *dest, const SqrlString *src, bool append ) {
 		if( !src || src->length() == 0 ) return NULL;
 		if( !dest ) {

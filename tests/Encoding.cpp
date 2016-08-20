@@ -251,9 +251,18 @@ TEST_CASE( "Base56", "[encode]" ) {
     for( i = 0; i < NT; i++ ) {
         b56.encode( &e, &(evector[i]) );
         b56.decode( &d, &e );
-        REQUIRE( d.compare( &(evector[i]) ) == 0 );
+		printf( "%s -> %s -> %s\n", evector[i].cstring(), e.cstring(), d.cstring() );
+		REQUIRE( d.compare( &(evector[i]) ) == 0 );
     }
 }
+/*
+f -> q3 -> f
+fo -> G7B -> fo
+foo -> ykaj2 -> foo
+foob -> yksvz4 -> foob
+fooba -> Q8SEUZF -> fooba
+foobar -> y4MpRmpJ3 -> foobar
+*/
 
 TEST_CASE( "Base64", "[encode]" ) {
     const int NT = 10;

@@ -18,10 +18,10 @@ namespace libsqrl
     {
     public:
 		SqrlBase56();
-		/*
-		virtual SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false ) override;
-		virtual SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false ) override;
-		*/
+		
+		//virtual SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false ) override;
+		//virtual SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false ) override;
+		
     };
 }
 #endif // SQRLBASE56_H
