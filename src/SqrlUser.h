@@ -73,6 +73,8 @@ namespace libsqrl
         bool forceRescue( SqrlAction *action );
         bool rekey( SqrlAction *action );
         bool forceDecrypt( SqrlAction *action );
+		void *getTag();
+		void setTag( void *tag );
 
     private:
         uint32_t flags;
@@ -86,6 +88,7 @@ namespace libsqrl
         SqrlStorage *storage;
         SqrlString uniqueId;
         SqrlKeySet *keys;
+		void *tag;
 
         void        ensureKeysAllocated();
         bool        isMemLocked();

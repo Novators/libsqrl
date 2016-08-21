@@ -28,7 +28,8 @@ namespace libsqrl
         uri( NULL ),
         state( 0 ),
         status( SQRL_ACTION_RUNNING ),
-        shouldCancel( false ) {
+        shouldCancel( false ),
+		tag( NULL ) {
         SqrlClient *client = SqrlClient::getClient();
         if( !client ) {
             exit( 1 );
@@ -38,7 +39,7 @@ namespace libsqrl
         SQRL_MUTEX_UNLOCK( &client->actionMutex )
     }
 
-    SqrlAction::~SqrlAction() {
+	SqrlAction::~SqrlAction() {
         SqrlClient *client = SqrlClient::getClient();
         SQRL_MUTEX_LOCK( &client->actionMutex )
             client->actions.erase( this );
@@ -100,6 +101,14 @@ namespace libsqrl
         }
         this->uri = new SqrlUri( uri );
     }
+
+	void * SqrlAction::getTag() {
+		return this->tag;
+	}
+
+	void SqrlAction::setTag( void * tag ) {
+		this->tag = tag;
+	}
 
     void SqrlAction::authenticate( Sqrl_Credential_Type credentialType, const char *credential, size_t length ) {
         if( !this->user ) return;

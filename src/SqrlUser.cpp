@@ -63,6 +63,7 @@ namespace libsqrl
         this->referenceCount = 1;
         this->keys = NULL;
         this->storage = NULL;
+		this->tag = NULL;
         this->edition = 0;
         struct SqrlUserList *l = new struct SqrlUserList;
         if( l ) {
@@ -420,6 +421,14 @@ namespace libsqrl
         }
         return false;
     }
+
+	void * SqrlUser::getTag() {
+		return this->tag;
+	}
+
+	void SqrlUser::setTag( void * tag ) {
+		this->tag = tag;
+	}
 
     bool SqrlUser::forceRescue( SqrlAction *t ) {
         if( !t ) return false;
