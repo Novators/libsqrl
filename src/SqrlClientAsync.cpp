@@ -17,39 +17,37 @@
 
 namespace libsqrl
 {
-    SqrlClientAsync::SqrlClientAsync() : SqrlClient() {
-        this->myThread = new std::thread( SqrlClientAsync::clientThread );
-    }
+	SqrlClientAsync::SqrlClientAsync() : SqrlClient() {
+		this->myThread = new std::thread( SqrlClientAsync::clientThread );
+	}
 
-    SqrlClientAsync::~SqrlClientAsync() {
-        this->stopping = true;
-        this->myThread->join();
-        delete this->myThread;
-    }
+	SqrlClientAsync::~SqrlClientAsync() {
+	}
 
-    void SqrlClientAsync::clientThread() {
-        SqrlClientAsync *client = (SqrlClientAsync*)SqrlClient::getClient();
-        if( !client ) return;
-         while( !client->stopping ) {
-            if( client->loop() ) {
-                if( client->rapid ) {
-                    client->rapid = false;
-                } else {
-                    sqrl_sleep( 50 );
-                }
-            } else {
-                sqrl_sleep( 100 );
-            }
-        }
-        while( !client->callbackQueue.empty() ) {
-            struct CallbackInfo *info = client->callbackQueue.pop();
-            delete info;
-        }
-        SQRL_MUTEX_LOCK( &client->actionMutex )
-            while( !client->actions.empty() ) {
-                SqrlAction *action = client->actions.pop();
-                delete action;
-            }
-        SQRL_MUTEX_UNLOCK( &client->actionMutex )
-    }
+	void SqrlClientAsync::onClientIsStopping() {
+		this->stopping = true;
+		if( this->myThread ) {
+			this->myThread->join();
+			delete this->myThread;
+		}
+	}
+
+	void SqrlClientAsync::clientThread() {
+		SqrlClientAsync *client = (SqrlClientAsync*)SqrlClient::getClient();
+		while( client && !client->stopping ) {
+			if( client->loop() ) {
+				if( client->rapid ) {
+					client->rapid = false;
+				} else {
+					sqrl_sleep( 50 );
+				}
+			} else {
+				sqrl_sleep( 100 );
+			}
+		}
+		while( !client->callbackQueue.empty() ) {
+			struct CallbackInfo *info = client->callbackQueue.pop();
+			delete info;
+		}
+	}
 }

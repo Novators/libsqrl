@@ -41,14 +41,11 @@ namespace libsqrl
 
 	SqrlAction::~SqrlAction() {
         SqrlClient *client = SqrlClient::getClient();
-        SQRL_MUTEX_LOCK( &client->actionMutex )
-            client->actions.erase( this );
-        SQRL_MUTEX_UNLOCK( &client->actionMutex )
+		if( client ) {
+			client->actions.erase( this );
+		}
 
             this->onRelease();
-        if( this->user ) {
-            this->user->release();
-        }
         if( this->uri ) {
             delete this->uri;
         }
@@ -66,6 +63,10 @@ namespace libsqrl
             return false;
         } else {
             this->state = this->run( this->state );
+			SqrlClient *client = SqrlClient::getClient();
+			if( client ) {
+				client->actions.push_back( this );
+			}
             return true;
         }
     }
@@ -79,12 +80,7 @@ namespace libsqrl
     }
 
     void SqrlAction::setUser( SqrlUser *u ) {
-        if( !u ) return;
-        if( this->user ) {
-            this->user->release();
-        }
         this->user = u;
-        u->hold();
     }
 
     SqrlUser *SqrlAction::getUser() {

@@ -18,9 +18,10 @@ namespace libsqrl
     {
     public:
         SqrlClientAsync();
-        ~SqrlClientAsync();
+		~SqrlClientAsync();
 
     protected:
+		virtual void onClientIsStopping() override;
 
     private:
         static void clientThread();

@@ -207,27 +207,6 @@ namespace libsqrl
         }
     }
 
-    SqrlUser::SqrlUser( SqrlUri *uri ) {
-        this->initialize();
-        if( uri->getScheme() != SQRL_SCHEME_FILE ) {
-            return;
-        }
-        this->storage = new SqrlStorage( uri );
-        if( this->storage ) {
-            this->_load_unique_id();
-            // TODO: Load Options
-        }
-    }
-
-    SqrlUser::SqrlUser( const char *buffer, size_t buffer_len ) {
-        this->initialize();
-        SqrlString buf( buffer, buffer_len );
-        this->storage = new SqrlStorage( &buf );
-        if( this->storage ) {
-            this->_load_unique_id();
-        }
-    }
-
     bool SqrlUser::tryLoadPassword( SqrlAction *action, bool retry ) {
         if( !action ) return false;
         if( action->getUser() != this ) {

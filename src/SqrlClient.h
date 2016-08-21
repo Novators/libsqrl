@@ -27,19 +27,16 @@ namespace libsqrl
         friend class SqrlActionLock;
         friend class SqrlActionChangePassword;
 
-    private:
-        static SqrlClient *client;
-
     public:
         SqrlClient();
         ~SqrlClient();
         static SqrlClient *getClient();
         bool loop();
+		SqrlUser *getUser( const SqrlString *uniqueId );
+		SqrlUser *getUser( void *tag );
 
     protected:
         bool rapid;
-
-        void initialize();
 
         virtual int getUserIdleSeconds();
         virtual bool isScreenLocked();
@@ -62,6 +59,7 @@ namespace libsqrl
             SqrlUser *user ) = 0;
         virtual void onActionComplete(
             SqrlAction *action ) = 0;
+		virtual void onClientIsStopping() {}
 
         struct CallbackInfo
         {
@@ -76,9 +74,13 @@ namespace libsqrl
         };
 
     private:
+		static SqrlClient *client;
+
         SqrlDeque<struct CallbackInfo*> callbackQueue;
         SqrlDeque<SqrlAction *>actions;
+		SqrlDeque<SqrlUser*>users;
 #ifndef ARDUINO
+		static std::mutex *clientMutex;
         std::mutex actionMutex;
         std::mutex userMutex;
 #endif

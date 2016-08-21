@@ -29,37 +29,63 @@ namespace libsqrl
 
     SqrlClient *SqrlClient::client = NULL;
 #ifndef ARDUINO
-    static std::mutex sqrl_client_mutex;
+	std::mutex *SqrlClient::clientMutex = NULL;
 #endif
 
     SqrlClient::SqrlClient() :
         rapid(false)
     {
-        this->initialize();
-    }
+#ifndef ARDUINO
+		if( SqrlClient::clientMutex == nullptr ) {
+			SqrlClient::clientMutex = new std::mutex();
+		}
+#endif
+		SQRL_MUTEX_LOCK( SqrlClient::clientMutex )
+		if( SqrlClient::client != NULL ) {
+			// Enforce a single SqrlClient object
+			exit( 1 );
+		}
+		SqrlInit();
 
-    void SqrlClient::initialize() {
-        SQRL_MUTEX_LOCK( &sqrl_client_mutex )
-            if( SqrlClient::client != NULL ) {
-                // Enforce a single SqrlClient object
-                exit( 1 );
-            }
-        SqrlInit();
-
-        SqrlEntropy::start();
-        SqrlClient::client = this;
-        SQRL_MUTEX_UNLOCK( &sqrl_client_mutex )
-    }
+		SqrlEntropy::start();
+		SqrlClient::client = this;
+		SQRL_MUTEX_UNLOCK( SqrlClient::clientMutex )
+	}
 
     SqrlClient::~SqrlClient() {
-        SQRL_MUTEX_LOCK( &sqrl_client_mutex )
-            SqrlEntropy::stop();
+		this->onClientIsStopping();
+        SQRL_MUTEX_LOCK( SqrlClient::clientMutex )
         SqrlClient::client = NULL;
-        SQRL_MUTEX_UNLOCK( &sqrl_client_mutex )
+		SQRL_MUTEX_UNLOCK( SqrlClient::clientMutex )
+
+		SqrlEntropy::stop();
+
+		SqrlAction *action;
+		SqrlUser *user;
+		do {
+			SQRL_MUTEX_LOCK( &this->actionMutex );
+			action = this->actions.pop();
+			SQRL_MUTEX_UNLOCK( &this->actionMutex );
+			if( action ) {
+				delete action;
+			}
+		} while( action );
+		do {
+			SQRL_MUTEX_LOCK( &this->userMutex );
+			user = this->users.pop();
+			SQRL_MUTEX_UNLOCK( &this->userMutex );
+			if( user ) {
+				delete user;
+			}
+		} while( user );
     }
 
     SqrlClient *SqrlClient::getClient() {
-        return SqrlClient::client;
+		SqrlClient *client = nullptr;
+		SQRL_MUTEX_LOCK( SqrlClient::clientMutex );
+		client = SqrlClient::client;
+		SQRL_MUTEX_UNLOCK( SqrlClient::clientMutex );
+        return client;
     }
 
     int SqrlClient::getUserIdleSeconds() {
@@ -78,6 +104,7 @@ namespace libsqrl
     }
 
     bool SqrlClient::loop() {
+		if( SqrlClient::getClient() != this ) return false;
         this->onLoop();
         SqrlAction *action;
         while( !this->callbackQueue.empty() ) {
@@ -86,7 +113,6 @@ namespace libsqrl
             switch( info->cbType ) {
             case SQRL_CALLBACK_SAVE_SUGGESTED:
                 this->onSaveSuggested( (SqrlUser*)info->ptr );
-                ((SqrlUser*)info->ptr)->release();
                 break;
             case SQRL_CALLBACK_SELECT_USER:
                 action = (SqrlAction*)info->ptr;
@@ -119,19 +145,49 @@ namespace libsqrl
             }
             delete info;
         }
-        if( (action = this->actions.pop()) ) {
-            if( action->exec() ) {
-                this->actions.push_back( action );
-            }
-        }
+		SQRL_MUTEX_LOCK( &this->actionMutex );
+		action = this->actions.pop();
+		SQRL_MUTEX_UNLOCK( &this->actionMutex );
+        if( action ) action->exec();
+
         if( this->actions.empty() && this->callbackQueue.empty() ) {
             return false;
         }
         return true;
     }
 
+	SqrlUser * SqrlClient::getUser( const SqrlString * uniqueId ) {
+		char testId[SQRL_UNIQUE_ID_LENGTH + 1];
+		SQRL_MUTEX_LOCK( &this->userMutex );
+		size_t end = this->users.count();
+		for( int i = 0; i < end; i++ ) {
+			SqrlUser *cur = this->users.peek( i );
+			if( cur->getUniqueId( testId ) ) {
+				if( 0 == uniqueId->compare( testId ) ) {
+					SQRL_MUTEX_UNLOCK( &this->userMutex );
+					return cur;
+				}
+			}
+		}
+		SQRL_MUTEX_UNLOCK( &this->userMutex );
+		return nullptr;
+	}
+
+	SqrlUser * SqrlClient::getUser( void * tag ) {
+		SQRL_MUTEX_LOCK( &this->userMutex );
+		size_t end = this->users.count();
+		for( int i = 0; i < end; i++ ) {
+			SqrlUser *cur = this->users.peek( i );
+			if( cur->getTag() == tag ) {
+				SQRL_MUTEX_UNLOCK( &this->userMutex );
+				return cur;
+			}
+		}
+		SQRL_MUTEX_UNLOCK( &this->userMutex );
+		return nullptr;
+	}
+
     void SqrlClient::callSaveSuggested( SqrlUser * user ) {
-        user->hold();
         struct CallbackInfo *info = new struct CallbackInfo();
         info->cbType = SQRL_CALLBACK_SAVE_SUGGESTED;
         info->ptr = user;
@@ -205,14 +261,7 @@ namespace libsqrl
     }
 
     SqrlClient::CallbackInfo::~CallbackInfo() {
-        int i;
-        if( this->ptr ) {
-            if( this->cbType == SQRL_CALLBACK_SAVE_SUGGESTED ) {
-                SqrlUser *user = (SqrlUser*)this->ptr;
-                user->release();
-            }
-        }
-        for( i = 0; i < 3; i++ ) {
+        for( int i = 0; i < 3; i++ ) {
             if( this->str[i] ) {
                 delete this->str[i];
             }

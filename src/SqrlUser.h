@@ -44,13 +44,9 @@ namespace libsqrl
         ~SqrlUser();
 
         static void defaultOptions( Sqrl_User_Options *options );
-        static int countUsers();
 
         uint16_t checkFlags( uint16_t flags );
         void clearFlags( uint16_t flags );
-        static SqrlUser*  find( const char *unique_id );
-        void release();
-        void hold();
         uint8_t getEnscryptSeconds();
         uint16_t getFlags();
         uint8_t getHintLength();
@@ -81,10 +77,6 @@ namespace libsqrl
         uint32_t hint_iterations;
         uint16_t edition;
         Sqrl_User_Options options;
-#ifndef ARDUINO
-        std::mutex referenceCountMutex;
-#endif
-        int referenceCount;
         SqrlStorage *storage;
         SqrlString uniqueId;
         SqrlKeySet *keys;
@@ -96,7 +88,6 @@ namespace libsqrl
         bool        tryLoadRescue( SqrlAction *action, bool retry );
         bool        regenKeys( SqrlAction *action );
         void        removeKey( int key_type );
-        void initialize();
         bool _keyGen( SqrlAction *t, int key_type );
         bool loadType2Block( SqrlAction *t, SqrlBlock *block );
         bool saveOrLoadType3Block( SqrlAction *action, SqrlBlock *block, bool saving );

@@ -17,17 +17,10 @@
 #include "SqrlStorage.h"
 #include "SqrlDeque.h"
 #include "SqrlBigInt.h"
+#include "SqrlUri.h"
 
 namespace libsqrl
 {
-    struct SqrlUserList
-    {
-        SqrlUser *user;
-        struct SqrlUserList *next;
-    };
-
-    struct SqrlUserList *SQRL_USER_LIST;
-
     void SqrlUser::ensureKeysAllocated() {
         if( this->keys == NULL ) {
             this->keys = new SqrlKeySet();
@@ -35,148 +28,56 @@ namespace libsqrl
         }
     }
 
-    SqrlUser* SqrlUser::find( const char *unique_id ) {
-        SqrlUser *user = NULL;
-        struct SqrlUserList *l;
-#ifndef ARDUINO
-        SqrlClient *client = SqrlClient::getClient();
-#endif
-        SQRL_MUTEX_LOCK( &client->userMutex )
-            l = SQRL_USER_LIST;
-        while( l ) {
-            if( l->user && l->user->uniqueIdMatches( unique_id ) ) {
-                user = l->user;
-                user->hold();
-                break;
-            }
-            l = l->next;
-        }
-        SQRL_MUTEX_UNLOCK( &client->userMutex )
-            return user;
-    }
-
-    void SqrlUser::initialize() {
-#ifndef ARDUINO
-        SqrlClient *client = SqrlClient::getClient();
-#endif
-        SqrlUser::defaultOptions( &this->options );
-        this->referenceCount = 1;
-        this->keys = NULL;
-        this->storage = NULL;
-		this->tag = NULL;
-        this->edition = 0;
-        struct SqrlUserList *l = new struct SqrlUserList;
-        if( l ) {
-            l->user = this;
-            SQRL_MUTEX_LOCK( &client->userMutex )
-            l->next = SQRL_USER_LIST;
-            SQRL_USER_LIST = l;
-            SQRL_MUTEX_UNLOCK( &client->userMutex )
-        }
-    }
-
     SqrlUser::SqrlUser() {
-        this->initialize();
-    }
-
-    int SqrlUser::countUsers() {
 #ifndef ARDUINO
-        SqrlClient *client = SqrlClient::getClient();
+		SqrlClient *client = SqrlClient::getClient();
 #endif
-        SQRL_MUTEX_LOCK( &client->userMutex )
-            int i = 0;
-        struct SqrlUserList *list = SQRL_USER_LIST;
-        while( list ) {
-            i++;
-            list = list->next;
-        }
-        SQRL_MUTEX_UNLOCK( &client->userMutex )
-            return i;
-    }
+		SqrlUser::defaultOptions( &this->options );
+		this->keys = NULL;
+		this->storage = NULL;
+		this->tag = NULL;
+		this->edition = 0;
+		SQRL_MUTEX_LOCK( &client->userMutex );
+		client->users.push( this );
+		SQRL_MUTEX_UNLOCK( &client->userMutex );
+	}
 
-    void SqrlUser::hold() {
-#ifndef ARDUINO
-        SqrlClient *client = SqrlClient::getClient();
-        client->userMutex.lock();
-#endif
-        // Make sure the user is still in active memory...
-        struct SqrlUserList *c = SQRL_USER_LIST;
-        while( c ) {
-            if( c->user == this ) {
-                SQRL_MUTEX_LOCK( &this->referenceCountMutex )
-                    this->referenceCount++;
-                SQRL_MUTEX_UNLOCK( &this->referenceCountMutex )
-                    break;
-            }
-            c = c->next;
-        }
-#ifndef ARDUINO
-        client->userMutex.unlock();
-#endif
-    }
+	SqrlUser::SqrlUser( SqrlUri *uri ) : SqrlUser() {
+		if( uri->getScheme() != SQRL_SCHEME_FILE ) {
+			return;
+		}
+		this->storage = new SqrlStorage( uri );
+		if( this->storage ) {
+			this->_load_unique_id();
+			// TODO: Load Options
+		}
+	}
 
-    void SqrlUser::release() {
-#ifndef ARDUINO
-        SqrlClient *client = SqrlClient::getClient();
-#endif
-        bool shouldFreeThis = false;
-        SQRL_MUTEX_LOCK( &client->userMutex )
-            struct SqrlUserList *list = SQRL_USER_LIST;
-        if( list == NULL ) {
-            // Not saved in memory... Go ahead and release it.
-            SQRL_MUTEX_UNLOCK( &client->userMutex )
-                shouldFreeThis = true;
-            goto END;
-        }
-        struct SqrlUserList *prev;
-        if( list->user == this ) {
-            prev = NULL;
-        } else {
-            prev = list;
-            list = NULL;
-            while( prev ) {
-                if( prev->next && prev->next->user == this ) {
-                    list = prev->next;
-                    break;
-                }
-                prev = prev->next;
-            }
-        }
-        if( list == NULL ) {
-            // Not saved in memory... Go ahead and release it.
-            SQRL_MUTEX_LOCK( &client->userMutex )
-                shouldFreeThis = true;
-            goto END;
-        }
-        // Release this reference
-        SQRL_MUTEX_LOCK( &this->referenceCountMutex )
-            this->referenceCount--;
-
-        if( this->referenceCount > 0 ) {
-            // There are other references... Do not delete.
-            SQRL_MUTEX_UNLOCK( &this->referenceCountMutex )
-                SQRL_MUTEX_UNLOCK( &client->userMutex )
-                goto END;
-        }
-        SQRL_MUTEX_UNLOCK( &this->referenceCountMutex );
-        // There were no other references... We can delete this.
-        shouldFreeThis = true;
-
-        if( prev == NULL ) {
-            SQRL_USER_LIST = list->next;
-        } else {
-            prev->next = list->next;
-        }
-        delete list;
-        SQRL_MUTEX_UNLOCK( &client->userMutex )
-
-            END:
-        if( shouldFreeThis ) {
-            delete(this);
-        }
-    }
+	SqrlUser::SqrlUser( const char *buffer, size_t buffer_len ) : SqrlUser() {
+		SqrlString buf( buffer, buffer_len );
+		this->storage = new SqrlStorage( &buf );
+		if( this->storage ) {
+			this->_load_unique_id();
+		}
+	}
 
     SqrlUser::~SqrlUser() {
+		SqrlClient *client = SqrlClient::getClient();
+		if( client ) {
+			SQRL_MUTEX_LOCK( &client->actionMutex );
+			size_t i, end = client->actions.count();
+			for( i = 0; i < end; i++ ) {
+				SqrlAction *action = client->actions.peek( i );
+				if( action->getUser() == this ) {
+					action->setUser( NULL );
+					action->cancel();
+				}
+			}
+			SQRL_MUTEX_UNLOCK( &client->actionMutex );
+			SQRL_MUTEX_LOCK( &client->userMutex );
+			client->users.erase( this );
+			SQRL_MUTEX_UNLOCK( &client->userMutex );
+		}
         if( this->keys ) {
             delete this->keys;
         }
