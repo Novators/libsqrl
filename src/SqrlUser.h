@@ -91,8 +91,6 @@ namespace libsqrl
         bool        isMemLocked();
         bool        tryLoadPassword( SqrlAction *action, bool retry );
         bool        tryLoadRescue( SqrlAction *action, bool retry );
-        void        memLock();
-        void        memUnlock();
         bool        regenKeys( SqrlAction *action );
         void        removeKey( int key_type );
         void initialize();

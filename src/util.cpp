@@ -47,30 +47,6 @@ namespace libsqrl
 #endif
     }
 
-    int sqrl_mprotect_noaccess( void *ptr ) {
-#ifndef ARDUINO
-        return sodium_mprotect_noaccess( ptr );
-#else
-        return 0;
-#endif
-    }
-
-    int sqrl_mprotect_readwrite( void *ptr ) {
-#ifndef ARDUINO
-        return sodium_mprotect_readwrite( ptr );
-#else
-        return 0;
-#endif
-    }
-
-    int sqrl_mprotect_readonly( void *ptr ) {
-#ifndef ARDUINO
-        return sodium_mprotect_readonly( ptr );
-#else
-        return 0;
-#endif
-    }
-
     void sqrl_randombytes( void *ptr, size_t len ) {
 #ifdef ARDUINO
         RNG.rand( (uint8_t*)ptr, len );
@@ -99,24 +75,6 @@ namespace libsqrl
         }
 #else
         sodium_memzero( buf, len );
-#endif
-    }
-
-    int sqrl_memcmp( const void * const b1_, const void * const b2_, size_t len ) {
-#ifdef ARDUINO
-        const volatile unsigned char *volatile b1 =
-            (const volatile unsigned char * volatile)b1_;
-        const volatile unsigned char *volatile b2 =
-            (const volatile unsigned char * volatile)b2_;
-        size_t               i;
-        unsigned char        d = (unsigned char)0U;
-
-        for( i = 0U; i < len; i++ ) {
-            d |= b1[i] ^ b2[i];
-        }
-        return (1 & ((d - 1) >> 8)) - 1;
-#else
-        return sodium_memcmp( b1_, b2_, len );
 #endif
     }
 

@@ -202,9 +202,9 @@ namespace libsqrl
         return (!isalpha( c ) && '+' != c && '-' != c && '.' != c) ? 0 : 1;
     }
 
-    static void sqrl_lcstr( char *str ) {
+    static void sqrl_lcstr( char *str, size_t len ) {
         int i;
-        for( i = 0; str[i] != 0; i++ ) {
+        for( i = 0; i < len; i++ ) {
             if( str[i] > 64 && str[i] < 91 ) {
                 str[i] += 32;
             }
@@ -220,18 +220,16 @@ namespace libsqrl
         const char *tmpstr;
         const char *curstr;
         size_t len;
-        size_t i;
         int userpass_flag;
-        int bracket_flag;
         char *port = NULL,
             *path = NULL,
             *query = NULL,
             *fragment = NULL,
             *username = NULL,
             *password = NULL,
-            *sch = NULL,
             *pp = NULL,
             *ppp = NULL;
+		char sch[4];
         long pl;
 
         SqrlString uri = SqrlString( source );
@@ -244,43 +242,28 @@ namespace libsqrl
         * <scheme> := [a-z\+\-\.]+
         *             upper case = lower case for resiliency
         */
-        /* Read scheme */
         tmpstr = strchr( curstr, ':' );
-        if( NULL == tmpstr ) goto ERR;
+		if( tmpstr ) {
+			len = (int)(tmpstr - curstr);
+			if( len != 4 ) goto ERR;
+			memcpy( sch, curstr, len );
+			curstr += len;
+			/* Skip "://" */
+			if( strstr( curstr, "://" ) != curstr ) goto ERR;
+			curstr += 3;
 
-        /* Get the scheme length */
-        len = (int)(tmpstr - curstr);
-        /* Check restrictions */
-        for( i = 0; i < len; i++ ) {
-            if( !_is_scheme_char( curstr[i] ) ) goto ERR;
-        }
-        /* Copy the scheme to the storage */
-        sch = new char[len + 1];
-        if( NULL == sch ) goto ERR;
-        memcpy( sch, curstr, len );
-        sch[len] = 0;
-        sqrl_lcstr( sch );
-        if( strcmp( sch, "sqrl" ) == 0 ) this->scheme = SQRL_SCHEME_SQRL;
-        else if( strcmp( sch, "file" ) == 0 ) this->scheme = SQRL_SCHEME_FILE;
-        else {
-            delete sch;
-            goto ERR;
-        }
-        delete sch;
-
-        /* Skip ':' */
-        tmpstr++;
-        curstr = tmpstr;
+			sqrl_lcstr( sch, len );
+			if( memcmp( sch, "sqrl", len ) == 0 ) this->scheme = SQRL_SCHEME_SQRL;
+			else if( memcmp( sch, "file", len ) == 0 ) this->scheme = SQRL_SCHEME_FILE;
+			else goto ERR;
+		} else {
+			goto ERR;
+		}
 
         /*
-        * //<user>:<password>@<host>:<port>/<uri-path>
+        * <user>:<password>@<host>:<port>/<uri-path>
         * Any ":", "@" and "/" must be encoded.
         */
-        /* Eat "//" */
-        for( i = 0; i < 2; i++ ) {
-            if( '/' != *curstr ) goto ERR;
-            curstr++;
-        }
 
         /* Check if the user (and password) are specified. */
         userpass_flag = 0;
@@ -292,7 +275,6 @@ namespace libsqrl
                 break;
             } else if( '/' == *tmpstr ) {
                 /* End of <host>:<port> specification */
-                userpass_flag = 0;
                 break;
             }
             tmpstr++;
@@ -302,7 +284,7 @@ namespace libsqrl
         tmpstr = curstr;
         if( userpass_flag ) {
             /* Read username */
-            while( '\0' != *tmpstr && ':' != *tmpstr && '@' != *tmpstr ) {
+            while( ':' != *tmpstr && '@' != *tmpstr ) {
                 tmpstr++;
             }
             len = (int)(tmpstr - curstr);
@@ -316,7 +298,7 @@ namespace libsqrl
                 curstr++;
                 /* Read password */
                 tmpstr = curstr;
-                while( '\0' != *tmpstr && '@' != *tmpstr ) {
+                while( '@' != *tmpstr ) {
                     tmpstr++;
                 }
                 len = (int)(tmpstr - curstr);
@@ -332,22 +314,25 @@ namespace libsqrl
         }
 
         if( '[' == *curstr ) {
-            bracket_flag = 1;
+			// IPv6 address
+			tmpstr = curstr;
+			while( '\0' != *tmpstr ) {
+				if( ']' == *tmpstr ) {
+					// End of IPv6 address.
+					tmpstr++;
+					break;
+				}
+				tmpstr++;
+			}
+			if( '\0' == *tmpstr ) goto ERR;
         } else {
-            bracket_flag = 0;
-        }
-        /* Proceed on by delimiters with reading host */
-        tmpstr = curstr;
-        while( '\0' != *tmpstr ) {
-            if( bracket_flag && ']' == *tmpstr ) {
-                /* End of IPv6 address. */
-                tmpstr++;
-                break;
-            } else if( !bracket_flag && (':' == *tmpstr || '/' == *tmpstr) ) {
-                /* Port number is specified. */
-                break;
-            }
-            tmpstr++;
+			tmpstr = curstr;
+			while( '\0' != *tmpstr ) {
+				if( ':' == *tmpstr || '/' == *tmpstr ) {
+					break;
+				}
+				tmpstr++;
+			}
         }
         len = (size_t)(tmpstr - curstr);
         if( len ) {
@@ -371,7 +356,7 @@ namespace libsqrl
             curstr = tmpstr;
         }
 
-        /* End of the string */
+        /* End of the string? */
         if( '\0' == *curstr ) {
             goto SQRL;
         }
@@ -430,11 +415,10 @@ namespace libsqrl
         switch( this->scheme ) {
         case SQRL_SCHEME_SQRL:
             len = uri.length();
+			this->prefix = new SqrlString( "https://" );
             this->url = new SqrlString( uri.length() + 1 );
-            this->url->append( 'h', 1 );
-            this->url->append( &uri );
-            memcpy( this->url->string(), "https", 5 );
-            this->prefix = new SqrlString( "https://" );
+			this->url->append( this->prefix );
+			this->url->append( uri.cstring() + 7 );
             break;
         case SQRL_SCHEME_FILE:
             this->url = new SqrlString( &uri );
@@ -446,10 +430,9 @@ namespace libsqrl
             goto ERR;
         }
         len = source->length();
-        this->challenge = new SqrlString( len + 1 );
+        this->challenge = new SqrlString( source );
         if( this->challenge == NULL || this->url == NULL ) goto ERR;
-        this->challenge->append( source->cstring(), len );
-
+        
         pl = 0;
         pp = NULL;
         ppp = NULL;

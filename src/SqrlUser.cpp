@@ -191,24 +191,6 @@ namespace libsqrl
         return false;
     }
 
-    void SqrlUser::memLock() {
-#ifndef ARDUINO
-        if( this->keys != NULL ) {
-            sqrl_mprotect_noaccess( this->keys );
-        }
-#endif
-        FLAG_SET( this->flags, USER_FLAG_MEMLOCKED );
-    }
-
-    void SqrlUser::memUnlock() {
-#ifndef ARDUINO
-        if( this->keys != NULL ) {
-            sqrl_mprotect_readwrite( this->keys );
-        }
-#endif
-        FLAG_CLEAR( this->flags, USER_FLAG_MEMLOCKED );
-    }
-
     bool SqrlUser::isHintLocked() {
         if( this->hint_iterations == 0 ) return false;
         return true;

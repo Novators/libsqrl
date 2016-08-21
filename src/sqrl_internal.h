@@ -83,11 +83,7 @@ return SQRL_ACTION_STATE_DELETE;
 
     void sqrl_free( void *ptr, size_t len );
     void * sqrl_malloc( const size_t size );
-    int sqrl_memcmp( const void * const b1_, const void * const b2_, size_t len );
     int sqrl_mlock( void *addr, size_t len );
     int sqrl_munlock( void * const addr, size_t len );
-    int sqrl_mprotect_noaccess( void *ptr );
-    int sqrl_mprotect_readonly( void *ptr );
-    int sqrl_mprotect_readwrite( void *ptr );
 }
 #endif // SQRL_INTERNAL_H
