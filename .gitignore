@@ -3,7 +3,6 @@ reset.sh
 DartConfiguration.tcl
 upload_docs.sh
 build
-/.vs/libsqrl/v14
 /tests/Release
 /tests/Debug
 /tests/x64
@@ -17,3 +16,4 @@ build
 /SQRLduino/__vm
 /SQRLduino/Release
 /SQRLduino/Debug
+/.vs
