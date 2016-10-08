@@ -68,7 +68,7 @@ namespace libsqrl
 
 		const char *it = src->cstring();
 		const char *end = src->cstrend();
-		while( 1 ) {
+		while( it < end ) {
 			cptr = strchr( this->alphabet, (it++)[0] );
 			if( cptr ) {
 				tmp |= ((cptr - this->alphabet) << shift);

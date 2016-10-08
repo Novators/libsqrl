@@ -11,6 +11,7 @@
 #include "SqrlBlock.h"
 #include "SqrlUri.h"
 #include "SqrlBase64.h"
+#include "SqrlBase56Check.h"
 #include <new>
 
 namespace libsqrl
@@ -152,11 +153,18 @@ namespace libsqrl
         if( buffer->compare( 0, 8, "sqrldata" ) == 0 ) {
             buffer->erase( 0, 8 );
         } else {
+			SqrlString buf( buffer );
             if( buffer->compare( 0, 8, "SQRLDATA" ) == 0 ) {
-                SqrlString buf( buffer );
                 buf.erase( 0, 8 );
                 SqrlBase64().decode( buffer, &buf );
-            }
+			} else {
+				SqrlBase56Check b56;
+				if( b56.validate( buffer, NULL ) ) {
+					b56.decode( buffer, &buf );
+				} else {
+					return false;
+				}
+			}
         }
 
         const uint8_t * cur = buffer->cdata();

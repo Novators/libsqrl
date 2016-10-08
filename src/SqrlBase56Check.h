@@ -21,6 +21,10 @@ namespace libsqrl
 		SqrlBase56Check();
         virtual SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false ) override;
         virtual SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false ) override;
+		virtual bool validate( const SqrlString *src, size_t *error ) override;
+
+	private:
+		bool preProcess( SqrlString *base56, const SqrlString *src, size_t *error );
     };
 }
 #endif // SQRLBASE56CHECK_H

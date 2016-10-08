@@ -91,4 +91,20 @@ namespace libsqrl
 		return dest;
 	}
 
+	bool SqrlEncoder::validate( const SqrlString *src, size_t *error ) {
+		if( !src ) return false;
+
+		const char *it = src->cstring();
+		const char *end = src->cstrend();
+		while( it != end ) {
+			if( !strchr( this->alphabet, *it ) ) {
+				if( error ) {
+					*error = it - src->cstring();
+				}
+				return false;
+			}
+			it++;
+		}
+		return true;
+	}
 }

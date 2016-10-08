@@ -49,6 +49,29 @@ namespace libsqrl
 		if( !src || src->length() == 0 ) return NULL;
 		SqrlString toDecode = SqrlString( src->length() );
 
+		if( this->preProcess( &toDecode, src, NULL ) ) {
+			bool didAlloc = false;
+			if( !dest ) {
+				dest = new SqrlString();
+				didAlloc = true;
+			}
+
+			if( this->SqrlBase56::decode( dest, &toDecode, append ) ) {
+				return dest;
+			} else {
+				if( didAlloc ) delete dest;
+				dest = NULL;
+			}
+		}
+		return dest;
+	}
+
+	bool SqrlBase56Check::validate( const SqrlString * src, size_t * error ) {
+		SqrlString b56;
+		return this->preProcess( &b56, src, error );
+	}
+
+	bool SqrlBase56Check::preProcess( SqrlString * base56, const SqrlString * src, size_t * error ) {
 		bool isError = false;
 		uint8_t lineCount = 0;
 		SqrlString line = SqrlString( 20 );
@@ -65,26 +88,17 @@ namespace libsqrl
 				break;
 			}
 			line.popc_back();
-			toDecode.append( &line );
+			base56->append( &line );
 			lineCount++;
 		}
 		if( isError ) {
 			printf( "Failed at line %d\n", lineCount );
-			return NULL;
+			if( error ) {
+				*error = lineCount * 20;
+			}
+			return false;
 		}
-
-		bool didAlloc = false;
-		if( !dest ) {
-			dest = new SqrlString();
-			didAlloc = true;
-		}
-
-		if( !this->SqrlBase56::decode( dest, &toDecode, append ) ) {
-			delete dest;
-			return NULL;
-		}
-
-		return dest;
+		return true;
 	}
 
 }

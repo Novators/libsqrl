@@ -21,6 +21,7 @@ namespace libsqrl
 		SqrlEncoder( const char *alphabet );
         virtual SqrlString *encode( SqrlString *dest, const SqrlString *src, bool append = false );
         virtual SqrlString *decode( SqrlString *dest, const SqrlString *src, bool append = false );
+		virtual bool validate( const SqrlString *src, size_t *error );
 
 	protected:
 		const char *alphabet;
