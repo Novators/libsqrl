@@ -156,7 +156,9 @@ namespace libsqrl
                 SqrlString buf( buffer );
                 buf.erase( 0, 8 );
                 SqrlBase64().decode( buffer, &buf );
-            }
+            }else{
+                return false; // not valid sqrl data
+            }            
         }
 
         const uint8_t * cur = buffer->cdata();
