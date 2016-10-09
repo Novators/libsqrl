@@ -22,21 +22,29 @@
 #else
 #include "WProgram.h"
 #endif
-#else
+#endif
+
+#if defined(ARDUINO)
+#define WITHOUT_THREADS
+#define WITHOUT_SCRYPT
+#endif
+
+#if !defined(WITHOUT_THREADS)
+#define WITH_THREADS
 #include <thread>
 #include <mutex>
+#else
+#undef WITH_THREADS
+#endif
+
+#if !defined(WITHOUT_SCRYPT)
+#define WITH_SCRYPT
+#else
+#undef WITH_SCRYPT
 #endif
 
 namespace libsqrl
 {
-#if defined(ARDUINO)
-#define SQRL_MUTEX_LOCK(p) ;
-#define SQRL_MUTEX_UNLOCK(p) ;
-#else
-#define SQRL_MUTEX_LOCK(p) (p)->lock();
-#define SQRL_MUTEX_UNLOCK(p) (p)->unlock();
-#endif
-
 
     class SqrlUser;
     class SqrlEncoder;

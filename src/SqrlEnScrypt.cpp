@@ -47,7 +47,7 @@ namespace libsqrl
         const uint8_t *theSalt = salt ? salt->cdata() : NULL;
         size_t salt_len = salt ? salt->length() : 0;
 
-#ifdef ARDUINO
+#if defined(WITHOUT_SCRYPT)
         SHA256 sha = SHA256();
         sha.update( this->password.cdata(), this->password.length() );
         uint8_t buf[SQRL_KEY_SIZE];

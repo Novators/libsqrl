@@ -1,4 +1,4 @@
-# libsqrl 0.3.16283.2
+# libsqrl 0.3.16283.12
 
 A SQRL Authentication Library
 

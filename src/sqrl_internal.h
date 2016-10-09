@@ -8,11 +8,20 @@
 #ifndef SQRL_INTERNAL_H
 #define SQRL_INTERNAL_H
 
-#define DLL_PUBLIC
 #include "sqrl.h"
 #include <stdio.h>
 
-#ifndef ARDUINO
+#define DLL_PUBLIC
+
+#if defined(WITH_THREADS)
+#define SQRL_MUTEX_LOCK(p) (p)->lock();
+#define SQRL_MUTEX_UNLOCK(p) (p)->unlock();
+#else
+#define SQRL_MUTEX_LOCK(p) ;
+#define SQRL_MUTEX_UNLOCK(p) ;
+#endif
+
+#if defined(WITH_SCRYPT)
 #define SCRYPT_SALSA
 #define SCRYPT_SHA256
 #define SODIUM_STATIC
@@ -53,8 +62,6 @@ return SQRL_ACTION_STATE_DELETE;
 
     double sqrl_get_real_time();
     uint64_t sqrl_get_timestamp();
-
-    extern struct Sqrl_Global_Mutices SQRL_GLOBAL_MUTICES;
 
 #pragma pack(push)
 #pragma pack(1)

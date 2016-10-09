@@ -29,9 +29,7 @@ namespace libsqrl
     }
 
     SqrlUser::SqrlUser() {
-#ifndef ARDUINO
 		SqrlClient *client = SqrlClient::getClient();
-#endif
 		SqrlUser::defaultOptions( &this->options );
 		this->keys = NULL;
 		this->storage = NULL;

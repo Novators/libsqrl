@@ -39,7 +39,7 @@ namespace libsqrl
         static bool initialized;
         static bool stopping;
         static int sleeptime;
-#ifndef ARDUINO
+#ifdef WITH_THREADS
         static std::mutex *mutex;
         static std::thread *thread;
 #endif

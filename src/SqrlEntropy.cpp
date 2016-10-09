@@ -9,7 +9,7 @@
 #include "sqrl_internal.h"
 #include "sqrl.h"
 #include "SqrlEntropy.h"
-#ifndef ARDUINO
+#if defined(WITH_THREADS)
 #include <mutex>
 #endif
 
@@ -23,7 +23,7 @@ int libsqrl::SqrlEntropy::entropy_target = SQRL_ENTROPY_TARGET;
 bool libsqrl::SqrlEntropy::initialized = false;
 bool libsqrl::SqrlEntropy::stopping = false;
 int libsqrl::SqrlEntropy::sleeptime = SQRL_ENTROPY_REPEAT_FAST;
-#ifndef ARDUINO
+#if defined(WITH_THREADS)
 std::mutex *libsqrl::SqrlEntropy::mutex = NULL;
 std::thread *libsqrl::SqrlEntropy::thread = NULL;
 #endif

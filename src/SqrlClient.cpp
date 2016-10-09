@@ -28,14 +28,14 @@ namespace libsqrl
 #define SQRL_CALLBACK_PROGRESS 7
 
     SqrlClient *SqrlClient::client = NULL;
-#ifndef ARDUINO
+#if defined(WITH_THREADS)
 	std::mutex *SqrlClient::clientMutex = NULL;
 #endif
 
     SqrlClient::SqrlClient() :
         rapid(false)
     {
-#ifndef ARDUINO
+#if defined(WITH_THREADS)
 		if( SqrlClient::clientMutex == nullptr ) {
 			SqrlClient::clientMutex = new std::mutex();
 		}
@@ -160,7 +160,7 @@ namespace libsqrl
 		char testId[SQRL_UNIQUE_ID_LENGTH + 1];
 		SQRL_MUTEX_LOCK( &this->userMutex );
 		size_t end = this->users.count();
-		for( int i = 0; i < end; i++ ) {
+		for( size_t i = 0; i < end; i++ ) {
 			SqrlUser *cur = this->users.peek( i );
 			if( cur->getUniqueId( testId ) ) {
 				if( 0 == uniqueId->compare( testId ) ) {
@@ -176,7 +176,7 @@ namespace libsqrl
 	SqrlUser * SqrlClient::getUser( void * tag ) {
 		SQRL_MUTEX_LOCK( &this->userMutex );
 		size_t end = this->users.count();
-		for( int i = 0; i < end; i++ ) {
+		for( size_t i = 0; i < end; i++ ) {
 			SqrlUser *cur = this->users.peek( i );
 			if( cur->getTag() == tag ) {
 				SQRL_MUTEX_UNLOCK( &this->userMutex );

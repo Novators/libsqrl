@@ -25,7 +25,9 @@ namespace libsqrl
 
     private:
         static void clientThread();
+#if defined(WITH_THREADS)
         std::thread *myThread;
+#endif
         bool stopping = false;
 
     };

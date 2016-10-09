@@ -156,7 +156,9 @@ namespace libsqrl
 			SqrlString buf( buffer );
             if( buffer->compare( 0, 8, "SQRLDATA" ) == 0 ) {
                 buf.erase( 0, 8 );
-                SqrlBase64().decode( buffer, &buf );
+				if( !SqrlBase64().decode( buffer, &buf ) ) {
+					return false;
+				}
 			} else {
 				if( !SqrlBase56Check().decode( buffer, &buf ) ) {
 					return false;
@@ -189,7 +191,7 @@ namespace libsqrl
     /// <returns>true if it succeeds, false if it fails.</returns>
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     bool SqrlStorage::load( SqrlUri *uri ) {
-#ifdef ARDUINO
+#if defined(ARDUINO)
         return false;
 #else
         if( !uri || uri->getScheme() != SQRL_SCHEME_FILE ) return false;
@@ -266,7 +268,7 @@ namespace libsqrl
     /// <returns>true if it succeeds, false if it fails.</returns>
     ////////////////////////////////////////////////////////////////////////////////////////////////////
     bool SqrlStorage::save( SqrlUri *uri, Sqrl_Export etype, Sqrl_Encoding encoding ) {
-#ifdef ARDUINO
+#if defined(ARDUINO)
         return 0;
 #else
         if( !uri || uri->getScheme() != SQRL_SCHEME_FILE ) return false;

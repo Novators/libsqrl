@@ -26,10 +26,10 @@ namespace libsqrl
     SqrlAction::SqrlAction()
         : user( NULL ),
         uri( NULL ),
+		tag( NULL ),
         state( 0 ),
         status( SQRL_ACTION_RUNNING ),
-        shouldCancel( false ),
-		tag( NULL ) {
+        shouldCancel( false ) {
         SqrlClient *client = SqrlClient::getClient();
         if( !client ) {
             exit( 1 );

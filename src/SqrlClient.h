@@ -79,7 +79,7 @@ namespace libsqrl
         SqrlDeque<struct CallbackInfo*> callbackQueue;
         SqrlDeque<SqrlAction *>actions;
 		SqrlDeque<SqrlUser*>users;
-#ifndef ARDUINO
+#if defined(WITH_THREADS)
 		static std::mutex *clientMutex;
         std::mutex actionMutex;
         std::mutex userMutex;
