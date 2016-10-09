@@ -158,10 +158,7 @@ namespace libsqrl
                 buf.erase( 0, 8 );
                 SqrlBase64().decode( buffer, &buf );
 			} else {
-				SqrlBase56Check b56;
-				if( b56.validate( buffer, NULL ) ) {
-					b56.decode( buffer, &buf );
-				} else {
+				if( !SqrlBase56Check().decode( buffer, &buf ) ) {
 					return false;
 				}
 			}
