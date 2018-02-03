@@ -56,10 +56,10 @@ configure_file(${SRCDIR}/config.h.in ${CMAKE_BINARY_DIR}/include/sqrl_config.h)
 include_directories( ${CMAKE_BINARY_DIR}/include ${CMAKE_BINARY_DIR}/src/libsodium/src/libsodium/crypto_pwhash/scryptsalsa208sha256)
 
 configure_file(${SRCDIR}/sqrl_depends.c.in sqrl_depends.c)
-file(COPY 
+file(COPY
 	${CMAKE_SOURCE_DIR}/data/test1.sqrl
 	${CMAKE_SOURCE_DIR}/data/test2.sqrl
-	${CMAKE_SOURCE_DIR}/data/vectors 
+	${CMAKE_SOURCE_DIR}/data/vectors
 	DESTINATION ${CMAKE_BINARY_DIR})
 configure_file(README.in ${CMAKE_SOURCE_DIR}/README.md)
 
@@ -94,6 +94,11 @@ endif()
 find_library(PTHREAD_LIB NAMES pthread)
 if(NOT ${PTHREAD_LIB} STREQUAL "PTHREAD_LIB-NOTFOUND")
 	set(LIBS ${LIBS} ${PTHREAD_LIB})
+endif()
+
+find_library(M_LIB NAMES m)
+if(NOT ${M_LIB} STREQUAL "M_LIB-NOTFOUND")
+    set(LIBS ${LIBS} ${M_LIB})
 endif()
 
 include_directories(include)
@@ -181,10 +186,10 @@ install(TARGETS sqrl LIBRARY DESTINATION lib)
 #documentation
 find_package(Doxygen QUIET)
 if(DOXYGEN_FOUND)
-	set(HEADERS 
-		${CMAKE_SOURCE_DIR}/src/sqrl_common.h 
-		${CMAKE_SOURCE_DIR}/src/sqrl_client.h 
-		${CMAKE_SOURCE_DIR}/src/sqrl_server.h 
+	set(HEADERS
+		${CMAKE_SOURCE_DIR}/src/sqrl_common.h
+		${CMAKE_SOURCE_DIR}/src/sqrl_client.h
+		${CMAKE_SOURCE_DIR}/src/sqrl_server.h
 		${CMAKE_SOURCE_DIR}/src/sqrl_expert.h)
 	set(DOCSRC ${HEADERS} ${SRC} ${CMAKE_BINARY_DIR}/html/mainpage.dox)
 	string(REPLACE ";" " " DOCSRCSTR "${DOCSRC}")

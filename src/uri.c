@@ -1,4 +1,4 @@
-/** @file uri.c 
+/** @file uri.c
 
 @author Adam Comley
 
@@ -31,7 +31,7 @@ Sqrl_Uri *sqrl_uri_create_copy( Sqrl_Uri *original )
 	if( original->challenge ) {
 		sz = strlen( original->challenge );
 		nuri->challenge = calloc( sz + 1, 1 );
-		if( nuri->challenge ) 
+		if( nuri->challenge )
 			memcpy( nuri->challenge, original->challenge, sz );
 	}
 	if( original->host ) {
@@ -47,18 +47,12 @@ Sqrl_Uri *sqrl_uri_create_copy( Sqrl_Uri *original )
 			memcpy( nuri->url, original->url, sz );
 	}
 	nuri->scheme = original->scheme;
-	if( original->sfn ) {
-		sz = strlen( original->sfn );
-		nuri->sfn = calloc( sz + 1, 1 );
-		if( nuri->sfn )
-			memcpy( nuri->sfn, original->sfn, sz );
-	}
 	return nuri;
 }
 
 /*
  * URL Parsing function borrowed (with modifications) from:
- * 
+ *
  * Copyright 2010-2011 Scyphus Solutions Co. Ltd.  All rights reserved.
  *
  * Authors:
@@ -91,14 +85,14 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 	int i;
 	int userpass_flag;
 	int bracket_flag;
-	char *host = NULL, 
-		 *port = NULL, 
-		 *path = NULL, 
-		 *query = NULL, 
-		 *fragment = NULL, 
-		 *username = NULL, 
+	char *host = NULL,
+		 *port = NULL,
+		 *path = NULL,
+		 *query = NULL,
+		 *fragment = NULL,
+		 *username = NULL,
 		 *password = NULL;
-	
+
 	UT_string *prefix = NULL;
 	char *uri = malloc( strlen( theUrl ) + 1 );
 	strcpy( uri, theUrl );
@@ -109,7 +103,7 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 	if( puri == NULL ) goto ERROR;
 
 	curstr = uri;
-	
+
 	/*
 	 * <scheme>:<scheme-specific-part>
 	 * <scheme> := [a-z\+\-\.]+
@@ -118,7 +112,7 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 	/* Read scheme */
 	tmpstr = strchr(curstr, ':');
 	if ( NULL == tmpstr ) goto ERROR;
-	
+
 	/* Get the scheme length */
 	len = tmpstr - curstr;
 	/* Check restrictions */
@@ -128,7 +122,7 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 	/* Copy the scheme to the storage */
 	char *sch = malloc( sizeof(char) * (len + 1 ));
 	if ( NULL == sch ) goto ERROR;
-	
+
 	(void)strncpy(sch, curstr, len);
 	sch[len] = '\0';
 	sqrl_lcstr( sch );
@@ -143,7 +137,7 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 	/* Skip ':' */
 	tmpstr++;
 	curstr = tmpstr;
-	
+
 	/*
 	 * //<user>:<password>@<host>:<port>/<uri-path>
 	 * Any ":", "@" and "/" must be encoded.
@@ -153,7 +147,7 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 		if ( '/' != *curstr ) goto ERROR;
 		curstr++;
 	}
-	
+
 	/* Check if the user (and password) are specified. */
 	userpass_flag = 0;
 	tmpstr = curstr;
@@ -169,7 +163,7 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 		}
 		tmpstr++;
 	}
-	
+
 	/* User and password specification */
 	tmpstr = curstr;
 	if ( userpass_flag ) {
@@ -203,7 +197,7 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 	if ( '@' != *curstr ) goto ERROR;
 	curstr++;
 	}
-	
+
 	if ( '[' == *curstr ) {
 		bracket_flag = 1;
 	} else {
@@ -228,7 +222,7 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 	(void)strncpy(host, curstr, len);
 	host[len] = '\0';
 	curstr = tmpstr;
-	
+
 	/* Is port number specified? */
 	if ( ':' == *curstr ) {
 		curstr++;
@@ -244,16 +238,16 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 		port[len] = '\0';
 	curstr = tmpstr;
 	}
-	
+
 	/* End of the string */
 	if ( '\0' == *curstr ) {
 		goto SQRL;
 	}
-	
+
 	/* Skip '/' */
 	if ( '/' != *curstr ) goto ERROR;
 	curstr++;
-	
+
 	/* Parse path */
 	tmpstr = curstr;
 	while ( '\0' != *tmpstr && '#' != *tmpstr  && '?' != *tmpstr ) {
@@ -262,11 +256,11 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 	len = tmpstr - curstr;
 	path = malloc(sizeof(char) * (len + 1));
 	if ( NULL == path ) goto ERROR;
-	
+
 	(void)strncpy(path, curstr, len);
 	path[len] = '\0';
 	curstr = tmpstr;
-	
+
 	/* Is query specified? */
 	if ( '?' == *curstr ) {
 		/* Skip '?' */
@@ -279,12 +273,12 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 		len = tmpstr - curstr;
 		query = malloc(sizeof(char) * (len + 1));
 		if ( NULL == query ) goto ERROR;
-		
+
 		(void)strncpy(query, curstr, len);
 		query[len] = '\0';
 	curstr = tmpstr;
 	}
-	
+
 	/* Is fragment specified? */
 	if ( '#' == *curstr ) {
 		/* Skip '#' */
@@ -297,11 +291,11 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 		len = tmpstr - curstr;
 		fragment = malloc(sizeof(char) * (len + 1));
 		if ( NULL == fragment ) goto ERROR;
-		
+
 		(void)strncpy(fragment, curstr, len);
 		fragment[len] = '\0';
 	}
-	
+
 	/* SQRL Specific... */
 SQRL:
 	switch( puri->scheme ) {
@@ -332,23 +326,6 @@ SQRL:
 	char *pp = NULL;
 	char *ppp = NULL;
 	if( query ) {
-		pp = strstr( query, "sfn=" );
-		if( !pp ) {
-			goto ERROR;
-		}
-		pp += 4;
-		ppp = strchr( pp, '&' );
-		if( ppp ) {
-			pl = ppp - pp;
-		} else {
-			pl = strlen( pp );
-		}
-		UT_string *utsfn = sqrl_b64u_decode( NULL, pp, pl );
-		if( utsfn ) {
-			puri->sfn = calloc( 1, utstring_len( utsfn ) + 1 );
-			memcpy( puri->sfn, utstring_body( utsfn ), utstring_len( utsfn ));
-			utstring_free( utsfn );
-		}
 		pl = 0;
 		pp = strstr( query, "x=" );
 		if( pp ) {
@@ -378,7 +355,7 @@ ERROR:
 		sqrl_uri_free( puri );
 	}
 	puri = NULL;
-	
+
 END:
 	if( host ) free( host );
 	if( port ) free( port );
@@ -406,7 +383,6 @@ Sqrl_Uri* sqrl_uri_free( Sqrl_Uri *uri )
 		if( uri->host ) free( uri->host );
 		if( uri->prefix ) free( uri->prefix );
 		if( uri->url ) free( uri->url );
-		if( uri->sfn ) free( uri->sfn );
 		free(uri);
 	}
 	return NULL;

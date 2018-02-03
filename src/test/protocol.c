@@ -1,4 +1,4 @@
-/* protocol.c 
+/* protocol.c
 
 @author Adam Comley
 
@@ -168,7 +168,7 @@ void onServerSend(
     sqrl_client_receive( current_transaction, reply, reply_len );
 }
 
-void runTest( char *testName, Sqrl_Transaction_Type type, int expectedLoops, bool passCondition ) 
+void runTest( char *testName, Sqrl_Transaction_Type type, int expectedLoops, bool passCondition )
 {
     Sqrl_Transaction_Status status;
     loops = 0;
@@ -192,11 +192,11 @@ void runTest( char *testName, Sqrl_Transaction_Type type, int expectedLoops, boo
     free( sqrlUrl );
 }
 
-int main() 
+int main()
 {
     sqrl_init();
     char txtBuffer[4096] = {0};
-    
+
     Sqrl_Client_Callbacks cbs;
     memset( &cbs, 0, sizeof( Sqrl_Client_Callbacks ));
     cbs.onAuthenticationRequired = onAuthenticationRequired;
@@ -206,10 +206,9 @@ int main()
     cbs.onSend = onSend;
     sqrl_client_set_callbacks( &cbs );
 
-    server = sqrl_server_create( 
-        "sqrl://sqrlid.com/auth.php?sfn=_LIBSQRL_SFN_&nut=_LIBSQRL_NUT_",
-        "SQRLid", 
-        "SQRLid passcode", 15, 
+    server = sqrl_server_create(
+        "sqrl://sqrlid.com/auth.php?nut=_LIBSQRL_NUT_",
+        "SQRLid passcode", 15,
         NULL, onServerSend, 60 );
 
     if( !server ) {

@@ -1,10 +1,10 @@
-/** @file sqrl_common.h 
+/** @file sqrl_common.h
 
 @author Adam Comley
 
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
-**/  
+**/
 #ifndef SQRL_COMMON_H_INCLUDED
 #define SQRL_COMMON_H_INCLUDED
 
@@ -51,8 +51,6 @@ typedef struct Sqrl_Uri {
 	char *url;
 	/** Internal use */
 	Sqrl_Scheme scheme;
-	/** Server Friendly Name */
-	char *sfn;
 } Sqrl_Uri;
 
 Sqrl_Uri*	sqrl_uri_create_copy( Sqrl_Uri *original );
@@ -85,7 +83,7 @@ typedef enum {
 /**
 \defgroup encdec Encoding Functions
 
-Functions for encoding and decoding data in various formats.  We use the 
+Functions for encoding and decoding data in various formats.  We use the
 [UT_string](http://troydhanson.github.io/uthash/utstring.html) macros by Troy Hanson
 for easy string handling.  There are functions for URL-encoding (aka %-encoding) and SQRL's
 slightly modified base64url encoding.

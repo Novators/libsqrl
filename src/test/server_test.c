@@ -1,4 +1,4 @@
-/* server_test.c 
+/* server_test.c
 
 @author Adam Comley
 
@@ -18,10 +18,9 @@ int main()
 
     sqrl_init();
 
-    Sqrl_Server *server = sqrl_server_create( 
-        "sqrl://sqrlid.com/auth.php?sfn=_LIBSQRL_SFN_&nut=_LIBSQRL_NUT_",
-        "SQRLid", 
-        "I am SQRLid!", 12, 
+    Sqrl_Server *server = sqrl_server_create(
+        "sqrl://sqrlid.com/auth.php?nut=_LIBSQRL_NUT_",
+        "I am SQRLid!", 12,
         NULL, NULL, 1 );
     if( !server ) {
         printf( "Failed to create server\n" );

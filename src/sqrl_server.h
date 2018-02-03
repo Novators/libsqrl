@@ -1,17 +1,16 @@
-/** @file sqrl_client.h 
+/** @file sqrl_client.h
 
 @author Adam Comley
 
 This file is part of libsqrl.  It is released under the MIT license.
 For more details, see the LICENSE file included with this package.
-**/  
+**/
 #ifndef SQRL_SERVER_H_INCLUDED
 #define SQRL_SERVER_H_INCLUDED
 
 #include "sqrl_common.h"
 
 #define SQRL_SERVER_MAC_LENGTH 16
-#define SQRL_SERVER_TOKEN_SFN "_LIBSQRL_SFN_"
 #define SQRL_SERVER_TOKEN_NUT "_LIBSQRL_NUT_"
 
 #define SQRL_SERVER_USER_FLAG_DISABLED   0x01
@@ -79,7 +78,6 @@ typedef enum {
 
 typedef struct Sqrl_Server {
     Sqrl_Uri *uri;
-    char *sfn;
     uint8_t key[32];
     uint64_t nut_expires;
     void *onUserOp;
@@ -123,10 +121,9 @@ bool sqrl_scb_user_default(
     char *pidk,
     char *blob );
 
-bool sqrl_server_init( 
+bool sqrl_server_init(
     Sqrl_Server *server,
     char *uri,
-    char *sfn,
     char *passcode,
     size_t passcode_len,
     sqrl_scb_user *onUserOp,
@@ -135,7 +132,6 @@ bool sqrl_server_init(
 void sqrl_server_clear( Sqrl_Server *server );
 Sqrl_Server *sqrl_server_create(
     char *uri,
-    char *sfn,
     char *passcode,
     size_t passcode_len,
     sqrl_scb_user *onUserOp,
@@ -143,9 +139,9 @@ Sqrl_Server *sqrl_server_create(
     int nut_life );
 Sqrl_Server *sqrl_server_destroy( Sqrl_Server *server );
 
-bool sqrl_server_nut_generate( 
+bool sqrl_server_nut_generate(
     Sqrl_Server *server,
-    Sqrl_Nut *nut, 
+    Sqrl_Nut *nut,
     uint32_t ip );
 bool sqrl_server_nut_decrypt(
     Sqrl_Server *server,
@@ -154,7 +150,7 @@ bool sqrl_server_nut_decrypt(
 Sqrl_Server_Context *sqrl_server_context_create( Sqrl_Server *server );
 Sqrl_Server_Context *sqrl_server_context_destroy( Sqrl_Server_Context *context );
 void sqrl_server_add_mac( Sqrl_Server *server, UT_string *str, char sep );
-bool sqrl_server_verify_mac( Sqrl_Server *server, UT_string *str ); 
+bool sqrl_server_verify_mac( Sqrl_Server *server, UT_string *str );
 
 char *sqrl_server_create_link( Sqrl_Server *server, uint32_t ip );
 void sqrl_server_handle_query(
