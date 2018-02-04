@@ -271,7 +271,7 @@ void sqrl_site_parse_result( Sqrl_Site *site, const char *result, size_t result_
 
 	FLAG_CLEAR(site->flags, SITE_FLAG_VALID_SERVER_STRING);
 	utstring_new( rStr );
-	utstring_bincpy( rStr, result, result_len );
+	sqrl_b64u_decode( rStr, result, result_len );
 
 	str = utstring_body( rStr );
 
@@ -291,9 +291,7 @@ void sqrl_site_parse_result( Sqrl_Site *site, const char *result, size_t result_
 		utstring_free( site->serverString );
 	}
 	site->serverString = rStr;
-
 	if( required_keys == (found_keys & required_keys) ) {
-        DEBUG_PRINT( "SERVER STRING IS VALID.\n" );
 		FLAG_SET(site->flags, SITE_FLAG_VALID_SERVER_STRING);
 	}
 
@@ -725,21 +723,17 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 		site = sqrl_client_site_create( t );
 	}
 
-	if( !site ) goto ERROR;
+	if( !site ) {
+	  goto ERROR;
+	}
 	if( !FLAG_CHECK( site->flags, SITE_FLAG_VALID_SERVER_STRING )) {
-#if DEBUG_PRINT_CLIENT_PROTOCOL
-	DEBUG_PRINT( "!VALID_SERVER_STRING\n" );
-#endif
-		goto ERROR;
+	  goto ERROR;
 	}
 	if( response && response_len ) {
 		if( site->tif & SQRL_TIF_COMMAND_FAILURE ) {
 			goto ERROR;
 		}
 		if( site->tif & SQRL_TIF_TRANSIENT_ERROR ) {
-#if DEBUG_PRINT_CLIENT_PROTOCOL
-		DEBUG_PRINT( "Transient Error.  Trying again.\n" );
-#endif
             goto CONTINUE;
 		}
 
