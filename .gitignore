@@ -3,3 +3,5 @@ reset.sh
 DartConfiguration.tcl
 upload_docs.sh
 build
+*~
+
