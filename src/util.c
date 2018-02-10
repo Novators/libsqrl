@@ -84,6 +84,104 @@ void utstring_zero( UT_string *str )
 	sodium_memzero( utstring_body( str ), utstring_len( str ));
 }
 
+uint8_t utstring_lediv( UT_string *str, uint8_t divisor )
+{
+  if( divisor == 0 ) return 0;
+  if( !str || utstring_len( str ) == 0 ) {
+    return divisor;
+  }
+
+  uint16_t t = 0;
+
+  uint8_t *end = utstring_body( str );
+  uint8_t *it = end + utstring_len( str );
+  do {
+    it--;
+    t = (uint16_t)*it | (t<<8);
+    *it = (uint8_t)(t / divisor);
+    t = (t % divisor);
+  } while( it != end );
+
+  it = end + utstring_len( str );
+  do {
+    it--;
+    if( *it == 0 ) {
+      utstring_shrink( str, 1 );
+    } else {
+      break;
+    }
+  } while( it != end );
+  
+  return (uint8_t)t;
+}
+
+void utstring_binprepend( UT_string *str, uint8_t *buf, size_t buf_len )
+{
+  utstring_reserve( str, utstring_len(str) + buf_len );
+
+  size_t tmp_len = utstring_len( str );
+  uint8_t *tmp = malloc( tmp_len + 1);
+  memcpy( tmp, utstring_body( str ), tmp_len );
+
+  utstring_clear( str );
+  utstring_bincpy( str, buf, buf_len );
+  utstring_bincpy( str, tmp, tmp_len );
+  free( tmp );	  
+}
+
+void utstring_lemult( UT_string *str, uint8_t multiplicand )
+{
+  if( !str || utstring_len( str ) == 0 ) return;
+  if( multiplicand == 0 ) {
+    utstring_renew( str );
+    return;
+  }
+
+  uint16_t t = 0;
+  uint8_t carry;
+  
+  uint8_t *it = utstring_body( str );
+  uint8_t *end = it + utstring_len( str );
+  while( it != end ) {
+    t += ((uint16_t)*it * multiplicand);
+    *it = (uint8_t)t;
+    t = t >> 8;
+    it++;
+  }
+
+  if( t ) {
+    carry = t;
+    utstring_bincpy( str, &carry, 1 );
+  }
+}
+
+void utstring_leadd( UT_string *str, uint8_t operand )
+{
+  if( !str ) return;
+  if( utstring_len( str ) == 0 ) {
+    utstring_bincpy( str, &operand, 1 );
+    return;
+  }
+
+  uint16_t t = operand;
+  uint8_t carry;
+
+  uint8_t *it = utstring_body( str );
+  uint8_t *end = it + utstring_len( str );
+  
+  while( it != end ) {
+    t += *it;
+    *it = (uint8_t)t;
+    t = t >> 8;
+    it++;
+  }
+
+  if( t ) {
+    carry = t;
+    utstring_bincpy( str, &carry, 1 );
+  }
+}
+
 void bin2rc( char *buf, uint8_t *bin ) 
 {
 	// bin must be 512+ bits of entropy!
@@ -98,6 +196,7 @@ void bin2rc( char *buf, uint8_t *bin )
 	buf[j] = 0;
 }
 
+DLL_PUBLIC
 void sqrl_lcstr( char *str )
 {
 	int i;
@@ -106,6 +205,18 @@ void sqrl_lcstr( char *str )
 			str[i] += 32;
 		}
 	}
+}
+
+void reverse_buffer( uint8_t *in, size_t in_len )
+{
+  uint8_t tmp;
+  uint8_t *end = in + in_len - 1;
+  while( in < end ) {
+    tmp = *in;
+    *in = *end;
+    *end = tmp;
+    in++; end--;
+  }
 }
 
 uint16_t readint_16( void *buf )

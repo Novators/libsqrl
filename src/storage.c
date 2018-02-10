@@ -300,8 +300,10 @@ bool sqrl_storage_load_from_buffer( Sqrl_Storage storage, UT_string *buffer )
 		utstring_printf( buf, "sqrldata" );
 		if( strncmp( utstring_body( buffer ), "SQRLDATA", 8 ) == 0) {
 			sqrl_b64u_decode_append( buf, utstring_body(buffer)+8, utstring_len(buffer)-8 );
-		} else if( strncmp( utstring_body( buffer ), "SQAC", 4) == 0 ) {
+		} else if( strncmp( utstring_body( buffer ), "SQAC", 4 ) == 0 ) {
 			sqrl_b64u_decode_append( buf, utstring_body(buffer), utstring_len(buffer) );
+		} else if( utstring_len( buffer ) == sqrl_b56c_validate( NULL, utstring_body( buffer ), utstring_len( buffer ), false )) {
+			sqrl_b56c_decode_append( buf, utstring_body(buffer), utstring_len(buffer) );
 		} else {
 			printf( "Unrecognized format\n" );
 			utstring_free(buf);
@@ -422,7 +424,9 @@ bool sqrl_storage_save_to_buffer(
 	}
 
 	utstring_clear( buf );
-	if( encoding == SQRL_ENCODING_BASE64 ) {
+	if( encoding == SQRL_ENCODING_BASE56 ) {
+	  sqrl_b56c_encode_append( buf, (uint8_t*)(utstring_body( tmp )), utstring_len( tmp ));
+	} else if( encoding == SQRL_ENCODING_BASE64 ) {
 		utstring_printf( buf, "SQRLDATA" );
 		sqrl_b64u_encode_append( buf, (uint8_t*)(utstring_body( tmp )), utstring_len( tmp ));
 	} else {

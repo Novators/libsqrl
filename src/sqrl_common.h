@@ -16,6 +16,9 @@ For more details, see the LICENSE file included with this package.
 // SQRL_BASE64_PAD_CHAR = 0x00 for no padding.
 #define SQRL_BASE64_PAD_CHAR 				  0x00
 
+#define B56C_GROUP_SEP " "
+#define B56C_LINE_SEP "\n"
+
 // Buffer sizes for keys, etc...
 #define SQRL_KEY_SIZE 						    32
 #define SQRL_SIG_SIZE 						    64
@@ -89,21 +92,34 @@ for easy string handling.  There are functions for URL-encoding (aka %-encoding)
 slightly modified base64url encoding.
 
 @{ */
-UT_string*	sqrl_b64u_decode( UT_string * dest, const char *src, size_t src_len );
-void 		sqrl_b64u_decode_append( UT_string *dest, const char *src, size_t src_len );
+size_t          sqrl_b56c_validate( UT_string *dest, const char *src, size_t src_len, bool format );
+UT_string*      sqrl_b56_encode( UT_string *dest, const uint8_t *src, size_t src_len );
+UT_string*      sqrl_b56_encode_append( UT_string *dest, const uint8_t *src, size_t src_len );
+UT_string*      sqrl_b56_decode( UT_string *dest, const char *src, size_t src_len );
+UT_string*      sqrl_b56_decode_append( UT_string *dest, const char *src, size_t src_len );
+UT_string*      sqrl_b56c_encode( UT_string *dest, const char *src, size_t src_len );
+UT_string*      sqrl_b56c_encode_append( UT_string *dest, const char *src, size_t src_len );
+UT_string*      sqrl_b56c_decode( UT_string *dest, const char *src, size_t src_len );
+UT_string*      sqrl_b56c_decode_append( UT_string *dest, const char *src, size_t src_len );
+
 UT_string*	sqrl_b64u_encode( UT_string *dest, const uint8_t *src, size_t src_len );
-void 		sqrl_b64u_encode_append( UT_string *dest, const uint8_t *src, size_t src_len );
-uint32_t	sqrl_hex2uint( const char *hex );
+UT_string*	sqrl_b64u_encode_append( UT_string *dest, const uint8_t *src, size_t src_len );
+UT_string*	sqrl_b64u_decode( UT_string * dest, const char *src, size_t src_len );
+UT_string*	sqrl_b64u_decode_append( UT_string *dest, const char *src, size_t src_len );
+
 UT_string*	sqrl_urldecode( UT_string *dest, const char *src );
 UT_string*	sqrl_urlencode( UT_string *dest, const char *src );
+uint32_t	sqrl_hex2uint( const char *hex );
 /** @} */ // endgroup encdec
 
 /** \defgroup util Utility Functions
 
 @{ */
 
-int 		sqrl_init();
-int         sqrl_stop();
+int sqrl_init();
+int sqrl_stop();
+
+void sqrl_lcstr( char * );
 
 /**
 Get a string representing the version of SQRL lib in use

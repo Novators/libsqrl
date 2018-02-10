@@ -59,11 +59,16 @@ do {                                                  \
 	s->i -= l;                                        \
 	s->d[s->i]='\0';                                  \
 } while(0)
-	
+
 #define utstring_wipe(s)                              \
 do{                                                   \
 	if ((s)->d != NULL) sodium_memzero( (s)->d, (s)->n );  \
 } while(0)
+
+void utstring_binprepend( UT_string *str, uint8_t *buf, size_t buf_len );
+void utstring_leadd( UT_string *str, uint8_t operand );
+void utstring_lemult( UT_string *str, uint8_t multiplicand );
+uint8_t utstring_lediv( UT_string *str, uint8_t divisor );
 
 #define SQRL_ENCRYPT 1
 #define SQRL_DECRYPT 0
@@ -411,7 +416,7 @@ int sqrl_enscrypt_ms(
 void sqrl_curve_private_key( uint8_t *key );
 void sqrl_curve_public_key( uint8_t *puk, const uint8_t *prk );
 
-void sqrl_lcstr( char * );
+void reverse_buffer( uint8_t *in, size_t in_len );
 
 void bin2rc( char *buf, uint8_t *bin );
 void utstring_zero( UT_string *str );

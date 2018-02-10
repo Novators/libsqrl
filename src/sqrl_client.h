@@ -48,7 +48,9 @@ typedef enum {
     /** Binary Format */
     SQRL_ENCODING_BINARY = 0,
     /** base64 Encoded Format (larger, but safe for text file)*/
-    SQRL_ENCODING_BASE64
+    SQRL_ENCODING_BASE64,
+    /** base56check Encoded Format (Used for textual import/export) **/
+    SQRL_ENCODING_BASE56
 } Sqrl_Encoding;
 
 /**
