@@ -8,7 +8,7 @@ For more details, see the LICENSE file included with this package.
 
 #include "sqrl_internal.h"
 
-#define SITE_KV_COUNT 6
+#define SITE_KV_COUNT 7
 #define SITE_KV_LENGTH 3
 #define SITE_KV_VER 0
 #define SITE_KV_TIF 1
@@ -16,6 +16,7 @@ For more details, see the LICENSE file included with this package.
 #define SITE_KV_ASK 3
 #define SITE_KV_SUK 4
 #define SITE_KV_NUT 5
+#define SITE_KV_SIN 6
 
 #define SITE_FLAG_TIF 1
 #define SITE_FLAG_SFN 2
@@ -23,7 +24,7 @@ For more details, see the LICENSE file included with this package.
 #define SITE_FLAG_VALID_CLIENT_STRING 8
 
 static char kv_strings[SITE_KV_COUNT][SITE_KV_LENGTH+1] = {
-	"ver", "tif", "qry", "ask", "suk", "nut"};
+	"ver", "tif", "qry", "ask", "suk", "nut", "sin"};
 
 static int previousKeys[] = {KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3};
 static uint8_t emptyKey[SQRL_KEY_SIZE] = {0};
@@ -212,6 +213,14 @@ void parseSuk( struct Sqrl_Site *site, char *value, size_t value_len )
 	utstring_free( s );
 }
 
+void parseSin( struct Sqrl_Site *site, char *value, size_t value_len )
+{
+	if( !site || !value || value_len == 0 ) return;
+	if( site->sin ) free( site->sin );
+	site->sin = malloc( value_len + 1 );
+	strcpy( site->sin, value );
+}
+
 int parseKeyValue( struct Sqrl_Site *site, char *key, size_t key_len, char *value, size_t value_len )
 {
 	if( key_len != SITE_KV_LENGTH ) return -1;
@@ -247,6 +256,9 @@ int parseKeyValue( struct Sqrl_Site *site, char *key, size_t key_len, char *valu
 		break;
 	case SITE_KV_SUK:
 		parseSuk( site, theValue, value_len );
+		break;
+	case SITE_KV_SIN:
+		parseSin( site, theValue, value_len );
 		break;
 	default:
 		break;
@@ -284,8 +296,8 @@ void sqrl_site_parse_result( Sqrl_Site *site, const char *result, size_t result_
 
 	// Should return entire server response with next query...
 	utstring_clear( rStr );
-	sqrl_b64u_encode( rStr, (uint8_t*)result, result_len );
-	//utstring_bincpy( rStr, result, result_len );
+	//sqrl_b64u_encode( rStr, (uint8_t*)result, result_len );
+	utstring_bincpy( rStr, result, result_len );
 
 	if( site->serverString ) {
 		utstring_free( site->serverString );
@@ -303,26 +315,6 @@ int sqrl_site_tif( Sqrl_Site *site )
 	int retVal = site->tif;
 	if( ! FLAG_CHECK(site->flags, SITE_FLAG_TIF) ) retVal = -1;
 	return retVal;
-}
-
-bool sqrl_site_has_server_friendly_name( Sqrl_Site *site )
-{
-	bool retVal = false;
-	if( !site ) return false;
-	if( FLAG_CHECK( site->flags, SITE_FLAG_SFN ))
-		retVal = true;
-	return retVal;
-}
-
-UT_string *sqrl_site_server_friendly_name( Sqrl_Site *site )
-{
-	if( !site ) return NULL;
-	UT_string *ret = NULL;
-	if( FLAG_CHECK( site->flags, SITE_FLAG_SFN )) {
-		utstring_new( ret );
-		utstring_bincpy( ret, site->serverFriendlyName, strlen(site->serverFriendlyName ));
-	}
-	return ret;
 }
 
 UT_string *sqrl_site_domain( Sqrl_Site *site )
@@ -412,10 +404,34 @@ void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 	if( !site || !clientString ) return;
 	sqrl_site_add_key_value( clientString, "idk", NULL );
 	sqrl_b64u_encode_append( clientString, site->keys[SITE_KEY_PUB], SQRL_KEY_SIZE );
+	uint8_t ins[SQRL_KEY_SIZE], tmp[SQRL_KEY_SIZE];
+
+	if( site->sin ) {
+		Sqrl_EnHash( (uint64_t*)tmp, (uint64_t*)site->keys[SITE_KEY_SEC] );
+		if( 0 == crypto_auth_hmacsha256(
+			ins,
+			(unsigned char*)site->sin,
+			strlen( site->sin ),
+			tmp )) {
+				sqrl_site_add_key_value( clientString, "ins", NULL );
+				sqrl_b64u_encode_append( clientString, ins, SQRL_KEY_SIZE );
+		}
+	}
 
 	if( site->keys[SITE_KEY_LOOKUP][SITE_KEY_PPUB] ) {
 		sqrl_site_add_key_value( clientString, "pidk", NULL );
 		sqrl_b64u_encode_append( clientString, site->keys[SITE_KEY_PPUB], SQRL_KEY_SIZE );
+		if( site->sin ) {
+			Sqrl_EnHash( (uint64_t*)tmp, (uint64_t*)site->keys[SITE_KEY_PSEC] );
+			if( 0 == crypto_auth_hmacsha256(
+				ins,
+				(unsigned char*)site->sin,
+				strlen( site->sin ),
+				tmp )) {
+					sqrl_site_add_key_value( clientString, "pins", NULL );
+					sqrl_b64u_encode_append( clientString, ins, SQRL_KEY_SIZE );
+			}
+		}
 	}
 
 	if( site->currentTransaction == SQRL_TRANSACTION_AUTH_IDENT ) {
@@ -610,7 +626,7 @@ Sqrl_Site *sqrl_client_site_create( Sqrl_Transaction t )
 	Sqrl_Site *site = calloc( 1, sizeof( Sqrl_Site ));
 	site->transaction = sqrl_transaction_hold(t);
 	site->currentTransaction = SQRL_TRANSACTION_AUTH_QUERY;
-	site->previous_identity = -1;
+	site->previous_identity = 0;
 	site->mutex = sqrl_mutex_create();
 
 	if( transaction->uri ) {
@@ -648,9 +664,6 @@ static struct Sqrl_Site_List *_scsm( struct Sqrl_Site_List *cur, double now, boo
 		struct Sqrl_Site_List *next = cur->next;
 
 		cur->site->transaction = sqrl_transaction_release( cur->site->transaction );
-		if( cur->site->serverFriendlyName ) {
-			free( cur->site->serverFriendlyName );
-		}
 		if( cur->site->serverString ) {
 			utstring_free( cur->site->serverString );
 		}
@@ -659,6 +672,7 @@ static struct Sqrl_Site_List *_scsm( struct Sqrl_Site_List *cur, double now, boo
 		}
 		sqrl_mutex_destroy( cur->site->mutex );
 		sodium_memzero( cur->site->keys, sizeof( cur->site->keys ));
+		if( cur->site->sin ) free( cur->site->sin );
 		free( cur->site );
 
 		return _scsm( next, now, forceDeleteAll );
@@ -755,7 +769,6 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 					site->previous_identity++;
 				} else {
 					// Tried all previous identities
-					site->previous_identity = 0;
 					site->currentTransaction = transaction->type;
 					if( transaction->type != SQRL_TRANSACTION_AUTH_IDENT ) {
 						goto ERROR;

@@ -611,11 +611,7 @@ uint8_t *sqrl_user_key( Sqrl_Transaction t, int key_type )
 	int offset, i;
 	int loop = -1;
 	uint8_t *key;
-LOOP:
-	loop++;
-	if( loop == 3 ) {
-		goto DONE;
-	}
+
 	offset = -1;
 	for( i = 0; i < USER_MAX_KEYS; i++ ) {
 		if( user->lookup[i] == key_type ) {
@@ -638,7 +634,6 @@ LOOP:
 			return NULL;
 		case KEY_IUK:
 			sqrl_user_try_load_rescue( t, true );
-			goto LOOP;
 			break;
 		case KEY_MK:
 		case KEY_ILK:
@@ -647,8 +642,20 @@ LOOP:
 		case KEY_PIUK2:
 		case KEY_PIUK3:
 			sqrl_user_try_load_password( t, true );
-			goto LOOP;
 			break;
+		}
+		offset = -1;
+		for( i = 0; i < USER_MAX_KEYS; i++ ) {
+			if( user->lookup[i] == key_type ) {
+				offset = i;
+				break;
+			}
+		}
+		if( offset > -1 ) {
+			key = user->keys->keys[offset];
+			END_WITH_USER(user);
+			END_WITH_TRANSACTION(transaction);
+			return key;
 		}
 	}
 

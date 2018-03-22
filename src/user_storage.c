@@ -633,6 +633,11 @@ LOOP:
 	{
 		sul_block_3( transaction, &block, cbdata );
 		sqrl_block_free( &block );
+	} else {
+		sqrl_user_new_key( transaction->user, KEY_PIUK0 );
+		sqrl_user_new_key( transaction->user, KEY_PIUK1 );
+		sqrl_user_new_key( transaction->user, KEY_PIUK2 );
+		sqrl_user_new_key( transaction->user, KEY_PIUK3 );
 	}
 	retVal = true;
 	goto DONE;

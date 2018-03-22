@@ -221,12 +221,12 @@ typedef struct Sqrl_Site {
 	Sqrl_Transaction *transaction;
 	uint16_t userOptFlags;
 	uint16_t flags;
-	char *serverFriendlyName;
 	int version;
 	uint32_t tif;
 	UT_string *serverString;
 	UT_string *clientString;
 	uint8_t keys[9][SQRL_KEY_SIZE];
+	char *sin;
 	Sqrl_Transaction_Type currentTransaction;
 	int previous_identity;
 	double lastAction;

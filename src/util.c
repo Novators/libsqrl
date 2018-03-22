@@ -170,6 +170,7 @@ void utstring_leadd( UT_string *str, uint8_t operand )
   uint8_t *end = it + utstring_len( str );
   
   while( it != end ) {
+    if( t == 0 ) break;
     t += *it;
     *it = (uint8_t)t;
     t = t >> 8;

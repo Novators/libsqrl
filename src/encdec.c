@@ -186,20 +186,20 @@ UT_string * sqrl_b56_decode_append( UT_string *dest, const char *src, size_t src
 
   char *s = malloc( src_len );
   memcpy( s, src, src_len );
-  reverse_buffer( s, src_len );
-  
-  const uint8_t *it = (const uint8_t*)s;
-  const uint8_t *end = it + src_len;
 
-  while( it != end ) {
+  const uint8_t *end = (const uint8_t*)s;
+  const uint8_t *it = end + src_len;
+
+  do {
+    it--;
     ch = strchr( B56_ALPHABET, *it );
     if( ch ) {
       dp = (uint8_t)(ch - B56_ALPHABET);
       utstring_lemult( n, 56 );
       utstring_leadd( n, dp );
     }
-    it++;
-  }
+  } while( it != end );
+  
   utstring_concat( dest, n );
   utstring_free( n );
   free( s );
