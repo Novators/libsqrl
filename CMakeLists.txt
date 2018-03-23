@@ -32,7 +32,7 @@ include(${CMAKE_SOURCE_DIR}/cmake/libutils.cmake)
 
 set(sqrl_version_major 18)
 set(sqrl_version_minor 03)
-set(sqrl_build 0001)
+set(sqrl_build 0002)
 set(sqrl_version "${sqrl_version_major}.${sqrl_version_minor}.${sqrl_build}")
 
 #set(CMAKE_BUILD_TYPE Release)
@@ -121,6 +121,7 @@ set(SRC ${SG_CLIENT_USER} ${SG_CLIENT} ${SG_SERVER} ${SG_CRYPTO} ${SG_UTIL} ${SG
 add_library(sqrl_obj OBJECT ${SRC})
 add_dependencies(sqrl_obj libsodium)
 add_library(sqrl SHARED ${SG_HEADERS} $<TARGET_OBJECTS:sqrl_obj>)
+add_library(sqrl_static STATIC $<TARGET_OBJECTS:sqrl_obj>)
 target_link_libraries(sqrl ${LIBS})
 
 add_executable(entropy src/cli/entropy_cli.c $<TARGET_OBJECTS:sqrl_obj>)
