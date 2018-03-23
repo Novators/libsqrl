@@ -148,6 +148,15 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 		curstr++;
 	}
 
+	// If this is a file path, we're done...
+	if( puri->scheme == SQRL_SCHEME_FILE ) {
+		puri->url = (char*) malloc( strlen( uri ) + 2 );
+		strcpy( puri->url, uri );
+		puri->challenge = (char*) malloc( strlen( curstr ) + 1 );
+		strcpy( puri->challenge, curstr );
+		goto END;
+	}
+
 	/* Check if the user (and password) are specified. */
 	userpass_flag = 0;
 	tmpstr = curstr;
@@ -176,26 +185,26 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 		if ( NULL == username ) goto ERROR;
 		(void)strncpy(username, curstr, len);
 		username[len] = '\0';
-	/* Proceed current pointer */
-	curstr = tmpstr;
-	if ( ':' == *curstr ) {
-		/* Skip ':' */
-		curstr++;
-		/* Read password */
-		tmpstr = curstr;
-		while ( '\0' != *tmpstr && '@' != *tmpstr ) {
-			tmpstr++;
+		/* Proceed current pointer */
+		curstr = tmpstr;
+		if ( ':' == *curstr ) {
+			/* Skip ':' */
+			curstr++;
+			/* Read password */
+			tmpstr = curstr;
+			while ( '\0' != *tmpstr && '@' != *tmpstr ) {
+				tmpstr++;
+			}
+			len = tmpstr - curstr;
+			password = malloc(sizeof(char) * (len + 1));
+			if ( NULL == password ) goto ERROR;
+			(void)strncpy(password, curstr, len);
+			password[len] = '\0';
+		curstr = tmpstr;
 		}
-		len = tmpstr - curstr;
-		password = malloc(sizeof(char) * (len + 1));
-		if ( NULL == password ) goto ERROR;
-		(void)strncpy(password, curstr, len);
-		password[len] = '\0';
-	curstr = tmpstr;
-	}
-	/* Skip '@' */
-	if ( '@' != *curstr ) goto ERROR;
-	curstr++;
+		/* Skip '@' */
+		if ( '@' != *curstr ) goto ERROR;
+		curstr++;
 	}
 
 	if ( '[' == *curstr ) {
@@ -298,21 +307,13 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 
 	/* SQRL Specific... */
 SQRL:
-	switch( puri->scheme ) {
-	case SQRL_SCHEME_SQRL:
+	if( puri->scheme == SQRL_SCHEME_SQRL ) {
 		puri->url = (char*) malloc( strlen( uri ) + 2 );
 		strcpy( puri->url + 1, theUrl );
 		memcpy( puri->url, "https", 5 );
 		utstring_new( prefix );
 		utstring_bincpy( prefix, "https://", 8 );
-		break;
-	case SQRL_SCHEME_FILE:
-		puri->url = (char*) malloc( strlen( uri ) + 2 );
-		strcpy( puri->url, uri );
-		puri->challenge = (char*) malloc( strlen( uri ) - 6 );
-		strcpy( puri->challenge, theUrl + 7 );
-		goto END;
-	default:
+	} else {
 		goto ERROR;
 	}
 	puri->challenge = (char*) malloc( strlen( uri ) + 1 );
