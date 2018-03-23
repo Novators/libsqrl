@@ -416,6 +416,8 @@ void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 				sqrl_site_add_key_value( clientString, "ins", NULL );
 				sqrl_b64u_encode_append( clientString, ins, SQRL_KEY_SIZE );
 		}
+		sodium_memzero( ins, SQRL_KEY_SIZE );
+		sodium_memzero( tmp, SQRL_KEY_SIZE );
 	}
 
 	if( site->keys[SITE_KEY_LOOKUP][SITE_KEY_PPUB] ) {
@@ -431,6 +433,8 @@ void sqrl_site_generate_keys( struct Sqrl_Site *site, UT_string *clientString )
 					sqrl_site_add_key_value( clientString, "pins", NULL );
 					sqrl_b64u_encode_append( clientString, ins, SQRL_KEY_SIZE );
 			}
+			sodium_memzero( ins, SQRL_KEY_SIZE );
+			sodium_memzero( tmp, SQRL_KEY_SIZE );
 		}
 	}
 
