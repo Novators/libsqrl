@@ -124,6 +124,7 @@ int main()
 	uint8_t *key;
 
 	char str[128];
+	ASSERT( "user_edition", sqrl_user_get_edition( user ) == 0 );
 	for( i = 4; i > 0; i-- ) {
 		sqrl_user_rekey( genericTransaction );
 		key = sqrl_user_key( genericTransaction, KEY_IUK );
@@ -131,9 +132,12 @@ int main()
 		sPointer += SQRL_KEY_SIZE;
 		sodium_bin2hex( str, 128, key, SQRL_KEY_SIZE );
 		printKV( "PIUK", str );
+		ASSERT( "user_edition", sqrl_user_get_edition( user ) == (4-i) )
 	}
 
 	sqrl_user_rekey( genericTransaction );
+	ASSERT( "user_edition", sqrl_user_get_edition( user ) == 4 );
+
 	key = sqrl_user_key( genericTransaction, KEY_IUK );
 	memcpy( sPointer, key, SQRL_KEY_SIZE );
 	sPointer += SQRL_KEY_SIZE;
@@ -169,7 +173,7 @@ int main()
 	strcpy( buf, utstring_body( ubuf ));
 	utstring_free( ubuf );
 	ubuf = NULL;
-	ASSERT( "export_len", strlen( buf ) == 470 )
+	ASSERT( "export_len", strlen( buf ) == 472 )
 
 	sqrl_user_release( user );
 	user = sqrl_user_create_from_buffer( buf, strlen(buf) );
@@ -177,6 +181,8 @@ int main()
 
 	key = sqrl_user_key( genericTransaction, KEY_MK );
 	ASSERT( "load_mk", 0 == sodium_memcmp( key, saved + (SQRL_KEY_SIZE * 6), SQRL_KEY_SIZE ));
+
+	ASSERT( "user_edition", sqrl_user_get_edition( user ) == 4 )
 
 	ASSERT( "hintlock_1", !sqrl_user_is_hintlocked( user ) )
 	sqrl_user_hintlock( user );

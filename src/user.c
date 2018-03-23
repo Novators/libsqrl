@@ -539,8 +539,10 @@ bool sqrl_user_rekey( Sqrl_Transaction t )
 	}
 	bool retVal = true;
 	uint8_t *key;
+	int ed = -1;
 	if( sqrl_user_has_key( transaction->user, KEY_IUK )) {
 		key = sqrl_user_key( t, KEY_IUK );
+		ed = user->edition;
 	} else {
 		key = sqrl_user_new_key( transaction->user, KEY_IUK );
 	}
@@ -555,6 +557,7 @@ bool sqrl_user_rekey( Sqrl_Transaction t )
 		goto ERROR;
 	}
 	user->flags |= (USER_FLAG_T1_CHANGED | USER_FLAG_T2_CHANGED);
+	user->edition = ed + 1;
 	goto DONE;
 
 ERROR:
@@ -910,6 +913,16 @@ uint16_t sqrl_user_get_flags( Sqrl_User u )
 	uint16_t retVal = 0;
 	WITH_USER(user,u);
 	retVal = user->options.flags;
+	END_WITH_USER(user);
+	return retVal;
+}
+
+DLL_PUBLIC
+uint16_t   sqrl_user_get_edition( Sqrl_User u )
+{
+	uint16_t retVal = 0;
+	WITH_USER(user,u);
+	retVal = user->edition;
 	END_WITH_USER(user);
 	return retVal;
 }

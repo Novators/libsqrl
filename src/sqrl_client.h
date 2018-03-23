@@ -88,6 +88,7 @@ bool       sqrl_user_set_rescue_code( Sqrl_User u, char *rc );
 void       sqrl_user_set_timeout_minutes( Sqrl_User u, uint16_t minutes );
 bool       sqrl_user_unique_id( Sqrl_User u, char *buffer );
 bool       sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id );
+uint16_t   sqrl_user_get_edition( Sqrl_User u );
 
 /** @} */ // endgroup user
 

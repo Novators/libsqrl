@@ -185,6 +185,7 @@ struct Sqrl_User
 	uint8_t lookup[USER_MAX_KEYS];
 	uint32_t flags;
 	uint32_t hint_iterations;
+	uint16_t edition;
 	Sqrl_User_Options options;
 	SqrlMutex referenceCountMutex;
 	int referenceCount;

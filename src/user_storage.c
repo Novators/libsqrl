@@ -141,18 +141,22 @@ bool sul_block_3( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 	SQRL_CAST_USER(user,transaction->user);
 	bool retVal = true;
 	int i;
+	size_t num_keys;
 	Sqrl_Crypt_Context sctx;
 	uint8_t *keyPointer;
 	block->cur = 0;
 	sctx.add = block->data;
-	sctx.add_len = 4;
-	if( sqrl_block_read_int16( block ) != 148 ||
+	sctx.add_len = 6;
+	num_keys = sqrl_block_read_int16( block ) - 22;
+	i = num_keys % 32;
+	num_keys /= 32;
+	if( i != 0 || num_keys > 4 || num_keys < 1 || 
 		sqrl_block_read_int16( block ) != 3 ) {
-		return false;
+			return false;
 	}
-	sctx.text_len = SQRL_KEY_SIZE * 4;
-	sctx.cipher_text = block->data + 4;
-	sctx.tag = sctx.cipher_text + (SQRL_KEY_SIZE * 4);
+	sctx.text_len = SQRL_KEY_SIZE * num_keys;
+	sctx.cipher_text = block->data + 6;
+	sctx.tag = sctx.cipher_text + sctx.text_len;
 	sctx.plain_text = user->keys->scratch;
 	sctx.iv = sctx.plain_text + sctx.text_len;
 	memset( sctx.iv, 0, 12 );
@@ -162,12 +166,16 @@ bool sul_block_3( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struc
 		goto ERROR;
 	}
 
+	user->edition = sqrl_block_read_int16( block );
+	
 	int pt_offset = 0;
 	int piuks[] = { KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3 };
-	for( i = 0; i < 4; i++ ) {
+	for( i = 0; i < num_keys; i++ ) {
 		keyPointer = sqrl_user_new_key( transaction->user, piuks[i] );
-		memcpy( keyPointer, sctx.plain_text + pt_offset, SQRL_KEY_SIZE );
-		pt_offset += SQRL_KEY_SIZE;
+		if( i < num_keys ) {
+			memcpy( keyPointer, sctx.plain_text + pt_offset, SQRL_KEY_SIZE );
+			pt_offset += SQRL_KEY_SIZE;
+		}
 	}
 	goto DONE;
 
@@ -183,30 +191,36 @@ DONE:
 bool sus_block_3( struct Sqrl_Transaction *transaction, Sqrl_Block *block, struct sqrl_user_callback_data cbdata )
 {
 	SQRL_CAST_USER(user,transaction->user);
+	if( user->edition == 0 ) return false;
 	bool retVal = true;
 	int i;
+	size_t block_size, num_keys;
 	Sqrl_Crypt_Context sctx;
 	uint8_t *keyPointer;
-	sqrl_block_init( block, 3, 148 );
+	num_keys = user->edition;
+	if( num_keys > 4 ) num_keys = 4;
+	block_size = 22 + ( SQRL_KEY_SIZE * num_keys );
+	
+	sqrl_block_init( block, 3, block_size );
 	sctx.add = block->data;
-	sctx.add_len = 4;
-	sqrl_block_write_int16( block, 148 );
+	sctx.add_len = 6;
+	sqrl_block_write_int16( block, block_size );
 	sqrl_block_write_int16( block, 3 );
-	sctx.text_len = SQRL_KEY_SIZE * 4;
-	sctx.cipher_text = block->data + 4;
-	sctx.tag = sctx.cipher_text + (SQRL_KEY_SIZE * 4);
+	sqrl_block_write_int16( block, user->edition );
+	
+	sctx.text_len = SQRL_KEY_SIZE * num_keys;
+	sctx.cipher_text = block->data + 6;
+	sctx.tag = sctx.cipher_text + (SQRL_KEY_SIZE * num_keys);
 	sctx.plain_text = user->keys->scratch;
 
 	int pt_offset = 0;
 	int piuks[] = { KEY_PIUK0, KEY_PIUK1, KEY_PIUK2, KEY_PIUK3 };
-	for( i = 0; i < 4; i++ ) {
+	for( i = 0; i < num_keys; i++ ) {
 		if( sqrl_user_has_key( transaction->user, piuks[i] )) {
 			keyPointer = sqrl_user_key( transaction, piuks[i] );
 			memcpy( sctx.plain_text + pt_offset, keyPointer, SQRL_KEY_SIZE );
-		} else {
-			memset( sctx.plain_text + pt_offset, 0, SQRL_KEY_SIZE );
+			pt_offset += SQRL_KEY_SIZE;
 		}
-		pt_offset += SQRL_KEY_SIZE;
 	}
 	sctx.iv = sctx.plain_text + pt_offset;
 	memset( sctx.iv, 0, 12 );
