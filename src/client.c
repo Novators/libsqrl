@@ -443,6 +443,8 @@ DONE:
 	sqrl_client_call_transaction_complete( t );
 
 	sqrl_transaction_release( t );
+	sqrl_client_site_maintenance( false );
+
 	return retVal;
 }
 

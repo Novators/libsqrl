@@ -11,19 +11,6 @@ For more details, see the LICENSE file included with this package.
 
 struct Sqrl_Transaction_List *SQRL_TRANSACTION_LIST = NULL;
 
-#if defined(DEBUG) && DEBUG_PRINT_TRANSACTION_COUNT==1
-#define PRINT_TRANSACTION_COUNT(tag) \
-int _ptcI = 0;\
-struct Sqrl_Transaction_List *_ptcC = SQRL_TRANSACTION_LIST;\
-while( _ptcC ) {\
-    _ptcI++;\
-    _ptcC = _ptcC->next;\
-}\
-printf( "%10s: %d\n", tag, _ptcI )
-#else
-#define PRINT_TRANSACTION_COUNT(tag)
-#endif
-
 Sqrl_Transaction sqrl_transaction_create( Sqrl_Transaction_Type type )
 {
     struct Sqrl_Transaction *transaction = calloc( 1, sizeof( struct Sqrl_Transaction ));
@@ -35,7 +22,6 @@ Sqrl_Transaction sqrl_transaction_create( Sqrl_Transaction_Type type )
     sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.transaction );
     list->next = SQRL_TRANSACTION_LIST;
     SQRL_TRANSACTION_LIST = list;
-    PRINT_TRANSACTION_COUNT( "trn_create" );
     sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
     return (Sqrl_Transaction)transaction;
 }
@@ -64,6 +50,9 @@ Sqrl_Transaction sqrl_transaction_hold( Sqrl_Transaction t )
         if( l->transaction == transaction ) {
             sqrl_mutex_enter( transaction->mutex );
             transaction->referenceCount++;
+#if DEBUG_PRINT_TRANSACTION_COUNT==1
+			printf( "sqrl_transaction_hold: %d\n", transaction->referenceCount );
+#endif
             sqrl_mutex_leave( transaction->mutex );
             break;
         }
@@ -85,6 +74,9 @@ Sqrl_Transaction sqrl_transaction_release( Sqrl_Transaction t )
         if( n->transaction == transaction ) {
             sqrl_mutex_enter( transaction->mutex );
             transaction->referenceCount--;
+#if DEBUG_PRINT_TRANSACTION_COUNT==1
+			printf( "sqrl_transaction_release: %d\n", transaction->referenceCount );
+#endif
             if( transaction->referenceCount < 1 ) {
                 if( l ) l->next = n->next;
                 else SQRL_TRANSACTION_LIST = n->next;
@@ -97,7 +89,6 @@ Sqrl_Transaction sqrl_transaction_release( Sqrl_Transaction t )
         l = n;
         n = l->next;
     }
-    PRINT_TRANSACTION_COUNT( "trn_rel" );
     sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.transaction );
     if( freeMe ) {
         freeMe->user = sqrl_user_release( freeMe->user );
