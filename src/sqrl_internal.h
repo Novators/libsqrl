@@ -295,6 +295,7 @@ bool        sqrl_user_set_password(
 				char *password, 
 				size_t password_len );
 bool        sqrl_user_update_storage( Sqrl_Transaction transaction );
+void		sqrl_client_release_all_users();
 
 Sqrl_Transaction sqrl_transaction_create( Sqrl_Transaction_Type type );
 Sqrl_Transaction sqrl_transaction_hold( Sqrl_Transaction t );

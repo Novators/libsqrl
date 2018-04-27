@@ -213,6 +213,20 @@ Sqrl_User sqrl_user_release( Sqrl_User u )
 	return NULL;
 }
 
+void sqrl_client_release_all_users() {
+	struct Sqrl_User_List *list; 
+	
+LOOP:	
+	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
+	list = SQRL_USER_LIST;
+	if( list ) {
+		sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+		sqrl_user_release( list->user );
+		goto LOOP;
+	}
+	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+}
+
 void sqrl_client_user_maintenance( bool forceLockAll )
 {
 	// TODO: Get User Idle Time

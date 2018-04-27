@@ -65,7 +65,7 @@ int sqrl_stop()
         DEBUG_PRINTF( "%10s: Cleaning Up...\n", "sqrl_stop" );
 #endif
         sqrl_client_site_maintenance( true );
-        sqrl_client_user_maintenance( true );
+        sqrl_client_release_all_users();
         transactionCount = sqrl_transaction_count();
         userCount = sqrl_user_count();
         siteCount = sqrl_site_count();

@@ -23,6 +23,7 @@ For more details, see the LICENSE file included with this package.
 #define SQRL_KEY_SIZE 						    32
 #define SQRL_SIG_SIZE 						    64
 
+#define SQRL_OPTION_TOKEN_NOIPTEST		"noiptest"
 #define SQRL_OPTION_TOKEN_SQRLONLY      "sqrlonly"
 #define SQRL_OPTION_TOKEN_HARDLOCK      "hardlock"
 #define SQRL_OPTION_TOKEN_CPS                "cps"

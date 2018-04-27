@@ -243,7 +243,12 @@ int main()
 
     gen_user = sqrl_user_release( gen_user );
     t1_user = sqrl_user_release( t1_user );
-    load_user = sqrl_user_release( load_user );
+    //load_user = sqrl_user_release( load_user );
+    if( 0 == sqrl_stop() ) {
+		PC( "STOP", "PASS" );
+	} else {
+		PC( "STOP", "FAIL" );
+		exit(1);
+	}
     PC( "ALL", "PASS" );
-    return sqrl_stop();
 }

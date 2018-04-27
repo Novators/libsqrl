@@ -219,9 +219,10 @@ UT_string * sqrl_b56_decode_append( UT_string *dest, const char *src, size_t src
 DLL_PUBLIC
 UT_string * sqrl_b56_decode( UT_string *dest, const char *src, size_t src_len )
 {
-  utstring_renew( dest );
-  sqrl_b56_decode_append( dest, src, src_len );
-  return dest;
+  if( dest ) {
+	utstring_renew( dest );
+  }
+  return sqrl_b56_decode_append( dest, src, src_len );
 }
 
 /**
@@ -240,6 +241,7 @@ UT_string * sqrl_b56_encode_append( UT_string *dest, const uint8_t *src, size_t 
   if( !dest ) {
     utstring_new( dest );
   }
+
   if( !src || src_len == 0 ) return dest;
 
   int base = (int)strlen( B56_ALPHABET );
@@ -276,9 +278,11 @@ UT_string * sqrl_b56_encode_append( UT_string *dest, const uint8_t *src, size_t 
 DLL_PUBLIC
 UT_string * sqrl_b56_encode( UT_string *dest, const uint8_t *src, size_t src_len )
 {
-  utstring_renew( dest );
-  sqrl_b56_encode_append( dest, src, src_len );
-  return dest;
+  if( dest ) {
+	utstring_renew( dest );
+  }
+  
+  return sqrl_b56_encode_append( dest, src, src_len );
 }
 
 /**
@@ -450,7 +454,9 @@ UT_string * sqrl_b56c_decode_append( UT_string *dest, const char *src, size_t sr
 DLL_PUBLIC
 UT_string * sqrl_b56c_decode( UT_string *dest, const char *src, size_t src_len )
 {
-  utstring_renew( dest );
+  if( dest ) {
+	utstring_renew( dest );
+  }
   if( !src || src_len == 0 ) return dest;
   return sqrl_b56c_decode_append( dest, src, src_len );
 }
@@ -539,7 +545,9 @@ UT_string * sqrl_b56c_encode_append( UT_string *dest, const char *src, size_t sr
 DLL_PUBLIC
 UT_string * sqrl_b56c_encode( UT_string *dest, const char *src, size_t src_len )
 {
-  utstring_renew( dest );
+  if( dest ) {
+	utstring_renew( dest );
+  }
   if( !src || src_len == 0 ) {
     return dest;
   }
@@ -603,7 +611,9 @@ UT_string* sqrl_b64u_encode_append( UT_string *dest, const uint8_t *src, size_t 
 DLL_PUBLIC
 UT_string *sqrl_b64u_encode( UT_string *dest, const uint8_t *src, size_t src_len )
 {
-  utstring_renew( dest );
+  if( dest ) {
+	utstring_renew( dest );
+  }
   return sqrl_b64u_encode_append( dest, src, src_len );
 }
 
@@ -718,7 +728,9 @@ UT_string* sqrl_b64u_decode_append( UT_string *dest, const char *src, size_t src
 DLL_PUBLIC
 UT_string *sqrl_b64u_decode( UT_string * dest, const char *src, size_t src_len )
 {
-  utstring_renew( dest );
+  if( dest ) {
+	utstring_renew( dest );
+  }
   if( !src || src_len == 0 ) {
     return dest;
   }
