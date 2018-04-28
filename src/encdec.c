@@ -221,6 +221,8 @@ UT_string * sqrl_b56_decode( UT_string *dest, const char *src, size_t src_len )
 {
   if( dest ) {
 	utstring_renew( dest );
+  } else {
+	utstring_new( dest );
   }
   return sqrl_b56_decode_append( dest, src, src_len );
 }
@@ -280,6 +282,8 @@ UT_string * sqrl_b56_encode( UT_string *dest, const uint8_t *src, size_t src_len
 {
   if( dest ) {
 	utstring_renew( dest );
+  } else {
+	utstring_new( dest );
   }
   
   return sqrl_b56_encode_append( dest, src, src_len );
@@ -456,6 +460,8 @@ UT_string * sqrl_b56c_decode( UT_string *dest, const char *src, size_t src_len )
 {
   if( dest ) {
 	utstring_renew( dest );
+  } else {
+	utstring_new( dest );
   }
   if( !src || src_len == 0 ) return dest;
   return sqrl_b56c_decode_append( dest, src, src_len );
@@ -547,6 +553,8 @@ UT_string * sqrl_b56c_encode( UT_string *dest, const char *src, size_t src_len )
 {
   if( dest ) {
 	utstring_renew( dest );
+  } else {
+	utstring_new( dest );
   }
   if( !src || src_len == 0 ) {
     return dest;
@@ -596,6 +604,7 @@ UT_string* sqrl_b64u_encode_append( UT_string *dest, const uint8_t *src, size_t 
     }
 #endif
   }
+  return dest;
 }
 
 /**
@@ -613,6 +622,8 @@ UT_string *sqrl_b64u_encode( UT_string *dest, const uint8_t *src, size_t src_len
 {
   if( dest ) {
 	utstring_renew( dest );
+  } else {
+	utstring_new( dest );
   }
   return sqrl_b64u_encode_append( dest, src, src_len );
 }
@@ -711,6 +722,7 @@ UT_string* sqrl_b64u_decode_append( UT_string *dest, const char *src, size_t src
   }
   i = charCount % 4;
   if( i ) utstring_shrink( dest, 4-i );
+  return dest;
 }
 
 /**
@@ -730,6 +742,8 @@ UT_string *sqrl_b64u_decode( UT_string * dest, const char *src, size_t src_len )
 {
   if( dest ) {
 	utstring_renew( dest );
+  } else {
+	utstring_new( dest );
   }
   if( !src || src_len == 0 ) {
     return dest;

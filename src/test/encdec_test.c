@@ -85,20 +85,19 @@ bool testbase56()
     "tpj22",
     "SvD73",
     "KBtX9tRs3"};
-  UT_string *s;
+  UT_string *s = NULL;
   int i;
-  utstring_new(s);
   
   for( i = 0; i < NT; i++ ) {
     printf( "%s\n", dvector[i] );
-    sqrl_b56_encode( s, (uint8_t*)inVector[i], inSize[i] );
+    s = sqrl_b56_encode( s, (uint8_t*)inVector[i], inSize[i] );
     if( utstring_len(s) != strlen( dvector[i] ) ||
 	strcmp( utstring_body(s), dvector[i] )) {
       printf( "ENCODE ERROR (%d): %s\n", i, utstring_body(s) );
       result = false;
     }
-    
-    sqrl_b56_decode( s, dvector[i], strlen( dvector[i] ));
+    utstring_free( s );
+    s = sqrl_b56_decode( NULL, dvector[i], strlen( dvector[i] ));
     if( utstring_len(s) != inSize[i] ||
 	memcmp( utstring_body(s), inVector[i], inSize[i] )) {
       printf( "DECODE ERROR (%d): %s\n", i, utstring_body(s) );
@@ -125,19 +124,22 @@ bool testbase64()
     "SQAC",
     "AAik",
     "SQACAAik"};
-  UT_string *s;
+  UT_string *s = NULL;
   int i;
-  utstring_new(s);
   
   for( i = 0; i < NT; i++ ) {
     printf( "%s\n", dvector[i] );
-    sqrl_b64u_encode( s, (uint8_t*)inVector[i], inSize[i] );
+    s = sqrl_b64u_encode( s, (uint8_t*)inVector[i], inSize[i] );
     if( utstring_len(s) != strlen( dvector[i] ) ||
 	strcmp( utstring_body(s), dvector[i] )) {
       printf( "ENCODE ERROR (%d): %s\n", i, utstring_body(s) );
       result = false;
     }
-    sqrl_b64u_decode( s, dvector[i], strlen( dvector[i] ));
+    utstring_free( s );
+    s = sqrl_b64u_decode( NULL, dvector[i], strlen( dvector[i] ));
+    if( s == NULL ) {
+		printf( "s is NULL.\n" );
+	}
     if( utstring_len(s) != inSize[i] ||
 	memcmp( utstring_body(s), inVector[i], inSize[i] )) {
       printf( "DECODE ERROR (%d): %s\n", i, utstring_body(s) );
