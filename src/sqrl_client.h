@@ -254,7 +254,7 @@ void sqrl_client_receive(
 	const char *payload, size_t payload_len );
 void sqrl_client_set_callbacks( Sqrl_Client_Callbacks *callbacks );
 
-
+UT_string* sqrl_user_secure_memory_monitor( UT_string *dest, Sqrl_User u );
 
 
 void sqrl_client_answer( 

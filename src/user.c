@@ -1056,3 +1056,37 @@ bool sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id )
 	return retVal;
 }
 
+DLL_PUBLIC
+UT_string* sqrl_user_secure_memory_monitor( UT_string *dest, Sqrl_User u ) {
+	if( !dest ) {
+		utstring_new( dest );
+	} else {
+		utstring_clear( dest );
+	}
+	if( !u ) {
+		return dest;
+	}
+#if defined(DEBUG)
+	SQRL_CAST_USER(user,u);
+	char *buf = calloc( 1, 512 );
+	char keyNames[10][6] = { "MK", "ILK", "PIUK0", "PIUK1", "PIUK2", "PIUK3", "IUK", "LOCAL", "RC", "PASS" };
+	char keyName[6];
+	int i, offset;
+	
+	if( user->keys ) {
+		for( i = USER_MAX_KEYS - 1; i >= 0; i-- ) {
+			if( user->lookup[i] > 0 ) {
+				strcpy( keyName, keyNames[user->lookup[i]] );
+			} else {
+				keyName[0] = 0;
+			}
+			sodium_bin2hex( buf, 512, user->keys->keys[i], SQRL_KEY_SIZE );
+			utstring_printf( dest, "%6s: %s\n", keyName, buf );
+		}
+		memcpy( buf, user->keys->password, user->keys->password_len );
+		buf[user->keys->password_len] = 0;
+		utstring_printf( dest, "%6s: %s\n", "PW", buf );
+	}
+#endif	
+	return dest;
+}
