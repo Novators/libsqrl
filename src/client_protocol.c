@@ -753,11 +753,11 @@ Sqrl_Transaction_Status sqrl_client_resume_transaction( Sqrl_Transaction t, cons
 	  goto ERROR;
 	}
 	if( response && response_len ) {
-		if( site->tif & SQRL_TIF_COMMAND_FAILURE ) {
-			goto ERROR;
-		}
 		if( site->tif & SQRL_TIF_TRANSIENT_ERROR ) {
             goto CONTINUE;
+		}
+		if( site->tif & SQRL_TIF_COMMAND_FAILURE ) {
+			goto ERROR;
 		}
 
 		switch( site->currentTransaction ) {
