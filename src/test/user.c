@@ -185,12 +185,10 @@ int main()
 	ASSERT( "user_edition", sqrl_user_get_edition( user ) == 4 )
 
 	ASSERT( "hintlock_1", !sqrl_user_is_hintlocked( user ) )
-	sqrl_user_hintlock( user );
-	ASSERT( "hintlock_2", sqrl_user_is_hintlocked( user ) )
 	Sqrl_Transaction trans = sqrl_transaction_create( SQRL_TRANSACTION_IDENTITY_UNLOCK );
 	sqrl_transaction_set_user( trans, user );
 	sqrl_user_hintunlock( trans, NULL, 0 );
-	ASSERT( "hintlock_3", !sqrl_user_is_hintlocked( user ) )
+	ASSERT( "hintlock_2", !sqrl_user_is_hintlocked( user ) )
 	sqrl_transaction_release( trans );
 
 	key = sqrl_user_key( genericTransaction, KEY_ILK );

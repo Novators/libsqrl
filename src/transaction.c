@@ -102,6 +102,16 @@ Sqrl_Transaction sqrl_transaction_release( Sqrl_Transaction t )
     return NULL;
 }
 
+int sqrl_transactions_with_user( Sqrl_User u ) {
+	int retval = 0;
+	struct Sqrl_Transaction_List *l = SQRL_TRANSACTION_LIST;
+	while( l ) {
+		if( l->transaction->user == u ) retval++;
+		l = l->next;
+	}
+	return retval;
+}
+
 void sqrl_transaction_set_user( Sqrl_Transaction t, Sqrl_User u )
 {
     if( !u ) return;
@@ -109,8 +119,13 @@ void sqrl_transaction_set_user( Sqrl_Transaction t, Sqrl_User u )
     if( !transaction ) {
         return;
     }
-    transaction->user = sqrl_user_release( transaction->user );
-    transaction->user = sqrl_user_hold( u );
+    if( transaction->user != u ) {
+		Sqrl_User ou = transaction->user;
+		transaction->user = sqrl_user_hold( u );
+		if( ou ) {
+			sqrl_user_release( ou );
+		}
+	}
     END_WITH_TRANSACTION(transaction);
 }
 

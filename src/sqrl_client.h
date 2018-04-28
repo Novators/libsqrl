@@ -81,6 +81,7 @@ uint16_t   sqrl_user_get_flags( Sqrl_User u );
 uint8_t    sqrl_user_get_hint_length( Sqrl_User u );
 char*      sqrl_user_get_rescue_code( Sqrl_User u );
 uint16_t   sqrl_user_get_timeout_minutes( Sqrl_User u );
+UT_string* sqrl_user_secure_memory_monitor( UT_string *dest, Sqrl_User u );
 void       sqrl_user_set_enscrypt_seconds( Sqrl_User u, uint8_t seconds );
 void       sqrl_user_set_flags( Sqrl_User u, uint16_t flags );
 void       sqrl_user_set_hint_length( Sqrl_User u, uint8_t length );
@@ -89,6 +90,7 @@ void       sqrl_user_set_timeout_minutes( Sqrl_User u, uint16_t minutes );
 bool       sqrl_user_unique_id( Sqrl_User u, char *buffer );
 bool       sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id );
 uint16_t   sqrl_user_get_edition( Sqrl_User u );
+
 
 /** @} */ // endgroup user
 
@@ -253,8 +255,6 @@ void sqrl_client_receive(
 	Sqrl_Transaction transaction,
 	const char *payload, size_t payload_len );
 void sqrl_client_set_callbacks( Sqrl_Client_Callbacks *callbacks );
-
-UT_string* sqrl_user_secure_memory_monitor( UT_string *dest, Sqrl_User u );
 
 
 void sqrl_client_answer( 

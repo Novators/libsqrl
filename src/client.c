@@ -213,7 +213,7 @@ bool sqrl_client_require_hint( Sqrl_Transaction t )
 
 	bool retVal = sqrl_user_is_hintlocked( transaction->user );
 	if( retVal ) {
-		retVal = sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_HINT );
+		sqrl_client_call_authentication_required( transaction, SQRL_CREDENTIAL_HINT );
 	}
 	END_WITH_TRANSACTION(transaction);
 	return retVal;
@@ -368,6 +368,12 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 		if( !transaction->user ) {
 			sqrl_client_call_select_user( transaction );
 			if( !transaction->user ) goto ERROR;
+		}
+		if( sqrl_user_is_hintlocked( transaction->user )) {
+			sqrl_client_require_hint( transaction );
+			if( sqrl_user_is_hintlocked( transaction->user )) {
+				goto ERROR;
+			}
 		}
 		if( type == SQRL_TRANSACTION_AUTH_ENABLE || type == SQRL_TRANSACTION_AUTH_REMOVE ) {
 			if( !sqrl_user_force_rescue( transaction )) {

@@ -300,6 +300,7 @@ void		sqrl_client_release_all_users();
 Sqrl_Transaction sqrl_transaction_create( Sqrl_Transaction_Type type );
 Sqrl_Transaction sqrl_transaction_hold( Sqrl_Transaction t );
 Sqrl_Transaction sqrl_transaction_release( Sqrl_Transaction t );
+int sqrl_transactions_with_user( Sqrl_User u );
 void sqrl_transaction_set_user( Sqrl_Transaction t, Sqrl_User u );
 int sqrl_transaction_count();
 int sqrl_user_count();

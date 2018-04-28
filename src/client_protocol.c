@@ -666,7 +666,6 @@ static struct Sqrl_Site_List *_scsm( struct Sqrl_Site_List *cur, double now, boo
 	int refs = 0;
 	if( cur->site->transaction ) {
 		refs = ((struct Sqrl_Transaction*)cur->site->transaction)->referenceCount;
-		printf( "SITE Transaction Ref Count: %d\n", refs );
 	}
 	if( forceDeleteAll || (now - cur->site->lastAction) > SQRL_CLIENT_SITE_TIMEOUT || refs == 1 ) {
 		// Delete this one

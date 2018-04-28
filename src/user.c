@@ -192,6 +192,7 @@ Sqrl_User sqrl_user_release( Sqrl_User u )
 	if( user->referenceCount > 0 ) {
 		sqrl_mutex_leave( user->referenceCountMutex );
 		sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+		sqrl_user_hintlock( u );
 		return NULL;
 	}
 	if( user->keys != NULL ) {
@@ -327,12 +328,14 @@ DLL_PUBLIC
 void sqrl_user_hintlock( Sqrl_User u )
 {
 	if( sqrl_user_is_hintlocked( u )) return;
-	WITH_USER(user,u);
-	if( user == NULL ) return;
-	if( user->keys->password_len == 0 ) {
-		END_WITH_USER(user);
+	if( sqrl_transactions_with_user( u ) > 0 ) {
 		return;
 	}
+	if( u == NULL ) return;
+	if( ((struct Sqrl_User*)u)->keys->password_len == 0 ) {
+		return;
+	}
+	WITH_USER(user,u);
 	Sqrl_Transaction t = sqrl_transaction_create( SQRL_TRANSACTION_IDENTITY_LOCK );
 	SQRL_CAST_TRANSACTION(transaction,t);
 	transaction->user = u;
@@ -413,10 +416,6 @@ void sqrl_user_hintunlock( Sqrl_Transaction t,
 		return;
 	}
 	WITH_USER(user,u);
-	if( user == NULL ) {
-		END_WITH_TRANSACTION(transaction);
-		return;
-	}
 
 	struct sqrl_user_callback_data cbdata;
 	cbdata.transaction = t;
@@ -1068,24 +1067,47 @@ UT_string* sqrl_user_secure_memory_monitor( UT_string *dest, Sqrl_User u ) {
 	}
 #if defined(DEBUG)
 	SQRL_CAST_USER(user,u);
-	char *buf = calloc( 1, 512 );
-	char keyNames[10][6] = { "MK", "ILK", "PIUK0", "PIUK1", "PIUK2", "PIUK3", "IUK", "LOCAL", "RC", "PASS" };
+	char buf[6000];
+	char buf2[512];
+	char keyNames[10][6] = { "MK", "ILK", "PIUK0", "PIUK1", "PIUK2", "PIUK3", "IUK", "LOCAL", "RC", "PW(e)" };
 	char keyName[6];
-	int i, offset;
+	int i, j, offset;
+	
+	sqrl_user_unique_id( u, buf );
+	buf[SQRL_UNIQUE_ID_LENGTH] = 0;
+	utstring_printf( dest, "%10s: %s\n", "User", buf );
+	
+	if( user->hint_iterations > 0 ) {
+		utstring_printf( dest, "%10s: Hint-Locked\n", "Enc" );
+	} else {
+		utstring_printf( dest, "%10s: Plain-text\n", "Enc" );
+	}
 	
 	if( user->keys ) {
+		memcpy( buf, user->keys->password, user->keys->password_len );
+		buf[user->keys->password_len] = 0;
+		utstring_printf( dest, "%10s: %s\n", "PW", buf );
 		for( i = USER_MAX_KEYS - 1; i >= 0; i-- ) {
 			if( user->lookup[i] > 0 ) {
 				strcpy( keyName, keyNames[user->lookup[i]] );
 			} else {
 				keyName[0] = 0;
 			}
-			sodium_bin2hex( buf, 512, user->keys->keys[i], SQRL_KEY_SIZE );
-			utstring_printf( dest, "%6s: %s\n", keyName, buf );
+			sodium_bin2hex( buf, 6000, user->keys->keys[i], SQRL_KEY_SIZE );
+			utstring_printf( dest, "%10s: %s\n", keyName, buf );
 		}
-		memcpy( buf, user->keys->password, user->keys->password_len );
-		buf[user->keys->password_len] = 0;
-		utstring_printf( dest, "%6s: %s\n", "PW", buf );
+		sodium_bin2hex( buf, 6000, user->keys->scratch, KEY_SCRATCH_SIZE );
+		i = strlen( buf );
+		j = 0;
+		while( j < i ) {
+			int len = 64;
+			if( i - j < 64 ) len = i - j;
+			strncpy( buf2, buf + j, len );
+			buf2[len] = 0;
+			utstring_printf( dest, "%10s: %s\n", "SCRATCH", buf2 );
+			j += len;
+		}
+		
 	}
 #endif	
 	return dest;
