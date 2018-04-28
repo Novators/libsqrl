@@ -137,9 +137,6 @@ bool testbase64()
     }
     utstring_free( s );
     s = sqrl_b64u_decode( NULL, dvector[i], strlen( dvector[i] ));
-    if( s == NULL ) {
-		printf( "s is NULL.\n" );
-	}
     if( utstring_len(s) != inSize[i] ||
 	memcmp( utstring_body(s), inVector[i], inSize[i] )) {
       printf( "DECODE ERROR (%d): %s\n", i, utstring_body(s) );
