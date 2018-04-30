@@ -129,6 +129,7 @@ void sqrl_transaction_set_user( Sqrl_Transaction t, Sqrl_User u )
     END_WITH_TRANSACTION(transaction);
 }
 
+DLL_PUBLIC
 void* sqrl_transaction_tag( Sqrl_Transaction t )
 {
 	SQRL_CAST_TRANSACTION( transaction, t );
