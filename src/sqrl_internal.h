@@ -190,6 +190,7 @@ struct Sqrl_User
 	SqrlMutex referenceCountMutex;
 	int referenceCount;
 	Sqrl_Storage storage;
+	void *tag;
 	char unique_id[SQRL_UNIQUE_ID_LENGTH+1];
 	struct Sqrl_Keys *keys;
 };
@@ -216,6 +217,7 @@ struct Sqrl_Transaction {
 	void *data;
 	SqrlMutex mutex;
 	int referenceCount;
+	void *tag;
 };
 
 typedef struct Sqrl_Site {

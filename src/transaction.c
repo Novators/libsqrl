@@ -129,6 +129,13 @@ void sqrl_transaction_set_user( Sqrl_Transaction t, Sqrl_User u )
     END_WITH_TRANSACTION(transaction);
 }
 
+void* sqrl_transaction_tag( Sqrl_Transaction t )
+{
+	SQRL_CAST_TRANSACTION( transaction, t );
+	if( transaction == NULL ) return NULL;
+	return transaction->tag;
+}
+
 /**
 Gets the current \p Sqrl_Transaction_Status of a \p Sqrl_Transaction
 

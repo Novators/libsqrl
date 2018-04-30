@@ -339,16 +339,38 @@ Starts a new \p Sqrl_Transaction
 @return \p Sqrl_Transaction_Status
 */
 DLL_PUBLIC
-Sqrl_Transaction_Status sqrl_client_begin_transaction(
+Sqrl_Transaction_Status sqrl_client_begin_transaction (
 	Sqrl_Transaction_Type type,
 	Sqrl_User user,
 	const char *string,
 	size_t string_len )
 {
+	sqrl_client_transact( type, user, string, string_len, NULL );
+}
+
+/**
+Starts a new tagged \p Sqrl_Transaction
+
+@param type \p Sqrl_Transaction_Type of transaction
+@param user A \p Sqrl_User, or NULL
+@param string A string representing a uri (SQRL or FILE) or an imported (text / base64) S4 identity.
+@param string_len Length of \p string
+@param tag Pointer to Tag
+@return \p Sqrl_Transaction_Status
+*/
+DLL_PUBLIC
+Sqrl_Transaction_Status sqrl_client_transact (
+	Sqrl_Transaction_Type type,
+	Sqrl_User user,
+	const char *string,
+	size_t string_len,
+	void *tag )
+{
 	Sqrl_Transaction_Status retVal = SQRL_TRANSACTION_STATUS_WORKING;
 	Sqrl_User tmpUser;
 	Sqrl_Transaction t = sqrl_transaction_create( type );
 	SQRL_CAST_TRANSACTION(transaction,t);
+	transaction->tag = tag;
 	transaction->status = retVal;
 
 	if( string ) {

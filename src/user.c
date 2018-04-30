@@ -272,6 +272,61 @@ Sqrl_User sqrl_get_user( const char *unique_id )
 	return NULL;
 }
 
+/**
+Finds a \p Sqrl_User in by tag, and returns a new reference to it.
+
+\warning \p sqrl_user_release the \p Sqrl_User when finished!
+
+@param tag A tag to match
+@return Sqrl_User the matched user, or NULL if not found
+*/
+DLL_PUBLIC
+Sqrl_User sqrl_get_user_by_tag( void* tag )
+{
+	Sqrl_User retVal = NULL;
+	sqrl_mutex_enter( SQRL_GLOBAL_MUTICES.user );
+	struct Sqrl_User_List *list = SQRL_USER_LIST;
+	while( list ) {
+		if( tag == list->user->tag ) {
+			retVal = list->user;
+			break;
+		}
+	}
+	sqrl_mutex_leave( SQRL_GLOBAL_MUTICES.user );
+	if( sqrl_user_hold( retVal )) {
+		return retVal;
+	}
+	return NULL;
+}
+
+/**
+Sets the tag for a \p Sqrl_User
+
+@param tag Tag to set
+@return void
+*/
+DLL_PUBLIC
+void sqrl_user_set_tag( Sqrl_User u, void *tag )
+{
+	SQRL_CAST_USER(user,u);
+	if( user == NULL ) return;
+	user->tag = tag;
+}
+
+/**
+Gets the tag for a \p Sqrl_User
+
+@return void* The \p Sqrl_User's tag.
+*/
+DLL_PUBLIC
+void* sqrl_user_get_tag( Sqrl_User u )
+{
+	SQRL_CAST_USER(user,u);
+	if( user == NULL ) return NULL;
+	return user->tag;
+}
+
+
 bool sqrl_user_is_memlocked( Sqrl_User u ) {
 	SQRL_CAST_USER(user,u);
 	if( user == NULL ) return false;

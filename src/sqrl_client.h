@@ -76,21 +76,22 @@ void       sqrl_user_clear_flags( Sqrl_User u, uint16_t flags );
 Sqrl_User  sqrl_user_find( const char *unique_id );
 Sqrl_User  sqrl_user_release( Sqrl_User user );
 Sqrl_User  sqrl_user_hold( Sqrl_User user );
+uint16_t   sqrl_user_get_edition( Sqrl_User u );
 uint8_t    sqrl_user_get_enscrypt_seconds( Sqrl_User u );
 uint16_t   sqrl_user_get_flags( Sqrl_User u );
 uint8_t    sqrl_user_get_hint_length( Sqrl_User u );
 char*      sqrl_user_get_rescue_code( Sqrl_User u );
+void*      sqrl_user_get_tag( Sqrl_User u );
 uint16_t   sqrl_user_get_timeout_minutes( Sqrl_User u );
 UT_string* sqrl_user_secure_memory_monitor( UT_string *dest, Sqrl_User u );
 void       sqrl_user_set_enscrypt_seconds( Sqrl_User u, uint8_t seconds );
 void       sqrl_user_set_flags( Sqrl_User u, uint16_t flags );
 void       sqrl_user_set_hint_length( Sqrl_User u, uint8_t length );
 bool       sqrl_user_set_rescue_code( Sqrl_User u, char *rc );
+void       sqrl_user_set_tag( Sqrl_User u, void *tag );
 void       sqrl_user_set_timeout_minutes( Sqrl_User u, uint16_t minutes );
 bool       sqrl_user_unique_id( Sqrl_User u, char *buffer );
 bool       sqrl_user_unique_id_match( Sqrl_User u, const char *unique_id );
-uint16_t   sqrl_user_get_edition( Sqrl_User u );
-
 
 /** @} */ // endgroup user
 
@@ -218,7 +219,9 @@ save, call \p sqrl_client_export_user.
 typedef void (sqrl_ccb_save_suggested)(
 	Sqrl_User user);
 
-/** Called when a \p Sqrl_Transaction has completed. */
+/** Called when a \p Sqrl_Transaction has completed.  If you are using tags,
+this would be a good place to free any tag data.
+*/
 typedef void (sqrl_ccb_transaction_complete)(
 	Sqrl_Transaction transaction );
 
@@ -245,6 +248,12 @@ Sqrl_Transaction_Status sqrl_client_begin_transaction(
 	Sqrl_User user,
 	const char *string,
 	size_t string_len );
+Sqrl_Transaction_Status sqrl_client_transact(
+	Sqrl_Transaction_Type type,
+	Sqrl_User user,
+	const char *string,
+	size_t string_len,
+	void *tag );
 Sqrl_Transaction_Status sqrl_client_export_user(
 	Sqrl_User user,
 	const char *uri,
@@ -264,10 +273,12 @@ void sqrl_client_transaction_set_alternate_identity(
 	Sqrl_Transaction transaction,
 	const char *altIdentity );
 Sqrl_Transaction_Type sqrl_transaction_type( Sqrl_Transaction t );
+void* sqrl_transaction_tag( Sqrl_Transaction t );
 Sqrl_User sqrl_transaction_user( Sqrl_Transaction t );
 Sqrl_Transaction_Status sqrl_transaction_status( Sqrl_Transaction t );
 size_t sqrl_transaction_string( Sqrl_Transaction t, char *buf, size_t *len );
 Sqrl_User sqrl_get_user( const char *unique_id );
+Sqrl_User sqrl_get_user_by_tag( void* tag );
 /** @} */ // endgroup Client
 
 #endif // SQRL_CLIENT_H_INCLUDED
