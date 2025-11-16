@@ -1,6 +1,8 @@
 project(libsqrl)
 set(PROJECT_NAME libsqrl)
-cmake_minimum_required(VERSION 2.8)
+# Security update: Updated CMake minimum to 3.10 (was 2.8)
+# This is required for CMake 4.0+ compatibility
+cmake_minimum_required(VERSION 3.10)
 
 # check for polluted source tree
 if(EXISTS ${CMAKE_SOURCE_DIR}/CMakeCache.txt OR
@@ -35,10 +37,36 @@ set(sqrl_version_minor 04)
 set(sqrl_build 0007)
 set(sqrl_version "${sqrl_version_major}.${sqrl_version_minor}.${sqrl_build}")
 
-#set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_BUILD_TYPE Debug)
+# Security update: Changed to Release build by default (was Debug)
+# WARNING: Debug builds have weakened cryptography - DO NOT use in production
+set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Debug)
 
 set(CMAKE_C_FLAGS_DEBUG "-DDEBUG")
+
+# Security hardening: Add compiler flags for enhanced security
+if(CMAKE_COMPILER_IS_GNUCC OR CMAKE_C_COMPILER_ID MATCHES "Clang")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wall -Wextra -Wformat-security")
+    set(CMAKE_C_FLAGS_RELEASE "${CMAKE_C_FLAGS_RELEASE} -O2 -D_FORTIFY_SOURCE=2")
+
+    # Stack protection
+    include(CheckCCompilerFlag)
+    check_c_compiler_flag(-fstack-protector-strong HAS_STACK_PROTECTOR_STRONG)
+    if(HAS_STACK_PROTECTOR_STRONG)
+        set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector-strong")
+    else()
+        check_c_compiler_flag(-fstack-protector HAS_STACK_PROTECTOR)
+        if(HAS_STACK_PROTECTOR)
+            set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -fstack-protector")
+        endif()
+    endif()
+endif()
+
+# Linker hardening (Linux/Unix)
+if(UNIX AND NOT APPLE)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -Wl,-z,relro,-z,now")
+    set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,relro,-z,now")
+endif()
 
 enable_testing()
 
@@ -73,7 +101,9 @@ ExternalProject_Add(libsodium
 #	BINARY_DIR ${CMAKE_BINARY_DIR}/libsodium
 	BUILD_IN_SOURCE 1
 	GIT_REPOSITORY https://github.com/jedisct1/libsodium.git
-	GIT_TAG stable
+	# Security update: Pin to specific version 1.0.20 (was: stable branch)
+	# This ensures reproducible builds and known security characteristics
+	GIT_TAG 1.0.20
 	UPDATE_COMMAND ""
 	CONFIGURE_COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/scripts/sodium-conf.sh ${CMAKE_BINARY_DIR}
 	BUILD_COMMAND make -s
@@ -108,12 +138,12 @@ set(SG_SERVER ${CMAKE_SOURCE_DIR}/src/server.c ${CMAKE_SOURCE_DIR}/src/server_pr
 source_group(Server FILES ${SG_SERVER})
 set(SG_CRYPTO ${CMAKE_SOURCE_DIR}/src/crypto/aes.c ${CMAKE_SOURCE_DIR}/src/crypto/gcm.c ${CMAKE_SOURCE_DIR}/src/crypto/crypt.c ${CMAKE_SOURCE_DIR}/src/crypto/aes.h ${CMAKE_SOURCE_DIR}/src/crypto/gcm.h)
 source_group(Crypto FILES ${SG_CRYPTO})
-set(SG_UTIL ${CMAKE_SOURCE_DIR}/src/util.c ${CMAKE_SOURCE_DIR}/src/encdec.c ${CMAKE_SOURCE_DIR}/src/realtime.c ${CMAKE_SOURCE_DIR}/src/uri.c ${CMAKE_SOURCE_DIR}/src/platform.c ${CMAKE_BINARY_DIR}/sqrl_depends.c)
+set(SG_UTIL ${CMAKE_SOURCE_DIR}/src/util.c ${CMAKE_SOURCE_DIR}/src/encdec.c ${CMAKE_SOURCE_DIR}/src/realtime.c ${CMAKE_SOURCE_DIR}/src/uri.c ${CMAKE_SOURCE_DIR}/src/platform.c ${CMAKE_SOURCE_DIR}/src/sqrl_secure.c ${CMAKE_BINARY_DIR}/sqrl_depends.c)
 source_group(Utility FILES ${SG_UTIL})
 set(SG_ENTROPY ${CMAKE_SOURCE_DIR}/src/entropy/entropy.c ${CMAKE_SOURCE_DIR}/src/entropy/rdrand.c ${CMAKE_SOURCE_DIR}/src/entropy/entropy.h ${CMAKE_SOURCE_DIR}/src/entropy/entropy_linux.h ${CMAKE_SOURCE_DIR}/src/entropy/entropy_mac.h ${CMAKE_SOURCE_DIR}/src/entropy/entropy_win.h ${CMAKE_SOURCE_DIR}/src/entropy/rdrand.h)
 source_group(Entropy FILES ${SG_ENTROPY})
 
-set(SG_HEADERS src/sqrl_internal.h src/sqrl_expert.h src/sqrl_client.h src/sqrl_server.h src/sqrl_common.h src/detect_platform.h src/utstring.h)
+set(SG_HEADERS src/sqrl_internal.h src/sqrl_expert.h src/sqrl_client.h src/sqrl_server.h src/sqrl_common.h src/detect_platform.h src/utstring.h src/sqrl_secure.h)
 source_group(Headers FILES ${SG_HEADERS})
 
 set(SRC ${SG_CLIENT_USER} ${SG_CLIENT} ${SG_SERVER} ${SG_CRYPTO} ${SG_UTIL} ${SG_ENTROPY})
@@ -176,7 +206,12 @@ add_executable(server_test src/test/server_test.c)
 target_link_libraries(server_test sqrl)
 set_target_properties(server_test PROPERTIES FOLDER Tests)
 
-install(FILES src/utstring.h src/sqrl_expert.h src/sqrl_client.h src/sqrl_server.h src/sqrl_common.h
+add_executable(secure_test src/test/secure_test.c src/sqrl_secure.c)
+add_dependencies(secure_test libsodium)
+target_link_libraries(secure_test sodium)
+set_target_properties(secure_test PROPERTIES FOLDER Tests)
+
+install(FILES src/utstring.h src/sqrl_expert.h src/sqrl_client.h src/sqrl_server.h src/sqrl_common.h src/sqrl_secure.h
 	DESTINATION include)
 
 install(TARGETS sqrl LIBRARY DESTINATION lib)
@@ -214,6 +249,7 @@ add_test(user_test ${EXECUTABLE_OUTPUT_PATH}/user_test)
 add_test(client_test ${EXECUTABLE_OUTPUT_PATH}/client_test)
 add_test(server_test ${EXECUTABLE_OUTPUT_PATH}/server_test)
 add_test(protocol_test ${EXECUTABLE_OUTPUT_PATH}/protocol_test)
+add_test(secure_test ${EXECUTABLE_OUTPUT_PATH}/secure_test)
 add_test(NAME sodium-test
 	WORKING_DIRECTORY ${CMAKE_BINARY_DIR}/src/libsodium/src/libsodium
 	COMMAND make check)

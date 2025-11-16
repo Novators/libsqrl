@@ -20,6 +20,7 @@ Creates a copy of a \p Sqrl_Uri object.
 #include <string.h>
 #include <ctype.h>
 #include "sqrl_internal.h"
+#include "sqrl_secure.h"
 
 DLL_PUBLIC
 Sqrl_Uri *sqrl_uri_create_copy( Sqrl_Uri *original )
@@ -94,8 +95,10 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 		 *password = NULL;
 
 	UT_string *prefix = NULL;
-	char *uri = malloc( strlen( theUrl ) + 1 );
-	strcpy( uri, theUrl );
+	size_t uri_len = strlen( theUrl ) + 1;
+	char *uri = malloc( uri_len );
+	/* Security fix: Use secure string copy (CWE-119) */
+	sqrl_secure_strcpy( uri, theUrl, uri_len );
 //	_fix_divider( uri );
 
 	/* Allocate the parsed uri storage */
@@ -150,10 +153,13 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 
 	// If this is a file path, we're done...
 	if( puri->scheme == SQRL_SCHEME_FILE ) {
-		puri->url = (char*) malloc( strlen( uri ) + 2 );
-		strcpy( puri->url, uri );
-		puri->challenge = (char*) malloc( strlen( curstr ) + 1 );
-		strcpy( puri->challenge, curstr );
+		size_t url_sz = strlen( uri ) + 2;
+		size_t chal_sz = strlen( curstr ) + 1;
+		puri->url = (char*) malloc( url_sz );
+		/* Security fix: Use secure string copy (CWE-119) */
+		sqrl_secure_strcpy( puri->url, uri, url_sz );
+		puri->challenge = (char*) malloc( chal_sz );
+		sqrl_secure_strcpy( puri->challenge, curstr, chal_sz );
 		goto END;
 	}
 
@@ -308,18 +314,22 @@ Sqrl_Uri * sqrl_uri_parse(const char *theUrl)
 	/* SQRL Specific... */
 SQRL:
 	if( puri->scheme == SQRL_SCHEME_SQRL ) {
-		puri->url = (char*) malloc( strlen( uri ) + 2 );
-		strcpy( puri->url + 1, theUrl );
+		size_t url_sz = strlen( uri ) + 2;
+		puri->url = (char*) malloc( url_sz );
+		/* Security fix: Use secure string copy (CWE-119) */
+		sqrl_secure_strcpy( puri->url + 1, theUrl, url_sz - 1 );
 		memcpy( puri->url, "https", 5 );
 		utstring_new( prefix );
 		utstring_bincpy( prefix, "https://", 8 );
 	} else {
 		goto ERROR;
 	}
-	puri->challenge = (char*) malloc( strlen( uri ) + 1 );
+	size_t chal_sz = strlen( uri ) + 1;
+	puri->challenge = (char*) malloc( chal_sz );
 	if( puri->challenge == NULL || puri->url == NULL ) goto ERROR;
 
-	strcpy( puri->challenge, theUrl );
+	/* Security fix: Use secure string copy (CWE-119) */
+	sqrl_secure_strcpy( puri->challenge, theUrl, chal_sz );
 
 	size_t hl = strlen( host );
 	long pl = 0;
@@ -337,7 +347,8 @@ SQRL:
 	if( pl ) ul += pl + 1;
 	puri->host = (char*) calloc( ul, 1 );
 	if( puri->host == NULL ) goto ERROR;
-	strcpy( puri->host, host );
+	/* Security fix: Use secure string copy (CWE-119) */
+	sqrl_secure_strcpy( puri->host, host, ul );
 	utstring_bincpy( prefix, host, strlen( host ));
 	if( port ) {
 		utstring_printf( prefix, ":%s", port );
@@ -346,9 +357,10 @@ SQRL:
 		puri->host[hl] = '/';
 		strncpy( puri->host + hl + 1, path, pl );
 	}
-	puri->prefix = (char*) malloc( utstring_len( prefix ));
+	size_t prefix_sz = utstring_len( prefix ) + 1;
+	puri->prefix = (char*) malloc( prefix_sz );
 	if( puri->prefix == NULL ) goto ERROR;
-	strcpy( puri->prefix, utstring_body( prefix ));
+	sqrl_secure_strcpy( puri->prefix, utstring_body( prefix ), prefix_sz );
 	goto END;
 
 ERROR:
@@ -380,10 +392,12 @@ DLL_PUBLIC
 Sqrl_Uri* sqrl_uri_free( Sqrl_Uri *uri )
 {
 	if ( uri ) {
-		if( uri->challenge ) free( uri->challenge );
-		if( uri->host ) free( uri->host );
-		if( uri->prefix ) free( uri->prefix );
-		if( uri->url ) free( uri->url );
+		/* Security fix: Clear potentially sensitive URI data before freeing (CWE-226) */
+		if( uri->challenge ) sqrl_secure_free_string( &uri->challenge, 0 );
+		if( uri->host ) sqrl_secure_free_string( &uri->host, 0 );
+		if( uri->prefix ) sqrl_secure_free_string( &uri->prefix, 0 );
+		if( uri->url ) sqrl_secure_free_string( &uri->url, 0 );
+		sodium_memzero( uri, sizeof( Sqrl_Uri ) );
 		free(uri);
 	}
 	return NULL;

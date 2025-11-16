@@ -8,6 +8,7 @@ For more details, see the LICENSE file included with this package.
 #include <stdlib.h>
 #include <stdio.h>
 #include "sqrl_internal.h"
+#include "sqrl_secure.h"
 
 struct Sqrl_Transaction_List *SQRL_TRANSACTION_LIST = NULL;
 
@@ -93,10 +94,17 @@ Sqrl_Transaction sqrl_transaction_release( Sqrl_Transaction t )
     if( freeMe ) {
         freeMe->user = sqrl_user_release( freeMe->user );
         freeMe->uri = sqrl_uri_free( freeMe->uri );
-        if( freeMe->string ) free( freeMe->string );
-        if( freeMe->altIdentity ) free( freeMe->altIdentity );
+        /* Security fix: Clear sensitive authentication data before freeing (CWE-226, CWE-200) */
+        if( freeMe->string ) {
+            sqrl_secure_free_string( &freeMe->string, freeMe->string_len );
+        }
+        if( freeMe->altIdentity ) {
+            sqrl_secure_free_string( &freeMe->altIdentity, 0 );
+        }
         // free ->data
         sqrl_mutex_destroy( freeMe->mutex );
+        /* Security fix: Clear transaction structure before freeing */
+        sodium_memzero( freeMe, sizeof( struct Sqrl_Transaction ) );
         free( freeMe );
     }
     return NULL;

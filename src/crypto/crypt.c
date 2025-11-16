@@ -78,10 +78,12 @@ int sqrl_enscrypt(
 DONE:
 	endTime = (sqrl_get_real_time() - startTime) * 1000;
 	if( cb_ptr ) (*cb_ptr)( 100, cb_data );
-	
+
     if( retVal != 0 ) {
     	sodium_memzero( buf, 32 );
     }
+    /* Security fix: Clear temporary key material (CWE-226) */
+    sodium_memzero( t, sizeof(t) );
     if (escrypt_free_local(&local)) {
         return -1; /* LCOV_EXCL_LINE */
     }
@@ -155,6 +157,8 @@ DONE:
     if( retVal != 0 ) {
     	sodium_memzero( buf, 32 );
     }
+    /* Security fix: Clear temporary key material (CWE-226) */
+    sodium_memzero( t, sizeof(t) );
     if (escrypt_free_local(&local)) {
         return -1; /* LCOV_EXCL_LINE */
     }

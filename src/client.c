@@ -7,6 +7,7 @@ For more details, see the LICENSE file included with this package.
 */
 
 #include "sqrl_internal.h"
+#include "sqrl_secure.h"
 
 Sqrl_Client_Callbacks *SQRL_CLIENT_CALLBACKS;
 
@@ -71,12 +72,14 @@ void sqrl_client_transaction_set_alternate_identity(
 		WITH_TRANSACTION(transaction,t);
 		if( !transaction ) return;
 		if( transaction->altIdentity ) {
-			free( transaction->altIdentity );
+			/* Security fix: Clear sensitive data before freeing (CWE-226) */
+			sqrl_secure_free_string( &transaction->altIdentity, 0 );
 		}
 		size_t len = strlen( altIdentity );
 		if( len > 0 ) {
 			transaction->altIdentity = malloc( len + 1 );
-			strcpy( transaction->altIdentity, altIdentity );
+			/* Security fix: Use secure string copy (CWE-119) */
+			sqrl_secure_strcpy( transaction->altIdentity, altIdentity, len + 1 );
 		}
 		END_WITH_TRANSACTION(transaction);
 	}

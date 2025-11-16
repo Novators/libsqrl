@@ -7,6 +7,7 @@ For more details, see the LICENSE file included with this package.
 **/
 
 #include "sqrl_internal.h"
+#include "sqrl_secure.h"
 
 #define SITE_KV_COUNT 7
 #define SITE_KV_LENGTH 3
@@ -184,8 +185,9 @@ void parseQry( struct Sqrl_Site *site, const char *url, size_t url_len )
 	}
 	suri->challenge = calloc( utstring_len( chal ) + 1, 1 );
 	suri->url = calloc( utstring_len( newUrl ) + 1, 1 );
-	strcpy( suri->challenge, utstring_body( chal ));
-	strcpy( suri->url, utstring_body( newUrl ));
+	/* Security fix: Use secure string copy to prevent buffer overflow (CWE-119) */
+	sqrl_secure_strcpy( suri->challenge, utstring_body( chal ), utstring_len( chal ) + 1 );
+	sqrl_secure_strcpy( suri->url, utstring_body( newUrl ), utstring_len( newUrl ) + 1 );
 
 	if( site->serverString ) {
 		utstring_free( site->serverString );
@@ -216,9 +218,13 @@ void parseSuk( struct Sqrl_Site *site, char *value, size_t value_len )
 void parseSin( struct Sqrl_Site *site, char *value, size_t value_len )
 {
 	if( !site || !value || value_len == 0 ) return;
-	if( site->sin ) free( site->sin );
+	if( site->sin ) {
+		/* Security fix: Clear sensitive data before freeing (CWE-226) */
+		sqrl_secure_free_string( &site->sin, 0 );
+	}
 	site->sin = malloc( value_len + 1 );
-	strcpy( site->sin, value );
+	/* Security fix: Use secure string copy to prevent buffer overflow (CWE-119) */
+	sqrl_secure_strcpy( site->sin, value, value_len + 1 );
 }
 
 int parseKeyValue( struct Sqrl_Site *site, char *key, size_t key_len, char *value, size_t value_len )
@@ -396,6 +402,8 @@ void sqrl_site_create_unlock_keys( struct Sqrl_Site *site ) {
 
 	site->keys[SITE_KEY_LOOKUP][SITE_KEY_SUK] = 1;
 	site->keys[SITE_KEY_LOOKUP][SITE_KEY_VUK] = 1;
+	/* Security fix: Clear sensitive RLK before leaving function (CWE-226) */
+	sodium_memzero( rlk, SQRL_KEY_SIZE );
 	sodium_munlock( scratch, 64 );
 }
 
@@ -604,6 +612,8 @@ UT_string *sqrl_site_client_body( Sqrl_Site *site )
 		sqrl_b64u_encode_append( result, binSig, SQRL_SIG_SIZE );
 	}
 
+	/* Security fix: Clear signature buffer after use (CWE-226) */
+	sodium_memzero( binSig, sizeof(binSig) );
 	utstring_free( buffer );
 	return result;
 }

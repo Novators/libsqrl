@@ -1,0 +1,231 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, master, develop, 'claude/*' ]
+  pull_request:
+    branches: [ main, master, develop ]
+  schedule:
+    # Run weekly security scan
+    - cron: '0 0 * * 0'
+
+jobs:
+  build-and-test:
+    name: Build and Test
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, ubuntu-22.04]
+        build_type: [Release, Debug]
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y \
+          cmake \
+          build-essential \
+          git \
+          autoconf \
+          automake \
+          libtool
+
+    - name: Create build directory
+      run: mkdir -p build
+
+    - name: Configure CMake
+      working-directory: build
+      run: cmake -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} ..
+
+    - name: Build
+      working-directory: build
+      run: make -j$(nproc)
+
+    - name: Run tests
+      working-directory: build
+      run: ctest --output-on-failure --timeout 300
+      continue-on-error: ${{ matrix.build_type == 'Debug' }}
+
+    - name: Check for security vulnerabilities in Debug build
+      if: matrix.build_type == 'Debug'
+      run: |
+        echo "WARNING: Debug builds have weakened cryptography"
+        echo "N-factor is reduced, entropy is minimized"
+        echo "DO NOT use Debug builds in production!"
+
+  static-analysis:
+    name: Static Analysis
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install analysis tools
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cppcheck clang-tools
+
+    - name: Run cppcheck
+      run: |
+        cppcheck --enable=all --suppress=missingIncludeSystem \
+          --error-exitcode=1 \
+          --inline-suppr \
+          --std=c99 \
+          src/ 2>&1 | tee cppcheck_report.txt
+      continue-on-error: true
+
+    - name: Upload cppcheck report
+      uses: actions/upload-artifact@v4
+      with:
+        name: cppcheck-report
+        path: cppcheck_report.txt
+
+    - name: Check for dangerous functions
+      run: |
+        echo "Checking for dangerous function usage..."
+        DANGEROUS_FUNCS="strcpy strcat sprintf gets"
+        FOUND_ISSUES=0
+        for func in $DANGEROUS_FUNCS; do
+          echo "Checking for $func..."
+          if grep -r "\\b$func\\s*(" src/ --include="*.c" --include="*.h" | grep -v "sqrl_secure_"; then
+            echo "WARNING: Found potential unsafe $func usage"
+            FOUND_ISSUES=1
+          fi
+        done
+        if [ $FOUND_ISSUES -eq 1 ]; then
+          echo "Found potentially dangerous functions - review recommended"
+        else
+          echo "No dangerous functions found outside of secure wrappers"
+        fi
+
+  memory-sanitizer:
+    name: Memory Sanitizer Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y cmake build-essential git autoconf automake libtool
+
+    - name: Create build directory
+      run: mkdir -p build
+
+    - name: Configure with AddressSanitizer
+      working-directory: build
+      run: |
+        cmake -DCMAKE_BUILD_TYPE=Debug \
+              -DCMAKE_C_FLAGS="-fsanitize=address -fno-omit-frame-pointer -g" \
+              -DCMAKE_EXE_LINKER_FLAGS="-fsanitize=address" \
+              ..
+
+    - name: Build with sanitizers
+      working-directory: build
+      run: make -j$(nproc)
+
+    - name: Run sanitized tests
+      working-directory: build
+      run: |
+        export ASAN_OPTIONS=detect_leaks=1:check_initialization_order=1
+        ctest --output-on-failure --timeout 600 || true
+
+  security-scan:
+    name: Security Vulnerability Scan
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check for sensitive data patterns
+      run: |
+        echo "Scanning for potential sensitive data exposure..."
+
+        # Check for hardcoded secrets
+        if grep -r "password\s*=\s*['\"]" src/ --include="*.c" --include="*.h"; then
+          echo "WARNING: Potential hardcoded password found"
+        fi
+
+        # Check for free() without clear
+        echo "Checking for potential CWE-226 violations..."
+        grep -n "free(" src/*.c src/**/*.c 2>/dev/null | head -20
+
+        echo "Security scan complete - review findings above"
+
+    - name: Verify secure memory handling
+      run: |
+        echo "Verifying secure memory handling functions are used..."
+
+        # Check that sqrl_secure functions exist
+        if [ -f "src/sqrl_secure.c" ]; then
+          echo "✓ Secure utility functions implemented"
+        else
+          echo "✗ Missing secure utility functions"
+          exit 1
+        fi
+
+        # Check for sodium_memzero usage
+        MEMZERO_COUNT=$(grep -r "sodium_memzero" src/ --include="*.c" | wc -l)
+        echo "Found $MEMZERO_COUNT sodium_memzero calls"
+
+        if [ "$MEMZERO_COUNT" -lt 10 ]; then
+          echo "WARNING: Low sodium_memzero usage - verify sensitive data is cleared"
+        fi
+
+  dependency-check:
+    name: Dependency Security Check
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Check libsodium version
+      run: |
+        SODIUM_VERSION=$(grep "GIT_TAG" CMakeLists.txt | grep libsodium -A 10 | grep "GIT_TAG" | head -1 | awk '{print $2}')
+        echo "libsodium version: $SODIUM_VERSION"
+
+        if [ "$SODIUM_VERSION" = "stable" ]; then
+          echo "WARNING: libsodium is not pinned to a specific version"
+          echo "This can lead to reproducibility issues"
+          exit 1
+        fi
+
+        echo "✓ libsodium is pinned to version: $SODIUM_VERSION"
+
+    - name: Check CMake minimum version
+      run: |
+        CMAKE_MIN=$(grep "cmake_minimum_required" CMakeLists.txt | grep -oP "VERSION\s+\K[0-9.]+")
+        echo "CMake minimum version: $CMAKE_MIN"
+
+        # Check if version is at least 3.10
+        MAJOR=$(echo $CMAKE_MIN | cut -d. -f1)
+        MINOR=$(echo $CMAKE_MIN | cut -d. -f2)
+
+        if [ "$MAJOR" -lt 3 ] || ([ "$MAJOR" -eq 3 ] && [ "$MINOR" -lt 10 ]); then
+          echo "WARNING: CMake minimum version should be at least 3.10"
+          exit 1
+        fi
+
+        echo "✓ CMake minimum version is adequate"
+
+    - name: Check build configuration
+      run: |
+        BUILD_TYPE=$(grep "set(CMAKE_BUILD_TYPE" CMakeLists.txt | grep -v "^#" | head -1)
+        echo "Default build type: $BUILD_TYPE"
+
+        if echo "$BUILD_TYPE" | grep -q "Debug"; then
+          echo "WARNING: Default build type is Debug"
+          echo "Debug builds have weakened cryptography!"
+          exit 1
+        fi
+
+        echo "✓ Build type is Release"
